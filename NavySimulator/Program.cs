@@ -44,3 +44,21 @@ Console.WriteLine($"Commander: {scenario.Defender.Commander}");
 Console.WriteLine($"Doctrine: {scenario.Defender.Doctrine}");
 Console.WriteLine($"Tech: {scenario.Defender.TechnologyLevel}");
 Console.WriteLine($"Nation Modifier: {scenario.Defender.NationModifier}");
+
+Console.WriteLine();
+Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
+
+var simulator = new BattleSimulator();
+var result = simulator.Simulate(scenario);
+
+foreach (var line in result.HourlyLog)
+{
+    Console.WriteLine(line);
+}
+
+Console.WriteLine();
+Console.WriteLine($"Result: {result.Outcome}");
+Console.WriteLine($"Hours Elapsed: {result.HoursElapsed}");
+Console.WriteLine($"Attacker Ships Remaining: {result.AttackerShipsRemaining}");
+Console.WriteLine($"Defender Ships Remaining: {result.DefenderShipsRemaining}");
+

@@ -49,8 +49,12 @@
 - Each rounds all ships will fire their guns and torpedoes, and then take damage
 - Weapons have cooldown, and carriers planes have a cooldown for flying
 - Round is repeated until one fleet is destroyed, or set number of hours have passed
+- Screening efficiency is determined by the ratio of screening group to battle line
+- Carrier screening efficiency is determined by the ratio of carrier group to battle line
 
-
+## Battle mechanics
+- Battle mechanics are explained in hoi4 wiki https://hoi4.paradoxwikis.com/Naval_battle
+- 
 ## Project Snapshot
 - Solution: `NavySimulator.sln` with a single executable project: `NavySimulator/NavySimulator.csproj`.
 - Target runtime: `.NET 10` (`<TargetFramework>net10.0</TargetFramework>`).

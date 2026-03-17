@@ -4,19 +4,21 @@
     { "id": "alpha_dd_2", "shipDesignID": "raider_destroyer" },
     { "id": "alpha_dd_3", "shipDesignID": "raider_destroyer" },
     { "id": "alpha_cl_1", "shipDesignID": "screen_cruiser" },
+    { "id": "alpha_ca_1", "shipDesignID": "battleline_cruiser" },
     { "id": "beta_dd_1", "shipDesignID": "escort_destroyer" },
     { "id": "beta_dd_2", "shipDesignID": "escort_destroyer" },
     { "id": "beta_dd_3", "shipDesignID": "escort_destroyer" },
-    { "id": "beta_dd_4", "shipDesignID": "escort_destroyer" }
+    { "id": "beta_dd_4", "shipDesignID": "escort_destroyer" },
+    { "id": "beta_ca_1", "shipDesignID": "battleline_cruiser" }
   ],
   "fleets": [
     {
       "id": "task_force_alpha",
-      "shipIDs": ["alpha_dd_1", "alpha_dd_2", "alpha_dd_3", "alpha_cl_1"]
+      "shipIDs": ["alpha_dd_1", "alpha_dd_2", "alpha_dd_3", "alpha_cl_1", "alpha_ca_1"]
     },
     {
       "id": "home_fleet_beta",
-      "shipIDs": ["beta_dd_1", "beta_dd_2", "beta_dd_3", "beta_dd_4"]
+      "shipIDs": ["beta_dd_1", "beta_dd_2", "beta_dd_3", "beta_dd_4", "beta_ca_1"]
     }
   ]
 }

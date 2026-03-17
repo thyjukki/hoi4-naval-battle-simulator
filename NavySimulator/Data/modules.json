@@ -13,6 +13,18 @@
       }
     },
     {
+      "id": "heavy_battery_1",
+      "statModifiers": {
+        "heavyAttack": 12
+      }
+    },
+    {
+      "id": "torpedo_launcher_1",
+      "statModifiers": {
+        "torpedoAttack": 8
+      }
+    },
+    {
       "id": "engine_2",
       "statModifiers": {
         "speed": 3

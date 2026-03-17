@@ -28,6 +28,7 @@ public class SetupLoader
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
 
         ValidateRequiredIds(hullsFile.Hulls.Select(h => h.ID), "hulls", errors);
+        ValidateRequiredValues(hullsFile.Hulls.Select(h => h.Role), "hulls.role", errors);
         ValidateRequiredIds(modulesFile.Modules.Select(m => m.ID), "modules", errors);
         ValidateRequiredIds(miosFile.Mios.Select(m => m.ID), "mios", errors);
         ValidateRequiredIds(designsFile.ShipDesigns.Select(d => d.ID), "shipDesigns", errors);
@@ -42,6 +43,14 @@ public class SetupLoader
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         var hullIds = hullsFile.Hulls.Select(h => h.ID).ToHashSet();
+                        foreach (var hull in hullsFile.Hulls)
+                        {
+                            if (!Enum.TryParse<ShipRole>(hull.Role, true, out _))
+                            {
+                                errors.Add($"hull '{hull.ID}' has unknown role '{hull.Role}'.");
+                            }
+                        }
+
         var moduleIds = modulesFile.Modules.Select(m => m.ID).ToHashSet();
         var mioIds = miosFile.Mios.Select(m => m.ID).ToHashSet();
         var designIds = designsFile.ShipDesigns.Select(d => d.ID).ToHashSet();
@@ -100,7 +109,9 @@ public class SetupLoader
             throw new SetupValidationException(errors);
         }
 
-        var hullById = hullsFile.Hulls.ToDictionary(h => h.ID, h => new Hull(h.ID, h.BaseStats.ToDomain()));
+        var hullById = hullsFile.Hulls.ToDictionary(
+            h => h.ID,
+            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), h.BaseStats.ToDomain()));
         var moduleById = modulesFile.Modules.ToDictionary(m => m.ID, m => (IModule)new StatModule(m.ID, m.StatModifiers.ToDomain()));
         var mioById = miosFile.Mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
 
@@ -179,6 +190,21 @@ public class SetupLoader
             if (string.IsNullOrWhiteSpace(id))
             {
                 errors.Add($"{sectionName}[{index}] has empty ID.");
+            }
+
+            index++;
+        }
+    }
+
+    private static void ValidateRequiredValues(IEnumerable<string> values, string sectionName, List<string> errors)
+    {
+        var index = 0;
+
+        foreach (var value in values)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                errors.Add($"{sectionName}[{index}] must not be empty.");
             }
 
             index++;

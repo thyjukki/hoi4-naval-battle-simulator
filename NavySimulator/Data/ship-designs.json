@@ -3,19 +3,25 @@
     {
       "id": "raider_destroyer",
       "hullID": "destroyer_hull_1936",
-      "moduleIDs": ["light_battery_2", "engine_2"],
+      "moduleIDs": ["light_battery_2", "torpedo_launcher_1", "engine_2"],
       "mioID": "offensive_designer"
     },
     {
       "id": "escort_destroyer",
       "hullID": "destroyer_hull_1936",
-      "moduleIDs": ["light_battery_1", "armor_1"],
+      "moduleIDs": ["light_battery_1", "torpedo_launcher_1", "armor_1"],
       "mioID": "defensive_designer"
     },
     {
       "id": "screen_cruiser",
       "hullID": "light_cruiser_hull_1936",
       "moduleIDs": ["light_battery_2", "armor_1"]
+    },
+    {
+      "id": "battleline_cruiser",
+      "hullID": "heavy_cruiser_hull_1936",
+      "moduleIDs": ["light_battery_2", "heavy_battery_1", "armor_1"],
+      "mioID": "defensive_designer"
     }
   ]
 }
