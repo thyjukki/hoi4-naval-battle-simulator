@@ -1,0 +1,25 @@
+{
+  "hulls": [
+    {
+      "id": "destroyer_hull_1936",
+      "baseStats": {
+        "speed": 35,
+        "organization": 30,
+        "hp": 180,
+        "lightAttack": 8,
+        "armor": 2
+      }
+    },
+    {
+      "id": "light_cruiser_hull_1936",
+      "baseStats": {
+        "speed": 32,
+        "organization": 40,
+        "hp": 320,
+        "lightAttack": 10,
+        "armor": 6
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,17 @@
+{
+  "mios": [
+    {
+      "id": "offensive_designer",
+      "percentBonus": {
+        "lightAttack": 10
+      }
+    },
+    {
+      "id": "defensive_designer",
+      "percentBonus": {
+        "hp": 10
+      }
+    }
+  ]
+}
+

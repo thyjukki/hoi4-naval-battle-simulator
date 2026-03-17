@@ -1,0 +1,29 @@
+{
+  "modules": [
+    {
+      "id": "light_battery_1",
+      "statModifiers": {
+        "lightAttack": 6
+      }
+    },
+    {
+      "id": "light_battery_2",
+      "statModifiers": {
+        "lightAttack": 8
+      }
+    },
+    {
+      "id": "engine_2",
+      "statModifiers": {
+        "speed": 3
+      }
+    },
+    {
+      "id": "armor_1",
+      "statModifiers": {
+        "armor": 2
+      }
+    }
+  ]
+}
+
