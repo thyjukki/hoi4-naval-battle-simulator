@@ -17,8 +17,10 @@ public class ShipDesign
 
     public ShipStats GetFinalStats()
     {
-        // StatModifiers are additive, StatMultipliers are multipliers
+        // StatModifiers are additive, averaged statAverages are added once, then statMultipliers are applied.
         var stats = Modules.Aggregate(Hull.BaseStats, (current, module) => current.Add(module.StatModifiers));
+        var averagedStats = ShipStats.AverageNonZero(Modules.Select(module => module.StatAverages));
+        stats = stats.Add(averagedStats);
         
         stats = Modules.Aggregate(stats, (current, module) => current.Scale(module.StatMultipliers));
         return MioBonus is null ? stats : stats.Scale(MioBonus.PercentBonus);

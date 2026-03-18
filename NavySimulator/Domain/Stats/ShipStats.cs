@@ -55,6 +55,39 @@ public record ShipStats(
             ProductionCost * (1 + percentBonus.ProductionCost));
     }
 
+    public static ShipStats AverageNonZero(IEnumerable<ShipStats> stats)
+    {
+        var statList = stats.ToList();
+
+        var averages = new ShipStats(
+            Speed: AverageNonZero(statList.Select(s => s.Speed)),
+            Organization: AverageNonZero(statList.Select(s => s.Organization)),
+            Hp: AverageNonZero(statList.Select(s => s.Hp)),
+            SurfaceVisibility: AverageNonZero(statList.Select(s => s.SurfaceVisibility)),
+            SubVisibility: AverageNonZero(statList.Select(s => s.SubVisibility)),
+            LightAttack: AverageNonZero(statList.Select(s => s.LightAttack)),
+            LightPiercing: AverageNonZero(statList.Select(s => s.LightPiercing)),
+            HeavyAttack: AverageNonZero(statList.Select(s => s.HeavyAttack)),
+            HeavyPiercing: AverageNonZero(statList.Select(s => s.HeavyPiercing)),
+            TorpedoAttack: AverageNonZero(statList.Select(s => s.TorpedoAttack)),
+            Armor: AverageNonZero(statList.Select(s => s.Armor)),
+            LightHitChangeFactor: AverageNonZero(statList.Select(s => s.LightHitChangeFactor)),
+            HeavyHitChangeFactor: AverageNonZero(statList.Select(s => s.HeavyHitChangeFactor)),
+            ProductionCost: AverageNonZero(statList.Select(s => s.ProductionCost)))
+        {
+            TorpedoHitChangeFactor = AverageNonZero(statList.Select(s => s.TorpedoHitChangeFactor)),
+            DepthChargeHitChangeFactor = AverageNonZero(statList.Select(s => s.DepthChargeHitChangeFactor))
+        };
+
+        return averages;
+    }
+
+    private static double AverageNonZero(IEnumerable<double> values)
+    {
+        var nonZero = values.Where(value => value != 0).ToList();
+        return nonZero.Count == 0 ? 0 : nonZero.Average();
+    }
+
     public double TorpedoHitChangeFactor { get; set; }
     public double DepthChargeHitChangeFactor { get; set; }
 }
