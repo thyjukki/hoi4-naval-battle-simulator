@@ -5,6 +5,7 @@ public class BattleSimulator
     public BattleResult Simulate(BattleScenario scenario)
     {
         var hourlyLog = new List<string>();
+        var allActions = new List<ActionResult>();
         var cooldowns = new Dictionary<(string ShipID, WeaponType Weapon), int>();
         var random = new Random(42);
 
@@ -45,6 +46,8 @@ public class BattleSimulator
 
             ApplyActionDamage(attackerActions);
             ApplyActionDamage(defenderActions);
+            allActions.AddRange(attackerActions);
+            allActions.AddRange(defenderActions);
 
             var attackerAliveCount = GetAliveShipCount(scenario.Attacker.Fleet.Ships);
             var defenderAliveCount = GetAliveShipCount(scenario.Defender.Fleet.Ships);
@@ -54,7 +57,7 @@ public class BattleSimulator
 
             hourlyLog.Add(
                 $"Hour {hour}: " +
-                $"attacker(scree§n:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
+                $"attacker(screen:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
                 $"screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
                 $"defender(screen:{defenderLines.Screens.Count}, capital:{defenderLines.Capitals.Count}, carrier:{defenderLines.Carriers.Count}, sub:{defenderLines.Submarines.Count}) " +
                 $"screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
@@ -71,12 +74,12 @@ public class BattleSimulator
             if (attackerAliveCount == attackerRetreatedCount || defenderAliveCount == defenderRetreatedCount)
             {
                 hourlyLog.Add($"Hour {hour}: Battle ended since one side has retreated");
-                return BuildResult(scenario, hour, attackerAliveCount, defenderAliveCount, attackerRetreatedCount, defenderRetreatedCount, hourlyLog);
+                return BuildResult(scenario, hour, attackerAliveCount, defenderAliveCount, attackerRetreatedCount, defenderRetreatedCount, hourlyLog, allActions);
             }
             
             if (attackerAliveCount == 0 || defenderAliveCount == 0)
             {
-                return BuildResult(scenario, hour, attackerAliveCount, defenderAliveCount, attackerRetreatedCount, defenderRetreatedCount, hourlyLog);
+                return BuildResult(scenario, hour, attackerAliveCount, defenderAliveCount, attackerRetreatedCount, defenderRetreatedCount, hourlyLog, allActions);
             }
         }
 
@@ -86,7 +89,7 @@ public class BattleSimulator
         var finalAttackerRetreated = GetRetreatedShipCount(scenario.Attacker.Fleet.Ships);
         var finalDefenderRetreated = GetRetreatedShipCount(scenario.Defender.Fleet.Ships);
 
-        return BuildResult(scenario, scenario.MaxHours, finalAttackerAlive, finalDefenderAlive, finalAttackerRetreated, finalDefenderRetreated, hourlyLog);
+        return BuildResult(scenario, scenario.MaxHours, finalAttackerAlive, finalDefenderAlive, finalAttackerRetreated, finalDefenderRetreated, hourlyLog, allActions);
     }
 
     private static List<Ship> FilterRetreated(List<Ship> ships)
@@ -239,6 +242,7 @@ public class BattleSimulator
         var retreatChance = Hoi4Defines.COMBAT_RETREAT_DECISION_CHANCE;
         if (!(Random.Shared.NextDouble() < retreatChance)) return;
         ship.CurrentStatus = ShipStatus.Retreating;
+        ship.AttemptedRetreat = true;
         ship.RetreatProgress = 0;
     }
 
@@ -307,6 +311,11 @@ public class BattleSimulator
             return ActionResult.Skip(shooter, weapon, "no-valid-target");
         }
 
+        var defenderStats = selectedTarget.Target.Design.GetFinalStats();
+        var defenderVisibility = selectedTarget.Target.Design.Hull.Role == ShipRole.Submarine
+            ? defenderStats.SubVisibility
+            : defenderStats.SurfaceVisibility;
+
         cooldowns[cooldownKey] = hour + GetCooldownHours(weapon);
         var finalHitChance = CalculateFinalHitChance(
             shooter,
@@ -324,7 +333,18 @@ public class BattleSimulator
             damage = CalculateDamage(selectedTarget.Target, attackValue, piercingValue, positioning);
         }
 
-        return ActionResult.Fire(shooter, weapon, selectedTarget, damage, finalHitChance, hitRoll, didHit);
+        return ActionResult.Fire(
+            shooter,
+            weapon,
+            selectedTarget,
+            damage,
+            piercingValue,
+            defenderStats.Armor,
+            defenderStats.Speed,
+            defenderVisibility,
+            finalHitChance,
+            hitRoll,
+            didHit);
     }
 
     private static double CalculateDamage(Ship target, double attackValue, double piercingValue, double positioning)
@@ -625,7 +645,9 @@ public class BattleSimulator
     {
         foreach (var action in actions.Where(action => action.Fired))
         {
+            var targetWasAlive = action.Target is not null && !action.Target.IsSunk;
             action.Target!.ApplyDamage(action.Damage);
+            action.DidKillingBlow = targetWasAlive && action.Target.IsSunk;
         }
     }
 
@@ -711,15 +733,22 @@ public class BattleSimulator
         int defenderShipsRemaining,
         int attackerShipsRetreated,
         int defenderShipsRetreated,
-        List<string> hourlyLog)
+        List<string> hourlyLog,
+        List<ActionResult> allActions)
     {
+        var attackerProductionLost = GetSunkProductionCost(scenario.Attacker.Fleet.Ships);
+        var defenderProductionLost = GetSunkProductionCost(scenario.Defender.Fleet.Ships);
+        var attackerToDefenderProductionLossRatio = SafeRatio(attackerProductionLost, defenderProductionLost);
+        var defenderToAttackerProductionLossRatio = SafeRatio(defenderProductionLost, attackerProductionLost);
+        var shipReports = BuildShipReports(scenario, allActions);
+
         var outcome = "Draw";
 
-        if (attackerShipsRemaining > 0 && defenderShipsRemaining == 0)
+        if (defenderProductionLost > attackerProductionLost)
         {
             outcome = "Attacker Victory";
         }
-        else if (defenderShipsRemaining > 0 && attackerShipsRemaining == 0)
+        else if (attackerProductionLost > defenderProductionLost)
         {
             outcome = "Defender Victory";
         }
@@ -732,7 +761,78 @@ public class BattleSimulator
             defenderShipsRemaining,
             attackerShipsRetreated,
             defenderShipsRetreated,
-            hourlyLog);
+            attackerProductionLost,
+            defenderProductionLost,
+            attackerToDefenderProductionLossRatio,
+            defenderToAttackerProductionLossRatio,
+            hourlyLog,
+            shipReports);
+    }
+
+    private static double GetSunkProductionCost(List<Ship> ships)
+    {
+        return ships.Where(ship => ship.IsSunk).Sum(ship => ship.Design.GetFinalStats().ProductionCost);
+    }
+
+    private static double SafeRatio(double numerator, double denominator)
+    {
+        if (denominator <= 0)
+        {
+            return numerator <= 0 ? 1.0 : double.PositiveInfinity;
+        }
+
+        return numerator / denominator;
+    }
+
+    private static List<ShipBattleReport> BuildShipReports(BattleScenario scenario, List<ActionResult> allActions)
+    {
+        var allShips = scenario.Attacker.Fleet.Ships
+            .Select(ship => (Ship: ship, Side: "Attacker"))
+            .Concat(scenario.Defender.Fleet.Ships.Select(ship => (Ship: ship, Side: "Defender")))
+            .OrderBy(entry => entry.Side)
+            .ThenBy(entry => entry.Ship.ID)
+            .ToList();
+
+        var reports = new List<ShipBattleReport>();
+
+        foreach (var entry in allShips)
+        {
+            var damagedShips = allActions
+                .Where(action => action.ShooterID == entry.Ship.ID && action.Fired && action.Target is not null && action.Damage > 0)
+                .Select(action => new ShipDamageReportEntry(
+                    action.Target!.ID,
+                    action.Weapon,
+                    action.Damage,
+                    action.DidKillingBlow,
+                    action.PiercingValue,
+                    action.FinalHitChance,
+                    action.DefenderArmor,
+                    action.DefenderSpeed,
+                    action.DefenderVisibility))
+                .ToList();
+
+            var didRetreat = entry.Ship.CurrentStatus == ShipStatus.Retreated;
+            var attemptedRetreat = entry.Ship.AttemptedRetreat || didRetreat || entry.Ship.CurrentStatus == ShipStatus.Retreating;
+            var attemptedRetreatButSunk = attemptedRetreat && entry.Ship.IsSunk;
+            var maxHp = entry.Ship.Design.GetFinalStats().Hp;
+            var hpPercentage = maxHp <= 0 ? 0 : entry.Ship.CurrentHP / maxHp;
+
+            reports.Add(new ShipBattleReport(
+                entry.Ship.ID,
+                entry.Side,
+                entry.Ship.IsSunk,
+                didRetreat,
+                attemptedRetreat,
+                attemptedRetreatButSunk,
+                entry.Ship.CurrentHP,
+                maxHp,
+                hpPercentage,
+                entry.Ship.Design.GetFinalStats().ProductionCost,
+                damagedShips.Sum(damageEvent => damageEvent.Damage),
+                damagedShips));
+        }
+
+        return reports;
     }
 }
 

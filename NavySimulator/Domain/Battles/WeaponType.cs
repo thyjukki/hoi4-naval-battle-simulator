@@ -1,6 +1,6 @@
 namespace NavySimulator.Domain;
 
-internal enum WeaponType
+public enum WeaponType
 {
     Light,
     Heavy,

@@ -13,6 +13,11 @@ internal class ActionResult
     public double HitRoll;
     public bool DidHit;
     public string SkipReason;
+    public double PiercingValue;
+    public double DefenderArmor;
+    public double DefenderSpeed;
+    public double DefenderVisibility;
+    public bool DidKillingBlow;
 
     private ActionResult(
         string shooterId,
@@ -24,7 +29,12 @@ internal class ActionResult
         double finalHitChance,
         double hitRoll,
         bool didHit,
-        string skipReason)
+        string skipReason,
+        double piercingValue,
+        double defenderArmor,
+        double defenderSpeed,
+        double defenderVisibility,
+        bool didKillingBlow)
     {
         ShooterID = shooterId;
         Weapon = weapon;
@@ -36,6 +46,11 @@ internal class ActionResult
         HitRoll = hitRoll;
         DidHit = didHit;
         SkipReason = skipReason;
+        PiercingValue = piercingValue;
+        DefenderArmor = defenderArmor;
+        DefenderSpeed = defenderSpeed;
+        DefenderVisibility = defenderVisibility;
+        DidKillingBlow = didKillingBlow;
     }
 
     public static ActionResult Fire(
@@ -43,6 +58,10 @@ internal class ActionResult
         WeaponType weapon,
         SelectedTarget target,
         double damage,
+        double piercingValue,
+        double defenderArmor,
+        double defenderSpeed,
+        double defenderVisibility,
         double finalHitChance,
         double hitRoll,
         bool didHit)
@@ -57,11 +76,16 @@ internal class ActionResult
             finalHitChance,
             hitRoll,
             didHit,
-            string.Empty);
+            string.Empty,
+            piercingValue,
+            defenderArmor,
+            defenderSpeed,
+            defenderVisibility,
+            didKillingBlow: false);
     }
 
     public static ActionResult Skip(Ship shooter, WeaponType weapon, string reason)
     {
-        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason);
+        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason, 0, 0, 0, 0, false);
     }
 }

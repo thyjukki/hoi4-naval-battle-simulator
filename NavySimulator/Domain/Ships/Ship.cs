@@ -8,6 +8,7 @@ public class Ship
     public double CurrentHP;
     public ShipStatus CurrentStatus;
     public double RetreatProgress;
+    public bool AttemptedRetreat;
 
     public Ship(string id, ShipDesign design)
     {

@@ -1,3 +1,5 @@
+using NavySimulator.Domain.Battles;
+
 namespace NavySimulator.Domain;
 
 public class BattleResult
@@ -9,7 +11,12 @@ public class BattleResult
     public int DefenderShipsRemaining;
     public int AttackerShipsRetreated;
     public int DefenderShipsRetreated;
+    public double AttackerProductionLost;
+    public double DefenderProductionLost;
+    public double AttackerToDefenderProductionLossRatio;
+    public double DefenderToAttackerProductionLossRatio;
     public List<string> HourlyLog;
+    public List<ShipBattleReport> ShipReports;
 
     public BattleResult(
         string scenarioId,
@@ -19,7 +26,12 @@ public class BattleResult
         int defenderShipsRemaining,
         int attackerShipsRetreated,
         int defenderShipsRetreated,
-        List<string> hourlyLog)
+        double attackerProductionLost,
+        double defenderProductionLost,
+        double attackerToDefenderProductionLossRatio,
+        double defenderToAttackerProductionLossRatio,
+        List<string> hourlyLog,
+        List<ShipBattleReport> shipReports)
     {
         ScenarioID = scenarioId;
         HoursElapsed = hoursElapsed;
@@ -28,7 +40,12 @@ public class BattleResult
         DefenderShipsRemaining = defenderShipsRemaining;
         AttackerShipsRetreated = attackerShipsRetreated;
         DefenderShipsRetreated = defenderShipsRetreated;
+        AttackerProductionLost = attackerProductionLost;
+        DefenderProductionLost = defenderProductionLost;
+        AttackerToDefenderProductionLossRatio = attackerToDefenderProductionLossRatio;
+        DefenderToAttackerProductionLossRatio = defenderToAttackerProductionLossRatio;
         HourlyLog = hourlyLog;
+        ShipReports = shipReports;
     }
 }
 
