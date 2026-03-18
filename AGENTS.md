@@ -60,18 +60,21 @@
 - Target runtime: `.NET 10` (`<TargetFramework>net10.0</TargetFramework>`).
 - Language features enabled: implicit usings and nullable reference types.
 - Current app entrypoint is top-level statements in `NavySimulator/Program.cs`.
+- `Program.cs` loads scenario data from `NavySimulator/Data/`, runs `BattleSimulator`, and prints hourly logs plus final outcome.
 
 ## Architecture (Current State)
-- Domain is intentionally minimal and centered on ship composition.
-- `Ship` (`NavySimulator/Ship.cs`) owns a `ShipDesign` instance.
-- `ShipDesign` (`NavySimulator/ShipDesign.cs`) owns a `List<IModule>`.
-- `IModule` (`NavySimulator/IModule.cs`) defines the module contract via `string ID { get; }`.
-- Data flow today is constructor-injected object graph: `List<IModule>` -> `ShipDesign` -> `Ship`.
-- No services, persistence, networking, DI container, or plugin loader are present yet.
+- Domain code is organized under `NavySimulator/Domain/` (`Battles`, `Fleets`, `Ships`, `Stats`) in the `NavySimulator.Domain` namespace.
+- Setup/loading code is organized under `NavySimulator/Setup/` (`Contracts/Dto`, `Loading`, `Validation`) in the `NavySimulator.Setup` namespace.
+- `Ship` (`NavySimulator/Domain/Ships/Ship.cs`) owns a `ShipDesign` instance.
+- `ShipDesign` (`NavySimulator/Domain/Ships/ShipDesign.cs`) owns a `Hull`, `List<IModule>`, and optional `MioBonus`.
+- `IModule` (`NavySimulator/Domain/Ships/IModule.cs`) defines the module contract via `string ID { get; }` and `ShipStats StatModifiers { get; }`.
+- Setup data flow is constructor-injected object graph built by `SetupLoader`: `Hull/StatModule/MioBonus` -> `ShipDesign` -> `Ship` -> `Fleet` -> `BattleParticipant` -> `BattleScenario`.
+- `BattleSimulator` (`NavySimulator/Domain/Battles/BattleSimulator.cs`) runs hourly rounds with screening efficiency, deterministic targeting, cooldowns, and hit chance.
+- No networking, database, DI container, or plugin loader are present.
 
 ## Code Patterns to Follow Here
 - Use var for types when it can be used
-- Keep types in the `NavySimulator` namespace and one top-level type per file.
+- Keep domain types in `NavySimulator.Domain`, setup types in `NavySimulator.Setup`, and one top-level type per file.
 - Match existing style of simple POCO/domain types with constructor assignment.
 - Prefer extending the `IModule` contract with concrete module classes rather than adding ad-hoc dictionaries.
 - Keep composition explicit in constructors (as in `Ship` and `ShipDesign`) instead of hidden factories.
@@ -82,17 +85,19 @@
   - `dotnet build NavySimulator.sln`
 - Run app:
   - `dotnet run --project NavySimulator/NavySimulator.csproj`
-- Verified behavior as of 2026-03-17: app prints `Hello, World!`.
+- Verified behavior as of 2026-03-18: app prints scenario setup, then simulation hourly logs, then final battle result.
 - There are currently no test projects in the solution; if you add tests, include them in `NavySimulator.sln`.
 
 ## Agent Workflow Tips for This Repo
-- Start edits from domain files (`Ship`, `ShipDesign`, `IModule`) before changing `Program.cs`.
+- For setup/data issues, start in `NavySimulator/Setup/Loading/SetupLoader.cs` and matching DTOs in `NavySimulator/Setup/Contracts/Dto/`.
+- For combat behavior issues, start in `NavySimulator/Domain/Battles/BattleSimulator.cs` and related domain models.
 - When introducing new behavior, demonstrate wiring in `Program.cs` so it is runnable immediately.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 - If adding new projects (e.g., tests), update the solution file so Rider/CLI workflows stay aligned.
 
 ## Known Integration Boundaries
 - External dependencies: none beyond the .NET SDK; no NuGet package references currently.
-- Cross-component communication is in-memory object references only.
+- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls.json`, `modules.json`, `mios.json`, `ship-designs.json`, `force-compositions.json`, `battle-scenario.json`).
+- Cross-component communication is in-memory object references only after setup is loaded.
 - Output artifact is a console executable at `NavySimulator/bin/<Configuration>/net10.0/`.
 

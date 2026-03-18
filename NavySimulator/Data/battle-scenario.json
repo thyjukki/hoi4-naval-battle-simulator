@@ -1,22 +1,22 @@
 {
   "battleScenario": {
-    "id": "north_sea_probe",
-    "terrain": "shallow_sea",
+    "id": "base_test",
+    "terrain": "ocean",
     "weather": "clear",
-    "maxHours": 24,
+    "maxHours": 1000,
     "attacker": {
-      "fleetID": "task_force_alpha",
-      "commander": "Rear Admiral Hale",
-      "doctrine": "Trade Interdiction",
-      "technologyLevel": "1939",
-      "nationModifier": "Night Fighting Training"
+      "fleetID": "task_force_rom_test",
+      "commander": "",
+      "doctrine": "",
+      "technologyLevel": "",
+      "nationModifier": ""
     },
     "defender": {
-      "fleetID": "home_fleet_beta",
-      "commander": "Vice Admiral Ward",
-      "doctrine": "Fleet in Being",
-      "technologyLevel": "1938",
-      "nationModifier": "Damage Control Schools"
+      "fleetID": "task_force_bul_test",
+      "commander": "",
+      "doctrine": "",
+      "technologyLevel": "",
+      "nationModifier": ""
     }
   }
 }

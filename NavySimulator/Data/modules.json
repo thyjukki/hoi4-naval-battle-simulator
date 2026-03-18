@@ -3,37 +3,51 @@
     {
       "id": "light_battery_1",
       "statModifiers": {
-        "lightAttack": 6
+        "lightAttack": 1,
+        "lightPiercing": 3,
+        "productionCost": 90,
+        "speedMultiplier": -0.005
       }
     },
     {
-      "id": "light_battery_2",
+      "id": "medium_light_battery_1",
       "statModifiers": {
-        "lightAttack": 8
+        "lightAttack": 3,
+        "lightPiercing": 4,
+        "productionCost": 400,
+        "speedMultiplier": -0.04
       }
     },
     {
-      "id": "heavy_battery_1",
+      "id": "engine_dd_1",
       "statModifiers": {
-        "heavyAttack": 12
+        "speedMultiplier": 0.1,
+        "productionCost": 90
       }
     },
     {
-      "id": "torpedo_launcher_1",
+      "id": "engine_cruiser_1",
       "statModifiers": {
-        "torpedoAttack": 8
+        "speedMultiplier": 0.2,
+        "productionCost": 400
       }
     },
     {
-      "id": "engine_2",
+      "id": "armor_cruiser_1",
       "statModifiers": {
-        "speed": 3
+        "speedMultiplier": -0.05,
+        "torpedoDamageReductionMultiplier": 0.05,
+        "incomingTorpedoCriticalHitChanceMultiplier": -0.05,
+        "armor": 3,
+        "productionCostMultiplier": 0.75
       }
     },
     {
-      "id": "armor_1",
+      "id": "fire_control_0",
       "statModifiers": {
-        "armor": 2
+        "lightHitChangeMultiplier": 0.025,
+        "heavyHitChangeMultiplier": 0.025,
+        "productionCost": 60
       }
     }
   ]

@@ -1,4 +1,5 @@
 ﻿using NavySimulator.Domain;
+using NavySimulator.Domain.Battles;
 using NavySimulator.Setup;
 
 var dataDirectoryPath = Path.Combine(AppContext.BaseDirectory, "Data");
@@ -61,4 +62,6 @@ Console.WriteLine($"Result: {result.Outcome}");
 Console.WriteLine($"Hours Elapsed: {result.HoursElapsed}");
 Console.WriteLine($"Attacker Ships Remaining: {result.AttackerShipsRemaining}");
 Console.WriteLine($"Defender Ships Remaining: {result.DefenderShipsRemaining}");
+Console.WriteLine($"Attacker Ships Retreated: {result.AttackerShipsRetreated}");
+Console.WriteLine($"Defender Ships Retreated: {result.DefenderShipsRetreated}");
 

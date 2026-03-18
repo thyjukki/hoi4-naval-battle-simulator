@@ -1,45 +1,33 @@
 {
   "hulls": [
     {
-      "id": "destroyer_hull_1936",
-      "role": "Screen",
-      "baseStats": {
-        "speed": 35,
-        "organization": 30,
-        "hp": 180,
-        "surfaceVisibility": 18,
-        "subVisibility": 8,
-        "lightAttack": 8,
-        "torpedoAttack": 4,
-        "armor": 2
-      }
-    },
-    {
-      "id": "light_cruiser_hull_1936",
+      "id": "destroyer_hull_1922",
       "role": "Screen",
       "baseStats": {
         "speed": 32,
-        "organization": 40,
-        "hp": 320,
-        "surfaceVisibility": 22,
-        "subVisibility": 10,
-        "lightAttack": 10,
-        "torpedoAttack": 2,
-        "armor": 6
+        "organization": 35,
+        "hp": 30,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 450
       }
     },
     {
-      "id": "heavy_cruiser_hull_1936",
-      "role": "Capital",
+      "id": "light_cruiser_hull_1922",
+      "role": "Screen",
       "baseStats": {
-        "speed": 30,
-        "organization": 50,
-        "hp": 480,
-        "surfaceVisibility": 28,
-        "subVisibility": 12,
-        "lightAttack": 6,
-        "heavyAttack": 20,
-        "armor": 10
+        "speed": 28,
+        "organization": 40,
+        "hp": 70,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 2000
       }
     }
   ]

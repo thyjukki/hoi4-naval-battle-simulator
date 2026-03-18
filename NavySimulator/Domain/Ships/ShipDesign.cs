@@ -15,12 +15,7 @@ public class ShipDesign
 
     public ShipStats GetFinalStats()
     {
-        ShipStats stats = Hull.BaseStats;
-
-        foreach (IModule module in Modules)
-        {
-            stats = stats.Add(module.StatModifiers);
-        }
+        var stats = Modules.Aggregate(Hull.BaseStats, (current, module) => current.Add(module.StatModifiers));
 
         return MioBonus is null ? stats : stats.Scale(MioBonus.PercentBonus);
     }

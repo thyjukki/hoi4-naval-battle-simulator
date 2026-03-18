@@ -7,6 +7,8 @@ public class BattleResult
     public string Outcome;
     public int AttackerShipsRemaining;
     public int DefenderShipsRemaining;
+    public int AttackerShipsRetreated;
+    public int DefenderShipsRetreated;
     public List<string> HourlyLog;
 
     public BattleResult(
@@ -15,6 +17,8 @@ public class BattleResult
         string outcome,
         int attackerShipsRemaining,
         int defenderShipsRemaining,
+        int attackerShipsRetreated,
+        int defenderShipsRetreated,
         List<string> hourlyLog)
     {
         ScenarioID = scenarioId;
@@ -22,6 +26,8 @@ public class BattleResult
         Outcome = outcome;
         AttackerShipsRemaining = attackerShipsRemaining;
         DefenderShipsRemaining = defenderShipsRemaining;
+        AttackerShipsRetreated = attackerShipsRetreated;
+        DefenderShipsRetreated = defenderShipsRetreated;
         HourlyLog = hourlyLog;
     }
 }

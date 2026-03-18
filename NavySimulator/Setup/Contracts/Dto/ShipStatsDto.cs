@@ -10,7 +10,9 @@ public class ShipStatsDto
     public double SurfaceVisibility { get; set; }
     public double SubVisibility { get; set; }
     public double LightAttack { get; set; }
+    public double LightPiercing { get; set; }
     public double HeavyAttack { get; set; }
+    public double HeavyPiercing { get; set; }
     public double TorpedoAttack { get; set; }
     public double Armor { get; set; }
 
@@ -23,7 +25,9 @@ public class ShipStatsDto
             surfaceVisibility: SurfaceVisibility,
             subVisibility: SubVisibility,
             lightAttack: LightAttack,
+            lightPiercing: LightPiercing,
             heavyAttack: HeavyAttack,
+            heavyPiercing: HeavyPiercing,
             torpedoAttack: TorpedoAttack,
             armor: Armor);
     }
