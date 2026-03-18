@@ -52,16 +52,53 @@ Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)")
 var simulator = new BattleSimulator();
 var result = simulator.Simulate(scenario);
 
-foreach (var line in result.HourlyLog)
+var outputDirectoryPath = BuildRunOutputDirectory(scenario.ID);
+var hourlyLogFilePath = Path.Combine(outputDirectoryPath, "hourly-log.txt");
+File.WriteAllLines(hourlyLogFilePath, result.HourlyLog);
+var summaryFilePath = Path.Combine(outputDirectoryPath, "summary.txt");
+
+string[] summaryLines =
+[
+    $"Scenario: {scenario.ID}",
+    $"Terrain: {scenario.Terrain}",
+    $"Weather: {scenario.Weather}",
+    $"Max Hours: {scenario.MaxHours}",
+    string.Empty,
+    $"Result: {result.Outcome}",
+    $"Hours Elapsed: {result.HoursElapsed}",
+    $"Attacker Ships Remaining: {result.AttackerShipsRemaining}",
+    $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
+    $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
+    $"Defender Ships Retreated: {result.DefenderShipsRetreated}"
+];
+
+File.WriteAllLines(summaryFilePath, summaryLines);
+
+Console.WriteLine();
+foreach (var line in summaryLines.Skip(5))
 {
     Console.WriteLine(line);
 }
+Console.WriteLine($"Hourly log file: {hourlyLogFilePath}");
+Console.WriteLine($"Summary file: {summaryFilePath}");
 
-Console.WriteLine();
-Console.WriteLine($"Result: {result.Outcome}");
-Console.WriteLine($"Hours Elapsed: {result.HoursElapsed}");
-Console.WriteLine($"Attacker Ships Remaining: {result.AttackerShipsRemaining}");
-Console.WriteLine($"Defender Ships Remaining: {result.DefenderShipsRemaining}");
-Console.WriteLine($"Attacker Ships Retreated: {result.AttackerShipsRetreated}");
-Console.WriteLine($"Defender Ships Retreated: {result.DefenderShipsRetreated}");
+static string BuildRunOutputDirectory(string scenarioId)
+{
+    var sanitizedScenarioName = SanitizePathSegment(scenarioId);
+    var runtime = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+    var outputDirectoryPath = Path.Combine(Directory.GetCurrentDirectory(), "output", $"{sanitizedScenarioName}_{runtime}");
+    Directory.CreateDirectory(outputDirectoryPath);
+    return outputDirectoryPath;
+}
+
+static string SanitizePathSegment(string segment)
+{
+    var invalidChars = Path.GetInvalidFileNameChars();
+    var sanitizedChars = segment
+        .Select(ch => invalidChars.Contains(ch) ? '_' : ch)
+        .ToArray();
+
+    var sanitized = new string(sanitizedChars).Trim();
+    return string.IsNullOrWhiteSpace(sanitized) ? "scenario" : sanitized;
+}
 
