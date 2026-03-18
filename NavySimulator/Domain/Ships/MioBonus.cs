@@ -1,3 +1,5 @@
+using NavySimulator.Domain.Stats;
+
 namespace NavySimulator.Domain;
 
 public class MioBonus

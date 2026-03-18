@@ -1,4 +1,5 @@
 using NavySimulator.Domain;
+using NavySimulator.Domain.Stats;
 
 namespace NavySimulator.Setup.Contracts;
 
@@ -15,21 +16,27 @@ public class ShipStatsDto
     public double HeavyPiercing { get; set; }
     public double TorpedoAttack { get; set; }
     public double Armor { get; set; }
+    public double LightHitChangeFactor { get; set; }
+    public double HeavyHitChangeFactor { get; set; }
+    public double ProductionCost { get; set; }
 
     public ShipStats ToDomain()
     {
         return new ShipStats(
-            speed: Speed,
-            organization: Organization,
-            hp: HP,
-            surfaceVisibility: SurfaceVisibility,
-            subVisibility: SubVisibility,
-            lightAttack: LightAttack,
-            lightPiercing: LightPiercing,
-            heavyAttack: HeavyAttack,
-            heavyPiercing: HeavyPiercing,
-            torpedoAttack: TorpedoAttack,
-            armor: Armor);
+            Speed: Speed,
+            Organization: Organization,
+            Hp: HP,
+            SurfaceVisibility: SurfaceVisibility,
+            SubVisibility: SubVisibility,
+            LightAttack: LightAttack,
+            LightPiercing: LightPiercing,
+            HeavyAttack: HeavyAttack,
+            HeavyPiercing: HeavyPiercing,
+            TorpedoAttack: TorpedoAttack,
+            Armor: Armor,
+            LightHitChangeFactor: LightHitChangeFactor,
+            HeavyHitChangeFactor: HeavyHitChangeFactor,
+            ProductionCost: ProductionCost);
     }
 }
 

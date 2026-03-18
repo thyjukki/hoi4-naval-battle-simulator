@@ -37,6 +37,8 @@ public static class Hoi4Defines
 
     public const double ScreeningBonusRetreatSpeed = 0.25;
     public const double CapitalScreeningBonusRetreatSpeed = 0.2;
+
+    public const double ScreeningVisibiliityBonus = -0.1;
     
     public const double NightRetreatSpeed = 0.1;
     public const double NightHitChange = -0.25;

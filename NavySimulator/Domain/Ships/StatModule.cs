@@ -1,15 +1,12 @@
+using NavySimulator.Domain.Stats;
+
 namespace NavySimulator.Domain;
 
-public class StatModule : IModule
+public class StatModule(string id, ShipStats statModifiers, ShipStats statMultipliers)
 {
-    public string ID { get; }
-    public ShipStats StatModifiers { get; }
-
-    public StatModule(string id, ShipStats statModifiers)
-    {
-        ID = id;
-        StatModifiers = statModifiers;
-    }
+    public string ID { get; } = id;
+    public ShipStats StatModifiers { get; } = statModifiers;
+    public ShipStats StatMultipliers { get; } = statMultipliers;
 }
 
 

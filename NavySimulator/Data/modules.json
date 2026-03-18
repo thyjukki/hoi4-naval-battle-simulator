@@ -4,9 +4,48 @@
       "id": "light_battery_1",
       "statModifiers": {
         "lightAttack": 1,
-        "lightPiercing": 3,
-        "productionCost": 90,
-        "speedMultiplier": -0.005
+        "lightPiercing": 0.1,
+        "lightPiercingAverage": 3,
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": -0.005
+      }
+    },
+    {
+      "id": "light_battery_2",
+      "statModifiers": {
+        "lightAttack": 2,
+        "lightPiercing": 0.15,
+        "lightPiercingAverage": 4,
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "light_battery_3",
+      "statModifiers": {
+        "lightAttack": 3,
+        "lightPiercing": 0.2,
+        "lightPiercingAverage": 5,
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": -0.015
+      }
+    },
+    {
+      "id": "light_battery_4",
+      "statModifiers": {
+        "lightAttack": 5,
+        "lightPiercing": 0.5,
+        "lightPiercingAverage": 6,
+        "productionCost": 180
+      },
+      "statMultipliers": {
+        "speed": -0.02
       }
     },
     {
@@ -14,40 +53,327 @@
       "statModifiers": {
         "lightAttack": 3,
         "lightPiercing": 4,
-        "productionCost": 400,
-        "speedMultiplier": -0.04
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": -0.04
+      }
+    },
+    {
+      "id": "medium_light_battery_2",
+      "statModifiers": {
+        "lightAttack": 6,
+        "lightPiercingAverage": 6,
+        "productionCost": 450
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "medium_light_battery_3",
+      "statModifiers": {
+        "lightAttack": 9,
+        "lightPiercingAverage": 8,
+        "productionCost": 500
+      },
+      "statMultipliers": {
+        "speed": -0.06
+      }
+    },
+    {
+      "id": "medium_light_battery_4",
+      "statModifiers": {
+        "lightAttack": 12,
+        "lightPiercing": 10,
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": -0.07
       }
     },
     {
       "id": "engine_dd_1",
       "statModifiers": {
-        "speedMultiplier": 0.1,
         "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": 0.1
+      }
+    },
+    {
+      "id": "engine_dd_2",
+      "statModifiers": {
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": 0.15
+      }
+    },
+    {
+      "id": "engine_dd_3",
+      "statModifiers": {
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_dd_4",
+      "statModifiers": {
+        "productionCost": 180
+      },
+      "statMultipliers": {
+        "speed": 0.25
       }
     },
     {
       "id": "engine_cruiser_1",
       "statModifiers": {
-        "speedMultiplier": 0.2,
         "productionCost": 400
+      },
+       "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_cruiser_2",
+      "statModifiers": {
+        "productionCost": 480
+      },
+      "statMultipliers": {
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "engine_cruiser_3",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "engine_cruiser_4",
+      "statModifiers": {
+        "productionCost": 670
+      },
+      "statMultipliers": {
+        "speed": 0.35
+      }
+    },
+    {
+      "id": "engine_heavy_1",
+      "statModifiers": {
+        "productionCost": 1800
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_heavy_2",
+      "statModifiers": {
+        "productionCost": 2200
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "engine_heavy_3",
+      "statModifiers": {
+        "productionCost": 2800
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "engine_heavy_4",
+      "statModifiers": {
+        "productionCost": 3200
+      },
+      "statMultipliers": {
+        "speed": 0.6
+      }
+    },
+    {
+      "id": "engine_carrier_1",
+      "statModifiers": {
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "engine_carrier_2",
+      "statModifiers": {
+        "productionCost": 475
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "engine_carrier_3",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "engine_carrier_4",
+      "statModifiers": {
+        "productionCost": 625
+      },
+      "statMultipliers": {
+        "speed": 0.6
       }
     },
     {
       "id": "armor_cruiser_1",
       "statModifiers": {
-        "speedMultiplier": -0.05,
-        "torpedoDamageReductionMultiplier": 0.05,
-        "incomingTorpedoCriticalHitChanceMultiplier": -0.05,
-        "armor": 3,
-        "productionCostMultiplier": 0.75
+        "torpedoDamageReductionFactor": 0.05,
+        "incomingTorpedoCriticalHitChanceFactor": -0.05,
+        "armor": 3
+      },
+      "statMultipliers": {
+        "speed": -0.05,
+        "productionCost": 0.075
+      }
+    },
+    {
+      "id": "armor_cruiser_2",
+      "statModifiers": {
+        "incomingTorpedoCriticalHitChanceFactor": -0.1,
+        "torpedoDamageReductionFactor": 0.1,
+        "armor": 6.5
+      },
+      "statMultipliers": {
+        "speed": -0.075,
+        "productionCost": 0.1,
+        "hp": 0.1
+      }
+    },
+    {
+      "id": "armor_cruiser_3",
+      "statModifiers": {
+        "incomingTorpedoCriticalHitChanceFactor": -0.15,
+        "torpedoDamageReductionFactor": 0.15,
+        "armor": 8.5
+      },
+      "statMultipliers": {
+        "speed": -0.1,
+        "productionCost": 0.125,
+        "hp": 0.2
+      }
+    },
+    {
+      "id": "armor_cruiser_4",
+      "statModifiers": {
+        "incomingTorpedoCriticalHitChanceFactor": -0.2,
+        "torpedoDamageReductionFactor": 0.2,
+        "armor": 11
+      },
+      "statMultipliers": {
+        "speed": -0.125,
+        "productionCost": 0.15,
+        "hp": 0.5
       }
     },
     {
       "id": "fire_control_0",
       "statModifiers": {
-        "lightHitChangeMultiplier": 0.025,
-        "heavyHitChangeMultiplier": 0.025,
+        "lightHitChangeFactor": 0.025,
+        "heavyHitChangeFactor": 0.025,
         "productionCost": 60
+      }
+    },
+    {
+      "id": "fire_control_1",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.05,
+        "heavyHitChangeFactor": 0.05,
+        "antiAirMultiplier": 0.025,
+        "productionCost": 135
+      },
+      "statMultipliers": {
+        "antiAir": 0.025
+      }
+    },
+    {
+      "id": "fire_control_2",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.075,
+        "heavyHitChangeFactor": 0.075,
+        "productionCost": 165
+      },
+      "statMultipliers": {
+        "antiAir": 0.005
+      }
+    },
+    {
+      "id": "fire_control_3",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.1,
+        "heavyHitChangeFactor": 0.1,
+        "productionCost": 225
+      },
+      "statMultipliers": {
+        "antiAir": 0.075
+      }
+    },
+    {
+      "id": "radar_1",
+      "statModifiers": {
+        "surfaceDetection": 3,
+        "heavyHitChangeFactor": 0.1,
+        "productionCost": 100
+      }
+    },
+    {
+      "id": "radar_2",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.025,
+        "heavyHitChangeFactor": 0.025,
+        "surfaceDetection": 5,
+        "subDetection": 2,
+        "productionCost": 130
+      },
+      "statMultipliers": {
+        "antiAir": 0.025
+      }
+    },
+    {
+      "id": "radar_3",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.05,
+        "heavyHitChangeFactor": 0.05,
+        "surfaceDetection": 7,
+        "subDetection": 6,
+        "productionCost": 160
+      },
+      "statMultipliers": {
+        "antiAir": 0.05
+      }
+    },
+    {
+      "id": "radar_4",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.075,
+        "heavyHitChangeFactor": 0.075,
+        "surfaceDetection": 9,
+        "subDetection": 14,
+        "productionCost": 190
+      },
+      "statMultipliers": {
+        "antiAir": 0.075
       }
     }
   ]

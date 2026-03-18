@@ -1,51 +1,28 @@
-namespace NavySimulator.Domain;
+namespace NavySimulator.Domain.Stats;
 
-public class ShipStats
+public record ShipStats(
+    double Speed = 0,
+    double Organization = 0,
+    double Hp = 0,
+    double SurfaceVisibility = 0,
+    double SubVisibility = 0,
+    double LightAttack = 0,
+    double LightPiercing = 0,
+    double HeavyAttack = 0,
+    double HeavyPiercing = 0,
+    double TorpedoAttack = 0,
+    double Armor = 0,
+    double LightHitChangeFactor = 0,
+    double HeavyHitChangeFactor = 0,
+    double ProductionCost = 0)
 {
-    public double Speed;
-    public double Organization;
-    public double HP;
-    public double SurfaceVisibility;
-    public double SubVisibility;
-    public double LightAttack;
-    public double LightPiercing;
-    public double HeavyAttack;
-    public double HeavyPiercing;
-    public double TorpedoAttack;
-    public double Armor;
-
-    public ShipStats(
-        double speed = 0,
-        double organization = 0,
-        double hp = 0,
-        double surfaceVisibility = 0,
-        double subVisibility = 0,
-        double lightAttack = 0,
-        double lightPiercing = 0,
-        double heavyAttack = 0,
-        double heavyPiercing = 0,
-        double torpedoAttack = 0,
-        double armor = 0)
-    {
-        Speed = speed;
-        Organization = organization;
-        HP = hp;
-        SurfaceVisibility = surfaceVisibility;
-        SubVisibility = subVisibility;
-        LightAttack = lightAttack;
-        LightPiercing = lightPiercing;
-        HeavyAttack = heavyAttack;
-        HeavyPiercing = heavyPiercing;
-        TorpedoAttack = torpedoAttack;
-        Armor = armor;
-    }
 
     public ShipStats Add(ShipStats other)
     {
         return new ShipStats(
             Speed + other.Speed,
             Organization + other.Organization,
-            HP + other.HP,
+            Hp + other.Hp,
             SurfaceVisibility + other.SurfaceVisibility,
             SubVisibility + other.SubVisibility,
             LightAttack + other.LightAttack,
@@ -53,24 +30,33 @@ public class ShipStats
             HeavyAttack + other.HeavyAttack,
             HeavyPiercing + other.HeavyPiercing,
             TorpedoAttack + other.TorpedoAttack,
-            Armor + other.Armor);
+            Armor + other.Armor,
+            LightHitChangeFactor + other.LightHitChangeFactor,
+            HeavyHitChangeFactor + other.HeavyHitChangeFactor,
+            ProductionCost + other.ProductionCost);
     }
 
     public ShipStats Scale(ShipStats percentBonus)
     {
         return new ShipStats(
-            Speed * (1 + percentBonus.Speed / 100.0),
-            Organization * (1 + percentBonus.Organization / 100.0),
-            HP * (1 + percentBonus.HP / 100.0),
-            SurfaceVisibility * (1 + percentBonus.SurfaceVisibility / 100.0),
-            SubVisibility * (1 + percentBonus.SubVisibility / 100.0),
-            LightAttack * (1 + percentBonus.LightAttack / 100.0),
-            LightPiercing * (1 + percentBonus.LightPiercing / 100.0),
-            HeavyAttack * (1 + percentBonus.HeavyAttack / 100.0),
-            HeavyPiercing  * (1 + percentBonus.HeavyPiercing / 100.0),
-            TorpedoAttack * (1 + percentBonus.TorpedoAttack / 100.0),
-            Armor * (1 + percentBonus.Armor / 100.0));
+            Speed * (1 + percentBonus.Speed),
+            Organization * (1 + percentBonus.Organization),
+            Hp * (1 + percentBonus.Hp),
+            SurfaceVisibility * (1 + percentBonus.SurfaceVisibility),
+            SubVisibility * (1 + percentBonus.SubVisibility),
+            LightAttack * (1 + percentBonus.LightAttack),
+            LightPiercing * (1 + percentBonus.LightPiercing),
+            HeavyAttack * (1 + percentBonus.HeavyAttack),
+            HeavyPiercing  * (1 + percentBonus.HeavyPiercing),
+            TorpedoAttack * (1 + percentBonus.TorpedoAttack),
+            Armor * (1 + percentBonus.Armor),
+            LightHitChangeFactor * (1 + percentBonus.LightHitChangeFactor),
+            HeavyHitChangeFactor * (1 + percentBonus.HeavyHitChangeFactor),
+            ProductionCost * (1 + percentBonus.ProductionCost));
     }
+
+    public double TorpedoHitChangeFactor { get; set; }
+    public double DepthChargeHitChangeFactor { get; set; }
 }
 
 

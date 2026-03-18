@@ -15,7 +15,7 @@ public class Ship
         Design = design;
         var effectiveStats = design.GetFinalStats();
         CurrentOrganization = effectiveStats.Organization;
-        CurrentHP = effectiveStats.HP;
+        CurrentHP = effectiveStats.Hp;
     }
 
     public Ship(ShipDesign design)
@@ -36,7 +36,7 @@ public class Ship
         CurrentHP = Math.Max(0, CurrentHP - hpDamage);
         
         var orgDamage = damage * Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
-        orgDamage *= 1.0 - (CurrentHP / Design.GetFinalStats().HP);
+        orgDamage *= 1.0 - (CurrentHP / Design.GetFinalStats().Hp);
         
         CurrentOrganization = Math.Max(0, CurrentOrganization - orgDamage);
     }

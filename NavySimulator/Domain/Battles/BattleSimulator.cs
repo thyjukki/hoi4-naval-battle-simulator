@@ -54,7 +54,7 @@ public class BattleSimulator
 
             hourlyLog.Add(
                 $"Hour {hour}: " +
-                $"attacker(screen:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
+                $"attacker(scree§n:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
                 $"screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
                 $"defender(screen:{defenderLines.Screens.Count}, capital:{defenderLines.Capitals.Count}, carrier:{defenderLines.Carriers.Count}, sub:{defenderLines.Submarines.Count}) " +
                 $"screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
@@ -233,7 +233,7 @@ public class BattleSimulator
             return;
         } 
         
-        var remainingHpRatio = ship.CurrentHP / ship.Design.GetFinalStats().HP;
+        var remainingHpRatio = ship.CurrentHP / ship.Design.GetFinalStats().Hp;
 
         if (!(remainingHpRatio < Hoi4Defines.CombatMinStrRetreatChance)) return;
         var retreatChance = Hoi4Defines.COMBAT_RETREAT_DECISION_CHANCE;
@@ -313,7 +313,8 @@ public class BattleSimulator
             selectedTarget.Target,
             weapon,
             attackerScreening,
-            defenderScreening);
+            defenderScreening,
+            hour);
         var hitRoll = random.NextDouble();
         var didHit = hitRoll <= finalHitChance;
 
@@ -351,13 +352,14 @@ public class BattleSimulator
         Ship target,
         WeaponType weapon,
         ScreeningSummary attackerScreening,
-        ScreeningSummary defenderScreening)
+        ScreeningSummary defenderScreening,
+        int hour)
     {
         var baseHitChance = GetBaseHitChance(weapon);
+        var modifierPipeline = GetHitChanceModifier(shooter, weapon, attackerScreening, hour);
+        var shipHitProfile = CalculateShipHitProfile(target, defenderScreening);
         var weaponHitProfile = GetWeaponHitProfile(weapon);
-        var shipHitProfile = CalculateShipHitProfile(target);
         var profileModifier = Math.Min(Math.Pow(shipHitProfile / weaponHitProfile, 2), 1.0);
-        var modifierPipeline = GetHitChanceModifier(shooter, target, weapon, attackerScreening, defenderScreening);
 
         return Math.Max(baseHitChance * modifierPipeline * profileModifier, Hoi4Defines.COMBAT_MIN_HIT_CHANCE);
     }
@@ -383,10 +385,14 @@ public class BattleSimulator
         };
     }
 
-    private static double CalculateShipHitProfile(Ship target)
+    private static double CalculateShipHitProfile(Ship target, ScreeningSummary defenderScreening)
     {
         var stats = target.Design.GetFinalStats();
         var visibility = target.Design.Hull.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility;
+        
+        visibility *= 1 + (Hoi4Defines.ScreeningVisibiliityBonus * defenderScreening.ScreeningEfficiency);
+        
+        
         var denominator = Hoi4Defines.HIT_PROFILE_SPEED_FACTOR * stats.Speed + Hoi4Defines.HIT_PROFILE_SPEED_BASE;
 
         return denominator <= 0
@@ -396,19 +402,34 @@ public class BattleSimulator
 
     private static double GetHitChanceModifier(
         Ship shooter,
-        Ship target,
         WeaponType weapon,
         ScreeningSummary attackerScreening,
-        ScreeningSummary defenderScreening)
+        int hour)
     {
-        _ = shooter;
-        _ = target;
-        _ = weapon;
-        _ = attackerScreening;
-        _ = defenderScreening;
+        var modifier = 1.0;
+        var timeOfDay = hour % 24;
+        if (timeOfDay is > 17 or < 5)
+        {
+            modifier *= 1.0 + Hoi4Defines.NightHitChange;
+        }
 
-        // Placeholder pipeline for night/weather/commander/doctrine/screening hit modifiers.
-        return 1.0;
+        var stats = shooter.Design.GetFinalStats();
+
+        modifier *= weapon switch
+        {
+            WeaponType.Light => 1.0 + stats.LightHitChangeFactor,
+            WeaponType.Heavy => 1.0 + stats.HeavyHitChangeFactor,
+            WeaponType.Torpedo => 1.0 + stats.TorpedoHitChangeFactor,
+            WeaponType.DepthCharge => 1.0 + stats.DepthChargeHitChangeFactor,
+            _ => throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null)
+        };
+
+        if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
+        {
+            modifier *= 1 + 1.3 * attackerScreening.ScreeningEfficiency; // 100 hit chance factor
+        }
+
+        return modifier;
     }
 
     private static List<TargetGroup> GetValidTargetGroups(
@@ -416,52 +437,49 @@ public class BattleSimulator
         BattleLines defenderLines,
         ScreeningSummary defenderScreening)
     {
-        if (weapon == WeaponType.Light)
+        switch (weapon)
         {
-            return GetClosestNonEmptyGroup(defenderLines, includeSubmarines: false);
+            case WeaponType.Light:
+                return GetClosestNonEmptyGroup(defenderLines, includeSubmarines: false);
+            case WeaponType.Heavy:
+                return GetFirstTwoNonEmptyGroups(defenderLines, includeSubmarines: false);
+            case WeaponType.Torpedo:
+            {
+                var groups = new List<TargetGroup>();
+                var canBypassScreens = (1.0 - defenderScreening.ScreeningEfficiency) > 0;
+                var canReachCarrierLine =
+                    canBypassScreens && (1.0 - defenderScreening.CarrierScreeningEfficiency) > 0;
+
+                if (defenderLines.Screens.Count > 0)
+                {
+                    groups.Add(new TargetGroup(GroupType.Screen, defenderLines.Screens));
+                }
+
+                if (canBypassScreens && defenderLines.Capitals.Count > 0)
+                {
+                    groups.Add(new TargetGroup(GroupType.Capital, defenderLines.Capitals));
+                }
+
+                if (canReachCarrierLine && defenderLines.Carriers.Count > 0)
+                {
+                    groups.Add(new TargetGroup(GroupType.Carrier, defenderLines.Carriers));
+                }
+
+                if (canReachCarrierLine && defenderLines.Convoys.Count > 0)
+                {
+                    groups.Add(new TargetGroup(GroupType.Convoy, defenderLines.Convoys));
+                }
+
+                if (groups.Count == 0)
+                {
+                    groups.AddRange(GetClosestNonEmptyGroup(defenderLines, includeSubmarines: false));
+                }
+
+                return groups;
+            }
+            default:
+                return [];
         }
-
-        if (weapon == WeaponType.Heavy)
-        {
-            return GetFirstTwoNonEmptyGroups(defenderLines, includeSubmarines: false);
-        }
-
-        if (weapon == WeaponType.Torpedo)
-        {
-            var groups = new List<TargetGroup>();
-            var canBypassScreens = (1.0 - defenderScreening.ScreeningEfficiency) > 0;
-            var canReachCarrierLine =
-                canBypassScreens && (1.0 - defenderScreening.CarrierScreeningEfficiency) > 0;
-
-            if (defenderLines.Screens.Count > 0)
-            {
-                groups.Add(new TargetGroup(GroupType.Screen, defenderLines.Screens));
-            }
-
-            if (canBypassScreens && defenderLines.Capitals.Count > 0)
-            {
-                groups.Add(new TargetGroup(GroupType.Capital, defenderLines.Capitals));
-            }
-
-            if (canReachCarrierLine && defenderLines.Carriers.Count > 0)
-            {
-                groups.Add(new TargetGroup(GroupType.Carrier, defenderLines.Carriers));
-            }
-
-            if (canReachCarrierLine && defenderLines.Convoys.Count > 0)
-            {
-                groups.Add(new TargetGroup(GroupType.Convoy, defenderLines.Convoys));
-            }
-
-            if (groups.Count == 0)
-            {
-                groups.AddRange(GetClosestNonEmptyGroup(defenderLines, includeSubmarines: false));
-            }
-
-            return groups;
-        }
-
-        return [];
     }
 
     private static List<TargetGroup> GetClosestNonEmptyGroup(BattleLines lines, bool includeSubmarines)
@@ -583,7 +601,7 @@ public class BattleSimulator
             _ => Hoi4Defines.TargetWeightDefault
         };
 
-        var maxHp = Math.Max(1, target.Design.GetFinalStats().HP);
+        var maxHp = Math.Max(1, target.Design.GetFinalStats().Hp);
         var damageRatio = 1.0 - target.CurrentHP / maxHp;
         var damagedWeightBonus = 1.0 + Math.Clamp(damageRatio, 0, 1);
 

@@ -2,13 +2,13 @@
   "shipDesigns": [
     {
       "id": "test_dd",
-      "hullID": "destroyer_hull_1922",
-      "moduleIDs": ["light_battery_1", "engine_dd_1"]
+      "hullID": "destroyer_hull_3",
+      "moduleIDs": ["light_battery_3", "fire_control_3", "engine_dd_3"]
     },
     {
       "id": "test_cl",
-      "hullID": "light_cruiser_hull_1922",
-      "moduleIDs": ["medium_light_battery_1", "fire_control_0", "engine_dd_1", "armor_cruiser_1"]
+      "hullID": "light_cruiser_hull_3",
+      "moduleIDs": ["medium_light_battery_3", "light_battery_3", "light_battery_3", "light_battery_3", "light_battery_3", "fire_control_0", "engine_cruiser_3", "armor_cruiser_3"]
     }
   ]
 }

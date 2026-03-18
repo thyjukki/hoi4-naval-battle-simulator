@@ -112,7 +112,7 @@ public class SetupLoader
         var hullById = hullsFile.Hulls.ToDictionary(
             h => h.ID,
             h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), h.BaseStats.ToDomain()));
-        var moduleById = modulesFile.Modules.ToDictionary(m => m.ID, m => (IModule)new StatModule(m.ID, m.StatModifiers.ToDomain()));
+        var moduleById = modulesFile.Modules.ToDictionary(m => m.ID, m => new StatModule(m.ID, m.StatModifiers.ToDomain(), m.StatMultipliers.ToDomain()));
         var mioById = miosFile.Mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
 
         var designById = new Dictionary<string, ShipDesign>();
