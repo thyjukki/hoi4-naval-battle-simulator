@@ -5,8 +5,10 @@
       "statModifiers": {
         "lightAttack": 1,
         "lightPiercing": 0.1,
-        "lightPiercingAverage": 3,
         "productionCost": 90
+      },
+      "statAverages": {
+        "lightPiercing": 3
       },
       "statMultipliers": {
         "speed": -0.005
@@ -17,8 +19,10 @@
       "statModifiers": {
         "lightAttack": 2,
         "lightPiercing": 0.15,
-        "lightPiercingAverage": 4,
         "productionCost": 120
+      },
+      "statAverages": {
+        "lightPiercing": 4
       },
       "statMultipliers": {
         "speed": -0.01
@@ -29,8 +33,10 @@
       "statModifiers": {
         "lightAttack": 3,
         "lightPiercing": 0.2,
-        "lightPiercingAverage": 5,
         "productionCost": 150
+      },
+      "statAverages": {
+        "lightPiercing": 5
       },
       "statMultipliers": {
         "speed": -0.015
@@ -41,8 +47,10 @@
       "statModifiers": {
         "lightAttack": 5,
         "lightPiercing": 0.5,
-        "lightPiercingAverage": 6,
         "productionCost": 180
+      },
+      "statAverages": {
+        "lightPiercing": 6
       },
       "statMultipliers": {
         "speed": -0.02
@@ -63,8 +71,10 @@
       "id": "medium_light_battery_2",
       "statModifiers": {
         "lightAttack": 6,
-        "lightPiercingAverage": 6,
         "productionCost": 450
+      },
+      "statAverages": {
+        "lightPiercing": 6
       },
       "statMultipliers": {
         "speed": -0.05
@@ -74,8 +84,10 @@
       "id": "medium_light_battery_3",
       "statModifiers": {
         "lightAttack": 9,
-        "lightPiercingAverage": 8,
         "productionCost": 500
+      },
+      "statAverages": {
+        "lightPiercing": 8
       },
       "statMultipliers": {
         "speed": -0.06
