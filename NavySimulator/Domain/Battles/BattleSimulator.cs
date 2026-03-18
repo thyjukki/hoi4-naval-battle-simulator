@@ -337,7 +337,13 @@ public class BattleSimulator
         var piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         
         var positioningMultiplier = 1.0 - Hoi4Defines.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
-        return attackValue * piercingDamageValue * positioningMultiplier;
+
+        var damage = attackValue * piercingDamageValue * positioningMultiplier;
+        // random factor in damage. So if max damage is fe. 10 and randomness is 30% then damage will be between 7-10.
+        damage *= (1.0 - Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS +
+                   Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS * Random.Shared.NextDouble());
+        damage = Math.Max(0, damage);
+        return damage;
     }
 
     private static double CalculateFinalHitChance(
