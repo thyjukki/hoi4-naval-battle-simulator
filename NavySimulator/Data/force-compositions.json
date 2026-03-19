@@ -23,6 +23,12 @@
       "shipDesigns": {
         "cl3_armor4_full_la": 75
       }
+    },
+    {
+      "id": "75_ca3_armor4",
+      "shipDesigns": {
+        "ca3_armor4": 75
+      }
     }
   ]
 }

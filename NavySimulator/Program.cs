@@ -85,9 +85,10 @@ var topDamageDealers = result.ShipReports
 
 var attackerShipsWithDamage = result.ShipReports.Count(report => report.Side == "Attacker" && report.TotalDamageDone > 0);
 var defenderShipsWithDamage = result.ShipReports.Count(report => report.Side == "Defender" && report.TotalDamageDone > 0);
+var damageBreakdownLines = BuildDamageBreakdownLines(scenario, result.ShipReports);
 
-string[] summaryLines =
-[
+var summaryLines = new List<string>
+{
     $"Scenario: {scenario.ID}",
     $"Terrain: {scenario.Terrain}",
     $"Weather: {scenario.Weather}",
@@ -103,7 +104,10 @@ string[] summaryLines =
     $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
     $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
     $"Defender Ships Retreated: {result.DefenderShipsRetreated}"
-];
+};
+
+summaryLines.Add(string.Empty);
+summaryLines.AddRange(damageBreakdownLines);
 
 File.WriteAllLines(summaryFilePath, summaryLines);
 
@@ -181,6 +185,128 @@ static List<string> BuildShipReportLines(List<ShipBattleReport> shipReports)
     }
 
     return lines;
+}
+
+static List<string> BuildDamageBreakdownLines(BattleScenario scenario, List<ShipBattleReport> shipReports)
+{
+    var shipById = scenario.Attacker.Fleet.Ships
+        .Concat(scenario.Defender.Fleet.Ships)
+        .ToDictionary(ship => ship.ID, ship => ship);
+
+    var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+    var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+
+    var lines = new List<string>();
+    lines.AddRange(BuildSideDamageBreakdown("Attacker", "Attacker", attackerEnemyHealth, shipReports, shipById));
+    lines.Add(string.Empty);
+    lines.AddRange(BuildSideDamageBreakdown("Defender", "Defender", defenderEnemyHealth, shipReports, shipById));
+    return lines;
+}
+
+static List<string> BuildSideDamageBreakdown(
+    string sideTitle,
+    string sideKey,
+    double enemyHealth,
+    List<ShipBattleReport> shipReports,
+    IReadOnlyDictionary<string, Ship> shipById)
+{
+    var damageEvents = shipReports
+        .Where(report => report.Side == sideKey)
+        .SelectMany(report => report.DamagedShips.Select(evt => (ShooterID: report.ShipID, Event: evt)))
+        .Where(entry => entry.Event.AppliedHpDamage > 0)
+        .ToList();
+
+    var totalDamage = damageEvents.Sum(entry => entry.Event.AppliedHpDamage);
+
+    var lines = new List<string>
+    {
+        $"{sideTitle} damage summary",
+        $"Total damage dealt {totalDamage:F1} ({FormatAsShareOfEnemyHealth(totalDamage, enemyHealth)} of enemy health)",
+        "Damage dealt by types"
+    };
+
+    lines.Add("- By GUNTYPE");
+    lines.AddRange(BuildBreakdownEntries(
+        damageEvents,
+        enemyHealth,
+        entry => entry.Event.Weapon.ToString()));
+
+    lines.Add("- By SHIPGROUP");
+    lines.AddRange(BuildBreakdownEntries(
+        damageEvents,
+        enemyHealth,
+        entry => ResolveShipGroup(entry.ShooterID, shipById)));
+
+    lines.Add("- By SHIPTYPE");
+    lines.AddRange(BuildBreakdownEntries(
+        damageEvents,
+        enemyHealth,
+        entry => ResolveShipType(entry.ShooterID, shipById)));
+
+    return lines;
+}
+
+static List<string> BuildBreakdownEntries(
+    List<(string ShooterID, ShipDamageReportEntry Event)> damageEvents,
+    double enemyHealth,
+    Func<(string ShooterID, ShipDamageReportEntry Event), string> keySelector)
+{
+    var grouped = damageEvents
+        .GroupBy(keySelector)
+        .Select(group => new
+        {
+            Name = group.Key,
+            Damage = group.Sum(entry => entry.Event.AppliedHpDamage)
+        })
+        .OrderByDescending(item => item.Damage)
+        .ThenBy(item => item.Name, StringComparer.Ordinal)
+        .ToList();
+
+    if (grouped.Count == 0)
+    {
+        return ["  - none"];
+    }
+
+    return grouped
+        .Select(item => $"  - {item.Name} {item.Damage:F1} ({FormatAsShareOfEnemyHealth(item.Damage, enemyHealth)})")
+        .ToList();
+}
+
+static string FormatAsShareOfEnemyHealth(double damage, double enemyHealth)
+{
+    if (enemyHealth <= 0)
+    {
+        return damage <= 0 ? "0.0 %" : "inf";
+    }
+
+    return (damage / enemyHealth).ToString("P1");
+}
+
+static string ResolveShipGroup(string shooterId, IReadOnlyDictionary<string, Ship> shipById)
+{
+    return shipById.TryGetValue(shooterId, out var ship)
+        ? GetShipGroupLabel(ship.Design.Hull.Role)
+        : "Unknown";
+}
+
+static string ResolveShipType(string shooterId, IReadOnlyDictionary<string, Ship> shipById)
+{
+    return shipById.TryGetValue(shooterId, out var ship)
+        ? ship.Design.ID
+        : "Unknown";
+}
+
+static string GetShipGroupLabel(ShipRole role)
+{
+    return role switch
+    {
+        ShipRole.Screen => "Screening",
+        ShipRole.Capital => "Battle line",
+        ShipRole.Carrier => "Carrier",
+        ShipRole.Submarine => "Submarine",
+        ShipRole.Convoy => "Convoy",
+        _ => "Unknown"
+    };
 }
 
 static void PrintFleetPreview(string sideLabel, Fleet fleet)

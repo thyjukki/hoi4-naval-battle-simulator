@@ -3,27 +3,27 @@
     {
       "id": "light_secondaries_1",
       "statModifiers": {
-        "lightAttack": 3,
-        "productionCost": 180
+        "lightAttack": 4,
+        "productionCost": 200
       },
       "statAverages": {
-        "lightPiercing": 5.5
+        "lightPiercing": 4
       },
       "statMultipliers": {
-        "speed": -0.02
+        "speed": -0.01
       }
     },
     {
       "id": "light_secondaries_2",
       "statModifiers": {
-        "lightAttack": 4,
-        "productionCost": 240
+        "lightAttack": 6,
+        "productionCost": 250
       },
       "statAverages": {
-        "lightPiercing": 7
+        "lightPiercing": 6
       },
       "statMultipliers": {
-        "speed": -0.03
+        "speed": -0.02
       }
     },
     {

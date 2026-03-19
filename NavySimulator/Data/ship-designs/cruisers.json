@@ -27,6 +27,19 @@
         "light_battery_3",
         "light_battery_3"
       ]
+    },
+    {
+      "id": "ca3_armor4",
+      "hullID": "heavy_cruiser_hull_3",
+      "moduleIDs": [
+        "medium_battery_3",
+        "fire_control_3",
+        "radar_4",
+        "engine_cruiser_3",
+        "armor_cruiser_4",
+        "anti_air_4",
+        "light_secondaries_2"
+      ]
     }
   ]
 }
