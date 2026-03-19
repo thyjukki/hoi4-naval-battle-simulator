@@ -447,6 +447,10 @@ public class BattleSimulator
             WeaponType.DepthCharge => 1.0 + stats.DepthChargeHitChangeFactor,
             _ => throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null)
         };
+        
+        var orgagnisatonPercentage = shooter.CurrentOrganization / stats.Organization;
+        
+        modifier *= 1.0 + Hoi4Defines.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - orgagnisatonPercentage);
 
         if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
         {
