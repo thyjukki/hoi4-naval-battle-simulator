@@ -8,6 +8,7 @@ public class ShipDesign
     public Hull Hull;
     public List<StatModule> Modules;
     public MioBonus? MioBonus;
+    private ShipStats? cachedFinalStats;
 
     public ShipDesign(string id, Hull hull, List<StatModule> modules, MioBonus? mioBonus = null)
     {
@@ -19,6 +20,11 @@ public class ShipDesign
 
     public ShipStats GetFinalStats()
     {
+        if (cachedFinalStats is not null)
+        {
+            return cachedFinalStats;
+        }
+
         var emptyStats = new ShipStats();
         var multipliers = Modules.Aggregate(emptyStats, (current, module) => current.Add(module.StatMultipliers));
         // StatModifiers are additive, averaged statAverages are added once, then statMultipliers are applied.
@@ -27,6 +33,7 @@ public class ShipDesign
         stats = stats.Add(averagedStats);
         
         stats = stats.Scale(multipliers);
-        return MioBonus is null ? stats : stats.Scale(MioBonus.PercentBonus);
+        cachedFinalStats = MioBonus is null ? stats : stats.Scale(MioBonus.PercentBonus);
+        return cachedFinalStats;
     }
 }

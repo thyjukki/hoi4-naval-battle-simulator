@@ -304,7 +304,7 @@ public class BattleSimulator
 
         var selectedTarget = shooter.CurrentStatus == ShipStatus.Retreating ? 
             SelectTargetDeterministically(weapon, targetGroups) : 
-            SelectTargetWeightedRandom(weapon, targetGroups);
+            SelectTargetWeightedRandom(weapon, targetGroups, random);
 
         if (selectedTarget is null)
         {
@@ -569,7 +569,8 @@ public class BattleSimulator
 
     private static SelectedTarget? SelectTargetWeightedRandom(
         WeaponType weapon,
-        List<TargetGroup> groups)
+        List<TargetGroup> groups,
+        Random random)
     {        
         var weightedTargets = new List<SelectedTarget>();
 
@@ -593,7 +594,7 @@ public class BattleSimulator
         }
 
         var totalWeight = weightedTargets.Sum(t => t.Weight);
-        var randomValue = new Random().NextDouble() * totalWeight;
+        var randomValue = random.NextDouble() * totalWeight;
         var cumulativeWeight = 0.0;
 
         foreach (var target in weightedTargets)
