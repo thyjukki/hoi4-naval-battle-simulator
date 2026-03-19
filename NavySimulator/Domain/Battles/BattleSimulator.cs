@@ -161,7 +161,7 @@ public class BattleSimulator
 
             if (ship.CurrentStatus == ShipStatus.Retreated)
             {
-                results.Add(ActionResult.Skip(ship, WeaponType.Light, "retreated"));
+                results.Add(ActionResult.Skip(ship, WeaponType.Light, hour, "retreated"));
                 continue;
             }
 
@@ -280,26 +280,26 @@ public class BattleSimulator
     {
         if (attackValue <= 0)
         {
-            return ActionResult.Skip(shooter, weapon, "no-weapon");
+            return ActionResult.Skip(shooter, weapon, hour, "no-weapon");
         }
 
         var cooldownKey = (shooter.ID, weapon);
         
         if (hour < Hoi4Defines.COMBAT_INITIAL_DURATION)
         {
-            return ActionResult.Skip(shooter, weapon, "initial-combat");
+            return ActionResult.Skip(shooter, weapon, hour, "initial-combat");
         }
 
         if (cooldowns.TryGetValue(cooldownKey, out var nextAvailableHour) && hour < nextAvailableHour)
         {
-            return ActionResult.Skip(shooter, weapon, "cooldown");
+            return ActionResult.Skip(shooter, weapon, hour, "cooldown");
         }
 
         var targetGroups = GetValidTargetGroups(weapon, defenderLines, defenderScreening);
 
         if (targetGroups.Count == 0)
         {
-            return ActionResult.Skip(shooter, weapon, "no-valid-target");
+            return ActionResult.Skip(shooter, weapon, hour, "no-valid-target");
         }
 
         var selectedTarget = shooter.CurrentStatus == ShipStatus.Retreating ? 
@@ -308,7 +308,7 @@ public class BattleSimulator
 
         if (selectedTarget is null)
         {
-            return ActionResult.Skip(shooter, weapon, "no-valid-target");
+            return ActionResult.Skip(shooter, weapon, hour, "no-valid-target");
         }
 
         var defenderStats = selectedTarget.Target.Design.GetFinalStats();
@@ -342,6 +342,7 @@ public class BattleSimulator
             defenderStats.Armor,
             defenderStats.Speed,
             defenderVisibility,
+            hour,
             finalHitChance,
             hitRoll,
             didHit);
@@ -377,7 +378,7 @@ public class BattleSimulator
     {
         var baseHitChance = GetBaseHitChance(weapon);
         var modifierPipeline = GetHitChanceModifier(shooter, weapon, attackerScreening, hour);
-        var shipHitProfile = CalculateShipHitProfile(target, defenderScreening);
+        var shipHitProfile = CalculateShipHitProfile(shooter, target, defenderScreening);
         var weaponHitProfile = GetWeaponHitProfile(weapon);
         var profileModifier = Math.Min(Math.Pow(shipHitProfile / weaponHitProfile, 2), 1.0);
 
@@ -405,12 +406,15 @@ public class BattleSimulator
         };
     }
 
-    private static double CalculateShipHitProfile(Ship target, ScreeningSummary defenderScreening)
+    private static double CalculateShipHitProfile(Ship shooter, Ship target, ScreeningSummary defenderScreening)
     {
         var stats = target.Design.GetFinalStats();
         var visibility = target.Design.Hull.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility;
-        
-        visibility *= 1 + (Hoi4Defines.ScreeningVisibiliityBonus * defenderScreening.ScreeningEfficiency);
+
+        if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
+        {
+            visibility *= 1 + (Hoi4Defines.ScreeningVisibiliityBonus * defenderScreening.ScreeningEfficiency);
+        }
         
         
         var denominator = Hoi4Defines.HIT_PROFILE_SPEED_FACTOR * stats.Speed + Hoi4Defines.HIT_PROFILE_SPEED_BASE;
@@ -646,7 +650,9 @@ public class BattleSimulator
         foreach (var action in actions.Where(action => action.Fired))
         {
             var targetWasAlive = action.Target is not null && !action.Target.IsSunk;
-            action.Target!.ApplyDamage(action.Damage);
+            var appliedDamage = action.Target!.ApplyDamage(action.Damage);
+            action.AppliedHpDamage = appliedDamage.HpDamage;
+            action.AppliedOrganizationDamage = appliedDamage.OrganizationDamage;
             action.DidKillingBlow = targetWasAlive && action.Target.IsSunk;
         }
     }
@@ -800,9 +806,12 @@ public class BattleSimulator
             var damagedShips = allActions
                 .Where(action => action.ShooterID == entry.Ship.ID && action.Fired && action.Target is not null && action.Damage > 0)
                 .Select(action => new ShipDamageReportEntry(
+                    action.Hour,
                     action.Target!.ID,
                     action.Weapon,
                     action.Damage,
+                    action.AppliedHpDamage,
+                    action.AppliedOrganizationDamage,
                     action.DidKillingBlow,
                     action.PiercingValue,
                     action.FinalHitChance,

@@ -29,7 +29,7 @@ public static class Hoi4Defines
     public const double COMBAT_MIN_DURATION = 8;
     public const double COMBAT_INITIAL_DURATION = 6;
     public const double COMBAT_RETREAT_DECISION_CHANCE = 0.2;
-    public const double CombatMinStrRetreatChance = 0.4;
+    public const double CombatMinStrRetreatChance = 0.0; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
     public const double BASE_ESCAPE_SPEED = 0.06;
     public const double SPEED_TO_ESCAPE_SPEED = 1.15;
     public const double MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION = 0.20;
@@ -50,6 +50,8 @@ public static class Hoi4Defines
     public const double HIT_PROFILE_MULT = 100.0;
     public const double HIT_PROFILE_SPEED_FACTOR = 0.85;
     public const double HIT_PROFILE_SPEED_BASE = 5.0;
+
+    public const double COMBAT_LOW_ORG_HIT_CHANCE_PENALTY = -0.5;
 
     public const double TargetWeightCapitalLight = 2.0;
     public const double TargetWeightCapitalHeavyTorpedo = 30.0;

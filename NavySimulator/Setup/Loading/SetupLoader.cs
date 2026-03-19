@@ -10,15 +10,26 @@ public class SetupLoader
     {
         PropertyNameCaseInsensitive = true
     };
+    private static readonly HashSet<string> KnownShipStatsKeys = typeof(ShipStatsDto)
+        .GetProperties()
+        .Select(property => property.Name)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private readonly List<string> warnings = [];
+
+    public IReadOnlyList<string> Warnings => warnings;
 
     public BattleScenario LoadScenarioFromDirectory(string dataDirectoryPath)
     {
+        warnings.Clear();
         var errors = new List<string>();
 
         if (!Directory.Exists(dataDirectoryPath))
         {
             throw new DirectoryNotFoundException($"Data directory not found: {dataDirectoryPath}");
         }
+
+        ValidateModuleStatWarnings(dataDirectoryPath, warnings);
 
         var hullsFile = ReadJsonFile<HullsFileDto>(dataDirectoryPath, "hulls.json", errors) ?? new HullsFileDto();
         var modulesFile = ReadJsonFile<ModulesFileDto>(dataDirectoryPath, "modules.json", errors) ?? new ModulesFileDto();
@@ -32,14 +43,12 @@ public class SetupLoader
         ValidateRequiredIds(modulesFile.Modules.Select(m => m.ID), "modules", errors);
         ValidateRequiredIds(miosFile.Mios.Select(m => m.ID), "mios", errors);
         ValidateRequiredIds(designsFile.ShipDesigns.Select(d => d.ID), "shipDesigns", errors);
-        ValidateRequiredIds(forceCompositionsFile.Ships.Select(s => s.ID), "ships", errors);
         ValidateRequiredIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         ValidateDuplicateIds(hullsFile.Hulls.Select(h => h.ID), "hulls", errors);
         ValidateDuplicateIds(modulesFile.Modules.Select(m => m.ID), "modules", errors);
         ValidateDuplicateIds(miosFile.Mios.Select(m => m.ID), "mios", errors);
         ValidateDuplicateIds(designsFile.ShipDesigns.Select(d => d.ID), "shipDesigns", errors);
-        ValidateDuplicateIds(forceCompositionsFile.Ships.Select(s => s.ID), "ships", errors);
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         var hullIds = hullsFile.Hulls.Select(h => h.ID).ToHashSet();
@@ -54,7 +63,6 @@ public class SetupLoader
         var moduleIds = modulesFile.Modules.Select(m => m.ID).ToHashSet();
         var mioIds = miosFile.Mios.Select(m => m.ID).ToHashSet();
         var designIds = designsFile.ShipDesigns.Select(d => d.ID).ToHashSet();
-        var shipIds = forceCompositionsFile.Ships.Select(s => s.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
 
         foreach (var design in designsFile.ShipDesigns)
@@ -78,26 +86,29 @@ public class SetupLoader
             }
         }
 
-        foreach (var ship in forceCompositionsFile.Ships)
-        {
-            if (!designIds.Contains(ship.ShipDesignID))
-            {
-                errors.Add($"ship '{ship.ID}' references unknown shipDesignID '{ship.ShipDesignID}'.");
-            }
-        }
-
         foreach (var fleet in forceCompositionsFile.Fleets)
         {
-            if (fleet.ShipIDs.Count == 0)
+            if (fleet.ShipDesigns.Count == 0)
             {
-                errors.Add($"fleet '{fleet.ID}' must include at least one shipID.");
+                errors.Add($"fleet '{fleet.ID}' must include at least one ship design.");
             }
 
-            foreach (var shipId in fleet.ShipIDs)
+            foreach (var shipDesign in fleet.ShipDesigns)
             {
-                if (!shipIds.Contains(shipId))
+                if (string.IsNullOrWhiteSpace(shipDesign.Key))
                 {
-                    errors.Add($"fleet '{fleet.ID}' references unknown shipID '{shipId}'.");
+                    errors.Add($"fleet '{fleet.ID}' has an empty shipDesignID key.");
+                    continue;
+                }
+
+                if (!designIds.Contains(shipDesign.Key))
+                {
+                    errors.Add($"fleet '{fleet.ID}' references unknown shipDesignID '{shipDesign.Key}'.");
+                }
+
+                if (shipDesign.Value <= 0)
+                {
+                    errors.Add($"fleet '{fleet.ID}' has non-positive ship count {shipDesign.Value} for shipDesignID '{shipDesign.Key}'.");
                 }
             }
         }
@@ -131,18 +142,23 @@ public class SetupLoader
             designById[design.ID] = new ShipDesign(hull, modules, mio);
         }
 
-        var shipById = new Dictionary<string, Ship>();
-
-        foreach (var ship in forceCompositionsFile.Ships)
-        {
-            shipById[ship.ID] = new Ship(ship.ID, designById[ship.ShipDesignID]);
-        }
-
         var fleetById = new Dictionary<string, Fleet>();
 
         foreach (var fleet in forceCompositionsFile.Fleets)
         {
-            var ships = fleet.ShipIDs.Select(shipId => shipById[shipId]).ToList();
+            var ships = new List<Ship>();
+
+            foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+            {
+                var design = designById[shipDesign.Key];
+
+                for (var i = 1; i <= shipDesign.Value; i++)
+                {
+                    var shipId = $"{fleet.ID}_{shipDesign.Key}_{i:D3}";
+                    ships.Add(new Ship(shipId, design));
+                }
+            }
+
             fleetById[fleet.ID] = new Fleet(fleet.ID, ships);
         }
 
@@ -185,6 +201,224 @@ public class SetupLoader
             errors.Add($"File '{fileName}' has invalid JSON: {ex.Message}");
             return default;
         }
+    }
+
+    private static void ValidateModuleStatWarnings(string dataDirectoryPath, List<string> warnings)
+    {
+        var modulesPath = Path.Combine(dataDirectoryPath, "modules.json");
+
+        if (!File.Exists(modulesPath))
+        {
+            return;
+        }
+
+        try
+        {
+            ValidateDuplicateModuleStatKeysWithReader(modulesPath, warnings);
+            using var document = JsonDocument.Parse(File.ReadAllText(modulesPath));
+
+            if (!document.RootElement.TryGetProperty("modules", out var modulesElement) || modulesElement.ValueKind != JsonValueKind.Array)
+            {
+                return;
+            }
+
+            for (var index = 0; index < modulesElement.GetArrayLength(); index++)
+            {
+                var moduleElement = modulesElement[index];
+                var moduleId = TryGetModuleId(moduleElement, index);
+
+                ValidateModuleStatBlock(moduleElement, moduleId, "statModifiers", warnings);
+                ValidateModuleStatBlock(moduleElement, moduleId, "statAverages", warnings);
+                ValidateModuleStatBlock(moduleElement, moduleId, "statMultipliers", warnings);
+            }
+        }
+        catch (JsonException)
+        {
+            // Invalid JSON is already captured as a setup error by ReadJsonFile.
+        }
+    }
+
+    private static string TryGetModuleId(JsonElement moduleElement, int index)
+    {
+        if (moduleElement.TryGetProperty("id", out var idElement) && idElement.ValueKind == JsonValueKind.String)
+        {
+            var id = idElement.GetString();
+
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                return id;
+            }
+        }
+
+        return $"modules[{index}]";
+    }
+
+    private static void ValidateModuleStatBlock(
+        JsonElement moduleElement,
+        string moduleId,
+        string blockName,
+        List<string> warnings)
+    {
+        if (!moduleElement.TryGetProperty(blockName, out var statBlock) || statBlock.ValueKind != JsonValueKind.Object)
+        {
+            return;
+        }
+
+        var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var property in statBlock.EnumerateObject())
+        {
+            if (!seenKeys.Add(property.Name))
+            {
+                warnings.Add($"module '{moduleId}' has duplicate modifier '{property.Name}' in '{blockName}'.");
+            }
+
+            if (!KnownShipStatsKeys.Contains(property.Name))
+            {
+                warnings.Add($"module '{moduleId}' has unknown modifier '{property.Name}' in '{blockName}'.");
+            }
+        }
+    }
+
+    private static void ValidateDuplicateModuleStatKeysWithReader(string modulesPath, List<string> warnings)
+    {
+        var bytes = File.ReadAllBytes(modulesPath);
+        var reader = new Utf8JsonReader(bytes, new JsonReaderOptions { AllowTrailingCommas = true });
+
+        var moduleIndex = -1;
+        var inModulesArray = false;
+
+        while (reader.Read())
+        {
+            if (!inModulesArray)
+            {
+                if (reader.TokenType == JsonTokenType.PropertyName && reader.GetString() == "modules")
+                {
+                    reader.Read();
+
+                    if (reader.TokenType == JsonTokenType.StartArray)
+                    {
+                        inModulesArray = true;
+                    }
+                }
+
+                continue;
+            }
+
+            if (reader.TokenType == JsonTokenType.EndArray)
+            {
+                break;
+            }
+
+            if (reader.TokenType != JsonTokenType.StartObject)
+            {
+                continue;
+            }
+
+            moduleIndex++;
+            ValidateModuleWithReader(ref reader, moduleIndex, warnings);
+        }
+    }
+
+    private static void ValidateModuleWithReader(ref Utf8JsonReader reader, int moduleIndex, List<string> warnings)
+    {
+        var moduleId = $"modules[{moduleIndex}]";
+        var blockNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject)
+            {
+                return;
+            }
+
+            if (reader.TokenType != JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            var propertyName = reader.GetString() ?? string.Empty;
+            reader.Read();
+
+            if (propertyName.Equals("id", StringComparison.OrdinalIgnoreCase) && reader.TokenType == JsonTokenType.String)
+            {
+                var idValue = reader.GetString();
+
+                if (!string.IsNullOrWhiteSpace(idValue))
+                {
+                    moduleId = idValue;
+                }
+
+                continue;
+            }
+
+            if (propertyName is "statModifiers" or "statAverages" or "statMultipliers" && reader.TokenType == JsonTokenType.StartObject)
+            {
+                if (!blockNames.Add(propertyName))
+                {
+                    warnings.Add($"module '{moduleId}' has duplicate '{propertyName}' blocks.");
+                }
+
+                ValidateStatBlockWithReader(ref reader, moduleId, propertyName, warnings);
+                continue;
+            }
+
+            SkipValue(ref reader);
+        }
+    }
+
+    private static void ValidateStatBlockWithReader(
+        ref Utf8JsonReader reader,
+        string moduleId,
+        string blockName,
+        List<string> warnings)
+    {
+        var statKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        while (reader.Read())
+        {
+            if (reader.TokenType == JsonTokenType.EndObject)
+            {
+                return;
+            }
+
+            if (reader.TokenType != JsonTokenType.PropertyName)
+            {
+                continue;
+            }
+
+            var statKey = reader.GetString() ?? string.Empty;
+
+            if (!statKeys.Add(statKey))
+            {
+                warnings.Add($"module '{moduleId}' has duplicate modifier '{statKey}' in '{blockName}'.");
+            }
+
+            reader.Read();
+            SkipValue(ref reader);
+        }
+    }
+
+    private static void SkipValue(ref Utf8JsonReader reader)
+    {
+        if (reader.TokenType is not (JsonTokenType.StartObject or JsonTokenType.StartArray))
+        {
+            return;
+        }
+
+        var depth = 0;
+
+        do
+        {
+            if (reader.TokenType is JsonTokenType.StartObject or JsonTokenType.StartArray)
+            {
+                depth++;
+            }
+            else if (reader.TokenType is JsonTokenType.EndObject or JsonTokenType.EndArray)
+            {
+                depth--;
+            }
+        } while (depth > 0 && reader.Read());
     }
 
     private static void ValidateRequiredIds(IEnumerable<string> ids, string sectionName, List<string> errors)

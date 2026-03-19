@@ -1,21 +1,16 @@
 {
-  "ships": [
-    { "id": "alpha_dd_1", "shipDesignID": "test_dd" },
-    { "id": "alpha_dd_2", "shipDesignID": "test_dd" },
-    { "id": "alpha_dd_3", "shipDesignID": "test_dd" },
-    { "id": "alpha_dd_4", "shipDesignID": "test_dd" },
-    { "id": "alpha_dd_5", "shipDesignID": "test_dd" },
-    { "id": "alpha_cl_1", "shipDesignID": "test_cl" },
-    { "id": "alpha_cl_2", "shipDesignID": "test_cl" }
-  ],
   "fleets": [
     {
       "id": "task_force_rom_test",
-      "shipIDs": ["alpha_dd_1", "alpha_dd_2", "alpha_dd_3", "alpha_dd_4", "alpha_dd_5"]
+      "shipDesigns": {
+        "test_dd": 5
+      }
     },
     {
       "id": "task_force_bul_test",
-      "shipIDs": ["alpha_cl_1", "alpha_cl_2"]
+      "shipDesigns": {
+        "test_cl": 2
+      }
     }
   ]
 }

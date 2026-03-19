@@ -18,6 +18,9 @@ internal class ActionResult
     public double DefenderSpeed;
     public double DefenderVisibility;
     public bool DidKillingBlow;
+    public int Hour;
+    public double AppliedHpDamage;
+    public double AppliedOrganizationDamage;
 
     private ActionResult(
         string shooterId,
@@ -34,7 +37,10 @@ internal class ActionResult
         double defenderArmor,
         double defenderSpeed,
         double defenderVisibility,
-        bool didKillingBlow)
+        bool didKillingBlow,
+        int hour,
+        double appliedHpDamage,
+        double appliedOrganizationDamage)
     {
         ShooterID = shooterId;
         Weapon = weapon;
@@ -51,6 +57,9 @@ internal class ActionResult
         DefenderSpeed = defenderSpeed;
         DefenderVisibility = defenderVisibility;
         DidKillingBlow = didKillingBlow;
+        Hour = hour;
+        AppliedHpDamage = appliedHpDamage;
+        AppliedOrganizationDamage = appliedOrganizationDamage;
     }
 
     public static ActionResult Fire(
@@ -62,6 +71,7 @@ internal class ActionResult
         double defenderArmor,
         double defenderSpeed,
         double defenderVisibility,
+        int hour,
         double finalHitChance,
         double hitRoll,
         bool didHit)
@@ -81,11 +91,14 @@ internal class ActionResult
             defenderArmor,
             defenderSpeed,
             defenderVisibility,
-            didKillingBlow: false);
+            didKillingBlow: false,
+            hour,
+            appliedHpDamage: 0,
+            appliedOrganizationDamage: 0);
     }
 
-    public static ActionResult Skip(Ship shooter, WeaponType weapon, string reason)
+    public static ActionResult Skip(Ship shooter, WeaponType weapon, int hour, string reason)
     {
-        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason, 0, 0, 0, 0, false);
+        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason, 0, 0, 0, 0, false, hour, 0, 0);
     }
 }

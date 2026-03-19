@@ -23,6 +23,18 @@ catch (SetupValidationException ex)
     return;
 }
 
+if (loader.Warnings.Count > 0)
+{
+    Console.WriteLine("Setup warnings:");
+
+    foreach (var warning in loader.Warnings)
+    {
+        Console.WriteLine($"- {warning}");
+    }
+
+    Console.WriteLine();
+}
+
 Console.WriteLine($"Scenario: {scenario.ID}");
 Console.WriteLine($"Terrain: {scenario.Terrain}");
 Console.WriteLine($"Weather: {scenario.Weather}");
@@ -153,7 +165,8 @@ static List<string> BuildShipReportLines(List<ShipBattleReport> shipReports)
             foreach (var damageEvent in shipReport.DamagedShips)
             {
                 lines.Add(
-                    $"    - Target {damageEvent.TargetShipID}, Weapon {damageEvent.Weapon}, Damage {damageEvent.Damage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
+                    $"    - Hour {damageEvent.HourTick}, Target {damageEvent.TargetShipID}, Weapon {damageEvent.Weapon}, Damage {damageEvent.Damage:F1}, " +
+                    $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
                     $"Attacker Piercing {damageEvent.AttackerPiercing:F2}, Hit Chance {damageEvent.AttackerFinalHitChance:P1}, " +
                     $"Defender Armor {damageEvent.DefenderArmor:F2}, Speed {damageEvent.DefenderSpeed:F2}, Visibility {damageEvent.DefenderVisibility:F2}");
             }

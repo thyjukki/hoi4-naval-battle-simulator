@@ -3,7 +3,7 @@
     "id": "base_test",
     "terrain": "ocean",
     "weather": "clear",
-    "maxHours": 1000,
+    "maxHours": 1000000,
     "attacker": {
       "fleetID": "task_force_rom_test",
       "commander": "",
