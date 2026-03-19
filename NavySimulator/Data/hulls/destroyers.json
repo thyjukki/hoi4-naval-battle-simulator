@@ -1,0 +1,68 @@
+{
+  "hulls": [
+    {
+      "id": "destroyer_hull_1",
+      "role": "Screen",
+      "baseStats": {
+        "speed": 32,
+        "organization": 35,
+        "hp": 30,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "depthChargeAttack": 1,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 450
+      }
+    },
+    {
+      "id": "destroyer_hull_2",
+      "role": "Screen",
+      "baseStats": {
+        "speed": 33,
+        "organization": 35,
+        "hp": 30,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "depthChargeAttack": 1,
+        "subVisibility": 0,
+        "subDetection": 1.5,
+        "reliability": 0.85,
+        "productionCost": 550
+      }
+    },
+    {
+      "id": "destroyer_hull_3",
+      "role": "Screen",
+      "baseStats": {
+        "speed": 34,
+        "organization": 35,
+        "hp": 60,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "depthChargeAttack": 1,
+        "subVisibility": 0,
+        "subDetection": 2,
+        "reliability": 0.9,
+        "productionCost": 600
+      }
+    },
+    {
+      "id": "destroyer_hull_4",
+      "role": "Screen",
+      "baseStats": {
+        "speed": 35,
+        "organization": 35,
+        "hp": 30,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "depthChargeAttack": 1,
+        "subVisibility": 0,
+        "subDetection": 2.5,
+        "reliability": 0.95,
+        "productionCost": 650
+      }
+    }
+  ]
+}

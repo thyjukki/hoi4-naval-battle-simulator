@@ -1,0 +1,231 @@
+{
+  "modules": [
+    {
+      "id": "carrier_ship_nuclear_engine_1",
+      "statMultipliers": {
+        "speed": 0.6,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "engine_carrier_1",
+      "statModifiers": {
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "engine_carrier_2",
+      "statModifiers": {
+        "productionCost": 475
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "engine_carrier_3",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "engine_carrier_4",
+      "statModifiers": {
+        "productionCost": 625
+      },
+      "statMultipliers": {
+        "speed": 0.6
+      }
+    },
+    {
+      "id": "engine_cruiser_1",
+      "statModifiers": {
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_cruiser_2",
+      "statModifiers": {
+        "productionCost": 480
+      },
+      "statMultipliers": {
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "engine_cruiser_3",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "engine_cruiser_4",
+      "statModifiers": {
+        "productionCost": 670
+      },
+      "statMultipliers": {
+        "speed": 0.35
+      }
+    },
+    {
+      "id": "engine_dd_1",
+      "statModifiers": {
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": 0.1
+      }
+    },
+    {
+      "id": "engine_dd_2",
+      "statModifiers": {
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": 0.15
+      }
+    },
+    {
+      "id": "engine_dd_3",
+      "statModifiers": {
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_dd_4",
+      "statModifiers": {
+        "productionCost": 180
+      },
+      "statMultipliers": {
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "engine_heavy_1",
+      "statModifiers": {
+        "productionCost": 1800
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "engine_heavy_2",
+      "statModifiers": {
+        "productionCost": 2200
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "engine_heavy_3",
+      "statModifiers": {
+        "productionCost": 2800
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "engine_heavy_4",
+      "statModifiers": {
+        "productionCost": 3200
+      },
+      "statMultipliers": {
+        "speed": 0.6
+      }
+    },
+    {
+      "id": "engine_sub_aip_1",
+      "statMultipliers": {
+        "productionCost": 0.3,
+        "subVisibility": -0.05,
+        "speed": 0.15
+      }
+    },
+    {
+      "id": "engine_sub_aip_2",
+      "statMultipliers": {
+        "productionCost": 0.35,
+        "subVisibility": -0.1,
+        "speed": 0.15
+      }
+    },
+    {
+      "id": "engine_sub_aip_3",
+      "statMultipliers": {
+        "productionCost": 0.4,
+        "subVisibility": -0.15,
+        "speed": 0.35
+      }
+    },
+    {
+      "id": "heavy_ship_nuclear_engine_1",
+      "statMultipliers": {
+        "speed": 0.6,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "sub_ship_engine_1",
+      "statModifiers": {
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": 0.05
+      }
+    },
+    {
+      "id": "sub_ship_engine_2",
+      "statModifiers": {
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": 0.1
+      }
+    },
+    {
+      "id": "sub_ship_engine_3",
+      "statModifiers": {
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": 0.15,
+        "subVisibility": -0.05
+      }
+    },
+    {
+      "id": "sub_ship_engine_4",
+      "statModifiers": {
+        "productionCost": 170
+      },
+      "statMultipliers": {
+        "speed": 0.2,
+        "subVisibility": -0.1
+      }
+    },
+    {
+      "id": "sub_ship_nuclear_engine_1",
+      "statMultipliers": {
+        "speed": 0.1,
+        "productionCost": 0.25
+      }
+    }
+  ]
+}

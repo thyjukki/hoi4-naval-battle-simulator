@@ -1,0 +1,72 @@
+{
+  "modules": [
+    {
+      "id": "light_secondaries_1",
+      "statModifiers": {
+        "lightAttack": 3,
+        "productionCost": 180
+      },
+      "statAverages": {
+        "lightPiercing": 5.5
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "light_secondaries_2",
+      "statModifiers": {
+        "lightAttack": 4,
+        "productionCost": 240
+      },
+      "statAverages": {
+        "lightPiercing": 7
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "dp_secondaries_1",
+      "statModifiers": {
+        "lightAttack": 2,
+        "antiAir": 1,
+        "productionCost": 180
+      },
+      "statAverages": {
+        "lightPiercing": 3
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "dp_secondaries_2",
+      "statModifiers": {
+        "lightAttack": 3,
+        "antiAir": 2,
+        "productionCost": 240
+      },
+      "statAverages": {
+        "lightPiercing": 4
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "dp_secondaries_3",
+      "statModifiers": {
+        "lightAttack": 4,
+        "antiAir": 2.5,
+        "productionCost": 300
+      },
+      "statAverages": {
+        "lightPiercing": 7
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    }
+  ]
+}

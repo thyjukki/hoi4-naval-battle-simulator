@@ -1,0 +1,99 @@
+{
+  "modules": [
+    {
+      "id": "torpedo_1",
+      "statModifiers": {
+        "torpedoAttack": 14,
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "torpedo_2",
+      "statModifiers": {
+        "torpedoAttack": 18,
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "torpedo_3",
+      "statModifiers": {
+        "torpedoAttack": 22,
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "torpedo_4",
+      "statModifiers": {
+        "torpedoAttack": 26,
+        "productionCost": 180
+      },
+      "statMultipliers": {
+        "speed": -0.04
+      }
+    },
+    {
+      "id": "torpedo_sub_1",
+      "statModifiers": {
+        "torpedoAttack": 8,
+        "productionCost": 80
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "torpedo_sub_2",
+      "statModifiers": {
+        "torpedoAttack": 10,
+        "productionCost": 100,
+        "torpedoHitChangeFactor": 0.005
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "torpedo_sub_3",
+      "statModifiers": {
+        "torpedoAttack": 12,
+        "productionCost": 120,
+        "torpedoHitChangeFactor": 0.01
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "torpedo_sub_4",
+      "statModifiers": {
+        "torpedoAttack": 14,
+        "productionCost": 140,
+        "torpedoHitChangeFactor": 0.015
+      },
+      "statMultipliers": {
+        "speed": -0.04
+      }
+    },
+    {
+      "id": "torpedo_sub_nuclear",
+      "statModifiers": {
+        "torpedoAttack": 44,
+        "productionCost": 520,
+        "torpedoHitChangeFactor": 0.05,
+        "reliability": -0.15
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    }
+  ]
+}

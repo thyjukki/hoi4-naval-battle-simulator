@@ -91,13 +91,15 @@
 ## Agent Workflow Tips for This Repo
 - For setup/data issues, start in `NavySimulator/Setup/Loading/SetupLoader.cs` and matching DTOs in `NavySimulator/Setup/Contracts/Dto/`.
 - For combat behavior issues, start in `NavySimulator/Domain/Battles/BattleSimulator.cs` and related domain models.
+- Use `scritps/import_hoi4_ship_modules.py` to refresh `NavySimulator/Data/modules/00_imported_ship_modules.json` from HOI4 source modules (`.../common/units/equipment/modules/00_ship_modules.txt`); the script prints source modifiers it intentionally skips.
+- Use `scritps/split_data_files.py` when migrating legacy monolithic `hulls.json`/`modules.json`/`mios.json`/`ship-designs.json` files into folder-based `Data/<type>/` files.
 - When introducing new behavior, demonstrate wiring in `Program.cs` so it is runnable immediately.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 - If adding new projects (e.g., tests), update the solution file so Rider/CLI workflows stay aligned.
 
 ## Known Integration Boundaries
 - External dependencies: none beyond the .NET SDK; no NuGet package references currently.
-- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls.json`, `modules.json`, `mios.json`, `ship-designs.json`, `force-compositions.json`, `battle-scenario.json`).
+- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `force-compositions.json`, `battle-scenario.json`).
 - Cross-component communication is in-memory object references only after setup is loaded.
 - Output artifact is a console executable at `NavySimulator/bin/<Configuration>/net10.0/`.
 

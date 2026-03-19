@@ -1,0 +1,72 @@
+{
+  "modules": [
+    {
+      "id": "medium_battery_1",
+      "statModifiers": {
+        "heavyAttack": 10,
+        "productionCost": 800,
+        "hp": 5,
+        "torpedoEnemyCriticalChanceFactor": 0.05,
+        "torpedoDamageReductionFactor": -0.05
+      },
+      "statAverages": {
+        "heavyPiercing": 22
+      },
+      "statMultipliers": {
+        "speed": -0.07,
+        "hp": 0.2
+      }
+    },
+    {
+      "id": "medium_battery_2",
+      "statModifiers": {
+        "heavyAttack": 14,
+        "productionCost": 850,
+        "hp": 10,
+        "torpedoEnemyCriticalChanceFactor": 0.05,
+        "torpedoDamageReductionFactor": -0.05
+      },
+      "statAverages": {
+        "heavyPiercing": 28
+      },
+      "statMultipliers": {
+        "speed": -0.08,
+        "hp": 0.15
+      }
+    },
+    {
+      "id": "medium_battery_3",
+      "statModifiers": {
+        "heavyAttack": 18,
+        "productionCost": 900,
+        "hp": 15,
+        "torpedoEnemyCriticalChanceFactor": 0.05,
+        "torpedoDamageReductionFactor": -0.05
+      },
+      "statAverages": {
+        "heavyPiercing": 34
+      },
+      "statMultipliers": {
+        "speed": -0.09,
+        "hp": 0.15
+      }
+    },
+    {
+      "id": "medium_battery_4",
+      "statModifiers": {
+        "heavyAttack": 22,
+        "productionCost": 950,
+        "hp": 20,
+        "torpedoEnemyCriticalChanceFactor": 0.05,
+        "torpedoDamageReductionFactor": -0.05
+      },
+      "statAverages": {
+        "heavyPiercing": 40
+      },
+      "statMultipliers": {
+        "speed": -0.1,
+        "hp": 0.15
+      }
+    }
+  ]
+}

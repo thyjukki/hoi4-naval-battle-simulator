@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="Data\*.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,27 @@
+{
+  "shipDesigns": [
+    {
+      "id": "test_dd",
+      "hullID": "destroyer_hull_1",
+      "moduleIDs": [
+        "light_battery_1",
+        "fire_control_0",
+        "engine_dd_1"
+      ]
+    },
+    {
+      "id": "dd_la",
+      "hullID": "destroyer_hull_3",
+      "moduleIDs": [
+        "engine_dd_4",
+        "fire_control_3",
+        "radar_4",
+        "anti_air_4",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3"
+      ]
+    }
+  ]
+}

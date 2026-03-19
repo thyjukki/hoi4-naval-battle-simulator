@@ -1,0 +1,44 @@
+{
+  "modules": [
+    {
+      "id": "anti_air_1",
+      "statModifiers": {
+        "antiAir": 3,
+        "productionCost": 80
+      },
+      "statMultipliers": {
+        "speed": -0.002
+      }
+    },
+    {
+      "id": "anti_air_2",
+      "statModifiers": {
+        "antiAir": 4,
+        "productionCost": 110
+      },
+      "statMultipliers": {
+        "speed": -0.002
+      }
+    },
+    {
+      "id": "anti_air_3",
+      "statModifiers": {
+        "antiAir": 5,
+        "productionCost": 140
+      },
+      "statMultipliers": {
+        "speed": -0.002
+      }
+    },
+    {
+      "id": "anti_air_4",
+      "statModifiers": {
+        "antiAir": 6,
+        "productionCost": 170
+      },
+      "statMultipliers": {
+        "speed": -0.002
+      }
+    }
+  ]
+}

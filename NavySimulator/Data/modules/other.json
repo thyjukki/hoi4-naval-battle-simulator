@@ -1,0 +1,237 @@
+{
+  "modules": [
+    {
+      "id": "airplane_launcher_1",
+      "statModifiers": {
+        "surfaceDetection": 2,
+        "subDetection": 1.5,
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "airplane_launcher_2",
+      "statModifiers": {
+        "surfaceDetection": 4,
+        "subDetection": 3.5,
+        "productionCost": 170
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "anechoic_tile",
+      "statMultipliers": {
+        "subVisibility": -0.15,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "big_ship_deck_space",
+      "statModifiers": {
+        "carrierSize": 3,
+        "productionCost": 2000
+      },
+      "statMultipliers": {
+        "speed": -0.1
+      }
+    },
+    {
+      "id": "deck_space",
+      "statModifiers": {
+        "carrierSize": 2,
+        "productionCost": 1750
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "deck_space_sub",
+      "statModifiers": {
+        "carrierSize": 1,
+        "productionCost": 1000
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "dp_ship_medium_1",
+      "statModifiers": {
+        "lightAttack": 8,
+        "antiAir": 6,
+        "productionCost": 400
+      },
+      "statAverages": {
+        "lightPiercing": 8
+      },
+      "statMultipliers": {
+        "speed": -0.04,
+        "hp": 0.1
+      }
+    },
+    {
+      "id": "dp_ship_secondaries_1",
+      "statModifiers": {
+        "lightAttack": 2,
+        "antiAir": 1.5,
+        "productionCost": 180
+      },
+      "statAverages": {
+        "lightPiercing": 4
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "dp_ship_secondaries_2",
+      "statModifiers": {
+        "lightAttack": 3,
+        "antiAir": 3,
+        "productionCost": 220
+      },
+      "statAverages": {
+        "lightPiercing": 5
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "dp_ship_secondaries_3",
+      "statModifiers": {
+        "lightAttack": 4,
+        "antiAir": 4.5,
+        "productionCost": 260
+      },
+      "statAverages": {
+        "lightPiercing": 6
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "escort_deck_space",
+      "statModifiers": {
+        "carrierSize": 1,
+        "productionCost": 700,
+        "carrierSurfaceDetection": 1,
+        "carrierSubDetection": 5
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "extra_fuel_tank",
+      "statMultipliers": {
+        "productionCost": 0.05
+      }
+    },
+    {
+      "id": "mine_layer_1",
+      "statModifiers": {
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "mine_layer_sub",
+      "statModifiers": {
+        "productionCost": 90,
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "mine_sweeper_1",
+      "statModifiers": {
+        "productionCost": 30
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "secondaries_1",
+      "statModifiers": {
+        "lightAttack": 4,
+        "productionCost": 200
+      },
+      "statAverages": {
+        "lightPiercing": 4
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "secondaries_2",
+      "statModifiers": {
+        "lightAttack": 6,
+        "productionCost": 250
+      },
+      "statAverages": {
+        "lightPiercing": 6
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "slbm_launcher",
+      "statModifiers": {
+        "productionCost": 2000,
+        "reliability": -0.15
+      },
+      "statMultipliers": {
+        "subVisibility": 0.2
+      }
+    },
+    {
+      "id": "sub_missile_launcher",
+      "statModifiers": {
+        "productionCost": 1500,
+        "reliability": -0.1
+      },
+      "statMultipliers": {
+        "subVisibility": 0.15
+      }
+    },
+    {
+      "id": "sub_snorkel_1",
+      "statModifiers": {
+        "productionCost": 100
+      },
+      "statMultipliers": {
+        "subVisibility": -0.1
+      }
+    },
+    {
+      "id": "sub_snorkel_2",
+      "statModifiers": {
+        "productionCost": 140
+      },
+      "statMultipliers": {
+        "subVisibility": -0.2
+      }
+    },
+    {
+      "id": "submarine_deck_space",
+      "statModifiers": {
+        "productionCost": 350
+      },
+      "statMultipliers": {
+        "speed": -0.05,
+        "subVisibility": 0.1
+      }
+    }
+  ]
+}

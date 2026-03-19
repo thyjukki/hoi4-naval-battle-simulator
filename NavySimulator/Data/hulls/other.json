@@ -1,0 +1,19 @@
+{
+  "hulls": [
+    {
+      "id": "panzerschiff_cruiser_hull",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 25,
+        "organization": 40,
+        "hp": 200,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 3000
+      }
+    }
+  ]
+}

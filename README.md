@@ -16,15 +16,15 @@ Simulation runs in hourly rounds until one side has no ships left or `MaxHours` 
 
 ## Data Files
 Setup is split into multiple files under `NavySimulator/Data/`:
-- `hulls.json`
-- `modules.json`
-- `mios.json`
-- `ship-designs.json`
-- `force-compositions.json` (actual ships + fleet composition)
+- `hulls/*.json`
+- `modules/*.json`
+- `mios/*.json`
+- `ship-designs/*.json`
+- `force-compositions.json` (fleet composition by `shipDesignID -> count`)
 - `battle-scenario.json`
 
-`force-compositions.json` uses explicit ship instances, then fleets reference those ship IDs.
-`hulls.json` now includes `role` (`Screen`, `Capital`, `Carrier`, `Submarine`, `Convoy`) used by battle-line grouping and screening calculations.
+Each file can contain multiple items (`hulls`, `modules`, `mios`, `shipDesigns`) and `SetupLoader` merges all files in each folder.
+Hull entries include `role` (`Screen`, `Capital`, `Carrier`, `Submarine`, `Convoy`) used by battle-line grouping and screening calculations.
 
 ## Run
 ```powershell

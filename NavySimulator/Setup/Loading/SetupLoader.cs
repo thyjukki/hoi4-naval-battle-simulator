@@ -31,41 +31,41 @@ public class SetupLoader
 
         ValidateModuleStatWarnings(dataDirectoryPath, warnings);
 
-        var hullsFile = ReadJsonFile<HullsFileDto>(dataDirectoryPath, "hulls.json", errors) ?? new HullsFileDto();
-        var modulesFile = ReadJsonFile<ModulesFileDto>(dataDirectoryPath, "modules.json", errors) ?? new ModulesFileDto();
-        var miosFile = ReadJsonFile<MiosFileDto>(dataDirectoryPath, "mios.json", errors) ?? new MiosFileDto();
-        var designsFile = ReadJsonFile<ShipDesignsFileDto>(dataDirectoryPath, "ship-designs.json", errors) ?? new ShipDesignsFileDto();
+        var hulls = ReadCollectionFromFolderOrFile<HullDto>(dataDirectoryPath, "hulls", "hulls.json", "hulls", errors);
+        var modules = ReadCollectionFromFolderOrFile<ModuleDto>(dataDirectoryPath, "modules", "modules.json", "modules", errors);
+        var mios = ReadCollectionFromFolderOrFile<MioBonusDto>(dataDirectoryPath, "mios", "mios.json", "mios", errors);
+        var designs = ReadCollectionFromFolderOrFile<ShipDesignDto>(dataDirectoryPath, "ship-designs", "ship-designs.json", "shipDesigns", errors);
         var forceCompositionsFile = ReadJsonFile<ForceCompositionsFileDto>(dataDirectoryPath, "force-compositions.json", errors) ?? new ForceCompositionsFileDto();
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
 
-        ValidateRequiredIds(hullsFile.Hulls.Select(h => h.ID), "hulls", errors);
-        ValidateRequiredValues(hullsFile.Hulls.Select(h => h.Role), "hulls.role", errors);
-        ValidateRequiredIds(modulesFile.Modules.Select(m => m.ID), "modules", errors);
-        ValidateRequiredIds(miosFile.Mios.Select(m => m.ID), "mios", errors);
-        ValidateRequiredIds(designsFile.ShipDesigns.Select(d => d.ID), "shipDesigns", errors);
+        ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);
+        ValidateRequiredValues(hulls.Select(h => h.Role), "hulls.role", errors);
+        ValidateRequiredIds(modules.Select(m => m.ID), "modules", errors);
+        ValidateRequiredIds(mios.Select(m => m.ID), "mios", errors);
+        ValidateRequiredIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateRequiredIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
-        ValidateDuplicateIds(hullsFile.Hulls.Select(h => h.ID), "hulls", errors);
-        ValidateDuplicateIds(modulesFile.Modules.Select(m => m.ID), "modules", errors);
-        ValidateDuplicateIds(miosFile.Mios.Select(m => m.ID), "mios", errors);
-        ValidateDuplicateIds(designsFile.ShipDesigns.Select(d => d.ID), "shipDesigns", errors);
+        ValidateDuplicateIds(hulls.Select(h => h.ID), "hulls", errors);
+        ValidateDuplicateIds(modules.Select(m => m.ID), "modules", errors);
+        ValidateDuplicateIds(mios.Select(m => m.ID), "mios", errors);
+        ValidateDuplicateIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
-        var hullIds = hullsFile.Hulls.Select(h => h.ID).ToHashSet();
-                        foreach (var hull in hullsFile.Hulls)
-                        {
-                            if (!Enum.TryParse<ShipRole>(hull.Role, true, out _))
-                            {
-                                errors.Add($"hull '{hull.ID}' has unknown role '{hull.Role}'.");
-                            }
-                        }
+        var hullIds = hulls.Select(h => h.ID).ToHashSet();
+        foreach (var hull in hulls)
+        {
+            if (!Enum.TryParse<ShipRole>(hull.Role, true, out _))
+            {
+                errors.Add($"hull '{hull.ID}' has unknown role '{hull.Role}'.");
+            }
+        }
 
-        var moduleIds = modulesFile.Modules.Select(m => m.ID).ToHashSet();
-        var mioIds = miosFile.Mios.Select(m => m.ID).ToHashSet();
-        var designIds = designsFile.ShipDesigns.Select(d => d.ID).ToHashSet();
+        var moduleIds = modules.Select(m => m.ID).ToHashSet();
+        var mioIds = mios.Select(m => m.ID).ToHashSet();
+        var designIds = designs.Select(d => d.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
 
-        foreach (var design in designsFile.ShipDesigns)
+        foreach (var design in designs)
         {
             if (!hullIds.Contains(design.HullID))
             {
@@ -120,26 +120,26 @@ public class SetupLoader
             throw new SetupValidationException(errors);
         }
 
-        var hullById = hullsFile.Hulls.ToDictionary(
+        var hullById = hulls.ToDictionary(
             h => h.ID,
             h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), h.BaseStats.ToDomain()));
-        var moduleById = modulesFile.Modules.ToDictionary(
+        var moduleById = modules.ToDictionary(
             m => m.ID,
             m => new StatModule(
                 m.ID,
                 m.StatModifiers.ToDomain(),
                 m.StatMultipliers.ToDomain(),
                 m.StatAverages.ToDomain()));
-        var mioById = miosFile.Mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
+        var mioById = mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
 
         var designById = new Dictionary<string, ShipDesign>();
 
-        foreach (var design in designsFile.ShipDesigns)
+        foreach (var design in designs)
         {
             var hull = hullById[design.HullID];
-            var modules = design.ModuleIDs.Select(moduleId => moduleById[moduleId]).ToList();
+            var designModules = design.ModuleIDs.Select(moduleId => moduleById[moduleId]).ToList();
             var mio = string.IsNullOrWhiteSpace(design.MioID) ? null : mioById[design.MioID];
-            designById[design.ID] = new ShipDesign(hull, modules, mio);
+            designById[design.ID] = new ShipDesign(hull, designModules, mio);
         }
 
         var fleetById = new Dictionary<string, Fleet>();
@@ -174,6 +174,95 @@ public class SetupLoader
             defender);
     }
 
+    private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(
+        string dataDirectoryPath,
+        string folderName,
+        string legacyFileName,
+        string rootPropertyName,
+        List<string> errors)
+    {
+        var folderPath = Path.Combine(dataDirectoryPath, folderName);
+
+        if (Directory.Exists(folderPath))
+        {
+            var jsonFiles = Directory
+                .GetFiles(folderPath, "*.json", SearchOption.TopDirectoryOnly)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (jsonFiles.Count == 0)
+            {
+                errors.Add($"Directory '{folderName}' does not contain any JSON files.");
+                return [];
+            }
+
+            var items = new List<TItem>();
+
+            foreach (var filePath in jsonFiles)
+            {
+                items.AddRange(ReadCollectionFile<TItem>(filePath, rootPropertyName, errors));
+            }
+
+            return items;
+        }
+
+        var legacyPath = Path.Combine(dataDirectoryPath, legacyFileName);
+        return ReadCollectionFile<TItem>(legacyPath, rootPropertyName, errors);
+    }
+
+    private static List<TItem> ReadCollectionFile<TItem>(string filePath, string rootPropertyName, List<string> errors)
+    {
+        if (!File.Exists(filePath))
+        {
+            errors.Add($"Missing required setup source: {Path.GetFileName(filePath)}");
+            return [];
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(File.ReadAllText(filePath));
+            JsonElement arrayElement;
+
+            if (document.RootElement.ValueKind == JsonValueKind.Array)
+            {
+                arrayElement = document.RootElement;
+            }
+            else if (document.RootElement.ValueKind == JsonValueKind.Object &&
+                     document.RootElement.TryGetProperty(rootPropertyName, out var wrappedArray) &&
+                     wrappedArray.ValueKind == JsonValueKind.Array)
+            {
+                arrayElement = wrappedArray;
+            }
+            else
+            {
+                errors.Add($"File '{Path.GetFileName(filePath)}' must contain '{rootPropertyName}' array or be a JSON array.");
+                return [];
+            }
+
+            var items = new List<TItem>();
+
+            foreach (var itemElement in arrayElement.EnumerateArray())
+            {
+                var item = JsonSerializer.Deserialize<TItem>(itemElement.GetRawText(), JsonOptions);
+
+                if (item is null)
+                {
+                    errors.Add($"File '{Path.GetFileName(filePath)}' contains an invalid '{rootPropertyName}' entry.");
+                    continue;
+                }
+
+                items.Add(item);
+            }
+
+            return items;
+        }
+        catch (JsonException ex)
+        {
+            errors.Add($"File '{Path.GetFileName(filePath)}' has invalid JSON: {ex.Message}");
+            return [];
+        }
+    }
+
     private static T? ReadJsonFile<T>(string dataDirectoryPath, string fileName, List<string> errors)
     {
         var path = Path.Combine(dataDirectoryPath, fileName);
@@ -205,37 +294,76 @@ public class SetupLoader
 
     private static void ValidateModuleStatWarnings(string dataDirectoryPath, List<string> warnings)
     {
-        var modulesPath = Path.Combine(dataDirectoryPath, "modules.json");
+        var moduleFiles = GetModuleSourceFiles(dataDirectoryPath);
 
-        if (!File.Exists(modulesPath))
+        if (moduleFiles.Count == 0)
         {
             return;
         }
 
         try
         {
-            ValidateDuplicateModuleStatKeysWithReader(modulesPath, warnings);
-            using var document = JsonDocument.Parse(File.ReadAllText(modulesPath));
-
-            if (!document.RootElement.TryGetProperty("modules", out var modulesElement) || modulesElement.ValueKind != JsonValueKind.Array)
+            foreach (var modulesPath in moduleFiles)
             {
-                return;
-            }
+                ValidateDuplicateModuleStatKeysWithReader(modulesPath, warnings);
+                using var document = JsonDocument.Parse(File.ReadAllText(modulesPath));
 
-            for (var index = 0; index < modulesElement.GetArrayLength(); index++)
-            {
-                var moduleElement = modulesElement[index];
-                var moduleId = TryGetModuleId(moduleElement, index);
+                if (!TryGetCollectionArray(document.RootElement, "modules", out var modulesElement))
+                {
+                    continue;
+                }
 
-                ValidateModuleStatBlock(moduleElement, moduleId, "statModifiers", warnings);
-                ValidateModuleStatBlock(moduleElement, moduleId, "statAverages", warnings);
-                ValidateModuleStatBlock(moduleElement, moduleId, "statMultipliers", warnings);
+                for (var index = 0; index < modulesElement.GetArrayLength(); index++)
+                {
+                    var moduleElement = modulesElement[index];
+                    var moduleId = TryGetModuleId(moduleElement, index);
+
+                    ValidateModuleStatBlock(moduleElement, moduleId, "statModifiers", warnings);
+                    ValidateModuleStatBlock(moduleElement, moduleId, "statAverages", warnings);
+                    ValidateModuleStatBlock(moduleElement, moduleId, "statMultipliers", warnings);
+                }
             }
         }
         catch (JsonException)
         {
             // Invalid JSON is already captured as a setup error by ReadJsonFile.
         }
+    }
+
+    private static List<string> GetModuleSourceFiles(string dataDirectoryPath)
+    {
+        var modulesFolder = Path.Combine(dataDirectoryPath, "modules");
+
+        if (Directory.Exists(modulesFolder))
+        {
+            return Directory
+                .GetFiles(modulesFolder, "*.json", SearchOption.TopDirectoryOnly)
+                .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        var legacyModulesPath = Path.Combine(dataDirectoryPath, "modules.json");
+        return File.Exists(legacyModulesPath) ? [legacyModulesPath] : [];
+    }
+
+    private static bool TryGetCollectionArray(JsonElement rootElement, string rootPropertyName, out JsonElement arrayElement)
+    {
+        if (rootElement.ValueKind == JsonValueKind.Array)
+        {
+            arrayElement = rootElement;
+            return true;
+        }
+
+        if (rootElement.ValueKind == JsonValueKind.Object &&
+            rootElement.TryGetProperty(rootPropertyName, out var wrappedArray) &&
+            wrappedArray.ValueKind == JsonValueKind.Array)
+        {
+            arrayElement = wrappedArray;
+            return true;
+        }
+
+        arrayElement = default;
+        return false;
     }
 
     private static string TryGetModuleId(JsonElement moduleElement, int index)

@@ -1,0 +1,91 @@
+{
+  "modules": [
+    {
+      "id": "fire_control_0",
+      "statModifiers": {
+        "productionCost": 60,
+        "lightHitChangeFactor": 0.025,
+        "heavyHitChangeFactor": 0.025
+      }
+    },
+    {
+      "id": "fire_control_1",
+      "statModifiers": {
+        "productionCost": 135,
+        "lightHitChangeFactor": 0.05,
+        "heavyHitChangeFactor": 0.05
+      },
+      "statMultipliers": {
+        "antiAir": 0.025
+      }
+    },
+    {
+      "id": "fire_control_2",
+      "statModifiers": {
+        "productionCost": 165,
+        "lightHitChangeFactor": 0.075,
+        "heavyHitChangeFactor": 0.075
+      },
+      "statMultipliers": {
+        "antiAir": 0.05
+      }
+    },
+    {
+      "id": "fire_control_3",
+      "statModifiers": {
+        "productionCost": 225,
+        "lightHitChangeFactor": 0.1,
+        "heavyHitChangeFactor": 0.1
+      },
+      "statMultipliers": {
+        "antiAir": 0.075
+      }
+    },
+    {
+      "id": "radar_1",
+      "statModifiers": {
+        "productionCost": 100,
+        "surfaceDetection": 3
+      }
+    },
+    {
+      "id": "radar_2",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.025,
+        "heavyHitChangeFactor": 0.025,
+        "productionCost": 130,
+        "surfaceDetection": 5,
+        "subDetection": 2
+      },
+      "statMultipliers": {
+        "antiAir": 0.025
+      }
+    },
+    {
+      "id": "radar_3",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.05,
+        "heavyHitChangeFactor": 0.05,
+        "surfaceDetection": 7,
+        "subDetection": 6,
+        "productionCost": 160
+      },
+      "statMultipliers": {
+        "antiAir": 0.05
+      }
+    },
+    {
+      "id": "radar_4",
+      "statModifiers": {
+        "lightHitChangeFactor": 0.075,
+        "heavyHitChangeFactor": 0.075,
+        "productionCost": 190,
+        "surfaceDetection": 9,
+        "subDetection": 14
+      },
+      "statMultipliers": {
+        "antiAir": 0.075
+      }
+    }
+  ]
+}

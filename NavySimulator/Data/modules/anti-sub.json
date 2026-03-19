@@ -1,0 +1,65 @@
+{
+  "modules": [
+    {
+      "id": "depth_charge_1",
+      "statModifiers": {
+        "depthChargeAttack": 8,
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "depth_charge_2",
+      "statModifiers": {
+        "depthChargeAttack": 12,
+        "productionCost": 120
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "depth_charge_3",
+      "statModifiers": {
+        "depthChargeAttack": 16,
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "depth_charge_4",
+      "statModifiers": {
+        "depthChargeAttack": 20,
+        "productionCost": 180
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "sonar_1",
+      "statModifiers": {
+        "subDetection": 6,
+        "productionCost": 40
+      }
+    },
+    {
+      "id": "sonar_2",
+      "statModifiers": {
+        "subDetection": 10,
+        "productionCost": 60
+      }
+    },
+    {
+      "id": "sonar_3",
+      "statModifiers": {
+        "subDetection": 20,
+        "productionCost": 100
+      }
+    }
+  ]
+}

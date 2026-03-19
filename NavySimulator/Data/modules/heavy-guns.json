@@ -1,0 +1,82 @@
+{
+  "modules": [
+    {
+      "id": "heavy_battery_1",
+      "statModifiers": {
+        "heavyAttack": 12,
+        "productionCost": 1200
+      },
+      "statAverages": {
+        "heavyPiercing": 28
+      },
+      "statMultipliers": {
+        "speed": -0.04
+      }
+    },
+    {
+      "id": "heavy_battery_2",
+      "statModifiers": {
+        "heavyAttack": 16,
+        "productionCost": 1300
+      },
+      "statAverages": {
+        "heavyPiercing": 36
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "heavy_battery_3",
+      "statModifiers": {
+        "heavyAttack": 20,
+        "productionCost": 1400
+      },
+      "statAverages": {
+        "heavyPiercing": 44
+      },
+      "statMultipliers": {
+        "speed": -0.06
+      }
+    },
+    {
+      "id": "heavy_battery_4",
+      "statModifiers": {
+        "heavyAttack": 24,
+        "productionCost": 1500
+      },
+      "statAverages": {
+        "heavyPiercing": 52
+      },
+      "statMultipliers": {
+        "speed": -0.07
+      }
+    },
+    {
+      "id": "heavy_battery_sub_1",
+      "statModifiers": {
+        "heavyAttack": 6,
+        "productionCost": 500
+      },
+      "statAverages": {
+        "heavyPiercing": 24
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "super_heavy_battery_1",
+      "statModifiers": {
+        "heavyAttack": 28,
+        "productionCost": 1600
+      },
+      "statAverages": {
+        "heavyPiercing": 55
+      },
+      "statMultipliers": {
+        "speed": -0.075
+      }
+    }
+  ]
+}

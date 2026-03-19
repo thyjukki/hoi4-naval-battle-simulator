@@ -1,0 +1,190 @@
+{
+  "modules": [
+    {
+      "id": "armor_bb_1",
+      "statModifiers": {
+        "armor": 32,
+        "torpedoEnemyCriticalChanceFactor": -0.1,
+        "torpedoDamageReductionFactor": 0.1
+      },
+      "statMultipliers": {
+        "productionCost": 0.1,
+        "speed": -0.3,
+        "hp": 0.15
+      }
+    },
+    {
+      "id": "armor_bb_2",
+      "statModifiers": {
+        "armor": 38,
+        "torpedoEnemyCriticalChanceFactor": -0.15,
+        "torpedoDamageReductionFactor": 0.15
+      },
+      "statMultipliers": {
+        "productionCost": 0.125,
+        "speed": -0.3,
+        "hp": 0.2
+      }
+    },
+    {
+      "id": "armor_bb_3",
+      "statModifiers": {
+        "armor": 44,
+        "torpedoEnemyCriticalChanceFactor": -0.2,
+        "torpedoDamageReductionFactor": 0.2
+      },
+      "statMultipliers": {
+        "productionCost": 0.15,
+        "speed": -0.3,
+        "hp": 0.25
+      }
+    },
+    {
+      "id": "armor_bc_1",
+      "statModifiers": {
+        "armor": 23
+      },
+      "statMultipliers": {
+        "productionCost": 0.05,
+        "speed": -0.15
+      }
+    },
+    {
+      "id": "armor_bc_2",
+      "statModifiers": {
+        "armor": 29,
+        "torpedoEnemyCriticalChanceFactor": -0.05,
+        "torpedoDamageReductionFactor": 0.05
+      },
+      "statMultipliers": {
+        "productionCost": 0.075,
+        "speed": -0.15,
+        "hp": 0.05
+      }
+    },
+    {
+      "id": "armor_bc_3",
+      "statModifiers": {
+        "armor": 35,
+        "torpedoEnemyCriticalChanceFactor": -0.1,
+        "torpedoDamageReductionFactor": 0.1
+      },
+      "statMultipliers": {
+        "productionCost": 0.1,
+        "speed": -0.15,
+        "hp": 0.1
+      }
+    },
+    {
+      "id": "armor_carrier_deck",
+      "statModifiers": {
+        "armor": 6
+      },
+      "statMultipliers": {
+        "hp": 0.2,
+        "productionCost": 0.1
+      }
+    },
+    {
+      "id": "armor_cruiser_1",
+      "statModifiers": {
+        "armor": 3,
+        "torpedoEnemyCriticalChanceFactor": -0.05,
+        "torpedoDamageReductionFactor": 0.05
+      },
+      "statMultipliers": {
+        "speed": -0.05,
+        "productionCost": 0.075
+      }
+    },
+    {
+      "id": "armor_cruiser_2",
+      "statModifiers": {
+        "armor": 6.5,
+        "torpedoEnemyCriticalChanceFactor": -0.1,
+        "torpedoDamageReductionFactor": 0.1
+      },
+      "statMultipliers": {
+        "productionCost": 0.1,
+        "speed": -0.075,
+        "hp": 0.1
+      }
+    },
+    {
+      "id": "armor_cruiser_3",
+      "statModifiers": {
+        "armor": 8.5,
+        "torpedoEnemyCriticalChanceFactor": -0.15,
+        "torpedoDamageReductionFactor": 0.15
+      },
+      "statMultipliers": {
+        "productionCost": 0.125,
+        "speed": -0.1,
+        "hp": 0.2
+      }
+    },
+    {
+      "id": "armor_cruiser_4",
+      "statModifiers": {
+        "armor": 11,
+        "torpedoEnemyCriticalChanceFactor": -0.2,
+        "torpedoDamageReductionFactor": 0.2
+      },
+      "statMultipliers": {
+        "productionCost": 0.15,
+        "speed": -0.125,
+        "hp": 0.3
+      }
+    },
+    {
+      "id": "armor_ice_carrier_deck_1",
+      "statModifiers": {
+        "hp": 30,
+        "navalWeatherPenaltyFactor": -0.05,
+        "armor": 2
+      },
+      "statMultipliers": {
+        "productionCost": 0.1,
+        "speed": -0.1
+      }
+    },
+    {
+      "id": "armor_ice_carrier_deck_2",
+      "statModifiers": {
+        "hp": 35,
+        "navalWeatherPenaltyFactor": -0.1,
+        "armor": 4
+      },
+      "statMultipliers": {
+        "productionCost": 0.15,
+        "speed": -0.15
+      }
+    },
+    {
+      "id": "armor_ice_carrier_deck_3",
+      "statModifiers": {
+        "hp": 40,
+        "navalWeatherPenaltyFactor": -0.15,
+        "armor": 6
+      },
+      "statMultipliers": {
+        "productionCost": 0.2,
+        "speed": -0.15
+      }
+    },
+    {
+      "id": "armor_shbb",
+      "statModifiers": {
+        "armor": 55,
+        "surfaceVisibility": 10,
+        "torpedoEnemyCriticalChanceFactor": -0.1,
+        "torpedoDamageReductionFactor": 0.1
+      },
+      "statMultipliers": {
+        "productionCost": 0.275,
+        "speed": -0.35,
+        "hp": 0.1
+      }
+    }
+  ]
+}

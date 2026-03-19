@@ -1,0 +1,64 @@
+{
+  "hulls": [
+    {
+      "id": "heavy_cruiser_hull_1",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 28,
+        "organization": 40,
+        "hp": 70,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 2000
+      }
+    },
+    {
+      "id": "heavy_cruiser_hull_2",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 29,
+        "organization": 40,
+        "hp": 90,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.85,
+        "productionCost": 2100
+      }
+    },
+    {
+      "id": "heavy_cruiser_hull_3",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 30,
+        "organization": 40,
+        "hp": 110,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.9,
+        "productionCost": 2200
+      }
+    },
+    {
+      "id": "heavy_cruiser_hull_4",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 31,
+        "organization": 40,
+        "hp": 130,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.95,
+        "productionCost": 2300
+      }
+    }
+  ]
+}
