@@ -8,16 +8,13 @@ public class BattleSimulator
         var allActions = new List<ActionResult>();
         var cooldowns = new Dictionary<(string ShipID, WeaponType Weapon), int>();
         var random = new Random(42);
+        var attackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
+        var defenderFiringOrder = scenario.Defender.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
 
         for (var hour = 1; hour <= scenario.MaxHours; hour++)
         {
-            var attackerAlive = GetAliveShips(scenario.Attacker.Fleet.Ships);
-            var defenderAlive = GetAliveShips(scenario.Defender.Fleet.Ships);
-            attackerAlive = FilterRetreated(attackerAlive);
-            defenderAlive = FilterRetreated(defenderAlive);
-
-            var attackerLines = BuildBattleLines(attackerAlive);
-            var defenderLines = BuildBattleLines(defenderAlive);
+            var attackerLines = BuildBattleLinesFromFleet(scenario.Attacker.Fleet.Ships);
+            var defenderLines = BuildBattleLinesFromFleet(scenario.Defender.Fleet.Ships);
 
             var attackerPositioning = 1.0;
             var defenderPositioning = 1.0;
@@ -26,7 +23,7 @@ public class BattleSimulator
             var defenderScreening = CalculateScreening(defenderLines, defenderPositioning);
 
             var attackerActions = ResolveActions(
-                attackerLines,
+                attackerFiringOrder,
                 defenderLines,
                 attackerScreening,
                 defenderScreening,
@@ -35,7 +32,7 @@ public class BattleSimulator
                 cooldowns,
                 random);
             var defenderActions = ResolveActions(
-                defenderLines,
+                defenderFiringOrder,
                 attackerLines,
                 defenderScreening,
                 attackerScreening,
@@ -92,24 +89,42 @@ public class BattleSimulator
         return BuildResult(scenario, scenario.MaxHours, finalAttackerAlive, finalDefenderAlive, finalAttackerRetreated, finalDefenderRetreated, hourlyLog, allActions);
     }
 
-    private static List<Ship> FilterRetreated(List<Ship> ships)
+    private static BattleLines BuildBattleLinesFromFleet(List<Ship> ships)
     {
-        return ships.Where(ship => ship.CurrentStatus != ShipStatus.Retreated).ToList();
-    }
+        var screens = new List<Ship>();
+        var capitals = new List<Ship>();
+        var carriers = new List<Ship>();
+        var submarines = new List<Ship>();
+        var convoys = new List<Ship>();
 
-    private static List<Ship> GetAliveShips(List<Ship> ships)
-    {
-        return ships.Where(ship => !ship.IsSunk).ToList();
-    }
+        foreach (var ship in ships)
+        {
+            if (ship.IsSunk || ship.CurrentStatus == ShipStatus.Retreated)
+            {
+                continue;
+            }
 
-    private static BattleLines BuildBattleLines(List<Ship> ships)
-    {
-        return new BattleLines(
-            ships.Where(ship => ship.Design.Hull.Role == ShipRole.Screen).ToList(),
-            ships.Where(ship => ship.Design.Hull.Role == ShipRole.Capital).ToList(),
-            ships.Where(ship => ship.Design.Hull.Role == ShipRole.Carrier).ToList(),
-            ships.Where(ship => ship.Design.Hull.Role == ShipRole.Submarine).ToList(),
-            ships.Where(ship => ship.Design.Hull.Role == ShipRole.Convoy).ToList());
+            switch (ship.Design.Hull.Role)
+            {
+                case ShipRole.Screen:
+                    screens.Add(ship);
+                    break;
+                case ShipRole.Capital:
+                    capitals.Add(ship);
+                    break;
+                case ShipRole.Carrier:
+                    carriers.Add(ship);
+                    break;
+                case ShipRole.Submarine:
+                    submarines.Add(ship);
+                    break;
+                case ShipRole.Convoy:
+                    convoys.Add(ship);
+                    break;
+            }
+        }
+
+        return new BattleLines(screens, capitals, carriers, submarines, convoys);
     }
 
     private static ScreeningSummary CalculateScreening(BattleLines lines, double positioning)
@@ -141,7 +156,7 @@ public class BattleSimulator
     }
 
     private static List<ActionResult> ResolveActions(
-        BattleLines attackerLines,
+        List<Ship> firingOrder,
         BattleLines defenderLines,
         ScreeningSummary attackerScreening,
         ScreeningSummary defenderScreening,
@@ -151,10 +166,14 @@ public class BattleSimulator
         Random random)
     {
         var results = new List<ActionResult>();
-        var firingShips = attackerLines.AllAliveShips.OrderBy(ship => ship.ID).ToList();
 
-        foreach (var ship in firingShips)
+        foreach (var ship in firingOrder)
         {
+            if (ship.IsSunk || ship.CurrentStatus == ShipStatus.Retreated)
+            {
+                continue;
+            }
+
             var stats = ship.Design.GetFinalStats();
 
             ResolveRetreating(ship, hour, attackerScreening);
@@ -353,9 +372,15 @@ public class BattleSimulator
         var targetArmor = target.Design.GetFinalStats().Armor;
         var piercingRatio = piercingValue / targetArmor;
         
-        var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS
-            .Select((threshold, index) => (threshold, index))
-            .FirstOrDefault(t => piercingRatio >= t.threshold).index;
+        var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
+        for (var i = 0; i < Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length; i++)
+        {
+            if (piercingRatio >= Hoi4Defines.NAVY_PIERCING_THRESHOLDS[i])
+            {
+                piercingThresholdIndex = i;
+                break;
+            }
+        }
         var piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         
         var positioningMultiplier = 1.0 - Hoi4Defines.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
@@ -552,8 +577,13 @@ public class BattleSimulator
 
         foreach (var group in groups)
         {
-            foreach (var targetShip in group.Ships.Where(ship => !ship.IsSunk))
+            foreach (var targetShip in group.Ships)
             {
+                if (targetShip.IsSunk)
+                {
+                    continue;
+                }
+
                 var weight = GetTargetWeight(weapon, targetShip, group.GroupType);
                 
 
@@ -571,13 +601,18 @@ public class BattleSimulator
         WeaponType weapon,
         List<TargetGroup> groups,
         Random random)
-    {        
-        var weightedTargets = new List<SelectedTarget>();
+    {
+        var totalWeight = 0.0;
 
         foreach (var group in groups)
         {
-            foreach (var targetShip in group.Ships.Where(ship => !ship.IsSunk))
+            foreach (var targetShip in group.Ships)
             {
+                if (targetShip.IsSunk)
+                {
+                    continue;
+                }
+
                 var weight = GetTargetWeight(weapon, targetShip, group.GroupType);
 
                 // If the target is escaping, the weight is reduced by 50%
@@ -588,22 +623,45 @@ public class BattleSimulator
 
                 if (weight > 0)
                 {
-                    weightedTargets.Add(new SelectedTarget(targetShip, group.GroupType, weight));
+                    totalWeight += weight;
                 }
             }
         }
 
-        var totalWeight = weightedTargets.Sum(t => t.Weight);
+        if (totalWeight <= 0)
+        {
+            return null;
+        }
+
         var randomValue = random.NextDouble() * totalWeight;
         var cumulativeWeight = 0.0;
 
-        foreach (var target in weightedTargets)
+        foreach (var group in groups)
         {
-            cumulativeWeight += target.Weight;
-
-            if (randomValue <= cumulativeWeight)
+            foreach (var targetShip in group.Ships)
             {
-                return target;
+                if (targetShip.IsSunk)
+                {
+                    continue;
+                }
+
+                var weight = GetTargetWeight(weapon, targetShip, group.GroupType);
+                if (targetShip.CurrentStatus == ShipStatus.Retreating)
+                {
+                    weight *= Hoi4Defines.RetreatingTargetWeightMult;
+                }
+
+                if (weight <= 0)
+                {
+                    continue;
+                }
+
+                cumulativeWeight += weight;
+
+                if (randomValue <= cumulativeWeight)
+                {
+                    return new SelectedTarget(targetShip, group.GroupType, weight);
+                }
             }
         }
 
@@ -652,8 +710,13 @@ public class BattleSimulator
 
     private static void ApplyActionDamage(List<ActionResult> actions)
     {
-        foreach (var action in actions.Where(action => action.Fired))
+        foreach (var action in actions)
         {
+            if (!action.Fired)
+            {
+                continue;
+            }
+
             var targetWasAlive = action.Target is not null && !action.Target.IsSunk;
             var appliedDamage = action.Target!.ApplyDamage(action.Damage);
             action.AppliedHpDamage = appliedDamage.HpDamage;
@@ -664,7 +727,17 @@ public class BattleSimulator
 
     private static double GetTotalDamage(List<ActionResult> actions)
     {
-        return actions.Where(action => action.Fired).Sum(action => action.Damage);
+        var totalDamage = 0.0;
+
+        foreach (var action in actions)
+        {
+            if (action.Fired)
+            {
+                totalDamage += action.Damage;
+            }
+        }
+
+        return totalDamage;
     }
 
     private static string BuildActionSummary(List<ActionResult> actions)
@@ -729,12 +802,32 @@ public class BattleSimulator
 
     private static int GetAliveShipCount(List<Ship> ships)
     {
-        return ships.Count(ship => !ship.IsSunk);
+        var count = 0;
+
+        foreach (var ship in ships)
+        {
+            if (!ship.IsSunk)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private static int GetRetreatedShipCount(List<Ship> ships)
     {
-        return ships.Count(ship => ship.CurrentStatus == ShipStatus.Retreated);
+        var count = 0;
+
+        foreach (var ship in ships)
+        {
+            if (ship.CurrentStatus == ShipStatus.Retreated)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     private static BattleResult BuildResult(

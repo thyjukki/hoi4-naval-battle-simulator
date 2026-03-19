@@ -170,6 +170,7 @@ public class SetupLoader
             battleScenarioFile.BattleScenario.Terrain,
             battleScenarioFile.BattleScenario.Weather,
             battleScenarioFile.BattleScenario.MaxHours,
+            battleScenarioFile.BattleScenario.Iterations ?? 1,
             attacker,
             defender);
     }
@@ -613,6 +614,11 @@ public class SetupLoader
         if (scenario.MaxHours <= 0)
         {
             errors.Add("battleScenario.maxHours must be greater than 0.");
+        }
+
+        if (scenario.Iterations.HasValue && scenario.Iterations.Value <= 0)
+        {
+            errors.Add("battleScenario.iterations must be greater than 0 when provided.");
         }
 
         ValidateParticipant("attacker", scenario.Attacker, fleetIds, errors);

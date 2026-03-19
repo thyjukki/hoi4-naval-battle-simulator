@@ -6,6 +6,7 @@ public class BattleScenarioDto
     public string Terrain { get; set; } = string.Empty;
     public string Weather { get; set; } = string.Empty;
     public int MaxHours { get; set; }
+    public int? Iterations { get; set; }
     public BattleParticipantDto Attacker { get; set; } = new BattleParticipantDto();
     public BattleParticipantDto Defender { get; set; } = new BattleParticipantDto();
 }

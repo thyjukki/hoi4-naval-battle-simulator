@@ -58,70 +58,100 @@ Console.WriteLine($"Doctrine: {scenario.Defender.Doctrine}");
 Console.WriteLine($"Tech: {scenario.Defender.TechnologyLevel}");
 Console.WriteLine($"Nation Modifier: {scenario.Defender.NationModifier}");
 
-Console.WriteLine();
-Console.WriteLine("Pre-Simulation Fleet Overview");
-PrintFleetPreview("Attacker", scenario.Attacker.Fleet);
-PrintFleetPreview("Defender", scenario.Defender.Fleet);
-
-Console.WriteLine();
-Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
+var iterations = scenario.Iterations <= 0 ? 1 : scenario.Iterations;
+Console.WriteLine($"Iterations: {iterations}");
 
 var simulator = new BattleSimulator();
-var result = simulator.Simulate(scenario);
-
 var outputDirectoryPath = BuildRunOutputDirectory(scenario.ID);
-var hourlyLogFilePath = Path.Combine(outputDirectoryPath, "hourly-log.txt");
-File.WriteAllLines(hourlyLogFilePath, result.HourlyLog);
-var summaryFilePath = Path.Combine(outputDirectoryPath, "summary.txt");
-var shipReportFilePath = Path.Combine(outputDirectoryPath, "ship-report.txt");
+var iterationResults = new List<BattleResult>();
+var iterationScenarios = new List<BattleScenario>();
 
-File.WriteAllLines(shipReportFilePath, BuildShipReportLines(result.ShipReports));
-
-var topDamageDealers = result.ShipReports
-    .OrderByDescending(report => report.TotalDamageDone)
-    .ThenBy(report => report.ShipID)
-    .Take(3)
-    .Select(report => $"{report.ShipID}:{report.TotalDamageDone:F1}");
-
-var attackerShipsWithDamage = result.ShipReports.Count(report => report.Side == "Attacker" && report.TotalDamageDone > 0);
-var defenderShipsWithDamage = result.ShipReports.Count(report => report.Side == "Defender" && report.TotalDamageDone > 0);
-var damageBreakdownLines = BuildDamageBreakdownLines(scenario, result.ShipReports);
-
-var summaryLines = new List<string>
+for (var runNumber = 1; runNumber <= iterations; runNumber++)
 {
-    $"Scenario: {scenario.ID}",
-    $"Terrain: {scenario.Terrain}",
-    $"Weather: {scenario.Weather}",
-    $"Max Hours: {scenario.MaxHours}",
-    string.Empty,
-    $"Result: {result.Outcome}",
-    $"Hours Elapsed: {result.HoursElapsed}",
-    $"Attacker Production Lost: {result.AttackerProductionLost:F1}",
-    $"Defender Production Lost: {result.DefenderProductionLost:F1}",
-    $"Production Loss Ratio (Attacker/Defender): {FormatRatio(result.AttackerToDefenderProductionLossRatio)}",
-    $"Production Loss Ratio (Defender/Attacker): {FormatRatio(result.DefenderToAttackerProductionLossRatio)}",
-    $"Attacker Ships Remaining: {result.AttackerShipsRemaining}",
-    $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
-    $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
-    $"Defender Ships Retreated: {result.DefenderShipsRetreated}"
-};
+    var runScenario = runNumber == 1 ? scenario : loader.LoadScenarioFromDirectory(dataDirectoryPath);
+    iterationScenarios.Add(runScenario);
 
-summaryLines.Add(string.Empty);
-summaryLines.AddRange(damageBreakdownLines);
+    Console.WriteLine();
+    Console.WriteLine($"Iteration {runNumber}/{iterations}");
+    Console.WriteLine("Pre-Simulation Fleet Overview");
+    PrintFleetPreview("Attacker", runScenario.Attacker.Fleet);
+    PrintFleetPreview("Defender", runScenario.Defender.Fleet);
 
-File.WriteAllLines(summaryFilePath, summaryLines);
+    Console.WriteLine();
+    Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
 
-Console.WriteLine();
-foreach (var line in summaryLines.Skip(5))
-{
-    Console.WriteLine(line);
+    var result = simulator.Simulate(runScenario);
+    iterationResults.Add(result);
+
+    var fileSuffix = iterations > 1 ? $"-RUN{runNumber}" : string.Empty;
+    var hourlyLogFilePath = Path.Combine(outputDirectoryPath, $"hourly-log{fileSuffix}.txt");
+    var summaryFilePath = Path.Combine(outputDirectoryPath, $"summary{fileSuffix}.txt");
+    var shipReportFilePath = Path.Combine(outputDirectoryPath, $"ship-report{fileSuffix}.txt");
+
+    File.WriteAllLines(hourlyLogFilePath, result.HourlyLog);
+    File.WriteAllLines(shipReportFilePath, BuildShipReportLines(result.ShipReports));
+
+    var topDamageDealers = result.ShipReports
+        .OrderByDescending(report => report.TotalDamageDone)
+        .ThenBy(report => report.ShipID)
+        .Take(3)
+        .Select(report => $"{report.ShipID}:{report.TotalDamageDone:F1}");
+
+    var attackerShipsWithDamage = result.ShipReports.Count(report => report.Side == "Attacker" && report.TotalDamageDone > 0);
+    var defenderShipsWithDamage = result.ShipReports.Count(report => report.Side == "Defender" && report.TotalDamageDone > 0);
+    var damageBreakdownLines = BuildDamageBreakdownLines(runScenario, result.ShipReports);
+
+    var summaryLines = new List<string>
+    {
+        $"Scenario: {runScenario.ID}",
+        $"Terrain: {runScenario.Terrain}",
+        $"Weather: {runScenario.Weather}",
+        $"Max Hours: {runScenario.MaxHours}",
+        $"Iteration: {runNumber}/{iterations}",
+        string.Empty,
+        $"Result: {result.Outcome}",
+        $"Hours Elapsed: {result.HoursElapsed}",
+        $"Attacker Production Lost: {result.AttackerProductionLost:F1}",
+        $"Defender Production Lost: {result.DefenderProductionLost:F1}",
+        $"Production Loss Ratio (Attacker/Defender): {FormatRatio(result.AttackerToDefenderProductionLossRatio)}",
+        $"Production Loss Ratio (Defender/Attacker): {FormatRatio(result.DefenderToAttackerProductionLossRatio)}",
+        $"Attacker Ships Remaining: {result.AttackerShipsRemaining}",
+        $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
+        $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
+        $"Defender Ships Retreated: {result.DefenderShipsRetreated}"
+    };
+
+    summaryLines.Add(string.Empty);
+    summaryLines.AddRange(damageBreakdownLines);
+    File.WriteAllLines(summaryFilePath, summaryLines);
+
+    Console.WriteLine();
+    foreach (var line in summaryLines.Skip(6))
+    {
+        Console.WriteLine(line);
+    }
+
+    Console.WriteLine($"Ships Dealing Damage (Attacker): {attackerShipsWithDamage}");
+    Console.WriteLine($"Ships Dealing Damage (Defender): {defenderShipsWithDamage}");
+    Console.WriteLine($"Top Damage Dealers: {string.Join(", ", topDamageDealers)}");
+    Console.WriteLine($"Hourly log file: {hourlyLogFilePath}");
+    Console.WriteLine($"Summary file: {summaryFilePath}");
+    Console.WriteLine($"Per-ship report file: {shipReportFilePath}");
 }
-Console.WriteLine($"Ships Dealing Damage (Attacker): {attackerShipsWithDamage}");
-Console.WriteLine($"Ships Dealing Damage (Defender): {defenderShipsWithDamage}");
-Console.WriteLine($"Top Damage Dealers: {string.Join(", ", topDamageDealers)}");
-Console.WriteLine($"Hourly log file: {hourlyLogFilePath}");
-Console.WriteLine($"Summary file: {summaryFilePath}");
-Console.WriteLine($"Per-ship report file: {shipReportFilePath}");
+
+if (iterations > 1)
+{
+    var averagesSummaryLines = BuildIterationsAverageSummaryLines(iterationScenarios, iterationResults);
+    var averagesSummaryFilePath = Path.Combine(outputDirectoryPath, "summary-averages.txt");
+    File.WriteAllLines(averagesSummaryFilePath, averagesSummaryLines);
+
+    Console.WriteLine();
+    foreach (var line in averagesSummaryLines)
+    {
+        Console.WriteLine(line);
+    }
+    Console.WriteLine($"Averages summary file: {averagesSummaryFilePath}");
+}
 
 static string BuildRunOutputDirectory(string scenarioId)
 {
@@ -380,5 +410,131 @@ static (double ScreeningEfficiency, double CarrierScreeningEfficiency) Calculate
     var carrierRatio = requiredCapitals <= 0 ? 1.0 : capitals * contributionFactor / requiredCapitals;
 
     return (Math.Clamp(screeningRatio, 0, 1), Math.Clamp(carrierRatio, 0, 1));
+}
+
+static List<string> BuildIterationsAverageSummaryLines(
+    List<BattleScenario> iterationScenarios,
+    List<BattleResult> iterationResults)
+{
+    var lines = new List<string>
+    {
+        "Iterations averages summary",
+        $"Runs: {iterationResults.Count}"
+    };
+
+    var outcomeCounts = iterationResults
+        .GroupBy(result => result.Outcome)
+        .OrderBy(group => group.Key, StringComparer.Ordinal)
+        .Select(group => $"{group.Key}:{group.Count()}");
+    lines.Add($"Outcome distribution: {string.Join(", ", outcomeCounts)}");
+    lines.Add($"Avg Hours Elapsed: {iterationResults.Average(result => result.HoursElapsed):F1}");
+    lines.Add($"Avg Attacker Production Lost: {iterationResults.Average(result => result.AttackerProductionLost):F1}");
+    lines.Add($"Avg Defender Production Lost: {iterationResults.Average(result => result.DefenderProductionLost):F1}");
+    lines.Add($"Avg Attacker Ships Remaining: {iterationResults.Average(result => result.AttackerShipsRemaining):F2}");
+    lines.Add($"Avg Defender Ships Remaining: {iterationResults.Average(result => result.DefenderShipsRemaining):F2}");
+    lines.Add($"Avg Attacker Ships Retreated: {iterationResults.Average(result => result.AttackerShipsRetreated):F2}");
+    lines.Add($"Avg Defender Ships Retreated: {iterationResults.Average(result => result.DefenderShipsRetreated):F2}");
+
+    var attackerDamagePercentages = new List<double>();
+    var defenderDamagePercentages = new List<double>();
+
+    for (var i = 0; i < iterationResults.Count; i++)
+    {
+        var result = iterationResults[i];
+        var scenario = iterationScenarios[i];
+
+        var attackerDamage = CalculateTotalAppliedHpDamage(result.ShipReports, "Attacker");
+        var defenderDamage = CalculateTotalAppliedHpDamage(result.ShipReports, "Defender");
+
+        var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+        var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+
+        attackerDamagePercentages.Add(attackerEnemyHealth <= 0 ? 0 : attackerDamage / attackerEnemyHealth);
+        defenderDamagePercentages.Add(defenderEnemyHealth <= 0 ? 0 : defenderDamage / defenderEnemyHealth);
+    }
+
+    lines.Add($"Avg Attacker Damage (% enemy health): {(attackerDamagePercentages.Average()):P1}");
+    lines.Add($"Avg Defender Damage (% enemy health): {(defenderDamagePercentages.Average()):P1}");
+
+    lines.Add(string.Empty);
+    lines.Add("Avg ship types lost (Attacker)");
+    lines.AddRange(BuildAverageShipTypeLossLines(iterationScenarios, iterationResults, "Attacker"));
+    lines.Add(string.Empty);
+    lines.Add("Avg ship types lost (Defender)");
+    lines.AddRange(BuildAverageShipTypeLossLines(iterationScenarios, iterationResults, "Defender"));
+
+    return lines;
+}
+
+static double CalculateTotalAppliedHpDamage(List<ShipBattleReport> shipReports, string side)
+{
+    return shipReports
+        .Where(report => report.Side == side)
+        .SelectMany(report => report.DamagedShips)
+        .Sum(damageEvent => damageEvent.AppliedHpDamage);
+}
+
+static List<string> BuildAverageShipTypeLossLines(
+    List<BattleScenario> iterationScenarios,
+    List<BattleResult> iterationResults,
+    string side)
+{
+    var allDesignIds = new SortedSet<string>(StringComparer.Ordinal);
+    var initialCountsByDesign = new Dictionary<string, int>(StringComparer.Ordinal);
+    var totalLossesByDesign = new Dictionary<string, double>(StringComparer.Ordinal);
+
+    for (var i = 0; i < iterationResults.Count; i++)
+    {
+        var scenario = iterationScenarios[i];
+        var result = iterationResults[i];
+
+        var scenarioShips = side == "Attacker" ? scenario.Attacker.Fleet.Ships : scenario.Defender.Fleet.Ships;
+
+        var initialCountsThisRun = scenarioShips
+            .GroupBy(ship => ship.Design.ID)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+        var lossesThisRun = result.ShipReports
+            .Where(report => report.Side == side && report.IsSunk)
+            .GroupBy(report => ResolveShipType(report.ShipID, scenarioShips.ToDictionary(ship => ship.ID, ship => ship)))
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+        foreach (var kvp in initialCountsThisRun)
+        {
+            allDesignIds.Add(kvp.Key);
+
+            if (!initialCountsByDesign.ContainsKey(kvp.Key))
+            {
+                initialCountsByDesign[kvp.Key] = kvp.Value;
+            }
+        }
+
+        foreach (var designId in allDesignIds)
+        {
+            var lossCount = lossesThisRun.TryGetValue(designId, out var value) ? value : 0;
+            totalLossesByDesign[designId] = totalLossesByDesign.TryGetValue(designId, out var current)
+                ? current + lossCount
+                : lossCount;
+        }
+    }
+
+    if (allDesignIds.Count == 0)
+    {
+        return ["- none"];
+    }
+
+    var runCount = iterationResults.Count;
+    var output = new List<string>();
+
+    foreach (var designId in allDesignIds)
+    {
+        var initialCount = initialCountsByDesign.TryGetValue(designId, out var count) ? count : 0;
+        var avgLost = totalLossesByDesign.TryGetValue(designId, out var losses) ? losses / runCount : 0;
+        var avgLostPercent = initialCount <= 0 ? 0 : avgLost / initialCount;
+
+        output.Add($"- {designId}: {avgLost:F2} lost/run ({avgLostPercent:P1} of {initialCount})");
+    }
+
+    return output;
 }
 

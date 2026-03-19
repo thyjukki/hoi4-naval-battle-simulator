@@ -4,6 +4,7 @@
     "terrain": "ocean",
     "weather": "clear",
     "maxHours": 1000000,
+    "iterations": 5,
     "attacker": {
       "fleetID": "75_ca3_armor4",
       "commander": "",
