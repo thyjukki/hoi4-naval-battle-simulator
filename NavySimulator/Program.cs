@@ -59,6 +59,11 @@ Console.WriteLine($"Tech: {scenario.Defender.TechnologyLevel}");
 Console.WriteLine($"Nation Modifier: {scenario.Defender.NationModifier}");
 
 Console.WriteLine();
+Console.WriteLine("Pre-Simulation Fleet Overview");
+PrintFleetPreview("Attacker", scenario.Attacker.Fleet);
+PrintFleetPreview("Defender", scenario.Defender.Fleet);
+
+Console.WriteLine();
 Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
 
 var simulator = new BattleSimulator();
@@ -176,5 +181,78 @@ static List<string> BuildShipReportLines(List<ShipBattleReport> shipReports)
     }
 
     return lines;
+}
+
+static void PrintFleetPreview(string sideLabel, Fleet fleet)
+{
+    var allShips = fleet.Ships;
+    var designGroups = allShips
+        .GroupBy(ship => ship.Design.ID)
+        .OrderBy(group => group.Key, StringComparer.Ordinal)
+        .ToList();
+
+    var roleCounts = allShips
+        .GroupBy(ship => ship.Design.Hull.Role)
+        .ToDictionary(group => group.Key, group => group.Count());
+
+    var totalStats = allShips
+        .Select(ship => ship.Design.GetFinalStats())
+        .Aggregate(new NavySimulator.Domain.Stats.ShipStats(), (current, stats) => current.Add(stats));
+
+    var positioningPlaceholder = 1.0;
+    var screening = CalculateScreeningForPreview(roleCounts, positioningPlaceholder);
+
+    Console.WriteLine($"{sideLabel} Fleet: {fleet.ID}");
+    Console.WriteLine(
+        $"  Composition: Screen {GetRoleCount(roleCounts, ShipRole.Screen)}, Capital {GetRoleCount(roleCounts, ShipRole.Capital)}, " +
+        $"Carrier {GetRoleCount(roleCounts, ShipRole.Carrier)}, Submarine {GetRoleCount(roleCounts, ShipRole.Submarine)}, Convoy {GetRoleCount(roleCounts, ShipRole.Convoy)}");
+
+    Console.WriteLine("  Ship Designs:");
+    foreach (var designGroup in designGroups)
+    {
+        var sampleShip = designGroup.First();
+        var designStats = sampleShip.Design.GetFinalStats();
+        Console.WriteLine(
+            $"    - {designGroup.Key} x{designGroup.Count()} [{sampleShip.Design.Hull.ID}] " +
+            $"HP {designStats.Hp:F1}, Org {designStats.Organization:F1}, Speed {designStats.Speed:F1}, Armor {designStats.Armor:F1}, " +
+            $"LA {designStats.LightAttack:F1}, HA {designStats.HeavyAttack:F1}, Torp {designStats.TorpedoAttack:F1}, Depth {designStats.DepthChargeAttack:F1}, AA {designStats.AntiAir:F1}");
+    }
+
+    Console.WriteLine(
+        $"  Fleet Firepower: LA {totalStats.LightAttack:F1}, HA {totalStats.HeavyAttack:F1}, Torp {totalStats.TorpedoAttack:F1}, " +
+        $"Depth {totalStats.DepthChargeAttack:F1}, AA {totalStats.AntiAir:F1}");
+    Console.WriteLine($"  Total Production Cost: {totalStats.ProductionCost:F1}");
+    Console.WriteLine($"  Positioning: placeholder {positioningPlaceholder:P0} (calculation not implemented yet)");
+    Console.WriteLine($"  Screening Efficiency: {screening.ScreeningEfficiency:P0}, Carrier Screening: {screening.CarrierScreeningEfficiency:P0}");
+}
+
+static int GetRoleCount(IReadOnlyDictionary<ShipRole, int> roleCounts, ShipRole role)
+{
+    return roleCounts.TryGetValue(role, out var count) ? count : 0;
+}
+
+static (double ScreeningEfficiency, double CarrierScreeningEfficiency) CalculateScreeningForPreview(
+    IReadOnlyDictionary<ShipRole, int> roleCounts,
+    double positioning)
+{
+    var screens = GetRoleCount(roleCounts, ShipRole.Screen);
+    var capitals = GetRoleCount(roleCounts, ShipRole.Capital);
+    var carriers = GetRoleCount(roleCounts, ShipRole.Carrier);
+    var convoys = GetRoleCount(roleCounts, ShipRole.Convoy);
+
+    var contributionFactor = Hoi4Defines.PositioningBaseContribution +
+                             Hoi4Defines.PositioningContributionScale * Math.Clamp(positioning, 0, 1);
+
+    var requiredScreens =
+        Hoi4Defines.SCREEN_RATIO_FOR_FULL_SCREENING_FOR_CAPITALS * (capitals + carriers) +
+        Hoi4Defines.SCREEN_RATIO_FOR_FULL_SCREENING_FOR_CONVOYS * convoys;
+    var screeningRatio = requiredScreens <= 0 ? 1.0 : screens * contributionFactor / requiredScreens;
+
+    var requiredCapitals =
+        Hoi4Defines.CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CARRIERS * carriers +
+        Hoi4Defines.CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CONVOYS * convoys;
+    var carrierRatio = requiredCapitals <= 0 ? 1.0 : capitals * contributionFactor / requiredCapitals;
+
+    return (Math.Clamp(screeningRatio, 0, 1), Math.Clamp(carrierRatio, 0, 1));
 }
 

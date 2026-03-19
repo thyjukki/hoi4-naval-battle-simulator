@@ -139,7 +139,7 @@ public class SetupLoader
             var hull = hullById[design.HullID];
             var designModules = design.ModuleIDs.Select(moduleId => moduleById[moduleId]).ToList();
             var mio = string.IsNullOrWhiteSpace(design.MioID) ? null : mioById[design.MioID];
-            designById[design.ID] = new ShipDesign(hull, designModules, mio);
+            designById[design.ID] = new ShipDesign(design.ID, hull, designModules, mio);
         }
 
         var fleetById = new Dictionary<string, Fleet>();
