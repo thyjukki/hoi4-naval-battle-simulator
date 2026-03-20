@@ -1,3 +1,5 @@
+using NavySimulator.Domain.Stats;
+
 namespace NavySimulator.Domain;
 
 public class Ship
@@ -9,12 +11,13 @@ public class Ship
     public ShipStatus CurrentStatus;
     public double RetreatProgress;
     public bool AttemptedRetreat;
+    private ShipStats? effectiveStats;
 
     public Ship(string id, ShipDesign design)
     {
         ID = id;
         Design = design;
-        var effectiveStats = design.GetFinalStats();
+        effectiveStats = design.GetFinalStats();
         CurrentOrganization = effectiveStats.Organization;
         CurrentHP = effectiveStats.Hp;
     }
@@ -25,6 +28,22 @@ public class Ship
     }
 
     public bool IsSunk => CurrentHP <= 0;
+
+    public ShipStats GetFinalStats()
+    {
+        return effectiveStats ?? Design.GetFinalStats();
+    }
+
+    public void ApplyExternalModifiers(ShipStats statModifiers, ShipStats statAverages, ShipStats statMultipliers)
+    {
+        var stats = Design.GetFinalStats();
+        stats = stats.Add(statModifiers);
+        stats = stats.Add(statAverages);
+        stats = stats.Scale(statMultipliers);
+        effectiveStats = stats;
+        CurrentOrganization = stats.Organization;
+        CurrentHP = stats.Hp;
+    }
 
     public (double HpDamage, double OrganizationDamage) ApplyDamage(double damage)
     {
@@ -41,7 +60,7 @@ public class Ship
         var appliedHpDamage = hpBefore - CurrentHP;
         
         var orgDamage = damage * Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
-        var maxHp = Design.GetFinalStats().Hp;
+        var maxHp = GetFinalStats().Hp;
         var hpLossRatio = maxHp <= 0 ? 1.0 : 1.0 - (CurrentHP / maxHp);
         orgDamage *= Math.Clamp(hpLossRatio, 0, 1);
         

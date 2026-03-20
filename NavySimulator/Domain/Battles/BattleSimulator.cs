@@ -174,7 +174,7 @@ public class BattleSimulator
                 continue;
             }
 
-            var stats = ship.Design.GetFinalStats();
+            var stats = ship.GetFinalStats();
 
             ResolveRetreating(ship, hour, attackerScreening);
 
@@ -231,7 +231,7 @@ public class BattleSimulator
         {
             var retreatSpeed = Hoi4Defines.BASE_ESCAPE_SPEED;
             retreatSpeed += GetRetreatSpeedFromScreening(ship, screeningSummary);
-            retreatSpeed += ship.Design.GetFinalStats().Speed * Hoi4Defines.SPEED_TO_ESCAPE_SPEED / 100;
+            retreatSpeed += ship.GetFinalStats().Speed * Hoi4Defines.SPEED_TO_ESCAPE_SPEED / 100;
 
             var timeOfDay = hour % 24;
             if (timeOfDay is > 17 or < 5)
@@ -255,7 +255,7 @@ public class BattleSimulator
             return;
         } 
         
-        var remainingHpRatio = ship.CurrentHP / ship.Design.GetFinalStats().Hp;
+        var remainingHpRatio = ship.CurrentHP / ship.GetFinalStats().Hp;
 
         if (!(remainingHpRatio < Hoi4Defines.CombatMinStrRetreatChance)) return;
         var retreatChance = Hoi4Defines.COMBAT_RETREAT_DECISION_CHANCE;
@@ -330,7 +330,7 @@ public class BattleSimulator
             return ActionResult.Skip(shooter, weapon, hour, "no-valid-target");
         }
 
-        var defenderStats = selectedTarget.Target.Design.GetFinalStats();
+        var defenderStats = selectedTarget.Target.GetFinalStats();
         var defenderVisibility = selectedTarget.Target.Design.Hull.Role == ShipRole.Submarine
             ? defenderStats.SubVisibility
             : defenderStats.SurfaceVisibility;
@@ -369,7 +369,7 @@ public class BattleSimulator
 
     private static double CalculateDamage(Ship target, double attackValue, double piercingValue, double positioning)
     {
-        var targetArmor = target.Design.GetFinalStats().Armor;
+        var targetArmor = target.GetFinalStats().Armor;
         var piercingRatio = piercingValue / targetArmor;
         
         var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
@@ -433,7 +433,7 @@ public class BattleSimulator
 
     private static double CalculateShipHitProfile(Ship shooter, Ship target, ScreeningSummary defenderScreening)
     {
-        var stats = target.Design.GetFinalStats();
+        var stats = target.GetFinalStats();
         var visibility = target.Design.Hull.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility;
 
         if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
@@ -462,7 +462,7 @@ public class BattleSimulator
             modifier *= 1.0 + Hoi4Defines.NightHitChange;
         }
 
-        var stats = shooter.Design.GetFinalStats();
+        var stats = shooter.GetFinalStats();
 
         modifier *= weapon switch
         {
@@ -688,7 +688,7 @@ public class BattleSimulator
             _ => Hoi4Defines.TargetWeightDefault
         };
 
-        var maxHp = Math.Max(1, target.Design.GetFinalStats().Hp);
+        var maxHp = Math.Max(1, target.GetFinalStats().Hp);
         var damageRatio = 1.0 - target.CurrentHP / maxHp;
         var damagedWeightBonus = 1.0 + Math.Clamp(damageRatio, 0, 1);
 
@@ -875,7 +875,7 @@ public class BattleSimulator
 
     private static double GetSunkProductionCost(List<Ship> ships)
     {
-        return ships.Where(ship => ship.IsSunk).Sum(ship => ship.Design.GetFinalStats().ProductionCost);
+        return ships.Where(ship => ship.IsSunk).Sum(ship => ship.GetFinalStats().ProductionCost);
     }
 
     private static double SafeRatio(double numerator, double denominator)
@@ -921,7 +921,7 @@ public class BattleSimulator
             var didRetreat = entry.Ship.CurrentStatus == ShipStatus.Retreated;
             var attemptedRetreat = entry.Ship.AttemptedRetreat || didRetreat || entry.Ship.CurrentStatus == ShipStatus.Retreating;
             var attemptedRetreatButSunk = attemptedRetreat && entry.Ship.IsSunk;
-            var maxHp = entry.Ship.Design.GetFinalStats().Hp;
+            var maxHp = entry.Ship.GetFinalStats().Hp;
             var hpPercentage = maxHp <= 0 ? 0 : entry.Ship.CurrentHP / maxHp;
 
             reports.Add(new ShipBattleReport(
@@ -934,7 +934,7 @@ public class BattleSimulator
                 entry.Ship.CurrentHP,
                 maxHp,
                 hpPercentage,
-                entry.Ship.Design.GetFinalStats().ProductionCost,
+                entry.Ship.GetFinalStats().ProductionCost,
                 damagedShips.Sum(damageEvent => damageEvent.Damage),
                 damagedShips));
         }

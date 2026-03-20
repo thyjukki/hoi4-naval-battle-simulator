@@ -35,6 +35,8 @@ public class SetupLoader
         var modules = ReadCollectionFromFolderOrFile<ModuleDto>(dataDirectoryPath, "modules", "modules.json", "modules", errors);
         var mios = ReadCollectionFromFolderOrFile<MioBonusDto>(dataDirectoryPath, "mios", "mios.json", "mios", errors);
         var designs = ReadCollectionFromFolderOrFile<ShipDesignDto>(dataDirectoryPath, "ship-designs", "ship-designs.json", "shipDesigns", errors);
+        var researches = ReadCollectionFromFolderOrFile<ResearchDto>(dataDirectoryPath, "researches", "researches.json", "researches", errors);
+        var spirits = ReadCollectionFromFolderOrFile<SpiritDto>(dataDirectoryPath, "spirits", "spirits.json", "spirits", errors);
         var forceCompositionsFile = ReadJsonFile<ForceCompositionsFileDto>(dataDirectoryPath, "force-compositions.json", errors) ?? new ForceCompositionsFileDto();
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
 
@@ -43,12 +45,16 @@ public class SetupLoader
         ValidateRequiredIds(modules.Select(m => m.ID), "modules", errors);
         ValidateRequiredIds(mios.Select(m => m.ID), "mios", errors);
         ValidateRequiredIds(designs.Select(d => d.ID), "shipDesigns", errors);
+        ValidateRequiredIds(researches.Select(r => r.ID), "researches", errors);
+        ValidateRequiredIds(spirits.Select(s => s.ID), "spirits", errors);
         ValidateRequiredIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         ValidateDuplicateIds(hulls.Select(h => h.ID), "hulls", errors);
         ValidateDuplicateIds(modules.Select(m => m.ID), "modules", errors);
         ValidateDuplicateIds(mios.Select(m => m.ID), "mios", errors);
         ValidateDuplicateIds(designs.Select(d => d.ID), "shipDesigns", errors);
+        ValidateDuplicateIds(researches.Select(r => r.ID), "researches", errors);
+        ValidateDuplicateIds(spirits.Select(s => s.ID), "spirits", errors);
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         var hullIds = hulls.Select(h => h.ID).ToHashSet();
@@ -63,7 +69,12 @@ public class SetupLoader
         var moduleIds = modules.Select(m => m.ID).ToHashSet();
         var mioIds = mios.Select(m => m.ID).ToHashSet();
         var designIds = designs.Select(d => d.ID).ToHashSet();
+        var researchIds = researches.Select(r => r.ID).ToHashSet();
+        var spiritIds = spirits.Select(s => s.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
+
+        ValidateScopedRoleFilters(researches.Select(r => (r.ID, r.AppliesToRoles)), "research", errors);
+        ValidateScopedRoleFilters(spirits.Select(s => (s.ID, s.AppliesToRoles)), "spirit", errors);
 
         foreach (var design in designs)
         {
@@ -113,7 +124,7 @@ public class SetupLoader
             }
         }
 
-        ValidateScenario(battleScenarioFile.BattleScenario, fleetIds, errors);
+        ValidateScenario(battleScenarioFile.BattleScenario, fleetIds, researchIds, spiritIds, errors);
 
         if (errors.Count > 0)
         {
@@ -131,6 +142,22 @@ public class SetupLoader
                 m.StatMultipliers.ToDomain(),
                 m.StatAverages.ToDomain()));
         var mioById = mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
+        var researchById = researches.ToDictionary(
+            research => research.ID,
+            research => new Research(
+                research.ID,
+                research.StatModifiers.ToDomain(),
+                research.StatAverages.ToDomain(),
+                research.StatMultipliers.ToDomain(),
+                ParseRoles(research.AppliesToRoles)));
+        var spiritById = spirits.ToDictionary(
+            spirit => spirit.ID,
+            spirit => new Spirit(
+                spirit.ID,
+                spirit.StatModifiers.ToDomain(),
+                spirit.StatAverages.ToDomain(),
+                spirit.StatMultipliers.ToDomain(),
+                ParseRoles(spirit.AppliesToRoles)));
 
         var designById = new Dictionary<string, ShipDesign>();
 
@@ -162,8 +189,8 @@ public class SetupLoader
             fleetById[fleet.ID] = new Fleet(fleet.ID, ships);
         }
 
-        var attacker = BuildParticipant(battleScenarioFile.BattleScenario.Attacker, fleetById);
-        var defender = BuildParticipant(battleScenarioFile.BattleScenario.Defender, fleetById);
+        var attacker = BuildParticipant(battleScenarioFile.BattleScenario.Attacker, fleetById, researchById, spiritById);
+        var defender = BuildParticipant(battleScenarioFile.BattleScenario.Defender, fleetById, researchById, spiritById);
 
         return new BattleScenario(
             battleScenarioFile.BattleScenario.ID,
@@ -594,7 +621,12 @@ public class SetupLoader
         }
     }
 
-    private static void ValidateScenario(BattleScenarioDto scenario, HashSet<string> fleetIds, List<string> errors)
+    private static void ValidateScenario(
+        BattleScenarioDto scenario,
+        HashSet<string> fleetIds,
+        HashSet<string> researchIds,
+        HashSet<string> spiritIds,
+        List<string> errors)
     {
         if (string.IsNullOrWhiteSpace(scenario.ID))
         {
@@ -621,14 +653,16 @@ public class SetupLoader
             errors.Add("battleScenario.iterations must be greater than 0 when provided.");
         }
 
-        ValidateParticipant("attacker", scenario.Attacker, fleetIds, errors);
-        ValidateParticipant("defender", scenario.Defender, fleetIds, errors);
+        ValidateParticipant("attacker", scenario.Attacker, fleetIds, researchIds, spiritIds, errors);
+        ValidateParticipant("defender", scenario.Defender, fleetIds, researchIds, spiritIds, errors);
     }
 
     private static void ValidateParticipant(
         string role,
         BattleParticipantDto participant,
         HashSet<string> fleetIds,
+        HashSet<string> researchIds,
+        HashSet<string> spiritIds,
         List<string> errors)
     {
         if (string.IsNullOrWhiteSpace(participant.FleetID))
@@ -639,20 +673,74 @@ public class SetupLoader
         {
             errors.Add($"battleScenario.{role}.fleetID references unknown fleet '{participant.FleetID}'.");
         }
+
+        foreach (var researchId in participant.ResearchIDs)
+        {
+            if (!researchIds.Contains(researchId))
+            {
+                errors.Add($"battleScenario.{role}.researchIDs references unknown research '{researchId}'.");
+            }
+        }
+
+        foreach (var spiritId in participant.SpiritIDs)
+        {
+            if (!spiritIds.Contains(spiritId))
+            {
+                errors.Add($"battleScenario.{role}.spiritIDs references unknown spirit '{spiritId}'.");
+            }
+        }
     }
 
     private static BattleParticipant BuildParticipant(
         BattleParticipantDto participant,
-        IReadOnlyDictionary<string, Fleet> fleetById)
+        IReadOnlyDictionary<string, Fleet> fleetById,
+        IReadOnlyDictionary<string, Research> researchById,
+        IReadOnlyDictionary<string, Spirit> spiritById)
     {
         var fleet = fleetById[participant.FleetID];
+        var participantResearches = participant.ResearchIDs.Select(researchId => researchById[researchId]).ToList();
+        var participantSpirits = participant.SpiritIDs.Select(spiritId => spiritById[spiritId]).ToList();
 
         return new BattleParticipant(
             fleet,
             participant.Commander,
             participant.Doctrine,
             participant.TechnologyLevel,
-            participant.NationModifier);
+            participant.NationModifier,
+            participantResearches,
+            participantSpirits);
+    }
+
+    private static void ValidateScopedRoleFilters(
+        IEnumerable<(string ID, List<string> AppliesToRoles)> entries,
+        string entryType,
+        List<string> errors)
+    {
+        foreach (var entry in entries)
+        {
+            foreach (var role in entry.AppliesToRoles)
+            {
+                if (!Enum.TryParse<ShipRole>(role, true, out _))
+                {
+                    errors.Add($"{entryType} '{entry.ID}' has unknown appliesToRoles value '{role}'.");
+                }
+            }
+        }
+    }
+
+    private static List<ShipRole> ParseRoles(List<string> roleNames)
+    {
+        var roles = new List<ShipRole>();
+
+        foreach (var roleName in roleNames)
+        {
+            if (Enum.TryParse<ShipRole>(roleName, true, out var role))
+            {
+                roles.Add(role);
+            }
+        }
+
+        return roles;
     }
 }
 

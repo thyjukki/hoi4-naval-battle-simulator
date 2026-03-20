@@ -1,0 +1,18 @@
+{
+  "spirits": [
+    {
+      "id": "fleet_damage_control_schools",
+      "statModifiers": {
+        "hp": 0.05
+      }
+    },
+    {
+      "id": "capital_gunnery_focus",
+      "statModifiers": {
+        "heavyAttack": 2
+      },
+      "appliesToRoles": ["Capital"]
+    }
+  ]
+}
+

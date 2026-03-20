@@ -59,6 +59,21 @@
         "reliability": 0.95,
         "productionCost": 2300
       }
+    },
+    {
+      "id": "torpedo_cruiser_hull",
+      "role": "Capital",
+      "baseStats": {
+        "speed": 30,
+        "organization": 40,
+        "hp": 105,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 18,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.95,
+        "productionCost": 2300
+      }
     }
   ]
 }

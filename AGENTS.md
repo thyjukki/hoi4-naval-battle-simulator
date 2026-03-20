@@ -99,7 +99,7 @@
 
 ## Known Integration Boundaries
 - External dependencies: none beyond the .NET SDK; no NuGet package references currently.
-- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `force-compositions.json`, `battle-scenario.json`).
+- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `researches/*.json`, `spirits/*.json`, `force-compositions.json`, `battle-scenario.json`).
 - Cross-component communication is in-memory object references only after setup is loaded.
 - Output artifact is a console executable at `NavySimulator/bin/<Configuration>/net10.0/`.
 

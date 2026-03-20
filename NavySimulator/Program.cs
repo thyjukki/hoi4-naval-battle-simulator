@@ -223,8 +223,8 @@ static List<string> BuildDamageBreakdownLines(BattleScenario scenario, List<Ship
         .Concat(scenario.Defender.Fleet.Ships)
         .ToDictionary(ship => ship.ID, ship => ship);
 
-    var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
-    var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+    var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
+    var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
 
     var lines = new List<string>();
     lines.AddRange(BuildSideDamageBreakdown("Attacker", "Attacker", attackerEnemyHealth, shipReports, shipById));
@@ -352,7 +352,7 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet)
         .ToDictionary(group => group.Key, group => group.Count());
 
     var totalStats = allShips
-        .Select(ship => ship.Design.GetFinalStats())
+        .Select(ship => ship.GetFinalStats())
         .Aggregate(new NavySimulator.Domain.Stats.ShipStats(), (current, stats) => current.Add(stats));
 
     var positioningPlaceholder = 1.0;
@@ -367,7 +367,7 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet)
     foreach (var designGroup in designGroups)
     {
         var sampleShip = designGroup.First();
-        var designStats = sampleShip.Design.GetFinalStats();
+        var designStats = sampleShip.GetFinalStats();
         Console.WriteLine(
             $"    - {designGroup.Key} x{designGroup.Count()} [{sampleShip.Design.Hull.ID}] " +
             $"HP {designStats.Hp:F1}, Org {designStats.Organization:F1}, Speed {designStats.Speed:F1}, Armor {designStats.Armor:F1}, " +
@@ -446,8 +446,8 @@ static List<string> BuildIterationsAverageSummaryLines(
         var attackerDamage = CalculateTotalAppliedHpDamage(result.ShipReports, "Attacker");
         var defenderDamage = CalculateTotalAppliedHpDamage(result.ShipReports, "Defender");
 
-        var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
-        var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.Design.GetFinalStats().Hp);
+        var attackerEnemyHealth = scenario.Defender.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
+        var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
 
         attackerDamagePercentages.Add(attackerEnemyHealth <= 0 ? 0 : attackerDamage / attackerEnemyHealth);
         defenderDamagePercentages.Add(defenderEnemyHealth <= 0 ? 0 : defenderDamage / defenderEnemyHealth);
@@ -489,6 +489,7 @@ static List<string> BuildAverageShipTypeLossLines(
         var result = iterationResults[i];
 
         var scenarioShips = side == "Attacker" ? scenario.Attacker.Fleet.Ships : scenario.Defender.Fleet.Ships;
+        var shipById = scenarioShips.ToDictionary(ship => ship.ID, ship => ship);
 
         var initialCountsThisRun = scenarioShips
             .GroupBy(ship => ship.Design.ID)
@@ -496,7 +497,7 @@ static List<string> BuildAverageShipTypeLossLines(
 
         var lossesThisRun = result.ShipReports
             .Where(report => report.Side == side && report.IsSunk)
-            .GroupBy(report => ResolveShipType(report.ShipID, scenarioShips.ToDictionary(ship => ship.ID, ship => ship)))
+            .GroupBy(report => ResolveShipType(report.ShipID, shipById))
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
         foreach (var kvp in initialCountsThisRun)
