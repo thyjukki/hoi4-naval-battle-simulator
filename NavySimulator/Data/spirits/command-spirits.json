@@ -1,0 +1,59 @@
+{
+  "spirits": [
+    {
+      "id": "close_combat",
+      "statMultiplier": {
+        "attack": 0.05,
+        "torpedoScreenPenetration": 0.05
+      },
+      "appliesToRoles": ["Screen"]
+    },
+    {
+      "id": "night_fighting",
+      "statMultiplier": {
+        "night_time_attack": 0.1
+      }
+    },
+    {
+      "id": "efficient_communications",
+      "statMultiplier": {
+        "positioning": 0.1
+      }
+    },
+    {
+      "id": "decisive_battle",
+      "statMultiplier": {
+        "hitChance": 0.1,
+        "retreatSpeed": -0.1,
+        "retreatDecisionChance": -0.1,
+        "torpedoHitChance": 0.1
+      }
+    },
+    {
+      "id": "inclement_weather",
+      "statMultiplier": {
+        "badWeatherPenalty": -0.4
+      }
+    },
+    {
+      "id": "brave_commanders",
+      "statMultiplier": {
+        "retreatDecisionChance": -0.05,
+        "chanceToScoreCriticalHit": 0.15
+      }
+    },
+    {
+      "id": "naval_tripwire",
+      "statMultiplier": {
+        "enemyFleetSizePenalty": 0.20
+      }
+    },
+    {
+      "id": "fleet_defense",
+      "statMultiplier": {
+        "screeningEfficiency": 0.10
+      }
+    }
+  ]
+}
+

@@ -15,7 +15,7 @@
       }
     },
     {
-      "id": "fire_control_1",
+      "id": "fire_control_methods_1",
       "statMultipliers": {
         "lightAttack": 0.05,
         "heavyAttack": 0.05
@@ -23,7 +23,7 @@
       "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
     },
     {
-      "id": "fire_control_2",
+      "id": "fire_control_methods_2",
       "statMultipliers": {
         "lightAttack": 0.1,
         "heavyAttack": 0.1
@@ -31,7 +31,7 @@
       "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser", "Heavy Cruiser"]
     },
     {
-      "id": "fire_control_2",
+      "id": "fire_control_methods_3",
       "statMultipliers": {
         "lightAttack": 0.15,
         "heavyAttack": 0.15
