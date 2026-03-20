@@ -79,6 +79,11 @@ public class SetupLoader
                     errors.Add($"hull '{hull.ID}' has unknown type '{hullType}'.");
                 }
             }
+
+            if (hull.Manpower <= 0)
+            {
+                errors.Add($"hull '{hull.ID}' must define manpower greater than 0.");
+            }
         }
 
         var moduleIds = modules.Select(m => m.ID).ToHashSet();
@@ -158,7 +163,7 @@ public class SetupLoader
 
         var hullById = hulls.ToDictionary(
             h => h.ID,
-            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), ParseTypes(h.Types ?? []), h.BaseStats.ToDomain()));
+            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), ParseTypes(h.Types ?? []), h.Manpower, h.BaseStats.ToDomain()));
         var moduleById = modules.ToDictionary(
             m => m.ID,
             m => new StatModule(

@@ -5,6 +5,7 @@
       "id": "panzerschiff_cruiser_hull",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
+      "manpower": 400,
       "baseStats": {
         "speed": 25,
         "organization": 40,

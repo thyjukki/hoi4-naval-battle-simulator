@@ -12,7 +12,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "role", "type", "baseStats"],
+        "required": ["id", "role", "type", "manpower", "baseStats"],
         "properties": {
           "id": { "$ref": "#/$defs/id" },
           "role": { "$ref": "#/$defs/shipRole" },
@@ -21,6 +21,10 @@
             "items": { "$ref": "#/$defs/shipType" },
             "uniqueItems": true,
             "minItems": 1
+          },
+          "manpower": {
+            "type": "integer",
+            "minimum": 1
           },
           "baseStats": { "$ref": "#/$defs/shipStats" }
         },
