@@ -16,8 +16,10 @@ public class BattleSimulator
             var attackerLines = BuildBattleLinesFromFleet(scenario.Attacker.Fleet.Ships);
             var defenderLines = BuildBattleLinesFromFleet(scenario.Defender.Fleet.Ships);
 
-            var attackerPositioning = 1.0;
-            var defenderPositioning = 1.0;
+            var attackerShipCount = GetLineShipCount(attackerLines);
+            var defenderShipCount = GetLineShipCount(defenderLines);
+            var attackerPositioning = CalculateFleetSizePositioning(attackerShipCount, defenderShipCount);
+            var defenderPositioning = CalculateFleetSizePositioning(defenderShipCount, attackerShipCount);
             
             var attackerScreening = CalculateScreening(attackerLines, attackerPositioning);
             var defenderScreening = CalculateScreening(defenderLines, defenderPositioning);
@@ -55,9 +57,9 @@ public class BattleSimulator
             hourlyLog.Add(
                 $"Hour {hour}: " +
                 $"attacker(screen:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
-                $"screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
+                $"positioning {attackerPositioning:P0}, screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
                 $"defender(screen:{defenderLines.Screens.Count}, capital:{defenderLines.Capitals.Count}, carrier:{defenderLines.Carriers.Count}, sub:{defenderLines.Submarines.Count}) " +
-                $"screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
+                $"positioning {defenderPositioning:P0}, screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
             hourlyLog.Add(
                 $"Hour {hour}: attacker damage {GetTotalDamage(attackerActions):F1}, defender damage {GetTotalDamage(defenderActions):F1}, " +
                 $"attacker ships {attackerAliveCount} (retreated {attackerRetreatedCount}), defender ships {defenderAliveCount} (retreated {defenderRetreatedCount})");
@@ -146,6 +148,32 @@ public class BattleSimulator
         return new ScreeningSummary(
             Math.Clamp(screeningRatio, 0, 1),
             Math.Clamp(carrierScreeningRatio, 0, 1));
+    }
+
+    private static int GetLineShipCount(BattleLines lines)
+    {
+        return lines.Screens.Count +
+               lines.Capitals.Count +
+               lines.Carriers.Count +
+               lines.Submarines.Count +
+               lines.Convoys.Count;
+    }
+
+    private static double CalculateFleetSizePositioning(int ownShipCount, int opponentShipCount)
+    {
+        if (ownShipCount < Hoi4Defines.MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY ||
+            ownShipCount <= opponentShipCount)
+        {
+            return Hoi4Defines.BASE_POSITIONING;
+        }
+
+        var shipRatio = ownShipCount / (double)opponentShipCount;
+        var ratioAboveParity = Math.Max(0, shipRatio - 1.0);
+        var penalty = Math.Min(
+            Hoi4Defines.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO,
+            ratioAboveParity * Hoi4Defines.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR);
+
+        return Math.Clamp(Hoi4Defines.BASE_POSITIONING - penalty, 0, 1);
     }
 
     private static double GetPositioningContributionFactor(double positioning)

@@ -24,7 +24,6 @@ public static class Hoi4Defines
 
     public const double PositioningBaseContribution = 0.5;
     public const double PositioningContributionScale = 0.5;
-    public const double DAMAGE_PENALTY_ON_MINIMUM_POSITIONING = 0.5;
 
     public const double COMBAT_MIN_DURATION = 8;
     public const double COMBAT_INITIAL_DURATION = 6;
@@ -44,8 +43,19 @@ public static class Hoi4Defines
     public const double NightHitChance = -0.25;
     public const double NightCarrierTraffic = -0.75;
     public const double NightTorpedoHitChanceFactor = -0.15;
+
+    public const double BASE_POSITIONING = 1.0;
+    public const double RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR = 0.01;
+    public const double MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION = 0.05;
+
+    public const double HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR = 0.4; // if one side has more ships than the other, that side will get this penalty for each +100% ship ratio it has
+    public const double MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO = 1.2;  // maximum penalty to get from larger fleets
+    public const double MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY = 99;    // the minimum fleet size in ships that a fleet must be before having the large fleet penalty applied to them
     
-    
+    public const double DAMAGE_PENALTY_ON_MINIMUM_POSITIONING = 0.75;	// damage penalty at 0% positioning
+    public const double SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING = 0.4;  // screening efficiency (screen to capital ratio) at 0% positioning
+    public const double AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING = 0.4;  // AA penalty at 0% positioning
+    public const double SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING = 2.0;  // submarine reveal change on 0% positioning
 
     public const double HIT_PROFILE_MULT = 100.0;
     public const double HIT_PROFILE_SPEED_FACTOR = 0.85;

@@ -70,8 +70,8 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
     Console.WriteLine();
     Console.WriteLine($"Iteration {runNumber}/{iterations}");
     Console.WriteLine("Pre-Simulation Fleet Overview");
-    PrintFleetPreview("Attacker", runScenario.Attacker.Fleet);
-    PrintFleetPreview("Defender", runScenario.Defender.Fleet);
+    PrintFleetPreview("Attacker", runScenario.Attacker.Fleet, runScenario.Defender.Fleet);
+    PrintFleetPreview("Defender", runScenario.Defender.Fleet, runScenario.Attacker.Fleet);
 
     Console.WriteLine();
     Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
@@ -335,7 +335,7 @@ static string GetShipGroupLabel(ShipRole role)
     };
 }
 
-static void PrintFleetPreview(string sideLabel, Fleet fleet)
+static void PrintFleetPreview(string sideLabel, Fleet fleet, Fleet opposingFleet)
 {
     var allShips = fleet.Ships;
     var designGroups = allShips
@@ -351,8 +351,8 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet)
         .Select(ship => ship.GetFinalStats())
         .Aggregate(new NavySimulator.Domain.Stats.ShipStats(), (current, stats) => current.Add(stats));
 
-    var positioningPlaceholder = 1.0;
-    var screening = CalculateScreeningForPreview(roleCounts, positioningPlaceholder);
+    var positioning = CalculateFleetSizePositioningForPreview(allShips.Count, opposingFleet.Ships.Count);
+    var screening = CalculateScreeningForPreview(roleCounts, positioning);
 
     Console.WriteLine($"{sideLabel} Fleet: {fleet.ID}");
     Console.WriteLine(
@@ -374,8 +374,25 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet)
         $"  Fleet Firepower: LA {totalStats.LightAttack:F1}, HA {totalStats.HeavyAttack:F1}, Torp {totalStats.TorpedoAttack:F1}, " +
         $"Depth {totalStats.DepthChargeAttack:F1}, AA {totalStats.AntiAir:F1}");
     Console.WriteLine($"  Total Production Cost: {totalStats.ProductionCost:F1}");
-    Console.WriteLine($"  Positioning: placeholder {positioningPlaceholder:P0} (calculation not implemented yet)");
+    Console.WriteLine($"  Positioning: {positioning:P0}");
     Console.WriteLine($"  Screening Efficiency: {screening.ScreeningEfficiency:P0}, Carrier Screening: {screening.CarrierScreeningEfficiency:P0}");
+}
+
+static double CalculateFleetSizePositioningForPreview(int ownShipCount, int opponentShipCount)
+{
+    if (ownShipCount < Hoi4Defines.MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY ||
+        ownShipCount <= opponentShipCount)
+    {
+        return Hoi4Defines.BASE_POSITIONING;
+    }
+
+    var shipRatio = ownShipCount / (double)opponentShipCount;
+    var ratioAboveParity = Math.Max(0, shipRatio - 1.0);
+    var penalty = Math.Min(
+        Hoi4Defines.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO,
+        ratioAboveParity * Hoi4Defines.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR);
+
+    return Math.Clamp(Hoi4Defines.BASE_POSITIONING - penalty, 0, 1);
 }
 
 static int GetRoleCount(IReadOnlyDictionary<ShipRole, int> roleCounts, ShipRole role)
