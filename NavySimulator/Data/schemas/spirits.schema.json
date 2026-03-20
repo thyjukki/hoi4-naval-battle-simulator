@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["spirits"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "spirits": {
       "type": "array",
       "items": {

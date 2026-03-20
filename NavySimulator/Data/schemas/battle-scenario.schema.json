@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["battleScenario"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "battleScenario": {
       "type": "object",
       "required": ["id", "terrain", "weather", "maxHours", "attacker", "defender"],

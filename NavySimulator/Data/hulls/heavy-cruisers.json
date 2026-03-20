@@ -67,7 +67,6 @@
       "baseStats": {
         "speed": 30,
         "organization": 40,
-        "testFalse": 50,
         "hp": 105,
         "surfaceVisibility": 17.5,
         "surfaceDetection": 18,

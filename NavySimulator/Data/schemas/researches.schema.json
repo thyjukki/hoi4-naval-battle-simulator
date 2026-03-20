@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["researches"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "researches": {
       "type": "array",
       "items": {

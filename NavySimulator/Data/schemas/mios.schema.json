@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["mios"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "mios": {
       "type": "array",
       "items": {

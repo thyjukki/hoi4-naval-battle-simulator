@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["modules"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "modules": {
       "type": "array",
       "items": {
