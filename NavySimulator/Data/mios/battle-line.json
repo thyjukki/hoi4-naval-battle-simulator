@@ -1,0 +1,54 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "battle_line_armor_armor_la",
+      "modifiers": [
+        {
+          "statMultiplier": {
+            "lightAttack": 0.15,
+            "lightHitChanceFactor": 0.05,
+            "lightPiercing": 0.05,
+            "antiAir": 0.15,
+            "armor": 0.05
+          },
+          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+        },
+        {
+          "statMultiplier": {
+            "incomingTorpedoCriticalChance": -0.05,
+            "armor": 0.15,
+            "hp": 0.10,
+            "productionCost": 0.05
+          },
+          "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+        }
+      ]
+    },
+    {
+      "id": "battle_line_armor_armor_ha",
+      "modifiers": [
+        {
+          "statMultiplier": {
+            "lightAttack": 0.10,
+            "lightHitChanceFactor": 0.05,
+            "heavyAttack": 0.05,
+            "heavyPiercing": 0.05,
+            "antiAir": 0.15,
+            "armor": 0.05
+          },
+          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+        },
+        {
+          "statMultiplier": {
+            "incomingTorpedoCriticalChance": -0.05,
+            "armor": 0.15,
+            "hp": 0.10,
+            "productionCost": 0.05
+          },
+          "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+        }
+      ]
+    }
+  ]
+}

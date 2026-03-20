@@ -13,9 +13,11 @@ public class MioBonus
         Modifiers = modifiers;
     }
 
-    public (ShipStats StatModifiers, ShipStats StatAverages, ShipStats StatMultipliers) GetCombinedForRole(ShipRole role)
+    public (ShipStats StatModifiers, ShipStats StatAverages, ShipStats StatMultipliers) GetCombinedForRoleAndTypes(
+        ShipRole role,
+        List<string> hullTypes)
     {
-        var applicable = Modifiers.Where(modifier => modifier.AppliesTo(role)).ToList();
+        var applicable = Modifiers.Where(modifier => modifier.AppliesTo(role, hullTypes)).ToList();
 
         var statModifiers = applicable
             .Select(modifier => modifier.StatModifiers)

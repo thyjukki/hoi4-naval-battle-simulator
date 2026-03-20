@@ -10,19 +10,15 @@
       "fleetID": "75_ca3_armor4",
       "commander": "",
       "doctrine": "",
-      "technologyLevel": "",
-      "nationModifier": "",
       "researchIDs": [],
       "spiritIDs": []
     },
     "defender": {
-      "fleetID": "75_cl3_armor4_full_la",
+      "fleetID": "150_s",
       "commander": "",
       "doctrine": "",
-      "technologyLevel": "",
-      "nationModifier": "",
-      "researchIDs": [],
-      "spiritIDs": []
+      "researchIDs": ["dsds"],
+      "spiritIDs": ["sds"]
     }
   }
 }

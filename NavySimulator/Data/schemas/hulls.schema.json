@@ -5,14 +5,23 @@
   "type": "object",
   "required": ["hulls"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "hulls": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "role", "baseStats"],
+        "required": ["id", "role", "type", "baseStats"],
         "properties": {
           "id": { "$ref": "#/$defs/id" },
           "role": { "$ref": "#/$defs/shipRole" },
+          "type": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/shipType" },
+            "uniqueItems": true,
+            "minItems": 1
+          },
           "baseStats": { "$ref": "#/$defs/shipStats" }
         },
         "additionalProperties": false
@@ -27,6 +36,20 @@
     "shipRole": {
       "type": "string",
       "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
+    },
+    "shipType": {
+      "type": "string",
+      "enum": [
+        "SHBB",
+        "Battleship",
+        "Battlecruiser",
+        "Carrier",
+        "Heavy Cruiser",
+        "Light Cruiser",
+        "Torpedo Cruiser",
+        "Destroyer",
+        "Submarine"
+      ]
     },
     "shipStats": {
       "type": "object",

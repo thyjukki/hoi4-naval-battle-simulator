@@ -7,6 +7,43 @@
       "type": "string",
       "minLength": 1
     },
+    "mioId": {
+      "type": "string",
+      "enum": [
+        "battle_line_armor_armor_ha",
+        "battle_line_armor_armor_la"
+      ]
+    },
+    "researchId": {
+      "type": "string",
+      "enum": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_3",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "smoke_generators",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2"
+      ]
+    },
+    "spiritId": {
+      "type": "string",
+      "enum": [
+        "brave_commanders",
+        "close_combat",
+        "decisive_battle",
+        "efficient_communications",
+        "fleet_defense",
+        "inclement_weather",
+        "naval_tripwire",
+        "night_fighting"
+      ]
+    },
     "shipRole": {
       "type": "string",
       "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]

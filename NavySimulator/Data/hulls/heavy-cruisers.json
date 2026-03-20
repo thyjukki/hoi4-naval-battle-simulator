@@ -4,6 +4,7 @@
     {
       "id": "heavy_cruiser_hull_1",
       "role": "Capital",
+      "type": ["Heavy Cruiser"],
       "baseStats": {
         "speed": 28,
         "organization": 40,
@@ -19,6 +20,7 @@
     {
       "id": "heavy_cruiser_hull_2",
       "role": "Capital",
+      "type": ["Heavy Cruiser"],
       "baseStats": {
         "speed": 29,
         "organization": 40,
@@ -34,6 +36,7 @@
     {
       "id": "heavy_cruiser_hull_3",
       "role": "Capital",
+      "type": ["Heavy Cruiser"],
       "baseStats": {
         "speed": 30,
         "organization": 40,
@@ -49,6 +52,7 @@
     {
       "id": "heavy_cruiser_hull_4",
       "role": "Capital",
+      "type": ["Heavy Cruiser"],
       "baseStats": {
         "speed": 31,
         "organization": 40,
@@ -64,6 +68,7 @@
     {
       "id": "torpedo_cruiser_hull",
       "role": "Capital",
+      "type": ["Torpedo Cruiser", "Heavy Cruiser"],
       "baseStats": {
         "speed": 30,
         "organization": 40,

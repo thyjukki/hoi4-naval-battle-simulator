@@ -3,6 +3,64 @@
   "$id": "mios.schema.json",
   "title": "NavySimulator MIOs",
   "type": "object",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "shipRole": {
+      "type": "string",
+      "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
+    },
+    "shipType": {
+      "type": "string",
+      "enum": [
+        "SHBB",
+        "Battleship",
+        "Battlecruiser",
+        "Carrier",
+        "Heavy Cruiser",
+        "Light Cruiser",
+        "Torpedo Cruiser",
+        "Destroyer",
+        "Submarine"
+      ]
+    },
+    "shipStats": {
+      "type": "object",
+      "properties": {
+        "speed": { "type": "number" },
+        "reliability": { "type": "number" },
+        "organization": { "type": "number" },
+        "hp": { "type": "number" },
+        "surfaceVisibility": { "type": "number" },
+        "subVisibility": { "type": "number" },
+        "surfaceDetection": { "type": "number" },
+        "subDetection": { "type": "number" },
+        "carrierSubDetection": { "type": "number" },
+        "carrierSurfaceDetection": { "type": "number" },
+        "carrierSize": { "type": "number" },
+        "lightAttack": { "type": "number" },
+        "lightPiercing": { "type": "number" },
+        "heavyAttack": { "type": "number" },
+        "heavyPiercing": { "type": "number" },
+        "torpedoAttack": { "type": "number" },
+        "depthChargeAttack": { "type": "number" },
+        "antiAir": { "type": "number" },
+        "armor": { "type": "number" },
+        "torpedoDamageReductionFactor": { "type": "number" },
+        "torpedoEnemyCriticalChanceFactor": { "type": "number" },
+        "torpedoHitChanceFactor": { "type": "number" },
+        "torpedoHitChance": { "type": "number" },
+        "lightHitChangeFactor": { "type": "number" },
+        "lightHitChanceFactor": { "type": "number" },
+        "heavyHitChangeFactor": { "type": "number" },
+        "navalWeatherPenaltyFactor": { "type": "number" },
+        "productionCost": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
   "required": ["mios"],
   "properties": {
     "$schema": {
@@ -14,24 +72,24 @@
         "type": "object",
         "required": ["id", "modifiers"],
         "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "id": { "$ref": "common.schema.json#/$defs/mioId" },
           "modifiers": {
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
-                "statModifiers": { "$ref": "common.schema.json#/$defs/shipStats" },
-                "statMultiplier": { "$ref": "common.schema.json#/$defs/shipStats" },
-                "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" },
-                "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
+                "statModifiers": { "$ref": "#/$defs/shipStats" },
+                "statMultiplier": { "$ref": "#/$defs/shipStats" },
+                "statMultipliers": { "$ref": "#/$defs/shipStats" },
+                "statAverages": { "$ref": "#/$defs/shipStats" },
                 "appliesToRoles": {
                   "type": "array",
-                  "items": { "$ref": "common.schema.json#/$defs/shipRole" },
+                  "items": { "$ref": "#/$defs/shipRole" },
                   "uniqueItems": true
                 },
                 "appliesToTypes": {
                   "type": "array",
-                  "items": { "type": "string", "minLength": 1 },
+                  "items": { "$ref": "#/$defs/shipType" },
                   "uniqueItems": true
                 }
               },

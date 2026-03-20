@@ -14,7 +14,7 @@
         "type": "object",
         "required": ["id"],
         "properties": {
-          "id": { "$ref": "#/$defs/id" },
+          "id": { "$ref": "common.schema.json#/$defs/researchId" },
           "statModifiers": { "$ref": "#/$defs/shipStats" },
           "statMultiplier": { "$ref": "#/$defs/shipStats" },
           "statMultipliers": { "$ref": "#/$defs/shipStats" },
@@ -22,6 +22,11 @@
           "appliesToRoles": {
             "type": "array",
             "items": { "$ref": "#/$defs/shipRole" },
+            "uniqueItems": true
+          },
+          "appliesToTypes": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/shipType" },
             "uniqueItems": true
           }
         },
@@ -37,6 +42,20 @@
     "shipRole": {
       "type": "string",
       "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
+    },
+    "shipType": {
+      "type": "string",
+      "enum": [
+        "SHBB",
+        "Battleship",
+        "Battlecruiser",
+        "Carrier",
+        "Heavy Cruiser",
+        "Light Cruiser",
+        "Torpedo Cruiser",
+        "Destroyer",
+        "Submarine"
+      ]
     },
     "shipStats": {
       "type": "object",

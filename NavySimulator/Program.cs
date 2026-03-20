@@ -46,8 +46,6 @@ Console.WriteLine($"Fleet: {scenario.Attacker.Fleet.ID}");
 Console.WriteLine($"Ships: {scenario.Attacker.Fleet.Ships.Count}");
 Console.WriteLine($"Commander: {scenario.Attacker.Commander}");
 Console.WriteLine($"Doctrine: {scenario.Attacker.Doctrine}");
-Console.WriteLine($"Tech: {scenario.Attacker.TechnologyLevel}");
-Console.WriteLine($"Nation Modifier: {scenario.Attacker.NationModifier}");
 Console.WriteLine();
 
 Console.WriteLine("Defender Setup");
@@ -55,8 +53,6 @@ Console.WriteLine($"Fleet: {scenario.Defender.Fleet.ID}");
 Console.WriteLine($"Ships: {scenario.Defender.Fleet.Ships.Count}");
 Console.WriteLine($"Commander: {scenario.Defender.Commander}");
 Console.WriteLine($"Doctrine: {scenario.Defender.Doctrine}");
-Console.WriteLine($"Tech: {scenario.Defender.TechnologyLevel}");
-Console.WriteLine($"Nation Modifier: {scenario.Defender.NationModifier}");
 
 var iterations = scenario.Iterations <= 0 ? 1 : scenario.Iterations;
 Console.WriteLine($"Iterations: {iterations}");

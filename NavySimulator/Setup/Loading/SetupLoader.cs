@@ -60,9 +60,24 @@ public class SetupLoader
         var hullIds = hulls.Select(h => h.ID).ToHashSet();
         foreach (var hull in hulls)
         {
+            var hullTypes = hull.Types ?? [];
+
             if (!Enum.TryParse<ShipRole>(hull.Role, true, out _))
             {
                 errors.Add($"hull '{hull.ID}' has unknown role '{hull.Role}'.");
+            }
+
+            if (hullTypes.Count == 0)
+            {
+                errors.Add($"hull '{hull.ID}' must define at least one type in 'type'.");
+            }
+
+            foreach (var hullType in hullTypes)
+            {
+                if (!ShipHullTypes.IsKnown(hullType))
+                {
+                    errors.Add($"hull '{hull.ID}' has unknown type '{hullType}'.");
+                }
             }
         }
 
@@ -79,6 +94,12 @@ public class SetupLoader
             errors);
         ValidateScopedRoleFilters(researches.Select(r => (r.ID, r.AppliesToRoles)), "research", errors);
         ValidateScopedRoleFilters(spirits.Select(s => (s.ID, s.AppliesToRoles)), "spirit", errors);
+        ValidateScopedTypeFilters(
+            mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToTypes ?? []))),
+            "mio modifier",
+            errors);
+        ValidateScopedTypeFilters(researches.Select(r => (r.ID, r.AppliesToTypes ?? [])), "research", errors);
+        ValidateScopedTypeFilters(spirits.Select(s => (s.ID, s.AppliesToTypes ?? [])), "spirit", errors);
 
         foreach (var design in designs)
         {
@@ -137,7 +158,7 @@ public class SetupLoader
 
         var hullById = hulls.ToDictionary(
             h => h.ID,
-            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), h.BaseStats.ToDomain()));
+            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), ParseTypes(h.Types ?? []), h.BaseStats.ToDomain()));
         var moduleById = modules.ToDictionary(
             m => m.ID,
             m => new StatModule(
@@ -152,7 +173,8 @@ public class SetupLoader
                     modifier.StatModifiers.ToDomain(),
                     modifier.StatAverages.ToDomain(),
                     modifier.StatMultipliers.ToDomain(),
-                    ParseRoles(modifier.AppliesToRoles)))
+                    ParseRoles(modifier.AppliesToRoles),
+                    ParseTypes(modifier.AppliesToTypes ?? [])))
                 .ToList()));
         var researchById = researches.ToDictionary(
             research => research.ID,
@@ -161,7 +183,8 @@ public class SetupLoader
                 research.StatModifiers.ToDomain(),
                 research.StatAverages.ToDomain(),
                 research.StatMultipliers.ToDomain(),
-                ParseRoles(research.AppliesToRoles)));
+                ParseRoles(research.AppliesToRoles),
+                ParseTypes(research.AppliesToTypes ?? [])));
         var spiritById = spirits.ToDictionary(
             spirit => spirit.ID,
             spirit => new Spirit(
@@ -169,7 +192,8 @@ public class SetupLoader
                 spirit.StatModifiers.ToDomain(),
                 spirit.StatAverages.ToDomain(),
                 spirit.StatMultipliers.ToDomain(),
-                ParseRoles(spirit.AppliesToRoles)));
+                ParseRoles(spirit.AppliesToRoles),
+                ParseTypes(spirit.AppliesToTypes ?? [])));
 
         var designById = new Dictionary<string, ShipDesign>();
 
@@ -717,8 +741,6 @@ public class SetupLoader
             fleet,
             participant.Commander,
             participant.Doctrine,
-            participant.TechnologyLevel,
-            participant.NationModifier,
             participantResearches,
             participantSpirits);
     }
@@ -740,6 +762,23 @@ public class SetupLoader
         }
     }
 
+    private static void ValidateScopedTypeFilters(
+        IEnumerable<(string ID, List<string> AppliesToTypes)> entries,
+        string entryType,
+        List<string> errors)
+    {
+        foreach (var entry in entries)
+        {
+            foreach (var hullType in entry.AppliesToTypes)
+            {
+                if (!ShipHullTypes.IsKnown(hullType))
+                {
+                    errors.Add($"{entryType} '{entry.ID}' has unknown appliesToTypes value '{hullType}'.");
+                }
+            }
+        }
+    }
+
     private static List<ShipRole> ParseRoles(List<string> roleNames)
     {
         var roles = new List<ShipRole>();
@@ -753,6 +792,14 @@ public class SetupLoader
         }
 
         return roles;
+    }
+
+    private static List<string> ParseTypes(List<string> typeNames)
+    {
+        return typeNames
+            .Where(typeName => !string.IsNullOrWhiteSpace(typeName))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 }
 

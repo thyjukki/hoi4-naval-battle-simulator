@@ -7,5 +7,6 @@ public class SpiritDto
     public ShipStatsDto StatAverages { get; set; } = new();
     public ShipStatsDto StatMultipliers { get; set; } = new();
     public List<string> AppliesToRoles { get; set; } = [];
+    public List<string> AppliesToTypes { get; set; } = [];
 }
 

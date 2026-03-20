@@ -7,8 +7,6 @@ public class BattleParticipant
     public Fleet Fleet;
     public string Commander;
     public string Doctrine;
-    public string TechnologyLevel;
-    public string NationModifier;
     public List<Research> Researches;
     public List<Spirit> Spirits;
 
@@ -16,16 +14,12 @@ public class BattleParticipant
         Fleet fleet,
         string commander,
         string doctrine,
-        string technologyLevel,
-        string nationModifier,
         List<Research> researches,
         List<Spirit> spirits)
     {
         Fleet = fleet;
         Commander = commander;
         Doctrine = doctrine;
-        TechnologyLevel = technologyLevel;
-        NationModifier = nationModifier;
         Researches = researches;
         Spirits = spirits;
 
@@ -37,9 +31,10 @@ public class BattleParticipant
         foreach (var ship in Fleet.Ships)
         {
             var role = ship.Design.Hull.Role;
+            var hullTypes = ship.Design.Hull.Types;
 
-            var applicableResearches = Researches.Where(research => research.AppliesTo(role));
-            var applicableSpirits = Spirits.Where(spirit => spirit.AppliesTo(role));
+            var applicableResearches = Researches.Where(research => research.AppliesTo(role, hullTypes));
+            var applicableSpirits = Spirits.Where(spirit => spirit.AppliesTo(role, hullTypes));
 
             var modifiers = applicableResearches.Select(research => research.StatModifiers)
                 .Concat(applicableSpirits.Select(spirit => spirit.StatModifiers));

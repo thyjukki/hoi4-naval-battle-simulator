@@ -36,7 +36,7 @@ public class ShipDesign
 
         if (MioBonus is not null)
         {
-            var mioEffects = MioBonus.GetCombinedForRole(Hull.Role);
+            var mioEffects = MioBonus.GetCombinedForRoleAndTypes(Hull.Role, Hull.Types);
             stats = stats.Add(mioEffects.StatModifiers);
             stats = stats.Add(mioEffects.StatAverages);
             stats = stats.Scale(mioEffects.StatMultipliers);

@@ -4,6 +4,7 @@
     {
       "id": "light_cruiser_hull_1",
       "role": "Screen",
+      "type": ["Light Cruiser"],
       "baseStats": {
         "speed": 28,
         "organization": 40,
@@ -19,6 +20,7 @@
     {
       "id": "light_cruiser_hull_2",
       "role": "Screen",
+      "type": ["Light Cruiser"],
       "baseStats": {
         "speed": 29,
         "organization": 40,
@@ -34,6 +36,7 @@
     {
       "id": "light_cruiser_hull_3",
       "role": "Screen",
+      "type": ["Light Cruiser"],
       "baseStats": {
         "speed": 30,
         "organization": 40,
@@ -49,6 +52,7 @@
     {
       "id": "light_cruiser_hull_4",
       "role": "Screen",
+      "type": ["Light Cruiser"],
       "baseStats": {
         "speed": 31,
         "organization": 40,

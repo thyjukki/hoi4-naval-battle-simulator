@@ -26,21 +26,19 @@
   "$defs": {
     "participant": {
       "type": "object",
-      "required": ["fleetID", "commander", "doctrine", "technologyLevel", "nationModifier"],
+      "required": ["fleetID", "commander", "doctrine"],
       "properties": {
         "fleetID": { "$ref": "common.schema.json#/$defs/id" },
         "commander": { "type": "string" },
         "doctrine": { "type": "string" },
-        "technologyLevel": { "type": "string" },
-        "nationModifier": { "type": "string" },
         "researchIDs": {
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/id" },
+          "items": { "$ref": "common.schema.json#/$defs/researchId" },
           "uniqueItems": true
         },
         "spiritIDs": {
           "type": "array",
-          "items": { "$ref": "common.schema.json#/$defs/id" },
+          "items": { "$ref": "common.schema.json#/$defs/spiritId" },
           "uniqueItems": true
         }
       },

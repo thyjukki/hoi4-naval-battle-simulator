@@ -4,6 +4,7 @@
     {
       "id": "destroyer_hull_1",
       "role": "Screen",
+      "type": ["Destroyer"],
       "baseStats": {
         "speed": 32,
         "organization": 35,
@@ -20,6 +21,7 @@
     {
       "id": "destroyer_hull_2",
       "role": "Screen",
+      "type": ["Destroyer"],
       "baseStats": {
         "speed": 33,
         "organization": 35,
@@ -36,6 +38,7 @@
     {
       "id": "destroyer_hull_3",
       "role": "Screen",
+      "type": ["Destroyer"],
       "baseStats": {
         "speed": 34,
         "organization": 35,
@@ -52,6 +55,7 @@
     {
       "id": "destroyer_hull_4",
       "role": "Screen",
+      "type": ["Destroyer"],
       "baseStats": {
         "speed": 35,
         "organization": 35,

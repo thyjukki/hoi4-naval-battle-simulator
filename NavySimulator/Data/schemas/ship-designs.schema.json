@@ -170,10 +170,7 @@
             }
           },
           "mioID": {
-            "type": "string",
-            "enum": [
-              "brooklyn_naval_yard_armor_armor_la"
-            ]
+            "$ref": "common.schema.json#/$defs/mioId"
           }
         },
         "additionalProperties": false
