@@ -1,0 +1,43 @@
+{
+  "researches": [
+    {
+      "id": "damage_control_1",
+      "statMultipliers": {
+        "chanceToReceiveCriticalHit": -0.1,
+        "effectsOfSustainedCriticalHits": -0.1
+      }
+    },
+    {
+      "id": "damage_control_2",
+      "statMultipliers": {
+        "chanceToReceiveCriticalHit": -0.1,
+        "effectsOfSustainedCriticalHits": -0.1
+      }
+    },
+    {
+      "id": "fire_control_1",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "heavyAttack": 0.05
+      },
+      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+    },
+    {
+      "id": "fire_control_2",
+      "statMultipliers": {
+        "lightAttack": 0.1,
+        "heavyAttack": 0.1
+      },
+      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser", "Heavy Cruiser"]
+    },
+    {
+      "id": "fire_control_2",
+      "statMultipliers": {
+        "lightAttack": 0.15,
+        "heavyAttack": 0.15
+      },
+      "appliesToRoles": ["Capital", "Screen"]
+    }
+  ]
+}
+

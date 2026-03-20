@@ -1,0 +1,52 @@
+{
+  "researches": [
+    {
+      "id": "light_upgrade_1",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "lightPiercing": 0.05
+      }
+    },
+    {
+      "id": "light_upgrade_2",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "lightPiercing": 0.05
+      },
+      "appliesToRoles": ["Screen", "Submarine"]
+    },
+    {
+      "id": "heavy_upgrade_1",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "lightPiercing": 0.05
+      },
+      "appliesToRoles": ["Capital"]
+    },
+    {
+      "id": "heavy_upgrade_2",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "lightPiercing": 0.05
+      },
+      "appliesToRoles": ["Capital"]
+    },
+    {
+      "id": "torpedo_upgrade_1",
+      "statMultipliers": {
+        "torpedoAttack": 0.05,
+        "lightPiercing": 0.05
+      },
+      "appliesToRoles": ["Capital"]
+    },
+    {
+      "id": "torpedo_upgrade_2",
+      "statMultipliers": {
+        "torpedoHitChance": 0.05,
+        "torpedoRevealChance": -0.25
+      },
+      "appliesToRoles": ["Capital"]
+    }
+  ]
+}
+

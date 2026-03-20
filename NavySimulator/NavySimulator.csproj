@@ -9,6 +9,9 @@
 
     <ItemGroup>
         <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
+        <None Update="Data\researches\fire-and-damage-controll.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

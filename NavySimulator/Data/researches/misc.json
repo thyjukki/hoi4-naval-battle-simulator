@@ -1,0 +1,11 @@
+{
+  "researches": [
+    {
+      "id": "smoke_generators",
+      "statMultipliers": {
+        "fleetSpeedWhileRetreating": 0.2
+      }
+    }
+  ]
+}
+
