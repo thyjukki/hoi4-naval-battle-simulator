@@ -14,11 +14,11 @@
       "spiritIDs": []
     },
     "defender": {
-      "fleetID": "150_s",
+      "fleetID": "150_dd_3_la_torp",
       "commander": "",
       "doctrine": "",
-      "researchIDs": ["dsds"],
-      "spiritIDs": ["sds"]
+      "researchIDs": [],
+      "spiritIDs": []
     }
   }
 }

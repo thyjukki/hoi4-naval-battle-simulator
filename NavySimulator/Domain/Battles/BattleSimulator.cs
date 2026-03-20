@@ -314,7 +314,7 @@ public class BattleSimulator
             return ActionResult.Skip(shooter, weapon, hour, "cooldown");
         }
 
-        var targetGroups = GetValidTargetGroups(weapon, defenderLines, defenderScreening);
+        var targetGroups = GetValidTargetGroups(weapon, defenderLines, defenderScreening, random);
 
         if (targetGroups.Count == 0)
         {
@@ -349,7 +349,7 @@ public class BattleSimulator
         var damage = 0.0;
         if (didHit)
         {
-            damage = CalculateDamage(selectedTarget.Target, attackValue, piercingValue, positioning);
+            damage = CalculateDamage(selectedTarget.Target, weapon, attackValue, piercingValue, positioning);
         }
 
         return ActionResult.Fire(
@@ -367,25 +367,39 @@ public class BattleSimulator
             didHit);
     }
 
-    private static double CalculateDamage(Ship target, double attackValue, double piercingValue, double positioning)
+    private static double CalculateDamage(Ship target, WeaponType weapon, double attackValue, double piercingValue, double positioning)
     {
-        var targetArmor = target.GetFinalStats().Armor;
-        var piercingRatio = piercingValue / targetArmor;
-        
-        var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
-        for (var i = 0; i < Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length; i++)
+        var targetStats = target.GetFinalStats();
+        var piercingDamageValue = 1.0;
+
+        if (weapon is not WeaponType.Torpedo)
         {
-            if (piercingRatio >= Hoi4Defines.NAVY_PIERCING_THRESHOLDS[i])
+            var targetArmor = targetStats.Armor;
+            var effectiveArmor = Math.Max(0.0001, targetArmor);
+            var piercingRatio = piercingValue / effectiveArmor;
+
+            var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
+            for (var i = 0; i < Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length; i++)
             {
-                piercingThresholdIndex = i;
-                break;
+                if (piercingRatio >= Hoi4Defines.NAVY_PIERCING_THRESHOLDS[i])
+                {
+                    piercingThresholdIndex = i;
+                    break;
+                }
             }
+
+            piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         }
-        var piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         
         var positioningMultiplier = 1.0 - Hoi4Defines.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
+        var torpedoReductionMultiplier = 1.0;
 
-        var damage = attackValue * piercingDamageValue * positioningMultiplier;
+        if (weapon == WeaponType.Torpedo)
+        {
+            torpedoReductionMultiplier = Math.Max(0, 1.0 - targetStats.TorpedoDamageReductionFactor);
+        }
+
+        var damage = attackValue * piercingDamageValue * positioningMultiplier * torpedoReductionMultiplier;
         // random factor in damage. So if max damage is fe. 10 and randomness is 30% then damage will be between 7-10.
         damage *= (1.0 - Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS +
                    Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS * Random.Shared.NextDouble());
@@ -464,22 +478,36 @@ public class BattleSimulator
 
         var stats = shooter.GetFinalStats();
 
-        modifier *= weapon switch
+        switch (weapon)
         {
-            WeaponType.Light => 1.0 + stats.LightHitChanceFactor,
-            WeaponType.Heavy => 1.0 + stats.HeavyHitChanceFactor,
-            WeaponType.Torpedo => 1.0 + stats.TorpedoHitChanceFactor,
-            WeaponType.DepthCharge => 1.0 + stats.DepthChargeHitChanceFactor,
-            _ => throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null)
-        };
-        
+            case WeaponType.Light:
+                modifier *= 1.0 + stats.LightHitChanceFactor;
+
+                break;
+            case WeaponType.Heavy:
+                modifier *= 1.0 + stats.HeavyHitChanceFactor;
+                if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
+                {
+                    modifier *= 1 + 1 * attackerScreening.ScreeningEfficiency; // 100 heavy hit chance factor
+                }
+                break;
+            case WeaponType.Torpedo:
+                modifier *= 1.0 + stats.TorpedoHitChanceFactor;
+                break;
+            case WeaponType.DepthCharge:
+                modifier *= 1.0 + stats.DepthChargeHitChanceFactor;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null);
+        }
+
         var orgagnisatonPercentage = shooter.CurrentOrganization / stats.Organization;
         
         modifier *= 1.0 + Hoi4Defines.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - orgagnisatonPercentage);
 
         if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
         {
-            modifier *= 1 + 1.3 * attackerScreening.ScreeningEfficiency; // 100 hit chance factor
+            modifier *= 1 + 0.3 * attackerScreening.ScreeningEfficiency; // 30 hit chance factor
         }
 
         return modifier;
@@ -488,7 +516,8 @@ public class BattleSimulator
     private static List<TargetGroup> GetValidTargetGroups(
         WeaponType weapon,
         BattleLines defenderLines,
-        ScreeningSummary defenderScreening)
+        ScreeningSummary defenderScreening,
+        Random random)
     {
         switch (weapon)
         {
@@ -499,9 +528,12 @@ public class BattleSimulator
             case WeaponType.Torpedo:
             {
                 var groups = new List<TargetGroup>();
-                var canBypassScreens = (1.0 - defenderScreening.ScreeningEfficiency) > 0;
-                var canReachCarrierLine =
-                    canBypassScreens && (1.0 - defenderScreening.CarrierScreeningEfficiency) > 0;
+                var bypassScreenChance = Math.Clamp(1.0 - defenderScreening.ScreeningEfficiency, 0, 1);
+                var bypassCarrierScreenChance = Math.Clamp(1.0 - defenderScreening.CarrierScreeningEfficiency, 0, 1);
+
+                // Torpedoes roll each shot for whether they bypass screening layers.
+                var canBypassScreens = random.NextDouble() < bypassScreenChance;
+                var canReachCarrierLine = canBypassScreens && random.NextDouble() < bypassCarrierScreenChance;
 
                 if (defenderLines.Screens.Count > 0)
                 {

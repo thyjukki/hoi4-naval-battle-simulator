@@ -43,7 +43,7 @@
     {
       "id": "torpedo_upgrade_2",
       "statMultipliers": {
-        "torpedoHitChance": 0.05,
+        "torpedoHitChanceFactor": 0.05,
         "torpedoRevealChance": -0.25
       },
       "appliesToRoles": ["Capital"]

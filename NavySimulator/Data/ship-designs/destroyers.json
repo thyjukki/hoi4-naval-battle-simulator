@@ -23,6 +23,20 @@
         "light_battery_3",
         "light_battery_3"
       ]
+    },
+    {
+      "id": "dd_3_la_torp",
+      "hullID": "destroyer_hull_3",
+      "moduleIDs": [
+        "engine_dd_3",
+        "fire_control_3",
+        "radar_4",
+        "anti_air_4",
+        "light_battery_3",
+        "light_battery_3",
+        "torpedo_3",
+        "torpedo_3"
+      ]
     }
   ]
 }

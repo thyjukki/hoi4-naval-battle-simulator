@@ -27,7 +27,7 @@
         "hitChance": 0.1,
         "retreatSpeed": -0.1,
         "retreatDecisionChance": -0.1,
-        "torpedoHitChance": 0.1
+        "torpedoHitChanceFactor": 0.1
       }
     },
     {
