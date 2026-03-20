@@ -1,4 +1,5 @@
 {
+  "$schema": "schemas/force-compositions.schema.json",
   "fleets": [
     {
       "id": "task_force_rom_test",

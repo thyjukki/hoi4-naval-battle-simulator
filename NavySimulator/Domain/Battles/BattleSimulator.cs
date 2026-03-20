@@ -459,17 +459,17 @@ public class BattleSimulator
         var timeOfDay = hour % 24;
         if (timeOfDay is > 17 or < 5)
         {
-            modifier *= 1.0 + Hoi4Defines.NightHitChange;
+            modifier *= 1.0 + Hoi4Defines.NightHitChance;
         }
 
         var stats = shooter.GetFinalStats();
 
         modifier *= weapon switch
         {
-            WeaponType.Light => 1.0 + stats.LightHitChangeFactor,
-            WeaponType.Heavy => 1.0 + stats.HeavyHitChangeFactor,
-            WeaponType.Torpedo => 1.0 + stats.TorpedoHitChangeFactor,
-            WeaponType.DepthCharge => 1.0 + stats.DepthChargeHitChangeFactor,
+            WeaponType.Light => 1.0 + stats.LightHitChanceFactor,
+            WeaponType.Heavy => 1.0 + stats.HeavyHitChanceFactor,
+            WeaponType.Torpedo => 1.0 + stats.TorpedoHitChanceFactor,
+            WeaponType.DepthCharge => 1.0 + stats.DepthChargeHitChanceFactor,
             _ => throw new ArgumentOutOfRangeException(nameof(weapon), weapon, null)
         };
         

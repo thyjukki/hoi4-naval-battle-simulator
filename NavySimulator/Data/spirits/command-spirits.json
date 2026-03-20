@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/spirits.schema.json",
   "spirits": [
     {
       "id": "close_combat",

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mios.schema.json",
+  "title": "NavySimulator MIOs",
+  "type": "object",
+  "required": ["mios"],
+  "properties": {
+    "mios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "modifiers"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "statModifiers": { "$ref": "common.schema.json#/$defs/shipStats" },
+                "statMultiplier": { "$ref": "common.schema.json#/$defs/shipStats" },
+                "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" },
+                "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
+                "appliesToRoles": {
+                  "type": "array",
+                  "items": { "$ref": "common.schema.json#/$defs/shipRole" },
+                  "uniqueItems": true
+                },
+                "appliesToTypes": {
+                  "type": "array",
+                  "items": { "type": "string", "minLength": 1 },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false,
+              "anyOf": [
+                { "required": ["statModifiers"] },
+                { "required": ["statMultiplier"] },
+                { "required": ["statMultipliers"] },
+                { "required": ["statAverages"] }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

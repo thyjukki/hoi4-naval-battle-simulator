@@ -5,12 +5,27 @@ namespace NavySimulator.Domain;
 public class MioBonus
 {
     public string ID;
-    public ShipStats PercentBonus;
+    public List<MioModifier> Modifiers;
 
-    public MioBonus(string id, ShipStats percentBonus)
+    public MioBonus(string id, List<MioModifier> modifiers)
     {
         ID = id;
-        PercentBonus = percentBonus;
+        Modifiers = modifiers;
+    }
+
+    public (ShipStats StatModifiers, ShipStats StatAverages, ShipStats StatMultipliers) GetCombinedForRole(ShipRole role)
+    {
+        var applicable = Modifiers.Where(modifier => modifier.AppliesTo(role)).ToList();
+
+        var statModifiers = applicable
+            .Select(modifier => modifier.StatModifiers)
+            .Aggregate(new ShipStats(), (current, value) => current.Add(value));
+        var statAverages = ShipStats.AverageNonZero(applicable.Select(modifier => modifier.StatAverages));
+        var statMultipliers = applicable
+            .Select(modifier => modifier.StatMultipliers)
+            .Aggregate(new ShipStats(), (current, value) => current.Add(value));
+
+        return (statModifiers, statAverages, statMultipliers);
     }
 }
 

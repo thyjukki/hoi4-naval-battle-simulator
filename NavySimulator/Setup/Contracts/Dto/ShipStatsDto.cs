@@ -26,10 +26,10 @@ public class ShipStatsDto
     public double Armor { get; set; }
     public double TorpedoDamageReductionFactor { get; set; }
     public double TorpedoEnemyCriticalChanceFactor { get; set; }
-    public double TorpedoHitChangeFactor { get; set; }
+    public double TorpedoHitChanceFactor { get; set; }
     public double NavalWeatherPenaltyFactor { get; set; }
-    public double LightHitChangeFactor { get; set; }
-    public double HeavyHitChangeFactor { get; set; }
+    public double LightHitChanceFactor { get; set; }
+    public double HeavyHitChanceFactor { get; set; }
     public double ProductionCost { get; set; }
 
     public ShipStats ToDomain()
@@ -57,11 +57,11 @@ public class ShipStatsDto
             TorpedoDamageReductionFactor: TorpedoDamageReductionFactor,
             TorpedoEnemyCriticalChanceFactor: TorpedoEnemyCriticalChanceFactor,
             NavalWeatherPenaltyFactor: NavalWeatherPenaltyFactor,
-            LightHitChangeFactor: LightHitChangeFactor,
-            HeavyHitChangeFactor: HeavyHitChangeFactor,
+            LightHitChanceFactor: LightHitChanceFactor,
+            HeavyHitChanceFactor: HeavyHitChanceFactor,
             ProductionCost: ProductionCost)
         {
-            TorpedoHitChangeFactor = TorpedoHitChangeFactor
+            TorpedoHitChanceFactor = TorpedoHitChanceFactor
         };
     }
 }

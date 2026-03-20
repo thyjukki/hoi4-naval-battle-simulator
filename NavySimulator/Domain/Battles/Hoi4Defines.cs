@@ -41,9 +41,9 @@ public static class Hoi4Defines
     public const double ScreeningVisibiliityBonus = -0.1;
     
     public const double NightRetreatSpeed = 0.1;
-    public const double NightHitChange = -0.25;
+    public const double NightHitChance = -0.25;
     public const double NightCarrierTraffic = -0.75;
-    public const double NightTorpedoHitChangeFactor = -0.15;
+    public const double NightTorpedoHitChanceFactor = -0.15;
     
     
 

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle-scenario.schema.json",
+  "title": "NavySimulator Battle Scenario",
+  "type": "object",
+  "required": ["battleScenario"],
+  "properties": {
+    "battleScenario": {
+      "type": "object",
+      "required": ["id", "terrain", "weather", "maxHours", "attacker", "defender"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "terrain": { "type": "string", "minLength": 1 },
+        "weather": { "type": "string", "minLength": 1 },
+        "maxHours": { "type": "integer", "minimum": 1 },
+        "iterations": { "type": "integer", "minimum": 1 },
+        "attacker": { "$ref": "#/$defs/participant" },
+        "defender": { "$ref": "#/$defs/participant" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "participant": {
+      "type": "object",
+      "required": ["fleetID", "commander", "doctrine", "technologyLevel", "nationModifier"],
+      "properties": {
+        "fleetID": { "$ref": "common.schema.json#/$defs/id" },
+        "commander": { "type": "string" },
+        "doctrine": { "type": "string" },
+        "technologyLevel": { "type": "string" },
+        "nationModifier": { "type": "string" },
+        "researchIDs": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" },
+          "uniqueItems": true
+        },
+        "spiritIDs": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

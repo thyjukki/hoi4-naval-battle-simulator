@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "force-compositions.schema.json",
+  "title": "NavySimulator Force Compositions",
+  "type": "object",
+  "required": ["fleets"],
+  "properties": {
+    "fleets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "shipDesigns"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "shipDesigns": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

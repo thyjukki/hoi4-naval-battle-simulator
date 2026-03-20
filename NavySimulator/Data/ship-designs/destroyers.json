@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/ship-designs.schema.json",
   "shipDesigns": [
     {
       "id": "test_dd",

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "modules.schema.json",
+  "title": "NavySimulator Modules",
+  "type": "object",
+  "required": ["modules"],
+  "properties": {
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "statModifiers": { "$ref": "common.schema.json#/$defs/shipStats" },
+          "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
+          "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

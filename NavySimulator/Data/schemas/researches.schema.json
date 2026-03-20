@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "researches.schema.json",
+  "title": "NavySimulator Researches",
+  "type": "object",
+  "required": ["researches"],
+  "properties": {
+    "researches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "statModifiers": { "$ref": "#/$defs/shipStats" },
+          "statMultiplier": { "$ref": "#/$defs/shipStats" },
+          "statMultipliers": { "$ref": "#/$defs/shipStats" },
+          "statAverages": { "$ref": "#/$defs/shipStats" },
+          "appliesToRoles": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/shipRole" },
+            "uniqueItems": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "shipRole": {
+      "type": "string",
+      "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
+    },
+    "shipStats": {
+      "type": "object",
+      "properties": {
+        "speed": { "type": "number" },
+        "reliability": { "type": "number" },
+        "organization": { "type": "number" },
+        "hp": { "type": "number" },
+        "surfaceVisibility": { "type": "number" },
+        "subVisibility": { "type": "number" },
+        "surfaceDetection": { "type": "number" },
+        "subDetection": { "type": "number" },
+        "carrierSubDetection": { "type": "number" },
+        "carrierSurfaceDetection": { "type": "number" },
+        "carrierSize": { "type": "number" },
+        "lightAttack": { "type": "number" },
+        "lightPiercing": { "type": "number" },
+        "heavyAttack": { "type": "number" },
+        "heavyPiercing": { "type": "number" },
+        "torpedoAttack": { "type": "number" },
+        "depthChargeAttack": { "type": "number" },
+        "antiAir": { "type": "number" },
+        "armor": { "type": "number" },
+        "torpedoDamageReductionFactor": { "type": "number" },
+        "torpedoEnemyCriticalChanceFactor": { "type": "number" },
+        "torpedoHitChanceFactor": { "type": "number" },
+        "torpedoHitChance": { "type": "number" },
+        "lightHitChangeFactor": { "type": "number" },
+        "lightHitChanceFactor": { "type": "number" },
+        "heavyHitChangeFactor": { "type": "number" },
+        "navalWeatherPenaltyFactor": { "type": "number" },
+        "productionCost": { "type": "number" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+
+

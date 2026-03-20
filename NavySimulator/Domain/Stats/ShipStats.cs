@@ -23,8 +23,8 @@ public record ShipStats(
     double TorpedoDamageReductionFactor = 0,
     double TorpedoEnemyCriticalChanceFactor = 0,
     double NavalWeatherPenaltyFactor = 0,
-    double LightHitChangeFactor = 0,
-    double HeavyHitChangeFactor = 0,
+    double LightHitChanceFactor = 0,
+    double HeavyHitChanceFactor = 0,
     double ProductionCost = 0)
 {
 
@@ -53,8 +53,8 @@ public record ShipStats(
             TorpedoDamageReductionFactor + other.TorpedoDamageReductionFactor,
             TorpedoEnemyCriticalChanceFactor + other.TorpedoEnemyCriticalChanceFactor,
             NavalWeatherPenaltyFactor + other.NavalWeatherPenaltyFactor,
-            LightHitChangeFactor + other.LightHitChangeFactor,
-            HeavyHitChangeFactor + other.HeavyHitChangeFactor,
+            LightHitChanceFactor + other.LightHitChanceFactor,
+            HeavyHitChanceFactor + other.HeavyHitChanceFactor,
             ProductionCost + other.ProductionCost);
     }
 
@@ -83,8 +83,8 @@ public record ShipStats(
             TorpedoDamageReductionFactor * (1 + percentBonus.TorpedoDamageReductionFactor),
             TorpedoEnemyCriticalChanceFactor * (1 + percentBonus.TorpedoEnemyCriticalChanceFactor),
             NavalWeatherPenaltyFactor * (1 + percentBonus.NavalWeatherPenaltyFactor),
-            LightHitChangeFactor * (1 + percentBonus.LightHitChangeFactor),
-            HeavyHitChangeFactor * (1 + percentBonus.HeavyHitChangeFactor),
+            LightHitChanceFactor * (1 + percentBonus.LightHitChanceFactor),
+            HeavyHitChanceFactor * (1 + percentBonus.HeavyHitChanceFactor),
             ProductionCost * (1 + percentBonus.ProductionCost));
     }
 
@@ -115,12 +115,12 @@ public record ShipStats(
             TorpedoDamageReductionFactor: AverageNonZero(statList.Select(s => s.TorpedoDamageReductionFactor)),
             TorpedoEnemyCriticalChanceFactor: AverageNonZero(statList.Select(s => s.TorpedoEnemyCriticalChanceFactor)),
             NavalWeatherPenaltyFactor: AverageNonZero(statList.Select(s => s.NavalWeatherPenaltyFactor)),
-            LightHitChangeFactor: AverageNonZero(statList.Select(s => s.LightHitChangeFactor)),
-            HeavyHitChangeFactor: AverageNonZero(statList.Select(s => s.HeavyHitChangeFactor)),
+            LightHitChanceFactor: AverageNonZero(statList.Select(s => s.LightHitChanceFactor)),
+            HeavyHitChanceFactor: AverageNonZero(statList.Select(s => s.HeavyHitChanceFactor)),
             ProductionCost: AverageNonZero(statList.Select(s => s.ProductionCost)))
         {
-            TorpedoHitChangeFactor = AverageNonZero(statList.Select(s => s.TorpedoHitChangeFactor)),
-            DepthChargeHitChangeFactor = AverageNonZero(statList.Select(s => s.DepthChargeHitChangeFactor))
+            TorpedoHitChanceFactor = AverageNonZero(statList.Select(s => s.TorpedoHitChanceFactor)),
+            DepthChargeHitChanceFactor = AverageNonZero(statList.Select(s => s.DepthChargeHitChanceFactor))
         };
 
         return averages;
@@ -132,8 +132,8 @@ public record ShipStats(
         return nonZero.Count == 0 ? 0 : nonZero.Average();
     }
 
-    public double TorpedoHitChangeFactor { get; set; }
-    public double DepthChargeHitChangeFactor { get; set; }
+    public double TorpedoHitChanceFactor { get; set; }
+    public double DepthChargeHitChanceFactor { get; set; }
 }
 
 

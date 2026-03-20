@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/hulls.schema.json",
   "hulls": [
     {
       "id": "heavy_cruiser_hull_1",
@@ -66,6 +67,7 @@
       "baseStats": {
         "speed": 30,
         "organization": 40,
+        "testFalse": 50,
         "hp": 105,
         "surfaceVisibility": 17.5,
         "surfaceDetection": 18,

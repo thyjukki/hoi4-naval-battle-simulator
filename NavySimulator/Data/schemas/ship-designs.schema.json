@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ship-designs.schema.json",
+  "title": "NavySimulator Ship Designs",
+  "type": "object",
+  "required": ["shipDesigns"],
+  "properties": {
+    "shipDesigns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "hullID", "moduleIDs"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "hullID": { "$ref": "common.schema.json#/$defs/id" },
+          "moduleIDs": {
+            "type": "array",
+            "items": { "$ref": "common.schema.json#/$defs/id" }
+          },
+          "mioID": { "$ref": "common.schema.json#/$defs/id" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

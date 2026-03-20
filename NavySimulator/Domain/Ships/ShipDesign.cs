@@ -33,7 +33,16 @@ public class ShipDesign
         stats = stats.Add(averagedStats);
         
         stats = stats.Scale(multipliers);
-        cachedFinalStats = MioBonus is null ? stats : stats.Scale(MioBonus.PercentBonus);
+
+        if (MioBonus is not null)
+        {
+            var mioEffects = MioBonus.GetCombinedForRole(Hull.Role);
+            stats = stats.Add(mioEffects.StatModifiers);
+            stats = stats.Add(mioEffects.StatAverages);
+            stats = stats.Scale(mioEffects.StatMultipliers);
+        }
+
+        cachedFinalStats = stats;
         return cachedFinalStats;
     }
 }

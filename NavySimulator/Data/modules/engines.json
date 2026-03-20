@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
       "id": "carrier_ship_nuclear_engine_1",

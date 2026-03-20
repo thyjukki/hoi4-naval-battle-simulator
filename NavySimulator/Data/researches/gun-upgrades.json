@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
       "id": "light_upgrade_1",

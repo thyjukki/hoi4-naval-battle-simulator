@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
       "id": "torpedo_1",
@@ -55,7 +56,7 @@
       "statModifiers": {
         "torpedoAttack": 10,
         "productionCost": 100,
-        "torpedoHitChangeFactor": 0.005
+        "torpedoHitChanceFactor": 0.005
       },
       "statMultipliers": {
         "speed": -0.02
@@ -66,7 +67,7 @@
       "statModifiers": {
         "torpedoAttack": 12,
         "productionCost": 120,
-        "torpedoHitChangeFactor": 0.01
+        "torpedoHitChanceFactor": 0.01
       },
       "statMultipliers": {
         "speed": -0.03
@@ -77,7 +78,7 @@
       "statModifiers": {
         "torpedoAttack": 14,
         "productionCost": 140,
-        "torpedoHitChangeFactor": 0.015
+        "torpedoHitChanceFactor": 0.015
       },
       "statMultipliers": {
         "speed": -0.04
@@ -88,7 +89,7 @@
       "statModifiers": {
         "torpedoAttack": 44,
         "productionCost": 520,
-        "torpedoHitChangeFactor": 0.05,
+        "torpedoHitChanceFactor": 0.05,
         "reliability": -0.15
       },
       "statMultipliers": {

@@ -1,4 +1,5 @@
 {
+  "$schema": "schemas/battle-scenario.schema.json",
   "battleScenario": {
     "id": "base_test",
     "terrain": "ocean",

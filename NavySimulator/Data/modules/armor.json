@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
       "id": "armor_bb_1",

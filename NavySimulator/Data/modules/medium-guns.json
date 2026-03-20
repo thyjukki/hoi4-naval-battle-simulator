@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
       "id": "medium_battery_1",

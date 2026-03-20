@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/hulls.schema.json",
   "hulls": [
     {
       "id": "panzerschiff_cruiser_hull",

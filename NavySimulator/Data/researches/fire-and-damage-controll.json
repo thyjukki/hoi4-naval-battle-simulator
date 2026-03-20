@@ -1,4 +1,5 @@
 {
+  "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
       "id": "damage_control_1",

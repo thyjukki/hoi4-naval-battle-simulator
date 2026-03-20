@@ -1,0 +1,10 @@
+namespace NavySimulator.Setup.Contracts;
+
+public class MioModifierDto
+{
+    public ShipStatsDto StatModifiers { get; set; } = new();
+    public ShipStatsDto StatAverages { get; set; } = new();
+    public ShipStatsDto StatMultipliers { get; set; } = new();
+    public List<string> AppliesToRoles { get; set; } = [];
+}
+

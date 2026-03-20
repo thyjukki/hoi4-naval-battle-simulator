@@ -73,6 +73,10 @@ public class SetupLoader
         var spiritIds = spirits.Select(s => s.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
 
+        ValidateScopedRoleFilters(
+            mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToRoles))),
+            "mio modifier",
+            errors);
         ValidateScopedRoleFilters(researches.Select(r => (r.ID, r.AppliesToRoles)), "research", errors);
         ValidateScopedRoleFilters(spirits.Select(s => (s.ID, s.AppliesToRoles)), "spirit", errors);
 
@@ -141,7 +145,15 @@ public class SetupLoader
                 m.StatModifiers.ToDomain(),
                 m.StatMultipliers.ToDomain(),
                 m.StatAverages.ToDomain()));
-        var mioById = mios.ToDictionary(m => m.ID, m => new MioBonus(m.ID, m.PercentBonus.ToDomain()));
+        var mioById = mios.ToDictionary(
+            mio => mio.ID,
+            mio => new MioBonus(mio.ID, mio.Modifiers
+                .Select(modifier => new MioModifier(
+                    modifier.StatModifiers.ToDomain(),
+                    modifier.StatAverages.ToDomain(),
+                    modifier.StatMultipliers.ToDomain(),
+                    ParseRoles(modifier.AppliesToRoles)))
+                .ToList()));
         var researchById = researches.ToDictionary(
             research => research.ID,
             research => new Research(
