@@ -1598,11 +1598,12 @@ public class BattleSimulator
         foreach (var entry in allShips)
         {
             var damagedShips = allActions
-                .Where(action => action.ShooterID == entry.Ship.ID && action.Fired && action.Target is not null && action.Damage > 0)
+                .Where(action => action.ShooterID == entry.Ship.ID && action.Fired && action.Target is not null)
                 .Select(action => new ShipDamageReportEntry(
                     action.Hour,
                     action.Target!.ID,
                     action.Weapon,
+                    action.DidHit,
                     action.Damage,
                     action.AppliedHpDamage,
                     action.AppliedOrganizationDamage,

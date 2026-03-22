@@ -5,6 +5,7 @@ public class ShipDamageReportEntry
     public int HourTick;
     public string TargetShipID;
     public WeaponType Weapon;
+    public bool DidHit;
     public double Damage;
     public double AppliedHpDamage;
     public double AppliedOrganizationDamage;
@@ -19,6 +20,7 @@ public class ShipDamageReportEntry
         int hourTick,
         string targetShipId,
         WeaponType weapon,
+        bool didHit,
         double damage,
         double appliedHpDamage,
         double appliedOrganizationDamage,
@@ -32,6 +34,7 @@ public class ShipDamageReportEntry
         HourTick = hourTick;
         TargetShipID = targetShipId;
         Weapon = weapon;
+        DidHit = didHit;
         Damage = damage;
         AppliedHpDamage = appliedHpDamage;
         AppliedOrganizationDamage = appliedOrganizationDamage;

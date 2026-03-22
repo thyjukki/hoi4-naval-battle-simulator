@@ -84,10 +84,9 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
     var fileSuffix = iterations > 1 ? $"-RUN{runNumber}" : string.Empty;
     var hourlyLogFilePath = Path.Combine(outputDirectoryPath, $"hourly-log{fileSuffix}.txt");
     var summaryFilePath = Path.Combine(outputDirectoryPath, $"summary{fileSuffix}.txt");
-    var shipReportFilePath = Path.Combine(outputDirectoryPath, $"ship-report{fileSuffix}.txt");
 
     File.WriteAllLines(hourlyLogFilePath, result.HourlyLog);
-    File.WriteAllLines(shipReportFilePath, BuildShipReportLines(result.ShipReports));
+    var shipReportOutput = WriteShipReports(runScenario, result, outputDirectoryPath, fileSuffix);
 
     var topDamageDealers = result.ShipReports
         .OrderByDescending(report => report.TotalDamageDone)
@@ -136,7 +135,10 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
     Console.WriteLine($"Top Damage Dealers: {string.Join(", ", topDamageDealers)}");
     Console.WriteLine($"Hourly log file: {hourlyLogFilePath}");
     Console.WriteLine($"Summary file: {summaryFilePath}");
-    Console.WriteLine($"Per-ship report file: {shipReportFilePath}");
+    Console.WriteLine($"Attacker ship-report folder: {shipReportOutput.AttackerFolder}");
+    Console.WriteLine($"Defender ship-report folder: {shipReportOutput.DefenderFolder}");
+    Console.WriteLine($"Attacker design reports: {shipReportOutput.AttackerDesignReports}");
+    Console.WriteLine($"Defender design reports: {shipReportOutput.DefenderDesignReports}");
 }
 
 if (iterations > 1)
@@ -178,44 +180,305 @@ static string FormatRatio(double ratio)
     return double.IsPositiveInfinity(ratio) ? "inf" : ratio.ToString("F2");
 }
 
-static List<string> BuildShipReportLines(List<ShipBattleReport> shipReports)
+static (string AttackerFolder, string DefenderFolder, int AttackerDesignReports, int DefenderDesignReports) WriteShipReports(
+    BattleScenario scenario,
+    BattleResult result,
+    string outputDirectoryPath,
+    string fileSuffix)
+{
+    var allShipsById = scenario.Attacker.Fleet.Ships
+        .Concat(scenario.Defender.Fleet.Ships)
+        .ToDictionary(ship => ship.ID, ship => ship, StringComparer.Ordinal);
+
+    var allShots = BuildShotEvents(result.ShipReports);
+    var attackerOutput = WriteSideShipReports("Attacker", result.ShipReports, allShots, allShipsById, outputDirectoryPath, fileSuffix);
+    var defenderOutput = WriteSideShipReports("Defender", result.ShipReports, allShots, allShipsById, outputDirectoryPath, fileSuffix);
+
+    return (attackerOutput.FolderPath, defenderOutput.FolderPath, attackerOutput.DesignReportCount, defenderOutput.DesignReportCount);
+}
+
+static (string FolderPath, int DesignReportCount) WriteSideShipReports(
+    string side,
+    List<ShipBattleReport> shipReports,
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> allShots,
+    IReadOnlyDictionary<string, Ship> shipById,
+    string outputDirectoryPath,
+    string fileSuffix)
+{
+    var sideFolderPath = Path.Combine(outputDirectoryPath, side.ToLowerInvariant());
+    Directory.CreateDirectory(sideFolderPath);
+
+    var sideShipReports = shipReports
+        .Where(report => report.Side == side)
+        .OrderBy(report => report.ShipID, StringComparer.Ordinal)
+        .ToList();
+
+    var sideShipReportPath = Path.Combine(sideFolderPath, $"ship-report{fileSuffix}.txt");
+    File.WriteAllLines(sideShipReportPath, BuildSideShipReportLines(sideShipReports, allShots, shipById));
+
+    var byDesign = sideShipReports
+        .GroupBy(report => ResolveShipType(report.ShipID, shipById), StringComparer.Ordinal)
+        .OrderBy(group => group.Key, StringComparer.Ordinal)
+        .ToList();
+
+    foreach (var designGroup in byDesign)
+    {
+        var fileName = $"ship-design-{SanitizePathSegment(designGroup.Key)}{fileSuffix}.txt";
+        var designFilePath = Path.Combine(sideFolderPath, fileName);
+        File.WriteAllLines(designFilePath, BuildDesignShipReportLines(side, designGroup.Key, designGroup.ToList(), allShots, shipById));
+    }
+
+    return (sideFolderPath, byDesign.Count);
+}
+
+static List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> BuildShotEvents(List<ShipBattleReport> shipReports)
+{
+    return shipReports
+        .SelectMany(report => report.DamagedShips.Select(damageEvent => (report.Side, report.ShipID, damageEvent)))
+        .ToList();
+}
+
+static List<string> BuildSideShipReportLines(
+    List<ShipBattleReport> shipReports,
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> allShots,
+    IReadOnlyDictionary<string, Ship> shipById)
 {
     var lines = new List<string>();
 
-    foreach (var shipReport in shipReports.OrderBy(report => report.Side).ThenBy(report => report.ShipID))
+    foreach (var shipReport in shipReports)
     {
-        lines.Add($"Ship: {shipReport.ShipID} ({shipReport.Side})");
-        lines.Add($"  Sunk: {shipReport.IsSunk}");
-        lines.Add($"  HP: {shipReport.CurrentHp:F1}/{shipReport.MaxHp:F1} ({shipReport.HpPercentage:P1})");
-        lines.Add($"  Retreated: {shipReport.DidRetreat}");
-        lines.Add($"  Attempted Retreat: {shipReport.AttemptedRetreat}");
-        lines.Add($"  Attempted Retreat But Sunk: {shipReport.AttemptedRetreatButSunk}");
-        lines.Add($"  Production Cost: {shipReport.ProductionCost:F1}");
-        lines.Add($"  Total Damage Done: {shipReport.TotalDamageDone:F1}");
-
-        if (shipReport.DamagedShips.Count == 0)
-        {
-            lines.Add("  Damaged Ships: none");
-        }
-        else
-        {
-            lines.Add("  Damaged Ships:");
-
-            foreach (var damageEvent in shipReport.DamagedShips)
-            {
-                lines.Add(
-                    $"    - Hour {damageEvent.HourTick}, Target {damageEvent.TargetShipID}, Weapon {damageEvent.Weapon}, Damage {damageEvent.Damage:F1}, " +
-                    $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
-                    $"Attacker Piercing {damageEvent.AttackerPiercing:F2}, Hit Chance {damageEvent.AttackerFinalHitChance:P1}, " +
-                    $"Defender Armor {damageEvent.DefenderArmor:F2}, Speed {damageEvent.DefenderSpeed:F2}, Visibility {damageEvent.DefenderVisibility:F2}");
-            }
-        }
-
+        AppendShipDetailLines(lines, shipReport, allShots, shipById);
         lines.Add(string.Empty);
     }
 
     return lines;
 }
+
+static List<string> BuildDesignShipReportLines(
+    string side,
+    string shipDesignId,
+    List<ShipBattleReport> designShipReports,
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> allShots,
+    IReadOnlyDictionary<string, Ship> shipById)
+{
+    var lines = new List<string>();
+    var designShipIds = designShipReports.Select(report => report.ShipID).ToHashSet(StringComparer.Ordinal);
+    var designShots = allShots
+        .Where(shot => shot.ShooterSide == side && designShipIds.Contains(shot.ShooterShipID))
+        .ToList();
+
+    var sunkCount = designShipReports.Count(report => report.IsSunk);
+    var totalDamage = designShots.Sum(shot => shot.Event.AppliedHpDamage);
+    var sampleAttackStats = BuildDesignAttackStatsLine(designShipReports, shipById);
+
+    lines.Add($"Design: {shipDesignId} ({side})");
+    lines.Add($"Ships: {designShipReports.Count}");
+    lines.Add($"Sunk: {sunkCount}");
+    lines.Add(sampleAttackStats);
+    lines.Add($"Total HP Damage Dealt: {totalDamage:F1}");
+    lines.Add(string.Empty);
+    lines.Add("Summary");
+    lines.AddRange(BuildHitMissSummaryLines(designShots));
+    lines.AddRange(BuildWeaponTargetingSummaryLines(designShots, shipById));
+    lines.AddRange(BuildEnemyDamageShareSummaryLines(designShots, shipById, totalDamage));
+    lines.Add(string.Empty);
+    lines.Add("Ships");
+
+    foreach (var shipReport in designShipReports.OrderBy(report => report.ShipID, StringComparer.Ordinal))
+    {
+        AppendShipDetailLines(lines, shipReport, allShots, shipById, "  ");
+        lines.Add(string.Empty);
+    }
+
+    return lines;
+}
+
+static List<string> BuildHitMissSummaryLines(List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> designShots)
+{
+    var lines = new List<string> { "- Hit/Miss ratio per weapon" };
+    var weapons = new[] { WeaponType.Light, WeaponType.Heavy, WeaponType.Torpedo, WeaponType.DepthCharge };
+
+    foreach (var weapon in weapons)
+    {
+        var weaponShots = designShots.Where(shot => shot.Event.Weapon == weapon).ToList();
+
+        if (weaponShots.Count == 0)
+        {
+            lines.Add($"  - {weapon}: no shots");
+            continue;
+        }
+
+        var hitCount = weaponShots.Count(shot => shot.Event.DidHit);
+        var missCount = weaponShots.Count - hitCount;
+        var hitRate = hitCount / (double)weaponShots.Count;
+        lines.Add($"  - {weapon}: hits {hitCount}, misses {missCount}, hit rate {hitRate:P1}");
+    }
+
+    return lines;
+}
+
+static List<string> BuildWeaponTargetingSummaryLines(
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> designShots,
+    IReadOnlyDictionary<string, Ship> shipById)
+{
+    var lines = new List<string> { "- Weapon targeting % by enemy ship type" };
+    var weapons = new[] { WeaponType.Light, WeaponType.Heavy, WeaponType.Torpedo, WeaponType.DepthCharge };
+
+    foreach (var weapon in weapons)
+    {
+        var weaponShots = designShots.Where(shot => shot.Event.Weapon == weapon).ToList();
+
+        if (weaponShots.Count == 0)
+        {
+            lines.Add($"  - {weapon}: none");
+            continue;
+        }
+
+        lines.Add($"  - {weapon}");
+        var targetGroups = weaponShots
+            .GroupBy(shot => ResolveShipType(shot.Event.TargetShipID, shipById), StringComparer.Ordinal)
+            .Select(group => new { TargetType = group.Key, Count = group.Count() })
+            .OrderByDescending(group => group.Count)
+            .ThenBy(group => group.TargetType, StringComparer.Ordinal)
+            .ToList();
+
+        foreach (var targetGroup in targetGroups)
+        {
+            var share = targetGroup.Count / (double)weaponShots.Count;
+            lines.Add($"    - {targetGroup.TargetType}: {targetGroup.Count} ({share:P1})");
+        }
+    }
+
+    return lines;
+}
+
+static List<string> BuildEnemyDamageShareSummaryLines(
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> designShots,
+    IReadOnlyDictionary<string, Ship> shipById,
+    double totalDamage)
+{
+    var lines = new List<string> { "- Outgoing HP damage % by this design's weapon and enemy ship type" };
+    var damagingShots = designShots.Where(shot => shot.Event.AppliedHpDamage > 0).ToList();
+
+    if (damagingShots.Count == 0 || totalDamage <= 0)
+    {
+        lines.Add("  - none");
+        return lines;
+    }
+
+    var groups = damagingShots
+        .GroupBy(
+            shot => (Weapon: shot.Event.Weapon, TargetType: ResolveShipType(shot.Event.TargetShipID, shipById)))
+        .Select(group => new
+        {
+            group.Key.Weapon,
+            group.Key.TargetType,
+            Damage = group.Sum(entry => entry.Event.AppliedHpDamage)
+        })
+        .OrderByDescending(item => item.Damage)
+        .ThenBy(item => item.Weapon)
+        .ThenBy(item => item.TargetType, StringComparer.Ordinal)
+        .ToList();
+
+    foreach (var item in groups)
+    {
+        var share = item.Damage / totalDamage;
+        lines.Add($"  - Shooter weapon {item.Weapon} -> Enemy type {item.TargetType}: {item.Damage:F1} ({share:P1})");
+    }
+
+    return lines;
+}
+
+static string BuildDesignAttackStatsLine(
+    List<ShipBattleReport> designShipReports,
+    IReadOnlyDictionary<string, Ship> shipById)
+{
+    if (designShipReports.Count == 0)
+    {
+        return "Per-ship attack stats (LA/HA/Torp/Depth): n/a";
+    }
+
+    var firstShipId = designShipReports[0].ShipID;
+
+    if (!shipById.TryGetValue(firstShipId, out var ship))
+    {
+        return "Per-ship attack stats (LA/HA/Torp/Depth): unknown";
+    }
+
+    var stats = ship.GetFinalStats();
+    return $"Per-ship attack stats (LA/HA/Torp/Depth): {stats.LightAttack:F1}/{stats.HeavyAttack:F1}/{stats.TorpedoAttack:F1}/{stats.DepthChargeAttack:F1}";
+}
+
+static void AppendShipDetailLines(
+    List<string> lines,
+    ShipBattleReport shipReport,
+    List<(string ShooterSide, string ShooterShipID, ShipDamageReportEntry Event)> allShots,
+    IReadOnlyDictionary<string, Ship> shipById,
+    string indent = "")
+{
+    var outgoingShots = allShots
+        .Where(shot => shot.ShooterShipID == shipReport.ShipID)
+        .OrderBy(shot => shot.Event.HourTick)
+        .ThenBy(shot => shot.Event.TargetShipID, StringComparer.Ordinal)
+        .ToList();
+    var outgoingHitShots = outgoingShots
+        .Where(shot => shot.Event.DidHit)
+        .ToList();
+    var incomingDamageEvents = allShots
+        .Where(shot => shot.Event.TargetShipID == shipReport.ShipID && shot.Event.AppliedHpDamage > 0)
+        .OrderBy(shot => shot.Event.HourTick)
+        .ThenBy(shot => shot.ShooterShipID, StringComparer.Ordinal)
+        .ToList();
+
+    lines.Add($"{indent}Ship: {shipReport.ShipID} ({shipReport.Side})");
+    lines.Add($"{indent}  Design: {ResolveShipType(shipReport.ShipID, shipById)}");
+    lines.Add($"{indent}  Sunk: {shipReport.IsSunk}");
+    lines.Add($"{indent}  HP: {shipReport.CurrentHp:F1}/{shipReport.MaxHp:F1} ({shipReport.HpPercentage:P1})");
+    lines.Add($"{indent}  Retreated: {shipReport.DidRetreat}");
+    lines.Add($"{indent}  Attempted Retreat: {shipReport.AttemptedRetreat}");
+    lines.Add($"{indent}  Attempted Retreat But Sunk: {shipReport.AttemptedRetreatButSunk}");
+    lines.Add($"{indent}  Production Cost: {shipReport.ProductionCost:F1}");
+    lines.Add($"{indent}  Total Damage Done: {shipReport.TotalDamageDone:F1}");
+
+    if (outgoingHitShots.Count == 0)
+    {
+        lines.Add($"{indent}  Damaged Ships: none");
+    }
+    else
+    {
+        lines.Add($"{indent}  Damaged Ships:");
+
+        foreach (var shot in outgoingHitShots)
+        {
+            var damageEvent = shot.Event;
+            var targetType = ResolveShipType(damageEvent.TargetShipID, shipById);
+            lines.Add(
+                $"{indent}    - Hour {damageEvent.HourTick}, Target {damageEvent.TargetShipID} ({targetType}), Weapon {damageEvent.Weapon}, Hit {damageEvent.DidHit}, Damage {damageEvent.Damage:F1}, " +
+                $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
+                $"Attacker Piercing {damageEvent.AttackerPiercing:F2}, Hit Chance {damageEvent.AttackerFinalHitChance:P1}, " +
+                $"Defender Armor {damageEvent.DefenderArmor:F2}, Speed {damageEvent.DefenderSpeed:F2}, Visibility {damageEvent.DefenderVisibility:F2}");
+        }
+    }
+
+    if (incomingDamageEvents.Count == 0)
+    {
+        lines.Add($"{indent}  Damage Received: none");
+    }
+    else
+    {
+        lines.Add($"{indent}  Damage Received:");
+
+        foreach (var shot in incomingDamageEvents)
+        {
+            var damageEvent = shot.Event;
+            var shooterType = ResolveShipType(shot.ShooterShipID, shipById);
+            lines.Add(
+                $"{indent}    - Hour {damageEvent.HourTick}, From {shot.ShooterShipID} ({shooterType}), Weapon {damageEvent.Weapon}, Damage {damageEvent.Damage:F1}, " +
+                $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}");
+        }
+    }
+}
+
 
 static List<string> BuildDamageBreakdownLines(BattleScenario scenario, BattleResult result)
 {
