@@ -9,6 +9,7 @@ public class BattleScenario
     public int Iterations;
     public BattleParticipant Attacker;
     public BattleParticipant Defender;
+    public IReadOnlyDictionary<string, PlaneEquipment> PlanesByID;
 
     public BattleScenario(
         string id,
@@ -17,7 +18,8 @@ public class BattleScenario
         int maxHours,
         int iterations,
         BattleParticipant attacker,
-        BattleParticipant defender)
+        BattleParticipant defender,
+        IReadOnlyDictionary<string, PlaneEquipment> planesById)
     {
         ID = id;
         Terrain = terrain;
@@ -26,6 +28,7 @@ public class BattleScenario
         Iterations = iterations;
         Attacker = attacker;
         Defender = defender;
+        PlanesByID = planesById;
     }
 }
 

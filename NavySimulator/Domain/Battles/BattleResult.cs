@@ -19,6 +19,10 @@ public class BattleResult
     public PlaneStrength DefenderPlanesAtStart;
     public PlaneStrength AttackerPlanesLost;
     public PlaneStrength DefenderPlanesLost;
+    public double AttackerCarrierPlaneDamage;
+    public double DefenderCarrierPlaneDamage;
+    public Dictionary<string, double> AttackerPlaneDamageByType;
+    public Dictionary<string, double> DefenderPlaneDamageByType;
     public List<string> HourlyLog;
     public List<ShipBattleReport> ShipReports;
 
@@ -38,6 +42,10 @@ public class BattleResult
         PlaneStrength defenderPlanesAtStart,
         PlaneStrength attackerPlanesLost,
         PlaneStrength defenderPlanesLost,
+        double attackerCarrierPlaneDamage,
+        double defenderCarrierPlaneDamage,
+        Dictionary<string, double> attackerPlaneDamageByType,
+        Dictionary<string, double> defenderPlaneDamageByType,
         List<string> hourlyLog,
         List<ShipBattleReport> shipReports)
     {
@@ -56,6 +64,10 @@ public class BattleResult
         DefenderPlanesAtStart = defenderPlanesAtStart;
         AttackerPlanesLost = attackerPlanesLost;
         DefenderPlanesLost = defenderPlanesLost;
+        AttackerCarrierPlaneDamage = attackerCarrierPlaneDamage;
+        DefenderCarrierPlaneDamage = defenderCarrierPlaneDamage;
+        AttackerPlaneDamageByType = attackerPlaneDamageByType;
+        DefenderPlaneDamageByType = defenderPlaneDamageByType;
         HourlyLog = hourlyLog;
         ShipReports = shipReports;
     }

@@ -25,8 +25,6 @@ public static class Hoi4Defines
     public const double PositioningBaseContribution = 0.5;
     public const double PositioningContributionScale = 0.5;
 
-    public const double COMBAT_MIN_DURATION = 8;
-    public const double COMBAT_INITIAL_DURATION = 6;
     public const double COMBAT_RETREAT_DECISION_CHANCE = 0.2;
     public const double CombatMinStrRetreatChance = 0.0; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
     public const double BASE_ESCAPE_SPEED = 0.06;
@@ -131,5 +129,24 @@ public static class Hoi4Defines
     public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO = 0.1;
     public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY = 0.25;
     public static double NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP = 30;
+
+    public static double ANTI_AIR_TARGETTING_TO_CHANCE = 0.05;
+    public static double ANTI_AIR_TARGETING = 0.4;
+    public static double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY = 0.02;
+    public static double ANTI_AIR_ATTACK_TO_AMOUNT = 0.001;
+    public static double MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE = 0.75;
+    public static double ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE = 0.03;
+    public static double ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE = 0.58;
+    public static double SHIP_TO_FLEET_ANTI_AIR_RATIO = 0.25;
+
+    public static double NAVAL_STRIKE_CARRIER_MULTIPLIER = 1.75;
+    public static double NAVAL_STRIKE_TARGETTING_TO_AMOUNT = 0.4;
+
+    public const int COMBAT_MIN_DURATION = 8;
+    public const int COMBAT_INITIAL_DURATION = 6;
+    public static int ALL_SHIPS_ACTIVATE_TIME = 12;
+    public static int CAPITAL_ONLY_COMBAT_ACTIVATE_TIME = 8;
+    public static int CARRIER_ONLY_COMBAT_ACTIVATE_TIME = 0;
+
 }
 

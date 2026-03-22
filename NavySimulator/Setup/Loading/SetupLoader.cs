@@ -312,7 +312,8 @@ public class SetupLoader
             battleScenarioFile.BattleScenario.MaxHours,
             battleScenarioFile.BattleScenario.Iterations ?? 1,
             attacker,
-            defender);
+            defender,
+            planeById);
     }
 
     private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(

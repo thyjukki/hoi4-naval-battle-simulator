@@ -7,6 +7,20 @@
         "39_carrier": 2,
         "torpedo_cruiser_torpattack": 25,
         "cl3_armor4_full_la": 42
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "planeID": "fighter_1936",
+            "type": "fighter",
+            "airwings": 3
+          },
+          {
+            "planeID": "bomber_1936",
+            "type": "bomber",
+            "airwings": 2
+          }
+        ]
       }
     }
   ]

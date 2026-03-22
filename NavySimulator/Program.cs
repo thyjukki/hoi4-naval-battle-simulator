@@ -97,7 +97,7 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
 
     var attackerShipsWithDamage = result.ShipReports.Count(report => report.Side == "Attacker" && report.TotalDamageDone > 0);
     var defenderShipsWithDamage = result.ShipReports.Count(report => report.Side == "Defender" && report.TotalDamageDone > 0);
-    var damageBreakdownLines = BuildDamageBreakdownLines(runScenario, result.ShipReports);
+    var damageBreakdownLines = BuildDamageBreakdownLines(runScenario, result);
 
     var summaryLines = new List<string>
     {
@@ -217,8 +217,9 @@ static List<string> BuildShipReportLines(List<ShipBattleReport> shipReports)
     return lines;
 }
 
-static List<string> BuildDamageBreakdownLines(BattleScenario scenario, List<ShipBattleReport> shipReports)
+static List<string> BuildDamageBreakdownLines(BattleScenario scenario, BattleResult result)
 {
+    var shipReports = result.ShipReports;
     var shipById = scenario.Attacker.Fleet.Ships
         .Concat(scenario.Defender.Fleet.Ships)
         .ToDictionary(ship => ship.ID, ship => ship);
@@ -227,9 +228,23 @@ static List<string> BuildDamageBreakdownLines(BattleScenario scenario, List<Ship
     var defenderEnemyHealth = scenario.Attacker.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
 
     var lines = new List<string>();
-    lines.AddRange(BuildSideDamageBreakdown("Attacker", "Attacker", attackerEnemyHealth, shipReports, shipById));
+    lines.AddRange(BuildSideDamageBreakdown(
+        "Attacker",
+        "Attacker",
+        attackerEnemyHealth,
+        shipReports,
+        shipById,
+        result.AttackerCarrierPlaneDamage,
+        result.AttackerPlaneDamageByType));
     lines.Add(string.Empty);
-    lines.AddRange(BuildSideDamageBreakdown("Defender", "Defender", defenderEnemyHealth, shipReports, shipById));
+    lines.AddRange(BuildSideDamageBreakdown(
+        "Defender",
+        "Defender",
+        defenderEnemyHealth,
+        shipReports,
+        shipById,
+        result.DefenderCarrierPlaneDamage,
+        result.DefenderPlaneDamageByType));
     return lines;
 }
 
@@ -238,7 +253,9 @@ static List<string> BuildSideDamageBreakdown(
     string sideKey,
     double enemyHealth,
     List<ShipBattleReport> shipReports,
-    IReadOnlyDictionary<string, Ship> shipById)
+    IReadOnlyDictionary<string, Ship> shipById,
+    double carrierPlaneDamage,
+    IReadOnlyDictionary<string, double> planeDamageByType)
 {
     var damageEvents = shipReports
         .Where(report => report.Side == sideKey)
@@ -246,7 +263,7 @@ static List<string> BuildSideDamageBreakdown(
         .Where(entry => entry.Event.AppliedHpDamage > 0)
         .ToList();
 
-    var totalDamage = damageEvents.Sum(entry => entry.Event.AppliedHpDamage);
+    var totalDamage = damageEvents.Sum(entry => entry.Event.AppliedHpDamage) + carrierPlaneDamage;
 
     var lines = new List<string>
     {
@@ -256,48 +273,71 @@ static List<string> BuildSideDamageBreakdown(
     };
 
     lines.Add("- By GUNTYPE");
-    lines.AddRange(BuildBreakdownEntries(
+    var gunTypeExtras = planeDamageByType.ToDictionary(
+        kvp => $"Plane:{kvp.Key}",
+        kvp => kvp.Value,
+        StringComparer.Ordinal);
+    lines.AddRange(BuildBreakdownEntriesWithExtra(
         damageEvents,
         enemyHealth,
-        entry => entry.Event.Weapon.ToString()));
+        entry => entry.Event.Weapon.ToString(),
+        gunTypeExtras));
 
     lines.Add("- By SHIPGROUP");
-    lines.AddRange(BuildBreakdownEntries(
+    var groupExtras = carrierPlaneDamage > 0
+        ? new Dictionary<string, double>(StringComparer.Ordinal) { ["Carrier line"] = carrierPlaneDamage }
+        : new Dictionary<string, double>(StringComparer.Ordinal);
+    lines.AddRange(BuildBreakdownEntriesWithExtra(
         damageEvents,
         enemyHealth,
-        entry => ResolveShipGroup(entry.ShooterID, shipById)));
+        entry => ResolveShipGroup(entry.ShooterID, shipById),
+        groupExtras));
 
     lines.Add("- By SHIPTYPE");
-    lines.AddRange(BuildBreakdownEntries(
+    var typeExtras = carrierPlaneDamage > 0
+        ? new Dictionary<string, double>(StringComparer.Ordinal) { ["Carrier air wing"] = carrierPlaneDamage }
+        : new Dictionary<string, double>(StringComparer.Ordinal);
+    lines.AddRange(BuildBreakdownEntriesWithExtra(
         damageEvents,
         enemyHealth,
-        entry => ResolveShipType(entry.ShooterID, shipById)));
+        entry => ResolveShipType(entry.ShooterID, shipById),
+        typeExtras));
 
     return lines;
 }
 
-static List<string> BuildBreakdownEntries(
+static List<string> BuildBreakdownEntriesWithExtra(
     List<(string ShooterID, ShipDamageReportEntry Event)> damageEvents,
     double enemyHealth,
-    Func<(string ShooterID, ShipDamageReportEntry Event), string> keySelector)
+    Func<(string ShooterID, ShipDamageReportEntry Event), string> keySelector,
+    IReadOnlyDictionary<string, double> extraEntries)
 {
     var grouped = damageEvents
         .GroupBy(keySelector)
-        .Select(group => new
-        {
-            Name = group.Key,
-            Damage = group.Sum(entry => entry.Event.AppliedHpDamage)
-        })
+        .ToDictionary(
+            group => group.Key,
+            group => group.Sum(entry => entry.Event.AppliedHpDamage),
+            StringComparer.Ordinal);
+
+    foreach (var extra in extraEntries)
+    {
+        grouped[extra.Key] = grouped.TryGetValue(extra.Key, out var current)
+            ? current + extra.Value
+            : extra.Value;
+    }
+
+    var ordered = grouped
+        .Select(item => new { Name = item.Key, Damage = item.Value })
         .OrderByDescending(item => item.Damage)
         .ThenBy(item => item.Name, StringComparer.Ordinal)
         .ToList();
 
-    if (grouped.Count == 0)
+    if (ordered.Count == 0)
     {
         return ["  - none"];
     }
 
-    return grouped
+    return ordered
         .Select(item => $"  - {item.Name} {item.Damage:F1} ({FormatAsShareOfEnemyHealth(item.Damage, enemyHealth)})")
         .ToList();
 }

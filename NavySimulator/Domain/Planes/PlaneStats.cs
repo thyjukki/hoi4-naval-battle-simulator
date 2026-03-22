@@ -5,6 +5,7 @@ public record PlaneStats(
     double AirAttack = 0,
     double NavalAttack = 0,
     double Speed = 0,
+    double Agility = 0,
     double AirSuperiority = 0,
     double NavalTargeting = 0,
     double Reliability = 0,

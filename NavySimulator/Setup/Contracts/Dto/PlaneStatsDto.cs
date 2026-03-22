@@ -8,6 +8,7 @@ public class PlaneStatsDto
     public double AirAttack { get; set; }
     public double NavalAttack { get; set; }
     public double Speed { get; set; }
+    public double Agility { get; set; }
     public double AirSuperiority { get; set; }
     public double NavalTargeting { get; set; }
     public double Reliability { get; set; }
@@ -20,6 +21,7 @@ public class PlaneStatsDto
             AirAttack,
             NavalAttack,
             Speed,
+            Agility,
             AirSuperiority,
             NavalTargeting,
             Reliability,
