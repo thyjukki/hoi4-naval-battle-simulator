@@ -802,6 +802,11 @@ public class SetupLoader
                 errors.Add($"battleScenario.{role}.spiritIDs references unknown spirit '{spiritId}'.");
             }
         }
+
+        if (participant.ExternalNavalStrikePlanes < 0)
+        {
+            errors.Add($"battleScenario.{role}.externalNavalStrikePlanes must be >= 0.");
+        }
     }
 
     private static BattleParticipant BuildParticipant(
@@ -818,6 +823,7 @@ public class SetupLoader
             fleet,
             participant.Commander,
             participant.Doctrine,
+            participant.ExternalNavalStrikePlanes,
             participantResearches,
             participantSpirits);
     }

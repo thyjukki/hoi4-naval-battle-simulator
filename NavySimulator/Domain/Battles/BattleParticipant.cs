@@ -7,6 +7,7 @@ public class BattleParticipant
     public Fleet Fleet;
     public string Commander;
     public string Doctrine;
+    public int ExternalNavalStrikePlanes;
     public List<Research> Researches;
     public List<Spirit> Spirits;
 
@@ -14,12 +15,14 @@ public class BattleParticipant
         Fleet fleet,
         string commander,
         string doctrine,
+        int externalNavalStrikePlanes,
         List<Research> researches,
         List<Spirit> spirits)
     {
         Fleet = fleet;
         Commander = commander;
         Doctrine = doctrine;
+        ExternalNavalStrikePlanes = externalNavalStrikePlanes;
         Researches = researches;
         Spirits = spirits;
 

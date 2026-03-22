@@ -23,6 +23,8 @@ public class BattleSimulator
             
             var attackerScreening = CalculateScreening(attackerLines, attackerPositioning);
             var defenderScreening = CalculateScreening(defenderLines, defenderPositioning);
+            var attackerAirSortie = CalculateAirSortieSnapshot(scenario.Attacker, attackerLines, defenderLines, hour);
+            var defenderAirSortie = CalculateAirSortieSnapshot(scenario.Defender, defenderLines, attackerLines, hour);
 
             var attackerActions = ResolveActions(
                 attackerFiringOrder,
@@ -63,6 +65,18 @@ public class BattleSimulator
             hourlyLog.Add(
                 $"Hour {hour}: attacker damage {GetTotalDamage(attackerActions):F1}, defender damage {GetTotalDamage(defenderActions):F1}, " +
                 $"attacker ships {attackerAliveCount} (retreated {attackerRetreatedCount}), defender ships {defenderAliveCount} (retreated {defenderRetreatedCount})");
+
+            if (attackerAirSortie.IsSortieHour || defenderAirSortie.IsSortieHour)
+            {
+                hourlyLog.Add(
+                    $"Hour {hour}: air sortie - " +
+                    $"attacker carrier {attackerAirSortie.CarrierSortiePlanes}/{attackerAirSortie.CarrierAssignedPlanes} (night traffic x{attackerAirSortie.CarrierTrafficMultiplier:F2}), " +
+                    $"external {attackerAirSortie.ExternalPlanesJoining}/{attackerAirSortie.ExternalEligiblePlanes} (cap {attackerAirSortie.ExternalJoinCap:F1}); " +
+                    $"defender carrier {defenderAirSortie.CarrierSortiePlanes}/{defenderAirSortie.CarrierAssignedPlanes} (night traffic x{defenderAirSortie.CarrierTrafficMultiplier:F2}), " +
+                    $"external {defenderAirSortie.ExternalPlanesJoining}/{defenderAirSortie.ExternalEligiblePlanes} (cap {defenderAirSortie.ExternalJoinCap:F1})");
+                hourlyLog.Add($"Hour {hour}: air disruption - placeholder disabled (fighter interception not implemented yet)");
+            }
+
             hourlyLog.Add($"Hour {hour}: attacker actions - {BuildActionSummary(attackerActions)}");
             hourlyLog.Add($"Hour {hour}: defender actions - {BuildActionSummary(defenderActions)}");
             hourlyLog.Add($"Hour {hour}: attacker hit summary - {BuildHitSummary(attackerActions)}");
@@ -181,6 +195,96 @@ public class BattleSimulator
         // At 0% positioning ships contribute 50%; at 100% they contribute fully.
         return Hoi4Defines.PositioningBaseContribution +
                Hoi4Defines.PositioningContributionScale * Math.Clamp(positioning, 0, 1);
+    }
+
+    private static AirSortieSnapshot CalculateAirSortieSnapshot(
+        BattleParticipant participant,
+        BattleLines ownLines,
+        BattleLines enemyLines,
+        int hour)
+    {
+        var sortieDelayHours = Math.Max(1, (int)Math.Round(Hoi4Defines.CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT));
+        var isSortieHour = hour % sortieDelayHours == 0;
+
+        if (!isSortieHour)
+        {
+            return new AirSortieSnapshot(false, 0, 0, 1.0, 0, 0, 0);
+        }
+
+        var carrierAssignedPlanes = GetCarrierAssignedPlanes(participant, ownLines);
+        var carrierTrafficMultiplier = IsNightHour(hour)
+            ? Math.Clamp(1.0 + Hoi4Defines.NightCarrierTraffic, 0, 1)
+            : 1.0;
+        var carrierSortiePlanes = (int)Math.Floor(carrierAssignedPlanes * carrierTrafficMultiplier);
+
+        // Temporary assumption: Naval Strike mission efficiency is fixed at 100% for external planes.
+        const double externalMissionEfficiency = 1.0;
+        var externalEligiblePlanes = (int)Math.Floor(participant.ExternalNavalStrikePlanes * externalMissionEfficiency);
+
+        var enemyCurrentHp = SumCurrentHp(enemyLines);
+        var combatDays = (hour - 1) / 24.0;
+        var externalJoinCap = Math.Max(
+            Hoi4Defines.NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP,
+            enemyCurrentHp * Hoi4Defines.NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO *
+            (1.0 + Hoi4Defines.NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY * combatDays));
+        var externalPlanesJoining = Math.Min(externalEligiblePlanes, (int)Math.Floor(externalJoinCap));
+
+        // Air combat disruption phase hook.
+        // For now this intentionally does nothing until fighter interception is implemented.
+        const int enemyFightersPresentInAirZone = 0;
+        carrierSortiePlanes = ApplyAirCombatDisruptionPlaceholder(carrierSortiePlanes, enemyFightersPresentInAirZone);
+        externalPlanesJoining = ApplyAirCombatDisruptionPlaceholder(externalPlanesJoining, enemyFightersPresentInAirZone);
+
+        return new AirSortieSnapshot(
+            true,
+            carrierAssignedPlanes,
+            carrierSortiePlanes,
+            carrierTrafficMultiplier,
+            externalEligiblePlanes,
+            externalPlanesJoining,
+            externalJoinCap);
+    }
+
+    private static bool IsNightHour(int hour)
+    {
+        var timeOfDay = hour % 24;
+        return timeOfDay is > 17 or < 5;
+    }
+
+    private static int ApplyAirCombatDisruptionPlaceholder(int attackingPlanes, int enemyFightersPresent)
+    {
+        _ = enemyFightersPresent;
+        return attackingPlanes;
+    }
+
+    private static int GetCarrierAssignedPlanes(BattleParticipant participant, BattleLines ownLines)
+    {
+        var carrierCountByDesign = ownLines.Carriers
+            .GroupBy(ship => ship.Design.ID)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+        var assignedPlanes = 0;
+
+        foreach (var carrierGroup in carrierCountByDesign)
+        {
+            if (!participant.Fleet.CarrierAirwingsByShipDesign.TryGetValue(carrierGroup.Key, out var assignments))
+            {
+                continue;
+            }
+
+            assignedPlanes += carrierGroup.Value * assignments.Sum(assignment => assignment.PlaneCount);
+        }
+
+        return assignedPlanes;
+    }
+
+    private static double SumCurrentHp(BattleLines lines)
+    {
+        return lines.Screens.Sum(ship => ship.CurrentHP) +
+               lines.Capitals.Sum(ship => ship.CurrentHP) +
+               lines.Carriers.Sum(ship => ship.CurrentHP) +
+               lines.Submarines.Sum(ship => ship.CurrentHP) +
+               lines.Convoys.Sum(ship => ship.CurrentHP);
     }
 
     private static List<ActionResult> ResolveActions(
@@ -1039,5 +1143,14 @@ public class BattleSimulator
 
         return reports;
     }
+
+    private sealed record AirSortieSnapshot(
+        bool IsSortieHour,
+        int CarrierAssignedPlanes,
+        int CarrierSortiePlanes,
+        double CarrierTrafficMultiplier,
+        int ExternalEligiblePlanes,
+        int ExternalPlanesJoining,
+        double ExternalJoinCap);
 }
 

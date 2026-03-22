@@ -120,5 +120,16 @@ public static class Hoi4Defines
     ];
 
     public static double CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
+    
+    public static double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
+    public static double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
+    public static double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 50;
+    public static double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 200;
+    public static double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE = 5;                         // how much score factor from low health (scales between 0->this number)
+    public static double NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE = 5;
+
+    public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO = 0.1;
+    public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY = 0.25;
+    public static double NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP = 30;
 }
 
