@@ -20,7 +20,7 @@ public static class Hoi4Defines
 
     public const double GUN_HIT_PROFILES_LIGHT = 60.0;
     public const double GUN_HIT_PROFILES_HEAVY = 95.0;
-    public const double GUN_HIT_PROFILES_TORPEDO = 60.0;
+    public const double GUN_HIT_PROFILES_TORPEDO = 130.0;
 
     public const double PositioningBaseContribution = 0.5;
     public const double PositioningContributionScale = 0.5;
