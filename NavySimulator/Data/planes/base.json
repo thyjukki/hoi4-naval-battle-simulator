@@ -18,15 +18,29 @@
     {
       "id": "bomber_1936",
       "stats": {
-        "airDefense": 8,
-        "airAttack": 6,
-        "navalAttack": 25,
-        "speed": 260,
-        "agility": 28,
-        "airSuperiority": 4,
-        "navalTargeting": 30,
-        "reliability": 0.75,
-        "productionCost": 34
+        "airDefense": 17,
+        "airAttack": 14,
+        "navalAttack": 18,
+        "speed": 360,
+        "agility": 40,
+        "airSuperiority": 0.5,
+        "navalTargeting": 10,
+        "reliability": 0.80,
+        "productionCost": 140
+      }
+    },
+    {
+      "id": "bomber_1936_untrained",
+      "stats": {
+        "airDefense": 14.7,
+        "airAttack": 12.1,
+        "navalAttack": 18,
+        "speed": 360,
+        "agility": 34.6,
+        "airSuperiority": 0.5,
+        "navalTargeting": 10,
+        "reliability": 0.80,
+        "productionCost": 140
       }
     }
   ]

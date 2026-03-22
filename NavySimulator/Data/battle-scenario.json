@@ -5,13 +5,13 @@
     "terrain": "ocean",
     "weather": "clear",
     "maxHours": 1000000,
-    "iterations": 5,
+    "iterations": 1,
     "attacker": {
       "fleetID": "2cv_25torpca_42_cl",
       "commander": "",
       "doctrine": "",
       "externalNavalStrikePlanes": 0,
-      "researchIDs": [],
+      "researchIDs": ["sp_torpedo_cruiser_eq_bonus_torpedo"],
       "spiritIDs": []
     },
     "defender": {

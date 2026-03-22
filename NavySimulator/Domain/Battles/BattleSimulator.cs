@@ -1485,14 +1485,12 @@ public class BattleSimulator
         var shipReports = BuildShipReports(scenario, allActions);
         var attackerPlanesAtStart = GetFleetPlaneStrength(scenario.Attacker.Fleet, _ => true);
         var defenderPlanesAtStart = GetFleetPlaneStrength(scenario.Defender.Fleet, _ => true);
-        var attackerCarrierPlanesLost = GetFleetPlaneStrength(scenario.Attacker.Fleet, ship => ship.IsSunk);
-        var defenderCarrierPlanesLost = GetFleetPlaneStrength(scenario.Defender.Fleet, ship => ship.IsSunk);
         var attackerPlanesLost = new PlaneStrength(
-            Math.Min(attackerPlanesAtStart.Fighters, attackerCarrierPlanesLost.Fighters),
-            Math.Min(attackerPlanesAtStart.Bombers, attackerCarrierPlanesLost.Bombers + attackerBombersShotDownByShipAa));
+            0,
+            Math.Min(attackerPlanesAtStart.Bombers, attackerBombersShotDownByShipAa));
         var defenderPlanesLost = new PlaneStrength(
-            Math.Min(defenderPlanesAtStart.Fighters, defenderCarrierPlanesLost.Fighters),
-            Math.Min(defenderPlanesAtStart.Bombers, defenderCarrierPlanesLost.Bombers + defenderBombersShotDownByShipAa));
+            0,
+            Math.Min(defenderPlanesAtStart.Bombers, defenderBombersShotDownByShipAa));
 
         var outcome = "Draw";
 

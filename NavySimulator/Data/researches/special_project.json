@@ -1,0 +1,21 @@
+{
+  "$schema": "../schemas/researches.schema.json",
+  "researches": [
+    {
+      "id": "sp_torpedo_cruiser_eq_bonus_torpedo",
+      "statMultipliers": {
+        "torpedoHitChanceFactor": 0.05,
+        "torpedoAttack": 0.075
+      }
+    },
+    {
+      "id": "sp_torpedo_cruiser_eq_bonus_light_attack",
+      "statMultipliers": {
+        "lightHitChanceFactor": 0.075,
+        "lightAttack": 0.05,
+        "lightPiercing": 0.05
+      }
+    }
+  ]
+}
+

@@ -76,7 +76,6 @@
         "torpedoHitChanceFactor": { "type": "number" },
         "lightHitChangeFactor": { "type": "number" },
         "lightHitChanceFactor": { "type": "number" },
-        "heavyHitChangeFactor": { "type": "number" },
         "navalWeatherPenaltyFactor": { "type": "number" },
         "productionCost": { "type": "number" }
       },
