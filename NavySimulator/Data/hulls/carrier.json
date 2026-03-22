@@ -1,0 +1,90 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "carrier_hull_ca",
+      "role": "Carrier",
+      "type": ["Carrier"],
+      "manpower": 1000,
+      "baseStats": {
+        "speed": 28,
+        "organization": 40,
+        "hp": 125,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subVisibility": 0,
+        "subDetection": 5,
+        "reliability": 0.65,
+        "productionCost": 2100
+      }
+    },
+    {
+      "id": "carrier_hull_bb",
+      "role": "Carrier",
+      "type": ["Carrier"],
+      "manpower": 5000,
+      "baseStats": {
+        "speed": 24,
+        "organization": 40,
+        "hp": 325,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subVisibility": 0,
+        "subDetection": 5,
+        "reliability": 0.65,
+        "productionCost": 2400
+      }
+    },
+    {
+      "id": "carrier_hull_1",
+      "role": "Carrier",
+      "type": ["Carrier"],
+      "manpower": 4500,
+      "baseStats": {
+        "speed": 26,
+        "organization": 40,
+        "hp": 250,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subVisibility": 0,
+        "subDetection": 5,
+        "reliability": 0.7,
+        "productionCost": 2400
+      }
+    },
+    {
+      "id": "carrier_hull_2",
+      "role": "Carrier",
+      "type": ["Carrier"],
+      "manpower": 5000,
+      "baseStats": {
+        "speed": 26,
+        "organization": 40,
+        "hp": 325,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subVisibility": 0,
+        "subDetection": 5,
+        "reliability": 0.75,
+        "productionCost": 2600
+      }
+    },
+    {
+      "id": "carrier_hull_3",
+      "role": "Carrier",
+      "type": ["Carrier"],
+      "manpower": 5500,
+      "baseStats": {
+        "speed": 26,
+        "organization": 40,
+        "hp": 350,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subVisibility": 0,
+        "subDetection": 5,
+        "reliability": 0.8,
+        "productionCost": 2800
+      }
+    }
+  ]
+}

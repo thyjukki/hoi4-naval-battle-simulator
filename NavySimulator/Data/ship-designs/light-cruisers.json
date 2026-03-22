@@ -2,16 +2,6 @@
   "$schema": "../schemas/ship-designs.schema.json",
   "shipDesigns": [
     {
-      "id": "test_cl",
-      "hullID": "light_cruiser_hull_1",
-      "moduleIDs": [
-        "medium_light_battery_1",
-        "fire_control_0",
-        "engine_cruiser_1",
-        "armor_cruiser_1"
-      ]
-    },
-    {
       "id": "cl3_armor4_full_la",
       "hullID": "light_cruiser_hull_3",
       "moduleIDs": [
@@ -26,21 +16,43 @@
         "light_battery_3",
         "light_battery_3",
         "light_battery_3",
+        "light_battery_3"
+      ]
+    },
+    {
+      "id": "39_cl3_la_2aa",
+      "hullID": "light_cruiser_hull_3",
+      "moduleIDs": [
+        "medium_light_battery_3",
+        "fire_control_3",
+        "radar_3",
+        "engine_cruiser_3",
+        "armor_cruiser_4",
+        "anti_air_4",
+        "anti_air_4",
+        "light_secondaries_2",
+        "light_battery_3",
+        "light_battery_3",
         "light_battery_3",
         "light_battery_3"
       ]
     },
     {
-      "id": "ca3_armor4",
-      "hullID": "heavy_cruiser_hull_3",
+      "id": "39_cl3_la_1aa_1torp",
+      "hullID": "light_cruiser_hull_3",
       "moduleIDs": [
-        "medium_battery_3",
+        "medium_light_battery_3",
         "fire_control_3",
-        "radar_4",
+        "radar_3",
         "engine_cruiser_3",
         "armor_cruiser_4",
         "anti_air_4",
-        "light_secondaries_2"
+        "torpedo_3",
+        "light_secondaries_2",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3"
       ]
     }
   ]

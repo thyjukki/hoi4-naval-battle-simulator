@@ -1,0 +1,62 @@
+{
+  "$schema": "../schemas/ship-designs.schema.json",
+  "shipDesigns": [
+    {
+      "id": "39_battleship_balanced",
+      "hullID": "heavy_hull_1",
+      "moduleIDs": [
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "fire_control_3",
+        "radar_3",
+        "engine_heavy_3",
+        "anti_air_4",
+        "anti_air_4",
+        "anti_air_4",
+        "light_secondaries_2",
+        "light_secondaries_2",
+        "light_secondaries_2",
+        "armor_bb_3"
+      ]
+    },
+    {
+      "id": "39_battleship_pure_la",
+      "hullID": "heavy_hull_1",
+      "moduleIDs": [
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "fire_control_3",
+        "radar_3",
+        "engine_heavy_3",
+        "anti_air_4",
+        "light_secondaries_2",
+        "light_secondaries_2",
+        "light_secondaries_2",
+        "light_secondaries_2",
+        "armor_bb_3"
+      ]
+    },
+    {
+      "id": "39_battleship_pure_aa",
+      "hullID": "heavy_hull_1",
+      "moduleIDs": [
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "heavy_battery_3",
+        "fire_control_3",
+        "radar_3",
+        "engine_heavy_3",
+        "anti_air_4",
+        "anti_air_4",
+        "anti_air_4",
+        "anti_air_4",
+        "light_secondaries_2",
+        "armor_bb_3"
+      ]
+    }
+  ]
+}

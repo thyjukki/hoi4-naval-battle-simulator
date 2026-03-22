@@ -2,18 +2,6 @@
   "$schema": "schemas/force-compositions.schema.json",
   "fleets": [
     {
-      "id": "task_force_rom_test",
-      "shipDesigns": {
-        "test_dd": 5
-      }
-    },
-    {
-      "id": "task_force_bul_test",
-      "shipDesigns": {
-        "test_cl": 2
-      }
-    },
-    {
       "id": "150_dd_3_la",
       "shipDesigns": {
         "dd_3_la": 150

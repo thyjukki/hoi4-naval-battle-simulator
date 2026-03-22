@@ -1,0 +1,19 @@
+{
+  "$schema": "../schemas/ship-designs.schema.json",
+  "shipDesigns": [
+    {
+      "id": "39_carrier",
+      "hullID": "carrier_hull_3",
+      "moduleIDs": [
+        "engine_carrier_3",
+        "anti_air_4",
+        "anti_air_4",
+        "radar_3",
+        "deck_space",
+        "deck_space",
+        "deck_space",
+        "deck_space"
+      ]
+    }
+  ]
+}

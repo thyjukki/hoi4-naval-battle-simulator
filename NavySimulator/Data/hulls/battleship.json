@@ -1,0 +1,141 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "heavy_hull_1",
+      "role": "Capital",
+      "type": ["Battleship"],
+      "manpower": 4000,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 350,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 2800
+      }
+    },
+    {
+      "id": "heavy_hull_2",
+      "role": "Capital",
+      "type": ["Battleship"],
+      "manpower": 5200,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 370,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.85,
+        "productionCost": 3000
+      }
+    },
+    {
+      "id": "heavy_hull_3",
+      "role": "Capital",
+      "type": ["Battleship"],
+      "manpower": 6000,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 400,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.9,
+        "productionCost": 3200
+      }
+    },
+    {
+      "id": "heavy_hull_4",
+      "role": "Capital",
+      "type": ["Battleship"],
+      "manpower": 400,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 450,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.895,
+        "productionCost": 3400
+      }
+    },
+    {
+      "id": "heavy_bc_hull_1",
+      "role": "Capital",
+      "type": ["Battlecruiser"],
+      "manpower": 4000,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 350,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.8,
+        "productionCost": 2800
+      }
+    },
+    {
+      "id": "heavy_bc_hull_2",
+      "role": "Capital",
+      "type": ["Battlecruiser"],
+      "manpower": 5200,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 370,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.85,
+        "productionCost": 3000
+      }
+    },
+    {
+      "id": "heavy_bc_hull_3",
+      "role": "Capital",
+      "type": ["Battlecruiser"],
+      "manpower": 6000,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 400,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.9,
+        "productionCost": 3200
+      }
+    },
+    {
+      "id": "heavy_bc_hull_4",
+      "role": "Capital",
+      "type": ["Battlecruiser"],
+      "manpower": 400,
+      "baseStats": {
+        "speed": 30,
+        "organization": 50,
+        "hp": 450,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subVisibility": 0,
+        "subDetection": 1,
+        "reliability": 0.895,
+        "productionCost": 3400
+      }
+    }
+  ]
+}
