@@ -6,6 +6,7 @@ public class Ship
 {
     public string ID;
     public ShipDesign Design;
+    public int ExperienceLevel;
     public double CurrentOrganization;
     public double CurrentHP;
     public ShipStatus CurrentStatus;
@@ -13,17 +14,23 @@ public class Ship
     public bool AttemptedRetreat;
     private ShipStats? effectiveStats;
 
-    public Ship(string id, ShipDesign design)
+    public Ship(string id, ShipDesign design, int experienceLevel)
     {
         ID = id;
         Design = design;
+        ExperienceLevel = experienceLevel;
         effectiveStats = design.GetFinalStats();
         CurrentOrganization = effectiveStats.Organization;
         CurrentHP = effectiveStats.Hp;
     }
 
+    public Ship(string id, ShipDesign design)
+        : this(id, design, Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR)
+    {
+    }
+
     public Ship(ShipDesign design)
-        : this(Guid.NewGuid().ToString("N"), design)
+        : this(Guid.NewGuid().ToString("N"), design, Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR)
     {
     }
 
@@ -31,7 +38,16 @@ public class Ship
 
     public ShipStats GetFinalStats()
     {
-        return effectiveStats ?? Design.GetFinalStats();
+        var stats = effectiveStats ?? Design.GetFinalStats();
+        var attackMultiplier = Math.Max(0, 1.0 + Hoi4Defines.GetShipExperienceAttackModifier(ExperienceLevel));
+
+        return stats with
+        {
+            LightAttack = stats.LightAttack * attackMultiplier,
+            HeavyAttack = stats.HeavyAttack * attackMultiplier,
+            TorpedoAttack = stats.TorpedoAttack * attackMultiplier,
+            DepthChargeAttack = stats.DepthChargeAttack * attackMultiplier
+        };
     }
 
     public void ApplyExternalModifiers(ShipStats statModifiers, ShipStats statAverages, ShipStats statMultipliers)

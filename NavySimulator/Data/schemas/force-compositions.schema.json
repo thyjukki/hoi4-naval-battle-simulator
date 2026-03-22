@@ -23,6 +23,13 @@
               "minimum": 1
             }
           },
+          "shipExperienceLevels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "enum": [0, 1, 2]
+            }
+          },
           "carrierAirwings": {
             "type": "object",
             "additionalProperties": {

@@ -7,6 +7,7 @@ public class BattleParticipant
     public Fleet Fleet;
     public string Commander;
     public string Doctrine;
+    public int? ShipExperienceLevelOverride;
     public int ExternalNavalStrikePlanes;
     public List<Research> Researches;
     public List<Spirit> Spirits;
@@ -15,6 +16,7 @@ public class BattleParticipant
         Fleet fleet,
         string commander,
         string doctrine,
+        int? shipExperienceLevelOverride,
         int externalNavalStrikePlanes,
         List<Research> researches,
         List<Spirit> spirits)
@@ -22,6 +24,7 @@ public class BattleParticipant
         Fleet = fleet;
         Commander = commander;
         Doctrine = doctrine;
+        ShipExperienceLevelOverride = shipExperienceLevelOverride;
         ExternalNavalStrikePlanes = externalNavalStrikePlanes;
         Researches = researches;
         Spirits = spirits;
@@ -33,6 +36,11 @@ public class BattleParticipant
     {
         foreach (var ship in Fleet.Ships)
         {
+            if (ShipExperienceLevelOverride.HasValue)
+            {
+                ship.ExperienceLevel = ShipExperienceLevelOverride.Value;
+            }
+
             var role = ship.Design.Hull.Role;
             var hullTypes = ship.Design.Hull.Types;
 

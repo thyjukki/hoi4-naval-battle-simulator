@@ -12,7 +12,8 @@
       "doctrine": "",
       "externalNavalStrikePlanes": 0,
       "researchIDs": ["sp_torpedo_cruiser_eq_bonus_torpedo"],
-      "spiritIDs": []
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
     },
     "defender": {
       "fleetID": "4cv_10bb_29_cl",
@@ -20,7 +21,8 @@
       "doctrine": "",
       "externalNavalStrikePlanes": 0,
       "researchIDs": [],
-      "spiritIDs": []
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
     }
   }
 }

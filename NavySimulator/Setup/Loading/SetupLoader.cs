@@ -177,6 +177,19 @@ public class SetupLoader
                 }
             }
 
+            foreach (var shipExperienceByDesign in fleet.ShipExperienceLevels)
+            {
+                if (!fleet.ShipDesigns.ContainsKey(shipExperienceByDesign.Key))
+                {
+                    errors.Add($"fleet '{fleet.ID}' has shipExperienceLevels for shipDesignID '{shipExperienceByDesign.Key}' that is not present in shipDesigns.");
+                }
+
+                if (!IsValidShipExperienceLevel(shipExperienceByDesign.Value))
+                {
+                    errors.Add($"fleet '{fleet.ID}' has unsupported ship experience level {shipExperienceByDesign.Value} for shipDesignID '{shipExperienceByDesign.Key}'. Supported levels are 0 (untrained), 1 (regular), and 2 (trained).");
+                }
+            }
+
             foreach (var carrierAirwing in fleet.CarrierAirwings ?? [])
             {
                 var shipDesignId = carrierAirwing.Key;
@@ -291,11 +304,14 @@ public class SetupLoader
             foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
             {
                 var design = designById[shipDesign.Key];
+                var shipExperienceLevel = fleet.ShipExperienceLevels.TryGetValue(shipDesign.Key, out var configuredExperienceLevel)
+                    ? configuredExperienceLevel
+                    : Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR;
 
                 for (var i = 1; i <= shipDesign.Value; i++)
                 {
                     var shipId = $"{fleet.ID}_{shipDesign.Key}_{i:D3}";
-                    ships.Add(new Ship(shipId, design));
+                    ships.Add(new Ship(shipId, design, shipExperienceLevel));
                 }
             }
 
@@ -808,6 +824,12 @@ public class SetupLoader
         {
             errors.Add($"battleScenario.{role}.externalNavalStrikePlanes must be >= 0.");
         }
+
+        if (participant.ShipExperienceLevel.HasValue &&
+            !IsValidShipExperienceLevel(participant.ShipExperienceLevel.Value))
+        {
+            errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 (untrained), 1 (regular), and 2 (trained).");
+        }
     }
 
     private static BattleParticipant BuildParticipant(
@@ -824,9 +846,17 @@ public class SetupLoader
             fleet,
             participant.Commander,
             participant.Doctrine,
+            participant.ShipExperienceLevel,
             participant.ExternalNavalStrikePlanes,
             participantResearches,
             participantSpirits);
+    }
+
+    private static bool IsValidShipExperienceLevel(int level)
+    {
+        return level is Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED or
+            Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR or
+            Hoi4Defines.SHIP_EXPERIENCE_LEVEL_TRAINED;
     }
 
     private static void ValidateScopedRoleFilters(

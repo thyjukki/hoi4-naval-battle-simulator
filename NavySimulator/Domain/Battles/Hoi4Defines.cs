@@ -148,5 +148,24 @@ public static class Hoi4Defines
     public static int CAPITAL_ONLY_COMBAT_ACTIVATE_TIME = 8;
     public static int CARRIER_ONLY_COMBAT_ACTIVATE_TIME = 0;
 
+    public const int SHIP_EXPERIENCE_LEVEL_UNTRAINED = 0;
+    public const int SHIP_EXPERIENCE_LEVEL_REGULAR = 1;
+    public const int SHIP_EXPERIENCE_LEVEL_TRAINED = 2;
+
+    public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_UNTRAINED = -0.10;
+    public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR = 0.0;
+    public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_TRAINED = 0.06;
+
+    public static double GetShipExperienceAttackModifier(int experienceLevel)
+    {
+        return experienceLevel switch
+        {
+            SHIP_EXPERIENCE_LEVEL_UNTRAINED => SHIP_EXPERIENCE_ATTACK_MODIFIER_UNTRAINED,
+            SHIP_EXPERIENCE_LEVEL_REGULAR => SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR,
+            SHIP_EXPERIENCE_LEVEL_TRAINED => SHIP_EXPERIENCE_ATTACK_MODIFIER_TRAINED,
+            _ => SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR
+        };
+    }
+
 }
 

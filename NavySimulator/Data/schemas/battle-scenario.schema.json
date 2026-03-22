@@ -31,6 +31,10 @@
         "fleetID": { "$ref": "common.schema.json#/$defs/id" },
         "commander": { "type": "string" },
         "doctrine": { "type": "string" },
+        "shipExperienceLevel": {
+          "type": "integer",
+          "enum": [0, 1, 2]
+        },
         "externalNavalStrikePlanes": { "type": "integer", "minimum": 0 },
         "researchIDs": {
           "type": "array",
