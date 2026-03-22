@@ -1,0 +1,14 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "2cv_25torpca_42_cl",
+      "shipDesigns": {
+        "39_carrier": 2,
+        "torpedo_cruiser_torpattack": 25,
+        "cl3_armor4_full_la": 42
+      }
+    }
+  ]
+}
+

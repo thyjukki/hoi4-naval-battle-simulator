@@ -7,14 +7,14 @@
     "maxHours": 1000000,
     "iterations": 5,
     "attacker": {
-      "fleetID": "75_ca3_armor4",
+      "fleetID": "2cv_25torpca_42_cl",
       "commander": "",
       "doctrine": "",
       "researchIDs": [],
       "spiritIDs": []
     },
     "defender": {
-      "fleetID": "150_dd_3_la_torp",
+      "fleetID": "4cv_10bb_29_cl",
       "commander": "",
       "doctrine": "",
       "researchIDs": [],

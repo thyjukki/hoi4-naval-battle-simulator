@@ -1,0 +1,14 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "4cv_10bb_29_cl",
+      "shipDesigns": {
+        "39_carrier": 4,
+        "39_battleship_balanced": 10,
+        "cl3_armor4_full_la": 29
+      }
+    }
+  ]
+}
+
