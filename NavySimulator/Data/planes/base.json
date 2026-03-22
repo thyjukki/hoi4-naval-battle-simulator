@@ -1,0 +1,12 @@
+{
+  "$schema": "../schemas/planes.schema.json",
+  "planes": [
+    {
+      "id": "fighter_1936"
+    },
+    {
+      "id": "bomber_1936"
+    }
+  ]
+}
+

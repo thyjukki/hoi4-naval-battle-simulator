@@ -118,5 +118,7 @@ public static class Hoi4Defines
         0.20,
         0.10
     ];
+
+    public static double CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
 }
 

@@ -37,6 +37,7 @@ public class SetupLoader
         var designs = ReadCollectionFromFolderOrFile<ShipDesignDto>(dataDirectoryPath, "ship-designs", "ship-designs.json", "shipDesigns", errors);
         var researches = ReadCollectionFromFolderOrFile<ResearchDto>(dataDirectoryPath, "researches", "researches.json", "researches", errors);
         var spirits = ReadCollectionFromFolderOrFile<SpiritDto>(dataDirectoryPath, "spirits", "spirits.json", "spirits", errors);
+        var planes = ReadCollectionFromFolderOrFile<PlaneDto>(dataDirectoryPath, "planes", "planes.json", "planes", errors);
         var fleets = ReadCollectionFromFolderOrFile<FleetDto>(dataDirectoryPath, "force-compositions", "force-compositions.json", "fleets", errors);
         var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = fleets };
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
@@ -48,6 +49,7 @@ public class SetupLoader
         ValidateRequiredIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateRequiredIds(researches.Select(r => r.ID), "researches", errors);
         ValidateRequiredIds(spirits.Select(s => s.ID), "spirits", errors);
+        ValidateRequiredIds(planes.Select(p => p.ID), "planes", errors);
         ValidateRequiredIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         ValidateDuplicateIds(hulls.Select(h => h.ID), "hulls", errors);
@@ -56,6 +58,7 @@ public class SetupLoader
         ValidateDuplicateIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateDuplicateIds(researches.Select(r => r.ID), "researches", errors);
         ValidateDuplicateIds(spirits.Select(s => s.ID), "spirits", errors);
+        ValidateDuplicateIds(planes.Select(p => p.ID), "planes", errors);
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
         var hullIds = hulls.Select(h => h.ID).ToHashSet();
@@ -92,7 +95,10 @@ public class SetupLoader
         var designIds = designs.Select(d => d.ID).ToHashSet();
         var researchIds = researches.Select(r => r.ID).ToHashSet();
         var spiritIds = spirits.Select(s => s.ID).ToHashSet();
+        var planeIds = planes.Select(p => p.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
+        var hullRoleByHullId = hulls.ToDictionary(h => h.ID, h => h.Role, StringComparer.OrdinalIgnoreCase);
+        var designHullByDesignId = designs.ToDictionary(d => d.ID, d => d.HullID, StringComparer.OrdinalIgnoreCase);
 
         ValidateScopedRoleFilters(
             mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToRoles))),
@@ -151,6 +157,53 @@ public class SetupLoader
                 if (shipDesign.Value <= 0)
                 {
                     errors.Add($"fleet '{fleet.ID}' has non-positive ship count {shipDesign.Value} for shipDesignID '{shipDesign.Key}'.");
+                }
+            }
+
+            foreach (var carrierAirwing in fleet.CarrierAirwings ?? [])
+            {
+                var shipDesignId = carrierAirwing.Key;
+
+                if (!designIds.Contains(shipDesignId))
+                {
+                    errors.Add($"fleet '{fleet.ID}' has carrierAirwings for unknown shipDesignID '{shipDesignId}'.");
+                    continue;
+                }
+
+                if (!fleet.ShipDesigns.ContainsKey(shipDesignId))
+                {
+                    errors.Add($"fleet '{fleet.ID}' has carrierAirwings for shipDesignID '{shipDesignId}' that is not present in shipDesigns.");
+                }
+
+                if (!designHullByDesignId.TryGetValue(shipDesignId, out var hullId) ||
+                    !hullRoleByHullId.TryGetValue(hullId, out var hullRole) ||
+                    !hullRole.Equals(nameof(ShipRole.Carrier), StringComparison.OrdinalIgnoreCase))
+                {
+                    errors.Add($"fleet '{fleet.ID}' has carrierAirwings for non-carrier shipDesignID '{shipDesignId}'.");
+                }
+
+                foreach (var assignment in carrierAirwing.Value ?? [])
+                {
+                    if (string.IsNullOrWhiteSpace(assignment.PlaneID))
+                    {
+                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry with empty planeID for shipDesignID '{shipDesignId}'.");
+                        continue;
+                    }
+
+                    if (!planeIds.Contains(assignment.PlaneID))
+                    {
+                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry referencing unknown planeID '{assignment.PlaneID}' for shipDesignID '{shipDesignId}'.");
+                    }
+
+                    if (!TryParseAirwingType(assignment.Type, out _))
+                    {
+                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry with unknown type '{assignment.Type}' for shipDesignID '{shipDesignId}'.");
+                    }
+
+                    if (assignment.Airwings <= 0)
+                    {
+                        errors.Add($"fleet '{fleet.ID}' has non-positive airwings value {assignment.Airwings} for shipDesignID '{shipDesignId}'.");
+                    }
                 }
             }
         }
@@ -216,6 +269,7 @@ public class SetupLoader
         foreach (var fleet in forceCompositionsFile.Fleets)
         {
             var ships = new List<Ship>();
+            var carrierAirwingsByDesign = ParseCarrierAirwings(fleet.CarrierAirwings ?? []);
 
             foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
             {
@@ -228,7 +282,7 @@ public class SetupLoader
                 }
             }
 
-            fleetById[fleet.ID] = new Fleet(fleet.ID, ships);
+            fleetById[fleet.ID] = new Fleet(fleet.ID, ships, carrierAirwingsByDesign);
         }
 
         var attacker = BuildParticipant(battleScenarioFile.BattleScenario.Attacker, fleetById, researchById, spiritById);
@@ -806,6 +860,45 @@ public class SetupLoader
             .Where(typeName => !string.IsNullOrWhiteSpace(typeName))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    private static Dictionary<string, List<CarrierAirwingAssignment>> ParseCarrierAirwings(
+        Dictionary<string, List<CarrierAirwingAssignmentDto>> carrierAirwingsByDesign)
+    {
+        var parsed = new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal);
+
+        foreach (var designEntry in carrierAirwingsByDesign)
+        {
+            var assignments = new List<CarrierAirwingAssignment>();
+
+            foreach (var assignment in designEntry.Value ?? [])
+            {
+                if (!TryParseAirwingType(assignment.Type, out var type))
+                {
+                    continue;
+                }
+
+                assignments.Add(new CarrierAirwingAssignment(assignment.PlaneID, type, assignment.Airwings));
+            }
+
+            if (assignments.Count > 0)
+            {
+                parsed[designEntry.Key] = assignments;
+            }
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseAirwingType(string typeName, out AirwingType type)
+    {
+        if (typeName.Equals("figheter", StringComparison.OrdinalIgnoreCase))
+        {
+            type = AirwingType.Fighter;
+            return true;
+        }
+
+        return Enum.TryParse(typeName, true, out type);
     }
 }
 

@@ -15,6 +15,10 @@ public class BattleResult
     public double DefenderProductionLost;
     public double AttackerToDefenderProductionLossRatio;
     public double DefenderToAttackerProductionLossRatio;
+    public PlaneStrength AttackerPlanesAtStart;
+    public PlaneStrength DefenderPlanesAtStart;
+    public PlaneStrength AttackerPlanesLost;
+    public PlaneStrength DefenderPlanesLost;
     public List<string> HourlyLog;
     public List<ShipBattleReport> ShipReports;
 
@@ -30,6 +34,10 @@ public class BattleResult
         double defenderProductionLost,
         double attackerToDefenderProductionLossRatio,
         double defenderToAttackerProductionLossRatio,
+        PlaneStrength attackerPlanesAtStart,
+        PlaneStrength defenderPlanesAtStart,
+        PlaneStrength attackerPlanesLost,
+        PlaneStrength defenderPlanesLost,
         List<string> hourlyLog,
         List<ShipBattleReport> shipReports)
     {
@@ -44,6 +52,10 @@ public class BattleResult
         DefenderProductionLost = defenderProductionLost;
         AttackerToDefenderProductionLossRatio = attackerToDefenderProductionLossRatio;
         DefenderToAttackerProductionLossRatio = defenderToAttackerProductionLossRatio;
+        AttackerPlanesAtStart = attackerPlanesAtStart;
+        DefenderPlanesAtStart = defenderPlanesAtStart;
+        AttackerPlanesLost = attackerPlanesLost;
+        DefenderPlanesLost = defenderPlanesLost;
         HourlyLog = hourlyLog;
         ShipReports = shipReports;
     }

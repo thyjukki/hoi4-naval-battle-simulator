@@ -114,7 +114,9 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
         $"Attacker Ships Remaining: {result.AttackerShipsRemaining}",
         $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
         $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
-        $"Defender Ships Retreated: {result.DefenderShipsRetreated}"
+        $"Defender Ships Retreated: {result.DefenderShipsRetreated}",
+        $"Attacker Planes (Start/Lost/Remaining): {FormatPlaneStrength(result.AttackerPlanesAtStart)} / {FormatPlaneStrength(result.AttackerPlanesLost)} / {FormatPlaneStrength(GetRemainingPlaneStrength(result.AttackerPlanesAtStart, result.AttackerPlanesLost))}",
+        $"Defender Planes (Start/Lost/Remaining): {FormatPlaneStrength(result.DefenderPlanesAtStart)} / {FormatPlaneStrength(result.DefenderPlanesLost)} / {FormatPlaneStrength(GetRemainingPlaneStrength(result.DefenderPlanesAtStart, result.DefenderPlanesLost))}"
     };
 
     summaryLines.Add(string.Empty);
@@ -353,6 +355,7 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet, Fleet opposingFleet
 
     var positioning = CalculateFleetSizePositioningForPreview(allShips.Count, opposingFleet.Ships.Count);
     var screening = CalculateScreeningForPreview(roleCounts, positioning);
+    var planeStrength = GetFleetPlaneStrengthForPreview(fleet);
 
     Console.WriteLine($"{sideLabel} Fleet: {fleet.ID}");
     Console.WriteLine(
@@ -373,9 +376,69 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet, Fleet opposingFleet
     Console.WriteLine(
         $"  Fleet Firepower: LA {totalStats.LightAttack:F1}, HA {totalStats.HeavyAttack:F1}, Torp {totalStats.TorpedoAttack:F1}, " +
         $"Depth {totalStats.DepthChargeAttack:F1}, AA {totalStats.AntiAir:F1}");
+
+    if (fleet.CarrierAirwingsByShipDesign.Count > 0)
+    {
+        Console.WriteLine("  Carrier Airwings:");
+
+        foreach (var designEntry in fleet.CarrierAirwingsByShipDesign.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+        {
+            var assignmentSummary = string.Join(", ",
+                designEntry.Value
+                    .OrderBy(assignment => assignment.Type)
+                    .ThenBy(assignment => assignment.PlaneID, StringComparer.Ordinal)
+                    .Select(assignment =>
+                        $"{assignment.Type}:{assignment.Airwings}w ({assignment.PlaneCount} planes) [{assignment.PlaneID}]"));
+
+            Console.WriteLine($"    - {designEntry.Key}: {assignmentSummary}");
+        }
+    }
+
+    Console.WriteLine($"  Carrier Planes: {FormatPlaneStrength(planeStrength)}");
     Console.WriteLine($"  Total Production Cost: {totalStats.ProductionCost:F1}");
     Console.WriteLine($"  Positioning: {positioning:P0}");
     Console.WriteLine($"  Screening Efficiency: {screening.ScreeningEfficiency:P0}, Carrier Screening: {screening.CarrierScreeningEfficiency:P0}");
+}
+
+static PlaneStrength GetFleetPlaneStrengthForPreview(Fleet fleet)
+{
+    var carrierCountByDesign = fleet.Ships
+        .Where(ship => ship.Design.Hull.Role == ShipRole.Carrier)
+        .GroupBy(ship => ship.Design.ID)
+        .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+    var fighterPlanes = 0;
+    var bomberPlanes = 0;
+
+    foreach (var carrierGroup in carrierCountByDesign)
+    {
+        if (!fleet.CarrierAirwingsByShipDesign.TryGetValue(carrierGroup.Key, out var assignments))
+        {
+            continue;
+        }
+
+        var carrierCount = carrierGroup.Value;
+        fighterPlanes += carrierCount * assignments
+            .Where(assignment => assignment.Type == AirwingType.Fighter)
+            .Sum(assignment => assignment.PlaneCount);
+        bomberPlanes += carrierCount * assignments
+            .Where(assignment => assignment.Type == AirwingType.Bomber)
+            .Sum(assignment => assignment.PlaneCount);
+    }
+
+    return new PlaneStrength(fighterPlanes, bomberPlanes);
+}
+
+static PlaneStrength GetRemainingPlaneStrength(PlaneStrength atStart, PlaneStrength lost)
+{
+    return new PlaneStrength(
+        Math.Max(0, atStart.Fighters - lost.Fighters),
+        Math.Max(0, atStart.Bombers - lost.Bombers));
+}
+
+static string FormatPlaneStrength(PlaneStrength strength)
+{
+    return $"Fighters {strength.Fighters}, Bombers {strength.Bombers}, Total {strength.Total}";
 }
 
 static double CalculateFleetSizePositioningForPreview(int ownShipCount, int opponentShipCount)
@@ -447,6 +510,8 @@ static List<string> BuildIterationsAverageSummaryLines(
     lines.Add($"Avg Defender Ships Remaining: {iterationResults.Average(result => result.DefenderShipsRemaining):F2}");
     lines.Add($"Avg Attacker Ships Retreated: {iterationResults.Average(result => result.AttackerShipsRetreated):F2}");
     lines.Add($"Avg Defender Ships Retreated: {iterationResults.Average(result => result.DefenderShipsRetreated):F2}");
+    lines.Add($"Avg Attacker Planes Lost: Fighters {iterationResults.Average(result => result.AttackerPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.AttackerPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.AttackerPlanesLost.Total):F2}");
+    lines.Add($"Avg Defender Planes Lost: Fighters {iterationResults.Average(result => result.DefenderPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.DefenderPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.DefenderPlanesLost.Total):F2}");
 
     var attackerDamagePercentages = new List<double>();
     var defenderDamagePercentages = new List<double>();

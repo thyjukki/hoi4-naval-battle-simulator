@@ -22,6 +22,28 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          "carrierAirwings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["planeID", "type", "airwings"],
+                "properties": {
+                  "planeID": { "$ref": "common.schema.json#/$defs/id" },
+                  "type": {
+                    "type": "string",
+                    "enum": ["fighter", "figheter", "bomber"]
+                  },
+                  "airwings": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
           }
         },
         "additionalProperties": false

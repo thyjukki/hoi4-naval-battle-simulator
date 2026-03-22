@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "planes.schema.json",
+  "title": "NavySimulator Planes",
+  "type": "object",
+  "required": ["planes"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "planes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "$ref": "common.schema.json#/$defs/id" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
+

@@ -905,6 +905,10 @@ public class BattleSimulator
         var attackerToDefenderProductionLossRatio = SafeRatio(attackerProductionLost, defenderProductionLost);
         var defenderToAttackerProductionLossRatio = SafeRatio(defenderProductionLost, attackerProductionLost);
         var shipReports = BuildShipReports(scenario, allActions);
+        var attackerPlanesAtStart = GetFleetPlaneStrength(scenario.Attacker.Fleet, _ => true);
+        var defenderPlanesAtStart = GetFleetPlaneStrength(scenario.Defender.Fleet, _ => true);
+        var attackerPlanesLost = GetFleetPlaneStrength(scenario.Attacker.Fleet, ship => ship.IsSunk);
+        var defenderPlanesLost = GetFleetPlaneStrength(scenario.Defender.Fleet, ship => ship.IsSunk);
 
         var outcome = "Draw";
 
@@ -929,8 +933,42 @@ public class BattleSimulator
             defenderProductionLost,
             attackerToDefenderProductionLossRatio,
             defenderToAttackerProductionLossRatio,
+            attackerPlanesAtStart,
+            defenderPlanesAtStart,
+            attackerPlanesLost,
+            defenderPlanesLost,
             hourlyLog,
             shipReports);
+    }
+
+    private static PlaneStrength GetFleetPlaneStrength(Fleet fleet, Func<Ship, bool> carrierPredicate)
+    {
+        var carrierCountByDesign = fleet.Ships
+            .Where(ship => ship.Design.Hull.Role == ShipRole.Carrier)
+            .Where(carrierPredicate)
+            .GroupBy(ship => ship.Design.ID)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
+        var fighterPlanes = 0;
+        var bomberPlanes = 0;
+
+        foreach (var carrierGroup in carrierCountByDesign)
+        {
+            if (!fleet.CarrierAirwingsByShipDesign.TryGetValue(carrierGroup.Key, out var assignments))
+            {
+                continue;
+            }
+
+            var carrierCount = carrierGroup.Value;
+            fighterPlanes += carrierCount * assignments
+                .Where(assignment => assignment.Type == AirwingType.Fighter)
+                .Sum(assignment => assignment.PlaneCount);
+            bomberPlanes += carrierCount * assignments
+                .Where(assignment => assignment.Type == AirwingType.Bomber)
+                .Sum(assignment => assignment.PlaneCount);
+        }
+
+        return new PlaneStrength(fighterPlanes, bomberPlanes);
     }
 
     private static double GetSunkProductionCost(List<Ship> ships)
