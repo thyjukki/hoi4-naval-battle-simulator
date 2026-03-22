@@ -2,10 +2,30 @@
   "$schema": "../schemas/planes.schema.json",
   "planes": [
     {
-      "id": "fighter_1936"
+      "id": "fighter_1936",
+      "stats": {
+        "airDefense": 20,
+        "airAttack": 25,
+        "navalAttack": 4,
+        "speed": 400,
+        "airSuperiority": 35,
+        "navalTargeting": 10,
+        "reliability": 0.8,
+        "productionCost": 28
+      }
     },
     {
-      "id": "bomber_1936"
+      "id": "bomber_1936",
+      "stats": {
+        "airDefense": 8,
+        "airAttack": 6,
+        "navalAttack": 25,
+        "speed": 260,
+        "airSuperiority": 4,
+        "navalTargeting": 30,
+        "reliability": 0.75,
+        "productionCost": 34
+      }
     }
   ]
 }

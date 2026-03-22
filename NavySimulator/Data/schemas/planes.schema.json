@@ -12,9 +12,33 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id"],
+        "required": ["id", "stats"],
         "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/id" }
+          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "stats": {
+            "type": "object",
+            "required": [
+              "airDefense",
+              "airAttack",
+              "navalAttack",
+              "speed",
+              "airSuperiority",
+              "navalTargeting",
+              "reliability",
+              "productionCost"
+            ],
+            "properties": {
+              "airDefense": { "type": "number" },
+              "airAttack": { "type": "number" },
+              "navalAttack": { "type": "number" },
+              "speed": { "type": "number" },
+              "airSuperiority": { "type": "number" },
+              "navalTargeting": { "type": "number" },
+              "reliability": { "type": "number" },
+              "productionCost": { "type": "number" }
+            },
+            "additionalProperties": false
+          }
         },
         "additionalProperties": false
       }

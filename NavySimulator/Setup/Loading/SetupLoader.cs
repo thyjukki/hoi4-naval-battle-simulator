@@ -61,6 +61,23 @@ public class SetupLoader
         ValidateDuplicateIds(planes.Select(p => p.ID), "planes", errors);
         ValidateDuplicateIds(forceCompositionsFile.Fleets.Select(f => f.ID), "fleets", errors);
 
+        foreach (var plane in planes)
+        {
+            if (plane.Stats.ProductionCost < 0)
+            {
+                errors.Add($"plane '{plane.ID}' has negative productionCost {plane.Stats.ProductionCost}.");
+            }
+
+            if (plane.Stats.Reliability < 0)
+            {
+                errors.Add($"plane '{plane.ID}' has negative reliability {plane.Stats.Reliability}.");
+            }
+        }
+
+        var planeById = planes.ToDictionary(
+            plane => plane.ID,
+            plane => new PlaneEquipment(plane.ID, plane.Stats.ToDomain()));
+
         var hullIds = hulls.Select(h => h.ID).ToHashSet();
         foreach (var hull in hulls)
         {
@@ -95,7 +112,7 @@ public class SetupLoader
         var designIds = designs.Select(d => d.ID).ToHashSet();
         var researchIds = researches.Select(r => r.ID).ToHashSet();
         var spiritIds = spirits.Select(s => s.ID).ToHashSet();
-        var planeIds = planes.Select(p => p.ID).ToHashSet();
+        var planeIds = planeById.Keys.ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
         var hullRoleByHullId = hulls.ToDictionary(h => h.ID, h => h.Role, StringComparer.OrdinalIgnoreCase);
         var designHullByDesignId = designs.ToDictionary(d => d.ID, d => d.HullID, StringComparer.OrdinalIgnoreCase);
