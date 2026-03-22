@@ -37,7 +37,8 @@ public class SetupLoader
         var designs = ReadCollectionFromFolderOrFile<ShipDesignDto>(dataDirectoryPath, "ship-designs", "ship-designs.json", "shipDesigns", errors);
         var researches = ReadCollectionFromFolderOrFile<ResearchDto>(dataDirectoryPath, "researches", "researches.json", "researches", errors);
         var spirits = ReadCollectionFromFolderOrFile<SpiritDto>(dataDirectoryPath, "spirits", "spirits.json", "spirits", errors);
-        var forceCompositionsFile = ReadJsonFile<ForceCompositionsFileDto>(dataDirectoryPath, "force-compositions.json", errors) ?? new ForceCompositionsFileDto();
+        var fleets = ReadCollectionFromFolderOrFile<FleetDto>(dataDirectoryPath, "force-compositions", "force-compositions.json", "fleets", errors);
+        var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = fleets };
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
 
         ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);

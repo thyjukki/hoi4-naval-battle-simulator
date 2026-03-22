@@ -5,6 +5,9 @@
   "type": "object",
   "required": ["fleets"],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "fleets": {
       "type": "array",
       "items": {
