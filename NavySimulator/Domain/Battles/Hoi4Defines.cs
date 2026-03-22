@@ -8,15 +8,15 @@ public static class Hoi4Defines
     public const double CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CONVOYS = 0.25;
 
     public const int BASE_GUN_COOLDOWNS_LIGHT = 2;
-    public const int BASE_GUN_COOLDOWNS_HEAVY = 5;
-    public const int BASE_GUN_COOLDOWNS_TORPEDO = 2;
+    public const int BASE_GUN_COOLDOWNS_HEAVY = 3;
+    public const int BASE_GUN_COOLDOWNS_TORPEDO = 5;
     public const int BASE_GUN_COOLDOWNS = 1;
 
     public const double DEPTH_CHARGES_HIT_CHANCE_MULT = 1.25;
-    public const double DEPTH_CHARGES_HIT_PROFILE = 100.0;
+    public const double DEPTH_CHARGES_HIT_PROFILE = 80.0;
     
-    public const double COMBAT_BASE_HIT_CHANCE = 0.10;
-    public const double COMBAT_MIN_HIT_CHANCE = 0.05;
+    public const double COMBAT_BASE_HIT_CHANCE = 0.1;
+    public const double COMBAT_MIN_HIT_CHANCE = 0.02;
 
     public const double GUN_HIT_PROFILES_LIGHT = 60.0;
     public const double GUN_HIT_PROFILES_HEAVY = 95.0;
@@ -121,8 +121,8 @@ public static class Hoi4Defines
     
     public static double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
     public static double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
-    public static double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 50;
-    public static double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 200;
+    public static double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 30;
+    public static double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 100;
     public static double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE = 5;                         // how much score factor from low health (scales between 0->this number)
     public static double NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE = 5;
 
