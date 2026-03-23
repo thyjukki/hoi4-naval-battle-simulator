@@ -19,6 +19,7 @@
           "statMultiplier": { "$ref": "common.schema.json#/$defs/shipStats" },
           "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" },
           "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
+          "sortieEffiency": { "type": "number" },
           "appliesToRoles": {
             "type": "array",
             "items": { "$ref": "common.schema.json#/$defs/shipRole" },

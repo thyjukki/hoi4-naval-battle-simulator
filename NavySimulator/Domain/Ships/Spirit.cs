@@ -7,6 +7,7 @@ public class Spirit(
     ShipStats statModifiers,
     ShipStats statAverages,
     ShipStats statMultipliers,
+    double sortieEffiency,
     List<ShipRole> appliesToRoles,
     List<string> appliesToTypes)
 {
@@ -14,6 +15,7 @@ public class Spirit(
     public ShipStats StatModifiers { get; } = statModifiers;
     public ShipStats StatAverages { get; } = statAverages;
     public ShipStats StatMultipliers { get; } = statMultipliers;
+    public double SortieEffiency { get; } = sortieEffiency;
     public List<ShipRole> AppliesToRoles { get; } = appliesToRoles;
     public List<string> AppliesToTypes { get; } = appliesToTypes;
 

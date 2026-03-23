@@ -130,10 +130,10 @@ public static class Hoi4Defines
     public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY = 0.25;
     public static double NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP = 30;
 
-    public static double ANTI_AIR_TARGETTING_TO_CHANCE = 0.05;
+    public static double ANTI_AIR_TARGETTING_TO_CHANCE = 0.2;
     public static double ANTI_AIR_TARGETING = 0.4;
     public static double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY = 0.02;
-    public static double ANTI_AIR_ATTACK_TO_AMOUNT = 0.001;
+    public static double ANTI_AIR_ATTACK_TO_AMOUNT = 0.01;
     public static double MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE = 0.75;
     public static double ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE = 0.03;
     public static double ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE = 0.58;
@@ -141,6 +141,10 @@ public static class Hoi4Defines
 
     public static double NAVAL_STRIKE_CARRIER_MULTIPLIER = 1.75;
     public static double NAVAL_STRIKE_TARGETTING_TO_AMOUNT = 0.4;
+
+    public const double BASE_CARRIER_SORTIE_EFFICIENCY = 0.20;
+    public const double CARRIER_SORTIE_EFFICIENCY_FROM_SCREENING = 0.35;
+    public const double CARRIER_SORTIE_EFFICIENCY_FROM_CAPITAL_SCREENING = 0.20;
 
     public const int COMBAT_MIN_DURATION = 8;
     public const int COMBAT_INITIAL_DURATION = 6;
@@ -166,6 +170,5 @@ public static class Hoi4Defines
             _ => SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR
         };
     }
-
 }
 

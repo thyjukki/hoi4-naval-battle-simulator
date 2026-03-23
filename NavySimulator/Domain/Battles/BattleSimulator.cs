@@ -12,6 +12,10 @@ public class BattleSimulator
         var defenderBombersShotDownByShipAa = 0;
         var attackerCarrierPlaneDamageDealt = 0.0;
         var defenderCarrierPlaneDamageDealt = 0.0;
+        var attackerCarrierSortiesByShipId = new Dictionary<string, int>(StringComparer.Ordinal);
+        var defenderCarrierSortiesByShipId = new Dictionary<string, int>(StringComparer.Ordinal);
+        var attackerCarrierSortiesByShipIdAndHour = new Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>>(StringComparer.Ordinal);
+        var defenderCarrierSortiesByShipIdAndHour = new Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>>(StringComparer.Ordinal);
         var attackerPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
         var defenderPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
         var attackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
@@ -29,10 +33,26 @@ public class BattleSimulator
             
             var attackerScreening = CalculateScreening(attackerLines, attackerPositioning);
             var defenderScreening = CalculateScreening(defenderLines, defenderPositioning);
-            var attackerAirSortie = CalculateAirSortieSnapshot(scenario, scenario.Attacker, attackerLines, defenderLines, hour);
-            var defenderAirSortie = CalculateAirSortieSnapshot(scenario, scenario.Defender, defenderLines, attackerLines, hour);
+            var attackerAirSortie = CalculateAirSortieSnapshot(scenario, scenario.Attacker, attackerLines, attackerScreening, defenderLines, hour);
+            var defenderAirSortie = CalculateAirSortieSnapshot(scenario, scenario.Defender, defenderLines, defenderScreening, attackerLines, hour);
             var attackerAirTargetSelections = ResolveNavalStrike(defenderLines, attackerAirSortie, random);
             var defenderAirTargetSelections = ResolveNavalStrike(attackerLines, defenderAirSortie, random);
+            AccumulateCarrierSorties(
+                scenario.Attacker,
+                attackerLines,
+                attackerAirSortie,
+                attackerAirTargetSelections,
+                hour,
+                attackerCarrierSortiesByShipId,
+                attackerCarrierSortiesByShipIdAndHour);
+            AccumulateCarrierSorties(
+                scenario.Defender,
+                defenderLines,
+                defenderAirSortie,
+                defenderAirTargetSelections,
+                hour,
+                defenderCarrierSortiesByShipId,
+                defenderCarrierSortiesByShipIdAndHour);
             attackerBombersShotDownByShipAa += attackerAirTargetSelections.BombersShotDown;
             defenderBombersShotDownByShipAa += defenderAirTargetSelections.BombersShotDown;
             attackerCarrierPlaneDamageDealt += attackerAirTargetSelections.CarrierDamageDealt;
@@ -84,9 +104,9 @@ public class BattleSimulator
             {
                 hourlyLog.Add(
                     $"Hour {hour}: air sortie - " +
-                    $"attacker carrier {attackerAirSortie.CarrierSortiePlanes}/{attackerAirSortie.CarrierAssignedPlanes} (night traffic x{attackerAirSortie.CarrierTrafficMultiplier:F2}), " +
+                    $"attacker carrier {attackerAirSortie.CarrierSortiePlanes}/{attackerAirSortie.CarrierAssignedPlanes} (sortie x{attackerAirSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{attackerAirSortie.CarrierTrafficMultiplier:F2}), " +
                     $"external {attackerAirSortie.ExternalPlanesJoining}/{attackerAirSortie.ExternalEligiblePlanes} (cap {attackerAirSortie.ExternalJoinCap:F1}); " +
-                    $"defender carrier {defenderAirSortie.CarrierSortiePlanes}/{defenderAirSortie.CarrierAssignedPlanes} (night traffic x{defenderAirSortie.CarrierTrafficMultiplier:F2}), " +
+                    $"defender carrier {defenderAirSortie.CarrierSortiePlanes}/{defenderAirSortie.CarrierAssignedPlanes} (sortie x{defenderAirSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{defenderAirSortie.CarrierTrafficMultiplier:F2}), " +
                     $"external {defenderAirSortie.ExternalPlanesJoining}/{defenderAirSortie.ExternalEligiblePlanes} (cap {defenderAirSortie.ExternalJoinCap:F1})");
                 hourlyLog.Add($"Hour {hour}: air disruption - placeholder disabled (fighter interception not implemented yet)");
                 hourlyLog.Add(
@@ -123,6 +143,10 @@ public class BattleSimulator
                     defenderCarrierPlaneDamageDealt,
                     attackerPlaneDamageByType,
                     defenderPlaneDamageByType,
+                    attackerCarrierSortiesByShipId,
+                    defenderCarrierSortiesByShipId,
+                    attackerCarrierSortiesByShipIdAndHour,
+                    defenderCarrierSortiesByShipIdAndHour,
                     hourlyLog,
                     allActions);
             }
@@ -142,6 +166,10 @@ public class BattleSimulator
                     defenderCarrierPlaneDamageDealt,
                     attackerPlaneDamageByType,
                     defenderPlaneDamageByType,
+                    attackerCarrierSortiesByShipId,
+                    defenderCarrierSortiesByShipId,
+                    attackerCarrierSortiesByShipIdAndHour,
+                    defenderCarrierSortiesByShipIdAndHour,
                     hourlyLog,
                     allActions);
             }
@@ -166,6 +194,10 @@ public class BattleSimulator
             defenderCarrierPlaneDamageDealt,
             attackerPlaneDamageByType,
             defenderPlaneDamageByType,
+            attackerCarrierSortiesByShipId,
+            defenderCarrierSortiesByShipId,
+            attackerCarrierSortiesByShipIdAndHour,
+            defenderCarrierSortiesByShipIdAndHour,
             hourlyLog,
             allActions);
     }
@@ -266,6 +298,7 @@ public class BattleSimulator
         BattleScenario scenario,
         BattleParticipant participant,
         BattleLines ownLines,
+        ScreeningSummary ownScreening,
         BattleLines enemyLines,
         int hour)
     {
@@ -277,6 +310,7 @@ public class BattleSimulator
         {
             return new AirSortieSnapshot(
                 false,
+                0,
                 0,
                 0,
                 1.0,
@@ -297,10 +331,12 @@ public class BattleSimulator
 
         var carrierAssignedPlanesByPlane = GetCarrierAssignedBomberPlanesByPlane(participant, ownLines);
         var carrierAssignedPlanes = carrierAssignedPlanesByPlane.Values.Sum();
+        var carrierSortieEfficiency = CalculateCarrierSortieEfficiency(participant, ownLines, ownScreening);
         var carrierTrafficMultiplier = IsNightHour(hour)
             ? Math.Clamp(1.0 + Hoi4Defines.NightCarrierTraffic, 0, 1)
             : 1.0;
-        var carrierBomberWingsByPlaneType = BuildCarrierBomberWingsByPlaneType(carrierAssignedPlanesByPlane, carrierTrafficMultiplier);
+        var carrierTotalFlightMultiplier = carrierSortieEfficiency * carrierTrafficMultiplier;
+        var carrierBomberWingsByPlaneType = BuildCarrierBomberWingsByPlaneType(carrierAssignedPlanesByPlane, carrierTotalFlightMultiplier);
         var carrierBomberWingCount = carrierBomberWingsByPlaneType.Values.Sum();
         var carrierSortiePlanes = carrierBomberWingCount * 10;
 
@@ -334,6 +370,7 @@ public class BattleSimulator
             true,
             carrierAssignedPlanes,
             carrierSortiePlanes,
+            carrierSortieEfficiency,
             carrierTrafficMultiplier,
             externalEligiblePlanes,
             externalPlanesJoining,
@@ -348,6 +385,28 @@ public class BattleSimulator
             externalFallbackNavalAttack,
             externalFallbackNavalTargeting,
             carrierBomberWingsByPlaneType);
+    }
+
+    private static double CalculateCarrierSortieEfficiency(
+        BattleParticipant participant,
+        BattleLines ownLines,
+        ScreeningSummary ownScreening)
+    {
+        if (ownLines.Carriers.Count == 0)
+        {
+            return 0;
+        }
+
+        var spiritSortieBonus = participant.Spirits
+            .Where(spirit => spirit.AppliesTo(ShipRole.Carrier, ["Carrier"]))
+            .Sum(spirit => spirit.SortieEffiency);
+
+        var sortieEfficiency = Hoi4Defines.BASE_CARRIER_SORTIE_EFFICIENCY +
+                              Hoi4Defines.CARRIER_SORTIE_EFFICIENCY_FROM_SCREENING * ownScreening.ScreeningEfficiency +
+                              Hoi4Defines.CARRIER_SORTIE_EFFICIENCY_FROM_CAPITAL_SCREENING * ownScreening.CarrierScreeningEfficiency +
+                              spiritSortieBonus;
+
+        return Math.Clamp(sortieEfficiency, 0, 1);
     }
 
     private static Dictionary<string, int> BuildCarrierBomberWingsByPlaneType(
@@ -467,21 +526,26 @@ public class BattleSimulator
         Random random)
     {
         var selections = new Dictionary<string, int>(StringComparer.Ordinal);
+        var carrierSelections = new Dictionary<string, int>(StringComparer.Ordinal);
         var bombersShotDown = 0;
+        var carrierBombersShotDown = 0;
         var totalDamage = 0.0;
         var carrierDamage = 0.0;
+        var carrierTargetAaDefenseTotal = 0.0;
+        var carrierFleetAaReductionTotal = 0.0;
+        var carrierSelectionCount = 0;
         var damageByPlaneType = new Dictionary<string, double>(StringComparer.Ordinal);
 
         if (snapshot.BomberWings <= 0)
         {
-            return new NavalStrikeSelectionSummary(selections, 0, 0, 0, damageByPlaneType);
+            return new NavalStrikeSelectionSummary(selections, new Dictionary<string, int>(StringComparer.Ordinal), 0, 0, 0, 0, 0, 0, damageByPlaneType);
         }
 
         var candidates = BuildAirTargetCandidates(enemyLines).ToList();
 
         if (candidates.Count == 0)
         {
-            return new NavalStrikeSelectionSummary(selections, 0, 0, 0, damageByPlaneType);
+            return new NavalStrikeSelectionSummary(selections, new Dictionary<string, int>(StringComparer.Ordinal), 0, 0, 0, 0, 0, 0, damageByPlaneType);
         }
 
         foreach (var carrierEntry in snapshot.CarrierBomberWingsByPlaneType)
@@ -502,17 +566,29 @@ public class BattleSimulator
                 }
 
                 selections[target.ID] = selections.TryGetValue(target.ID, out var current) ? current + 1 : 1;
+                carrierSelections[target.ID] = carrierSelections.TryGetValue(target.ID, out var carrierCurrent) ? carrierCurrent + 1 : 1;
                 var shotDown = ResolvePreemptiveAntiAirDefense(target, wingAgility, random);
                 bombersShotDown += shotDown;
+                carrierBombersShotDown += shotDown;
 
                 var planesRemaining = Math.Max(0, 10 - shotDown);
+                var strikeBreakdown = CalculateNavalStrikeDamageBreakdown(
+                    isCarrierBased,
+                    wingNavalAttack,
+                    wingNavalTargeting,
+                    planesRemaining,
+                    target,
+                    enemyLines);
+                carrierTargetAaDefenseTotal += strikeBreakdown.TargetedAaDefense;
+                carrierFleetAaReductionTotal += strikeBreakdown.CombinedFleetAaDamageReduction;
+                carrierSelectionCount++;
 
                 if (planesRemaining <= 0)
                 {
                     continue;
                 }
 
-                var strikeDamage = CalculateNavalStrikeDamage(isCarrierBased, wingNavalAttack, wingNavalTargeting, planesRemaining, target, enemyLines);
+                var strikeDamage = strikeBreakdown.FinalDamageBeforeHpClamp;
 
                 if (strikeDamage <= 0)
                 {
@@ -554,7 +630,14 @@ public class BattleSimulator
                 continue;
             }
 
-            var strikeDamage = CalculateNavalStrikeDamage(isCarrierBased, wingNavalAttack, wingNavalTargeting, planesRemaining, target, enemyLines);
+            var strikeBreakdown = CalculateNavalStrikeDamageBreakdown(
+                isCarrierBased,
+                wingNavalAttack,
+                wingNavalTargeting,
+                planesRemaining,
+                target,
+                enemyLines);
+            var strikeDamage = strikeBreakdown.FinalDamageBeforeHpClamp;
 
             if (strikeDamage <= 0)
             {
@@ -566,10 +649,22 @@ public class BattleSimulator
             totalDamage += applied.HpDamage;
         }
 
-        return new NavalStrikeSelectionSummary(selections, bombersShotDown, totalDamage, carrierDamage, damageByPlaneType);
+        var averageCarrierTargetAaDefense = carrierSelectionCount <= 0 ? 0 : carrierTargetAaDefenseTotal / carrierSelectionCount;
+        var averageCarrierFleetAaReduction = carrierSelectionCount <= 0 ? 0 : carrierFleetAaReductionTotal / carrierSelectionCount;
+
+        return new NavalStrikeSelectionSummary(
+            selections,
+            carrierSelections,
+            bombersShotDown,
+            carrierBombersShotDown,
+            totalDamage,
+            carrierDamage,
+            averageCarrierTargetAaDefense,
+            averageCarrierFleetAaReduction,
+            damageByPlaneType);
     }
 
-    private static double CalculateNavalStrikeDamage(
+    private static NavalStrikeDamageBreakdown CalculateNavalStrikeDamageBreakdown(
         bool isCarrierBased,
         double navalAttack,
         double navalTargeting,
@@ -595,7 +690,10 @@ public class BattleSimulator
             -Hoi4Defines.MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE);
         var damageMultiplier = Math.Clamp(1.0 + reduction, 0, 1);
 
-        return Math.Max(0, rawDamage * damageMultiplier);
+        return new NavalStrikeDamageBreakdown(
+            Math.Max(0, rawDamage * damageMultiplier),
+            targetedAa,
+            1.0 - damageMultiplier);
     }
 
     private static double SumFleetAntiAir(BattleLines lines)
@@ -609,7 +707,8 @@ public class BattleSimulator
 
     private static int ResolvePreemptiveAntiAirDefense(Ship target, double bomberWingAverageAgility, Random random)
     {
-        var aaChance = 0.20 * Math.Max(0.9 - 0.02 * bomberWingAverageAgility, 0.01);
+        var aaChance = Hoi4Defines.ANTI_AIR_TARGETTING_TO_CHANCE *
+                       Math.Max(Hoi4Defines.ANTI_AIR_TARGETING - Hoi4Defines.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * bomberWingAverageAgility, 0.01);
 
         if (random.NextDouble() > aaChance)
         {
@@ -619,7 +718,7 @@ public class BattleSimulator
         var aa = Math.Max(0, target.GetFinalStats().AntiAir);
         var destroyedPlanes = 10 * aa * Hoi4Defines.ANTI_AIR_ATTACK_TO_AMOUNT;
         var rounded = StochasticRound(destroyedPlanes, random);
-        return Math.Clamp(rounded, 0, 10);
+        return rounded;
     }
 
     private static int StochasticRound(double value, Random random)
@@ -631,7 +730,8 @@ public class BattleSimulator
 
         var floor = (int)Math.Floor(value);
         var fraction = value - floor;
-        return floor + (random.NextDouble() < fraction ? 1 : 0);
+        var randomValue = random.NextDouble();
+        return floor + (randomValue < fraction ? 1 : 0);
     }
 
     private static IEnumerable<(Ship Target, double Weight)> BuildAirTargetCandidates(BattleLines enemyLines)
@@ -1475,6 +1575,10 @@ public class BattleSimulator
         double defenderCarrierPlaneDamageDealt,
         IReadOnlyDictionary<string, double> attackerPlaneDamageByType,
         IReadOnlyDictionary<string, double> defenderPlaneDamageByType,
+        IReadOnlyDictionary<string, int> attackerCarrierSortiesByShipId,
+        IReadOnlyDictionary<string, int> defenderCarrierSortiesByShipId,
+        IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> attackerCarrierSortiesByShipIdAndHour,
+        IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> defenderCarrierSortiesByShipIdAndHour,
         List<string> hourlyLog,
         List<ActionResult> allActions)
     {
@@ -1482,7 +1586,13 @@ public class BattleSimulator
         var defenderProductionLost = GetSunkProductionCost(scenario.Defender.Fleet.Ships);
         var attackerToDefenderProductionLossRatio = SafeRatio(attackerProductionLost, defenderProductionLost);
         var defenderToAttackerProductionLossRatio = SafeRatio(defenderProductionLost, attackerProductionLost);
-        var shipReports = BuildShipReports(scenario, allActions);
+        var shipReports = BuildShipReports(
+            scenario,
+            allActions,
+            attackerCarrierSortiesByShipId,
+            defenderCarrierSortiesByShipId,
+            attackerCarrierSortiesByShipIdAndHour,
+            defenderCarrierSortiesByShipIdAndHour);
         var attackerPlanesAtStart = GetFleetPlaneStrength(scenario.Attacker.Fleet, _ => true);
         var defenderPlanesAtStart = GetFleetPlaneStrength(scenario.Defender.Fleet, _ => true);
         var attackerPlanesLost = new PlaneStrength(
@@ -1584,7 +1694,13 @@ public class BattleSimulator
         return numerator / denominator;
     }
 
-    private static List<ShipBattleReport> BuildShipReports(BattleScenario scenario, List<ActionResult> allActions)
+    private static List<ShipBattleReport> BuildShipReports(
+        BattleScenario scenario,
+        List<ActionResult> allActions,
+        IReadOnlyDictionary<string, int> attackerCarrierSortiesByShipId,
+        IReadOnlyDictionary<string, int> defenderCarrierSortiesByShipId,
+        IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> attackerCarrierSortiesByShipIdAndHour,
+        IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> defenderCarrierSortiesByShipIdAndHour)
     {
         var allShips = scenario.Attacker.Fleet.Ships
             .Select(ship => (Ship: ship, Side: "Attacker"))
@@ -1620,6 +1736,24 @@ public class BattleSimulator
             var attemptedRetreatButSunk = attemptedRetreat && entry.Ship.IsSunk;
             var maxHp = entry.Ship.GetFinalStats().Hp;
             var hpPercentage = maxHp <= 0 ? 0 : entry.Ship.CurrentHP / maxHp;
+            var carrierSortiesByShipId = entry.Side == "Attacker" ? attackerCarrierSortiesByShipId : defenderCarrierSortiesByShipId;
+            var carrierPlaneSorties = carrierSortiesByShipId.TryGetValue(entry.Ship.ID, out var sorties) ? sorties : 0;
+            var carrierSortiesByShipIdAndHour = entry.Side == "Attacker"
+                ? attackerCarrierSortiesByShipIdAndHour
+                : defenderCarrierSortiesByShipIdAndHour;
+            var carrierSortiesByHour = carrierSortiesByShipIdAndHour.TryGetValue(entry.Ship.ID, out var sortiesByHour)
+                ? sortiesByHour
+                    .OrderBy(entry => entry.Key)
+                    .Select(entry => new CarrierSortieReportEntry(
+                        entry.Key,
+                        entry.Value.SortiePlanes,
+                        entry.Value.PlanesLost,
+                        entry.Value.SelectedTargets,
+                        entry.Value.TargetAntiAirDefense,
+                        entry.Value.CombinedFleetAaDamageReduction,
+                        entry.Value.FinalDamageDealt))
+                    .ToList()
+                : new List<CarrierSortieReportEntry>();
 
             reports.Add(new ShipBattleReport(
                 entry.Ship.ID,
@@ -1633,10 +1767,160 @@ public class BattleSimulator
                 hpPercentage,
                 entry.Ship.GetFinalStats().ProductionCost,
                 damagedShips.Sum(damageEvent => damageEvent.Damage),
+                carrierPlaneSorties,
+                carrierSortiesByHour,
                 damagedShips));
         }
 
         return reports;
+    }
+
+    private static void AccumulateCarrierSorties(
+        BattleParticipant participant,
+        BattleLines ownLines,
+        AirSortieSnapshot snapshot,
+        NavalStrikeSelectionSummary strikeSummary,
+        int hour,
+        Dictionary<string, int> aggregateSortiesByShipId,
+        Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>> aggregateSortiesByShipIdAndHour)
+    {
+        if (!snapshot.IsSortieHour || snapshot.CarrierSortiePlanes <= 0)
+        {
+            return;
+        }
+
+        var carrierAssignedByShip = GetCarrierAssignedBomberPlanesByShip(participant, ownLines);
+        var totalAssigned = carrierAssignedByShip.Values.Sum();
+
+        if (totalAssigned <= 0)
+        {
+            return;
+        }
+
+        var provisional = new List<(string ShipId, int BaseSorties, double FractionalPart)>();
+        var allocated = 0;
+
+        foreach (var entry in carrierAssignedByShip)
+        {
+            var exact = snapshot.CarrierSortiePlanes * (entry.Value / (double)totalAssigned);
+            var baseSorties = (int)Math.Floor(exact);
+            provisional.Add((entry.Key, baseSorties, exact - baseSorties));
+            allocated += baseSorties;
+        }
+
+        var remainder = snapshot.CarrierSortiePlanes - allocated;
+        var orderedForRemainder = provisional
+            .OrderByDescending(entry => entry.FractionalPart)
+            .ThenBy(entry => entry.ShipId, StringComparer.Ordinal)
+            .ToList();
+
+        for (var i = 0; i < remainder; i++)
+        {
+            var index = i % orderedForRemainder.Count;
+            var entry = orderedForRemainder[index];
+            orderedForRemainder[index] = (entry.ShipId, entry.BaseSorties + 1, entry.FractionalPart);
+        }
+
+        var lostPlanesProvisional = new List<(string ShipId, int LostPlanes, double FractionalPart)>();
+        var lostPlanesAllocated = 0;
+
+        foreach (var entry in orderedForRemainder)
+        {
+            var exactLost = snapshot.CarrierSortiePlanes <= 0
+                ? 0
+                : strikeSummary.CarrierBombersShotDown * (entry.BaseSorties / (double)snapshot.CarrierSortiePlanes);
+            var baseLost = (int)Math.Floor(exactLost);
+            lostPlanesProvisional.Add((entry.ShipId, baseLost, exactLost - baseLost));
+            lostPlanesAllocated += baseLost;
+        }
+
+        var lostPlanesRemainder = Math.Max(0, strikeSummary.CarrierBombersShotDown - lostPlanesAllocated);
+        var lostPlanesByShip = lostPlanesProvisional
+            .OrderByDescending(entry => entry.FractionalPart)
+            .ThenBy(entry => entry.ShipId, StringComparer.Ordinal)
+            .ToDictionary(entry => entry.ShipId, entry => entry.LostPlanes, StringComparer.Ordinal);
+
+        var lostRemainderOrder = lostPlanesProvisional
+            .OrderByDescending(entry => entry.FractionalPart)
+            .ThenBy(entry => entry.ShipId, StringComparer.Ordinal)
+            .ToList();
+
+        for (var i = 0; i < lostPlanesRemainder && lostRemainderOrder.Count > 0; i++)
+        {
+            var shipId = lostRemainderOrder[i % lostRemainderOrder.Count].ShipId;
+            lostPlanesByShip[shipId] = lostPlanesByShip[shipId] + 1;
+        }
+
+        foreach (var entry in orderedForRemainder)
+        {
+            aggregateSortiesByShipId[entry.ShipId] = aggregateSortiesByShipId.TryGetValue(entry.ShipId, out var current)
+                ? current + entry.BaseSorties
+                : entry.BaseSorties;
+
+            if (!aggregateSortiesByShipIdAndHour.TryGetValue(entry.ShipId, out var sortiesByHour))
+            {
+                sortiesByHour = new Dictionary<int, CarrierSortieHourMetrics>();
+                aggregateSortiesByShipIdAndHour[entry.ShipId] = sortiesByHour;
+            }
+
+            var share = snapshot.CarrierSortiePlanes <= 0 ? 0 : entry.BaseSorties / (double)snapshot.CarrierSortiePlanes;
+            var selectedTargets = FormatCarrierTargetSelectionSummary(strikeSummary.CarrierTargetSelections);
+
+            if (sortiesByHour.TryGetValue(hour, out var currentForHour))
+            {
+                currentForHour.SortiePlanes += entry.BaseSorties;
+                currentForHour.PlanesLost += lostPlanesByShip.TryGetValue(entry.ShipId, out var lostForShip) ? lostForShip : 0;
+                currentForHour.FinalDamageDealt += strikeSummary.CarrierDamageDealt * share;
+            }
+            else
+            {
+                sortiesByHour[hour] = new CarrierSortieHourMetrics(
+                    entry.BaseSorties,
+                    lostPlanesByShip.TryGetValue(entry.ShipId, out var lostForShip) ? lostForShip : 0,
+                    selectedTargets,
+                    strikeSummary.CarrierAverageTargetAaDefense,
+                    strikeSummary.CarrierAverageCombinedFleetAaDamageReduction,
+                    strikeSummary.CarrierDamageDealt * share);
+            }
+        }
+    }
+
+    private static string FormatCarrierTargetSelectionSummary(IReadOnlyDictionary<string, int> selections)
+    {
+        if (selections.Count == 0)
+        {
+            return "none";
+        }
+
+        return string.Join(", ", selections
+            .OrderByDescending(entry => entry.Value)
+            .ThenBy(entry => entry.Key, StringComparer.Ordinal)
+            .Take(3)
+            .Select(entry => $"{entry.Key}:{entry.Value}"));
+    }
+
+    private static Dictionary<string, int> GetCarrierAssignedBomberPlanesByShip(BattleParticipant participant, BattleLines ownLines)
+    {
+        var assigned = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var carrier in ownLines.Carriers)
+        {
+            if (!participant.Fleet.CarrierAirwingsByShipDesign.TryGetValue(carrier.Design.ID, out var assignments))
+            {
+                continue;
+            }
+
+            var bomberPlanes = assignments
+                .Where(assignment => assignment.Type == AirwingType.Bomber)
+                .Sum(assignment => assignment.PlaneCount);
+
+            if (bomberPlanes > 0)
+            {
+                assigned[carrier.ID] = bomberPlanes;
+            }
+        }
+
+        return assigned;
     }
 
     private sealed class AirSortieSnapshot
@@ -1644,6 +1928,7 @@ public class BattleSimulator
         public bool IsSortieHour;
         public int CarrierAssignedPlanes;
         public int CarrierSortiePlanes;
+        public double CarrierSortieEfficiencyMultiplier;
         public double CarrierTrafficMultiplier;
         public int ExternalEligiblePlanes;
         public int ExternalPlanesJoining;
@@ -1663,6 +1948,7 @@ public class BattleSimulator
             bool isSortieHour,
             int carrierAssignedPlanes,
             int carrierSortiePlanes,
+            double carrierSortieEfficiencyMultiplier,
             double carrierTrafficMultiplier,
             int externalEligiblePlanes,
             int externalPlanesJoining,
@@ -1681,6 +1967,7 @@ public class BattleSimulator
             IsSortieHour = isSortieHour;
             CarrierAssignedPlanes = carrierAssignedPlanes;
             CarrierSortiePlanes = carrierSortiePlanes;
+            CarrierSortieEfficiencyMultiplier = carrierSortieEfficiencyMultiplier;
             CarrierTrafficMultiplier = carrierTrafficMultiplier;
             ExternalEligiblePlanes = externalEligiblePlanes;
             ExternalPlanesJoining = externalPlanesJoining;
@@ -1701,23 +1988,78 @@ public class BattleSimulator
     private sealed class NavalStrikeSelectionSummary
     {
         public Dictionary<string, int> TargetSelections;
+        public Dictionary<string, int> CarrierTargetSelections;
         public int BombersShotDown;
+        public int CarrierBombersShotDown;
         public double TotalDamageDealt;
         public double CarrierDamageDealt;
+        public double CarrierAverageTargetAaDefense;
+        public double CarrierAverageCombinedFleetAaDamageReduction;
         public Dictionary<string, double> DamageByPlaneType;
 
         public NavalStrikeSelectionSummary(
             Dictionary<string, int> targetSelections,
+            Dictionary<string, int> carrierTargetSelections,
             int bombersShotDown,
+            int carrierBombersShotDown,
             double totalDamageDealt,
             double carrierDamageDealt,
+            double carrierAverageTargetAaDefense,
+            double carrierAverageCombinedFleetAaDamageReduction,
             Dictionary<string, double> damageByPlaneType)
         {
             TargetSelections = targetSelections;
+            CarrierTargetSelections = carrierTargetSelections;
             BombersShotDown = bombersShotDown;
+            CarrierBombersShotDown = carrierBombersShotDown;
             TotalDamageDealt = totalDamageDealt;
             CarrierDamageDealt = carrierDamageDealt;
+            CarrierAverageTargetAaDefense = carrierAverageTargetAaDefense;
+            CarrierAverageCombinedFleetAaDamageReduction = carrierAverageCombinedFleetAaDamageReduction;
             DamageByPlaneType = damageByPlaneType;
+        }
+    }
+
+    private sealed class NavalStrikeDamageBreakdown
+    {
+        public double FinalDamageBeforeHpClamp;
+        public double TargetedAaDefense;
+        public double CombinedFleetAaDamageReduction;
+
+        public NavalStrikeDamageBreakdown(
+            double finalDamageBeforeHpClamp,
+            double targetedAaDefense,
+            double combinedFleetAaDamageReduction)
+        {
+            FinalDamageBeforeHpClamp = finalDamageBeforeHpClamp;
+            TargetedAaDefense = targetedAaDefense;
+            CombinedFleetAaDamageReduction = combinedFleetAaDamageReduction;
+        }
+    }
+
+    private sealed class CarrierSortieHourMetrics
+    {
+        public int SortiePlanes;
+        public int PlanesLost;
+        public string SelectedTargets;
+        public double TargetAntiAirDefense;
+        public double CombinedFleetAaDamageReduction;
+        public double FinalDamageDealt;
+
+        public CarrierSortieHourMetrics(
+            int sortiePlanes,
+            int planesLost,
+            string selectedTargets,
+            double targetAntiAirDefense,
+            double combinedFleetAaDamageReduction,
+            double finalDamageDealt)
+        {
+            SortiePlanes = sortiePlanes;
+            PlanesLost = planesLost;
+            SelectedTargets = selectedTargets;
+            TargetAntiAirDefense = targetAntiAirDefense;
+            CombinedFleetAaDamageReduction = combinedFleetAaDamageReduction;
+            FinalDamageDealt = finalDamageDealt;
         }
     }
 }

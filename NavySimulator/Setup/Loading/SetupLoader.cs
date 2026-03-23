@@ -281,6 +281,7 @@ public class SetupLoader
                 spirit.StatModifiers.ToDomain(),
                 spirit.StatAverages.ToDomain(),
                 spirit.StatMultipliers.ToDomain(),
+                spirit.SortieEffiency,
                 ParseRoles(spirit.AppliesToRoles),
                 ParseTypes(spirit.AppliesToTypes ?? [])));
 

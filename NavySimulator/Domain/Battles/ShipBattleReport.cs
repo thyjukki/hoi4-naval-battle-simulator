@@ -13,6 +13,8 @@ public class ShipBattleReport
     public double HpPercentage;
     public double ProductionCost;
     public double TotalDamageDone;
+    public int CarrierPlaneSorties;
+    public List<CarrierSortieReportEntry> CarrierSortiesByHour;
     public List<ShipDamageReportEntry> DamagedShips;
 
     public ShipBattleReport(
@@ -27,6 +29,8 @@ public class ShipBattleReport
         double hpPercentage,
         double productionCost,
         double totalDamageDone,
+        int carrierPlaneSorties,
+        List<CarrierSortieReportEntry> carrierSortiesByHour,
         List<ShipDamageReportEntry> damagedShips)
     {
         ShipID = shipId;
@@ -40,6 +44,8 @@ public class ShipBattleReport
         HpPercentage = hpPercentage;
         ProductionCost = productionCost;
         TotalDamageDone = totalDamageDone;
+        CarrierPlaneSorties = carrierPlaneSorties;
+        CarrierSortiesByHour = carrierSortiesByHour;
         DamagedShips = damagedShips;
     }
 }

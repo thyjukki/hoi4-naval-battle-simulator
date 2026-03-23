@@ -440,6 +440,30 @@ static void AppendShipDetailLines(
     lines.Add($"{indent}  Production Cost: {shipReport.ProductionCost:F1}");
     lines.Add($"{indent}  Total Damage Done: {shipReport.TotalDamageDone:F1}");
 
+    if (shipById.TryGetValue(shipReport.ShipID, out var ship) && ship.Design.Hull.Role == ShipRole.Carrier)
+    {
+        lines.Add($"{indent}  Carrier Plane Sorties: {shipReport.CarrierPlaneSorties}");
+
+        if (shipReport.CarrierSortiesByHour.Count == 0)
+        {
+            lines.Add($"{indent}  Carrier Sorties By Hour: none");
+        }
+        else
+        {
+            lines.Add($"{indent}  Carrier Sorties By Hour:");
+
+            foreach (var sortieEntry in shipReport.CarrierSortiesByHour)
+            {
+                lines.Add(
+                    $"{indent}    - Hour {sortieEntry.HourTick}, Sorties {sortieEntry.SortiePlanes}, Planes Lost {sortieEntry.PlanesLost}, " +
+                    $"Selected Targets {sortieEntry.SelectedTargets}, " +
+                    $"Target AA Defense {sortieEntry.TargetAntiAirDefense:F2}, " +
+                    $"Combined Fleet AA Damage Reduction {sortieEntry.CombinedFleetAaDamageReduction:P1}, " +
+                    $"Final Damage Dealt {sortieEntry.FinalDamageDealt:F1}");
+            }
+        }
+    }
+
     if (outgoingHitShots.Count == 0)
     {
         lines.Add($"{indent}  Damaged Ships: none");
