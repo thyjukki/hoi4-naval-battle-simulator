@@ -170,5 +170,8 @@ public static class Hoi4Defines
             _ => SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR
         };
     }
+
+    public const int NightEndHour = 0; // 5
+    public const int NightStartHour = 24; //17
 }
 

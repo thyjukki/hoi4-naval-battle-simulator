@@ -704,7 +704,7 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet, Fleet opposingFleet
 
     Console.WriteLine(
         $"  Fleet Firepower: LA {totalStats.LightAttack:F1}, HA {totalStats.HeavyAttack:F1}, Torp {totalStats.TorpedoAttack:F1}, " +
-        $"Depth {totalStats.DepthChargeAttack:F1}, AA {totalStats.AntiAir:F1}");
+        $"Depth {totalStats.DepthChargeAttack:F1}, AA {totalStats.AntiAir*Hoi4Defines.SHIP_TO_FLEET_ANTI_AIR_RATIO:F1}");
 
     if (fleet.CarrierAirwingsByShipDesign.Count > 0)
     {
