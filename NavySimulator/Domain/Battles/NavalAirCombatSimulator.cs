@@ -2,9 +2,9 @@ using NavySimulator.Domain;
 
 namespace NavySimulator.Domain.Battles;
 
-internal static class NavalAirCombatSimulator
+internal class NavalAirCombatSimulator
 {
-    public static AirSortieSnapshot CalculateAirSortieSnapshot(
+    public virtual AirSortieSnapshot CalculateAirSortieSnapshot(
         BattleScenario scenario,
         BattleParticipant participant,
         BattleLines ownLines,
@@ -123,7 +123,7 @@ internal static class NavalAirCombatSimulator
             carrierStrikeWingProfiles);
     }
 
-    public static Dictionary<string, CarrierWingState> BuildCarrierWingStatesByWingKey(Fleet fleet)
+    public virtual Dictionary<string, CarrierWingState> BuildCarrierWingStatesByWingKey(Fleet fleet)
     {
         var wingStatesByWingKey = new Dictionary<string, CarrierWingState>(StringComparer.Ordinal);
         var carriers = fleet.Ships.Where(ship => ship.Design.Hull.Role == ShipRole.Carrier);
@@ -153,7 +153,7 @@ internal static class NavalAirCombatSimulator
         return wingStatesByWingKey;
     }
 
-    public static void ApplyCarrierWingLosses(
+    public virtual void ApplyCarrierWingLosses(
         IReadOnlyDictionary<string, CarrierWingState> carrierWingStatesByWingKey,
         IReadOnlyDictionary<string, int> lossesByWingKey)
     {
@@ -168,7 +168,7 @@ internal static class NavalAirCombatSimulator
         }
     }
 
-    public static NavalStrikeSelectionSummary ResolveNavalStrike(
+    public virtual NavalStrikeSelectionSummary ResolveNavalStrike(
         BattleLines enemyLines,
         AirSortieSnapshot snapshot,
         Random random)
@@ -350,7 +350,7 @@ internal static class NavalAirCombatSimulator
             damageByPlaneType);
     }
 
-    public static string FormatAirTargetSelectionSummary(NavalStrikeSelectionSummary summary)
+    public virtual string FormatAirTargetSelectionSummary(NavalStrikeSelectionSummary summary)
     {
         var selections = summary.TargetSelections;
 
@@ -366,7 +366,7 @@ internal static class NavalAirCombatSimulator
             .Select(entry => $"{entry.Key}:{entry.Value}"));
     }
 
-    public static void AccumulateCarrierSorties(
+    public virtual void AccumulateCarrierSorties(
         AirSortieSnapshot snapshot,
         NavalStrikeSelectionSummary strikeSummary,
         int hour,

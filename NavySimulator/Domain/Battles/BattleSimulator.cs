@@ -2,6 +2,18 @@ namespace NavySimulator.Domain.Battles;
 
 public class BattleSimulator
 {
+    private readonly NavalAirCombatSimulator navalAirCombatSimulator;
+
+    public BattleSimulator()
+        : this(new NavalAirCombatSimulator())
+    {
+    }
+
+    internal BattleSimulator(NavalAirCombatSimulator navalAirCombatSimulator)
+    {
+        this.navalAirCombatSimulator = navalAirCombatSimulator;
+    }
+
     public BattleResult Simulate(BattleScenario scenario)
     {
         var hourlyLog = new List<string>();
@@ -18,8 +30,8 @@ public class BattleSimulator
         var defenderCarrierSortiesByShipIdAndHour = new Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>>(StringComparer.Ordinal);
         var attackerPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
         var defenderPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
-        var attackerCarrierWingStatesByWingKey = NavalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Attacker.Fleet);
-        var defenderCarrierWingStatesByWingKey = NavalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
+        var attackerCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Attacker.Fleet);
+        var defenderCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
         var attackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
         var defenderFiringOrder = scenario.Defender.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
 
@@ -35,7 +47,7 @@ public class BattleSimulator
 
             var attackerScreening = BattleLineCalculator.CalculateScreening(attackerLines, attackerPositioning);
             var defenderScreening = BattleLineCalculator.CalculateScreening(defenderLines, defenderPositioning);
-            var attackerAirSortie = NavalAirCombatSimulator.CalculateAirSortieSnapshot(
+            var attackerAirSortie = navalAirCombatSimulator.CalculateAirSortieSnapshot(
                 scenario,
                 scenario.Attacker,
                 attackerLines,
@@ -43,7 +55,7 @@ public class BattleSimulator
                 defenderLines,
                 attackerCarrierWingStatesByWingKey,
                 hour);
-            var defenderAirSortie = NavalAirCombatSimulator.CalculateAirSortieSnapshot(
+            var defenderAirSortie = navalAirCombatSimulator.CalculateAirSortieSnapshot(
                 scenario,
                 scenario.Defender,
                 defenderLines,
@@ -51,17 +63,17 @@ public class BattleSimulator
                 attackerLines,
                 defenderCarrierWingStatesByWingKey,
                 hour);
-            var attackerAirTargetSelections = NavalAirCombatSimulator.ResolveNavalStrike(defenderLines, attackerAirSortie, random);
-            var defenderAirTargetSelections = NavalAirCombatSimulator.ResolveNavalStrike(attackerLines, defenderAirSortie, random);
-            NavalAirCombatSimulator.ApplyCarrierWingLosses(attackerCarrierWingStatesByWingKey, attackerAirTargetSelections.CarrierBombersShotDownByWingKey);
-            NavalAirCombatSimulator.ApplyCarrierWingLosses(defenderCarrierWingStatesByWingKey, defenderAirTargetSelections.CarrierBombersShotDownByWingKey);
-            NavalAirCombatSimulator.AccumulateCarrierSorties(
+            var attackerAirTargetSelections = navalAirCombatSimulator.ResolveNavalStrike(defenderLines, attackerAirSortie, random);
+            var defenderAirTargetSelections = navalAirCombatSimulator.ResolveNavalStrike(attackerLines, defenderAirSortie, random);
+            navalAirCombatSimulator.ApplyCarrierWingLosses(attackerCarrierWingStatesByWingKey, attackerAirTargetSelections.CarrierBombersShotDownByWingKey);
+            navalAirCombatSimulator.ApplyCarrierWingLosses(defenderCarrierWingStatesByWingKey, defenderAirTargetSelections.CarrierBombersShotDownByWingKey);
+            navalAirCombatSimulator.AccumulateCarrierSorties(
                 attackerAirSortie,
                 attackerAirTargetSelections,
                 hour,
                 attackerCarrierSortiesByShipId,
                 attackerCarrierSortiesByShipIdAndHour);
-            NavalAirCombatSimulator.AccumulateCarrierSorties(
+            navalAirCombatSimulator.AccumulateCarrierSorties(
                 defenderAirSortie,
                 defenderAirTargetSelections,
                 hour,
@@ -123,8 +135,8 @@ public class BattleSimulator
                     $"external {defenderAirSortie.ExternalPlanesJoining}/{defenderAirSortie.ExternalEligiblePlanes} (cap {defenderAirSortie.ExternalJoinCap:F1})");
                 hourlyLog.Add($"Hour {hour}: air disruption - placeholder disabled (fighter interception not implemented yet)");
                 hourlyLog.Add(
-                    $"Hour {hour}: air targets - attacker bomber wings {attackerAirSortie.BomberWings}, picks {NavalAirCombatSimulator.FormatAirTargetSelectionSummary(attackerAirTargetSelections)}; " +
-                    $"defender bomber wings {defenderAirSortie.BomberWings}, picks {NavalAirCombatSimulator.FormatAirTargetSelectionSummary(defenderAirTargetSelections)}");
+                    $"Hour {hour}: air targets - attacker bomber wings {attackerAirSortie.BomberWings}, picks {navalAirCombatSimulator.FormatAirTargetSelectionSummary(attackerAirTargetSelections)}; " +
+                    $"defender bomber wings {defenderAirSortie.BomberWings}, picks {navalAirCombatSimulator.FormatAirTargetSelectionSummary(defenderAirTargetSelections)}");
                 hourlyLog.Add(
                     $"Hour {hour}: air AA preemptive - attacker bombers shot down {attackerAirTargetSelections.BombersShotDown}, " +
                     $"defender bombers shot down {defenderAirTargetSelections.BombersShotDown}");
