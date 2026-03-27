@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <None Include="bin\Debug\net10.0\Data\battle-scenario.json" />
         <None Include="Data\**\*.json" CopyToOutputDirectory="PreserveNewest" />
         <None Update="Data\researches\fire-and-damage-controll.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -34,6 +35,12 @@
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
         <None Update="Data\researches\special_project.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\force-compositions\cv_test.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Data\battle-scenario-bk.json">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>

@@ -2,18 +2,22 @@
   "$schema": "../schemas/force-compositions.schema.json",
   "fleets": [
     {
-      "id": "4cv_10bb_29_cl",
+      "id": "1cv_no_plane",
       "shipDesigns": {
-        "39_carrier": 4,
-        "39_battleship_balanced": 10,
-        "cl3_armor4_full_la": 29
+        "39_carrier": 1
+      }
+    },
+    {
+      "id": "1cv_1_plane",
+      "shipDesigns": {
+        "39_carrier": 1
       },
       "carrierAirwings": {
         "39_carrier": [
           {
             "planeID": "bomber_1936_untrained",
             "type": "bomber",
-            "airwings": 8
+            "airwings": 1
           }
         ]
       }

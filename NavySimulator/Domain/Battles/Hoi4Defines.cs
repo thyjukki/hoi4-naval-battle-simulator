@@ -78,6 +78,9 @@ public static class Hoi4Defines
     public const double COMBAT_DAMAGE_TO_STR_FACTOR = 0.5;
     public const double COMBAT_DAMAGE_TO_ORG_FACTOR = 1.0;
 
+    public const double NAVAL_STRIKE_DAMAGE_TO_STR = 1.25;
+    public const double NAVAL_STRIKE_DAMAGE_TO_ORG = 1.25;
+
     public static double[] NAVY_PIERCING_THRESHOLDS =
     [
         2.00,

@@ -1,0 +1,29 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "base_test",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 100,
+    "iterations": 1,
+    "attacker": {
+      "fleetID": "1cv_1_plane",
+      "commander": "",
+      "doctrine": "",
+      "externalNavalStrikePlanes": 0,
+      "researchIDs": [],
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
+    },
+    "defender": {
+      "fleetID": "1cv_no_plane",
+      "commander": "",
+      "doctrine": "",
+      "externalNavalStrikePlanes": 0,
+      "researchIDs": [],
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
+    }
+  }
+}
+
