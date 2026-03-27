@@ -234,6 +234,12 @@ public class SetupLoader
                     {
                         errors.Add($"fleet '{fleet.ID}' has non-positive airwings value {assignment.Airwings} for shipDesignID '{shipDesignId}'.");
                     }
+
+                    if (assignment.PlaneCount < 0)
+                    {
+                        errors.Add(
+                            $"fleet '{fleet.ID}' has carrierAirwings entry with non-positive total plane count {assignment.PlaneCount} for shipDesignID '{shipDesignId}'.");
+                    }
                 }
             }
         }
@@ -932,8 +938,9 @@ public class SetupLoader
                 {
                     continue;
                 }
-
-                assignments.Add(new CarrierAirwingAssignment(assignment.PlaneID, type, assignment.Airwings));
+                
+                
+                assignments.Add(new CarrierAirwingAssignment(assignment.PlaneID, type, assignment.Airwings, assignment.PlaneCount == 0 ? 10 : assignment.PlaneCount));
             }
 
             if (assignments.Count > 0)

@@ -13,7 +13,7 @@ internal class NavalAirCombatSimulator
         IReadOnlyDictionary<string, CarrierWingState> carrierWingStatesByWingKey,
         int hour)
     {
-        var sortieDelayHours = Math.Max(1, (int)Math.Round(Hoi4Defines.CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT));
+        var sortieDelayHours = Math.Max(1, Hoi4Defines.CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT);
         var elapsedCombatHours = Math.Max(0, hour - 1);
         var isSortieHour = elapsedCombatHours % sortieDelayHours == 0;
 
@@ -145,7 +145,7 @@ internal class NavalAirCombatSimulator
                         carrier.ID,
                         assignment.PlaneID,
                         assignment.Type,
-                        10);
+                        assignment.PlaneCount);
                 }
             }
         }
@@ -445,7 +445,7 @@ internal class NavalAirCombatSimulator
                 .ToList();
 
             var carrierTotalAvailablePlanes = carrierWings.Sum(wing => wing.CurrentPlanes);
-            var sortiePlaneBudget = (int)Math.Floor(carrierTotalAvailablePlanes * carrierTotalFlightMultiplier);
+            var sortiePlaneBudget = (int)Math.Round(carrierTotalAvailablePlanes * carrierTotalFlightMultiplier);
 
             if (sortiePlaneBudget <= 0)
             {
@@ -656,7 +656,7 @@ internal class NavalAirCombatSimulator
         BattleLines defendingLines)
     {
         var hitRatio = Math.Clamp((navalTargeting / 10.0) * Hoi4Defines.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
-        var hitPlanes = planesRemaining * hitRatio;
+        var hitPlanes = Math.Round(planesRemaining * hitRatio);
         var rawDamage = hitPlanes * navalAttack;
 
         if (isCarrierBased)

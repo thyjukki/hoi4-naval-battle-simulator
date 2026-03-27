@@ -120,7 +120,7 @@ public static class Hoi4Defines
         0.10
     ];
 
-    public static double CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
+    public static int CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
     
     public static double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
     public static double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
