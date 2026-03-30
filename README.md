@@ -1,42 +1,51 @@
 # NavySimulator
 
-NavySimulator currently focuses on **scenario setup**:
-- load hulls, modules, MIO bonuses, ship designs, fleets, and battle participants from JSON
-- build an in-memory `BattleScenario`
-- print setup summary in `Program.cs`
+NavySimulator simulates HOI4 naval battles from JSON-defined content (hulls, modules, mios, designs, fleets, researches, spirits, and planes).
 
-Current simulation scope is intentionally small:
-- ships resolve `LightAttack`, `HeavyAttack`, and `TorpedoAttack` each hour with cooldowns
-- targeting is deterministic and weapon-specific (light closest line, heavy first two lines, torpedo with screening checks)
-- battle lines are built from explicit hull `role` values (`Screen`, `Capital`, `Carrier`, `Submarine`, `Convoy`)
-- hit chance uses base chance + weapon/ship hit profiles with a minimum hit floor
-- armor/piercing, critical hits, and weather/terrain/commander/doctrine modifiers are not implemented yet
+70% 20% headsmashing and 10% actuall coding....
 
-Simulation runs in hourly rounds until one side has no ships left or `MaxHours` is reached.
+## Current Scope
+- Setup is loaded into an in-memory `BattleScenario` by `SetupLoader`.
+- Battles run in hourly ticks with separate air and surface phases (`BattleSimulator`, `NavalAirCombatSimulator`, `NavalSurfaceCombatSimulator`).
+- Air combat supports carrier/external bomber sortie timing, target selection, ship AA preemptive kills, fleet AA damage reduction, and carrier wing plane-loss tracking. Still not working...
 
-## Data Files
-Setup is split into multiple files under `NavySimulator/Data/`:
+## Scenario setup
+- Scenario is defined in `NavySimulator/Data/battle-scenario.json` with references to other data files.
+
+
+## Output
+- Full hourly logs and summaries are written under:
+  - `output/<SCENARIO_ID>_<yyyyMMdd_HHmmss>/`
+- For multi-iteration scenarios, run-specific files use `-RUN<n>` suffix and an aggregate `summary-averages.txt` is generated.
+- Ship reports are split by side:
+  - `output/.../attacker/`
+  - `output/.../defender/`
+
+## Data Layout
+Data is loaded from `NavySimulator/Data/` folders (with legacy single-file fallback still supported by `SetupLoader`):
 - `hulls/*.json`
 - `modules/*.json`
 - `mios/*.json`
 - `ship-designs/*.json`
-- `force-compositions.json` (fleet composition by `shipDesignID -> count`)
+- `researches/*.json`
+- `spirits/*.json`
+- `planes/*.json`
+- `force-compositions/*.json`
 - `battle-scenario.json`
 
-Each file can contain multiple items (`hulls`, `modules`, `mios`, `shipDesigns`) and `SetupLoader` merges all files in each folder.
-Hull entries include `role` (`Screen`, `Capital`, `Carrier`, `Submarine`, `Convoy`) used by battle-line grouping and screening calculations.
+There is also schema files for each data type under `NavySimulator/Data/Schemas/'. If using a JSON editor with schema validation, you can point to these for autocompletion and error checking.
 
-## Run
+## Build, Run, Test
 ```powershell
 dotnet build "NavySimulator.sln"
 dotnet run --project "NavySimulator/NavySimulator.csproj"
+dotnet test "NavySimulator.sln" -p:UseAppHost=false
 ```
 
-## Key Types
-- Loader: `NavySimulator/Setup/Loading/SetupLoader.cs`
-- Validation exception: `NavySimulator/Setup/Validation/SetupValidationException.cs`
-- Scenario: `NavySimulator/Domain/Battles/BattleScenario.cs`
-- Simulator: `NavySimulator/Domain/Battles/BattleSimulator.cs`
-- Participants: `NavySimulator/Domain/Battles/BattleParticipant.cs`
-- Fleet: `NavySimulator/Domain/Fleets/Fleet.cs`
-
+## TODO
+- Clean up project structure
+- Add command line args for scenario selection, iteration count, and toggles
+- Fix air combat logic
+- Critical hits
+- Experience loss and gain
+- Weather effects

@@ -15,11 +15,11 @@
 - Battles have a terrain (sea region) that provides bonuses or penalties to certain stats
 - Battle participants have a commander that provides bonuses to certain stats
 - Battle participants have a doctrine that provides bonuses to certain stats
-- Battle participants have a technology level that provides bonuses to certain stats
-- Battle participants have a nation modifiers that provides bonuses to certain stats
+- Battle participants have researches that provide bonuses to certain stats
+- Battle participants have spirits that provide bonuses to certain stats
 - Battle has a weather condition that provides bonuses or penalties to certain stats
-- The app will load ship fleet compositions, ship designs and modules from JSON files
-- The app will simulate battles between fleets and output results to the console.
+- The app loads fleet compositions, ship designs, modules, mios, researches, spirits, and planes from JSON files
+- The app simulates battles between fleets and writes hourly/summary reports to output files.
 
 ## Possible stats
 - Speed
@@ -46,21 +46,23 @@
   - Carrier group
   - Submarine group
 - Battle is simulated in rounds of hours
-- Each rounds all ships will fire their guns and torpedoes, and then take damage
-- Weapons have cooldown, and carriers planes have a cooldown for flying
+- Surface combat resolves per ship and applies damage immediately, so later shots cannot target ships sunk earlier in the same hour
+- Weapons use universal cooldown cadence by weapon type (all ships fire same weapon type on the same eligible hours)
+- Carriers planes have a cooldown for flying
 - Round is repeated until one fleet is destroyed, or set number of hours have passed
 - Screening efficiency is determined by the ratio of screening group to battle line
 - Carrier screening efficiency is determined by the ratio of carrier group to battle line
+- Scenario supports `continueAfterRetreat` and `dontRetreat` toggles
 
 ## Battle mechanics
 - Battle mechanics are explained in hoi4 wiki https://hoi4.paradoxwikis.com/Naval_battle
 - 
 ## Project Snapshot
-- Solution: `NavySimulator.sln` with a single executable project: `NavySimulator/NavySimulator.csproj`.
+- Solution: `NavySimulator.sln` with executable `NavySimulator/NavySimulator.csproj` and tests `NavySimulator.Tests/NavySimulator.Tests.csproj`.
 - Target runtime: `.NET 10` (`<TargetFramework>net10.0</TargetFramework>`).
 - Language features enabled: implicit usings and nullable reference types.
 - Current app entrypoint is top-level statements in `NavySimulator/Program.cs`.
-- `Program.cs` loads scenario data from `NavySimulator/Data/`, runs `BattleSimulator`, and prints hourly logs plus final outcome.
+- `Program.cs` loads scenario data from `NavySimulator/Data/`, runs `BattleSimulator`, prints short summaries, and writes logs/reports to `output/<scenario>_<runtime>/`.
 
 ## Architecture (Current State)
 - Domain code is organized under `NavySimulator/Domain/` (`Battles`, `Fleets`, `Ships`, `Stats`) in the `NavySimulator.Domain` namespace.
@@ -68,8 +70,10 @@
 - `Ship` (`NavySimulator/Domain/Ships/Ship.cs`) owns a `ShipDesign` instance.
 - `ShipDesign` (`NavySimulator/Domain/Ships/ShipDesign.cs`) owns a `Hull`, `List<IModule>`, and optional `MioBonus`.
 - `IModule` (`NavySimulator/Domain/Ships/IModule.cs`) defines the module contract via `string ID { get; }` and `ShipStats StatModifiers { get; }`.
-- Setup data flow is constructor-injected object graph built by `SetupLoader`: `Hull/StatModule/MioBonus` -> `ShipDesign` -> `Ship` -> `Fleet` -> `BattleParticipant` -> `BattleScenario`.
-- `BattleSimulator` (`NavySimulator/Domain/Battles/BattleSimulator.cs`) runs hourly rounds with screening efficiency, deterministic targeting, cooldowns, and hit chance.
+- Setup data flow is constructor-injected object graph built by `SetupLoader`: `Hull/StatModule/MioBonus` + `Research/Spirit/Plane` -> `ShipDesign` -> `Ship` -> `Fleet` -> `BattleParticipant` -> `BattleScenario`.
+- `BattleSimulator` orchestrates hourly simulation with explicit air and surface phase helpers.
+- `NavalAirCombatSimulator` handles air sortie snapshots, strike targeting, preemptive AA, and strike damage.
+- `NavalSurfaceCombatSimulator` handles weapon actions, activation delays, cooldown cadence, targeting, hit chance, and immediate damage application.
 - No networking, database, DI container, or plugin loader are present.
 
 ## Code Patterns to Follow Here
@@ -85,21 +89,23 @@
   - `dotnet build NavySimulator.sln`
 - Run app:
   - `dotnet run --project NavySimulator/NavySimulator.csproj`
-- Verified behavior as of 2026-03-18: app prints scenario setup, then simulation hourly logs, then final battle result.
-- There are currently no test projects in the solution; if you add tests, include them in `NavySimulator.sln`.
+- Run tests:
+  - `dotnet test NavySimulator.sln -p:UseAppHost=false`
+- Verified behavior as of 2026-03-31: app prints setup + run summaries to console and writes detailed logs/reports under `output/`.
 
 ## Agent Workflow Tips for This Repo
 - For setup/data issues, start in `NavySimulator/Setup/Loading/SetupLoader.cs` and matching DTOs in `NavySimulator/Setup/Contracts/Dto/`.
 - For combat behavior issues, start in `NavySimulator/Domain/Battles/BattleSimulator.cs` and related domain models.
 - Use `scritps/import_hoi4_ship_modules.py` to refresh `NavySimulator/Data/modules/00_imported_ship_modules.json` from HOI4 source modules (`.../common/units/equipment/modules/00_ship_modules.txt`); the script prints source modifiers it intentionally skips.
 - Use `scritps/split_data_files.py` when migrating legacy monolithic `hulls.json`/`modules.json`/`mios.json`/`ship-designs.json` files into folder-based `Data/<type>/` files.
+- Data loading prefers folder-based inputs; keep new content in `Data/<type>/*.json`.
 - When introducing new behavior, demonstrate wiring in `Program.cs` so it is runnable immediately.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
-- If adding new projects (e.g., tests), update the solution file so Rider/CLI workflows stay aligned.
+- Add regression tests in `NavySimulator.Tests/Domain/Battles/` for battle logic changes.
 
 ## Known Integration Boundaries
 - External dependencies: none beyond the .NET SDK; no NuGet package references currently.
-- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `researches/*.json`, `spirits/*.json`, `force-compositions.json`, `battle-scenario.json`).
+- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `researches/*.json`, `spirits/*.json`, `planes/*.json`, `force-compositions/*.json`, `battle-scenario.json`).
 - Cross-component communication is in-memory object references only after setup is loaded.
-- Output artifact is a console executable at `NavySimulator/bin/<Configuration>/net10.0/`.
+- Output artifacts include console executable (`NavySimulator/bin/<Configuration>/net10.0/`) and run reports under `output/`.
 
