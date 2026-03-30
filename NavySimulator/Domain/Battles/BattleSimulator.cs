@@ -264,9 +264,6 @@ public class BattleSimulator
             state.Random,
             out var defenderRetreatEvents);
         state.RetreatEvents += attackerRetreatEvents + defenderRetreatEvents;
-
-        NavalSurfaceCombatSimulator.ApplyActionDamage(attackerActions);
-        NavalSurfaceCombatSimulator.ApplyActionDamage(defenderActions);
         state.AllActions.AddRange(attackerActions);
         state.AllActions.AddRange(defenderActions);
 

@@ -39,7 +39,7 @@ internal static class NavalSurfaceCombatSimulator
                 continue;
             }
 
-            results.Add(ResolveWeaponAction(
+            var lightAction = ResolveWeaponAction(
                 ship,
                 WeaponType.Light,
                 stats.LightAttack,
@@ -50,8 +50,11 @@ internal static class NavalSurfaceCombatSimulator
                 attackerScreening,
                 defenderLines,
                 defenderScreening,
-                random));
-            results.Add(ResolveWeaponAction(
+                random);
+            ApplyActionDamage(lightAction);
+            results.Add(lightAction);
+
+            var heavyAction = ResolveWeaponAction(
                 ship,
                 WeaponType.Heavy,
                 stats.HeavyAttack,
@@ -62,8 +65,11 @@ internal static class NavalSurfaceCombatSimulator
                 attackerScreening,
                 defenderLines,
                 defenderScreening,
-                random));
-            results.Add(ResolveWeaponAction(
+                random);
+            ApplyActionDamage(heavyAction);
+            results.Add(heavyAction);
+
+            var torpedoAction = ResolveWeaponAction(
                 ship,
                 WeaponType.Torpedo,
                 stats.TorpedoAttack,
@@ -74,27 +80,26 @@ internal static class NavalSurfaceCombatSimulator
                 attackerScreening,
                 defenderLines,
                 defenderScreening,
-                random));
+                random);
+            ApplyActionDamage(torpedoAction);
+            results.Add(torpedoAction);
         }
 
         return results;
     }
 
-    public static void ApplyActionDamage(List<ActionResult> actions)
+    private static void ApplyActionDamage(ActionResult action)
     {
-        foreach (var action in actions)
+        if (!action.Fired || action.Target is null)
         {
-            if (!action.Fired)
-            {
-                continue;
-            }
-
-            var targetWasAlive = action.Target is not null && !action.Target.IsSunk;
-            var appliedDamage = action.Target!.ApplyDamage(action.Damage);
-            action.AppliedHpDamage = appliedDamage.HpDamage;
-            action.AppliedOrganizationDamage = appliedDamage.OrganizationDamage;
-            action.DidKillingBlow = targetWasAlive && action.Target.IsSunk;
+            return;
         }
+
+        var targetWasAlive = !action.Target.IsSunk;
+        var appliedDamage = action.Target.ApplyDamage(action.Damage);
+        action.AppliedHpDamage = appliedDamage.HpDamage;
+        action.AppliedOrganizationDamage = appliedDamage.OrganizationDamage;
+        action.DidKillingBlow = targetWasAlive && action.Target.IsSunk;
     }
 
     public static double GetTotalDamage(List<ActionResult> actions)
