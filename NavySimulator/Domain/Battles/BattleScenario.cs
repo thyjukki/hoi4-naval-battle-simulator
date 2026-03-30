@@ -7,6 +7,7 @@ public class BattleScenario
     public readonly string Weather;
     public readonly int MaxHours;
     public readonly int Iterations;
+    public readonly int? Seed;
     public readonly BattleParticipant Attacker;
     public readonly BattleParticipant Defender;
     public readonly IReadOnlyDictionary<string, PlaneEquipment> PlanesByID;
@@ -19,6 +20,7 @@ public class BattleScenario
         string weather,
         int maxHours,
         int iterations,
+        int? seed,
         BattleParticipant attacker,
         BattleParticipant defender,
         IReadOnlyDictionary<string, PlaneEquipment> planesById,
@@ -30,6 +32,7 @@ public class BattleScenario
         Weather = weather;
         MaxHours = maxHours;
         Iterations = iterations;
+        Seed = seed;
         Attacker = attacker;
         Defender = defender;
         PlanesByID = planesById;

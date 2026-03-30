@@ -334,6 +334,7 @@ public class SetupLoader
             battleScenarioFile.BattleScenario.Weather,
             battleScenarioFile.BattleScenario.MaxHours,
             battleScenarioFile.BattleScenario.Iterations ?? 1,
+            battleScenarioFile.BattleScenario.Seed,
             attacker,
             defender,
             planeById,

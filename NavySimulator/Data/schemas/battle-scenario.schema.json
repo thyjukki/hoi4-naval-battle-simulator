@@ -17,6 +17,7 @@
         "weather": { "type": "string", "minLength": 1 },
         "maxHours": { "type": "integer", "minimum": 1 },
         "iterations": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer" },
         "continueAfterRetreat": { "type": "boolean" },
         "dontRetreat": { "type": "boolean" },
         "attacker": { "$ref": "#/$defs/participant" },

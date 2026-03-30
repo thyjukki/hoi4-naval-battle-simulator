@@ -5,7 +5,7 @@
     "terrain": "ocean",
     "weather": "clear",
     "maxHours": 1000000,
-    "iterations": 1,
+    "iterations": 3,
     "continueAfterRetreat": false,
     "dontRetreat": true,
     "attacker": {

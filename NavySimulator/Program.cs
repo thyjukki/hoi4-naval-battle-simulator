@@ -79,7 +79,10 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
     Console.WriteLine();
     Console.WriteLine("Simulation (screening + targeting + cooldowns + hit chance)");
 
-    var result = simulator.Simulate(runScenario);
+    var iterationSeed = runScenario.Seed.HasValue
+        ? unchecked(runScenario.Seed.Value + runNumber - 1)
+        : (int?)null;
+    var result = simulator.Simulate(runScenario, iterationSeed);
     iterationResults.Add(result);
 
     var fileSuffix = iterations > 1 ? $"-RUN{runNumber}" : string.Empty;
@@ -833,17 +836,21 @@ static List<string> BuildIterationsAverageSummaryLines(
         .OrderBy(group => group.Key, StringComparer.Ordinal)
         .Select(group => $"{group.Key}:{group.Count()}");
     lines.Add($"Outcome distribution: {string.Join(", ", outcomeCounts)}");
-    lines.Add($"Avg Hours Elapsed: {iterationResults.Average(result => result.HoursElapsed):F1}");
-    lines.Add($"Avg Attacker Production Lost: {iterationResults.Average(result => result.AttackerProductionLost):F1}");
-    lines.Add($"Avg Defender Production Lost: {iterationResults.Average(result => result.DefenderProductionLost):F1}");
-    lines.Add($"Avg Attacker Ships Remaining: {iterationResults.Average(result => result.AttackerShipsRemaining):F2}");
-    lines.Add($"Avg Defender Ships Remaining: {iterationResults.Average(result => result.DefenderShipsRemaining):F2}");
-    lines.Add($"Avg Attacker Ships Retreated: {iterationResults.Average(result => result.AttackerShipsRetreated):F2}");
-    lines.Add($"Avg Defender Ships Retreated: {iterationResults.Average(result => result.DefenderShipsRetreated):F2}");
-    lines.Add($"Avg Retreat events: {iterationResults.Average(result => result.RetreatEvents):F2}");
-    lines.Add($"Avg Re-engagements: {iterationResults.Average(result => result.Reengagements):F2}");
-    lines.Add($"Avg Attacker Planes Lost: Fighters {iterationResults.Average(result => result.AttackerPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.AttackerPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.AttackerPlanesLost.Total):F2}");
-    lines.Add($"Avg Defender Planes Lost: Fighters {iterationResults.Average(result => result.DefenderPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.DefenderPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.DefenderPlanesLost.Total):F2}");
+    lines.Add($"Avg Hours Elapsed: {FormatSummaryStats(iterationResults.Select(result => (double)result.HoursElapsed), "F1")}");
+    lines.Add($"Avg Attacker Production Lost: {FormatSummaryStats(iterationResults.Select(result => result.AttackerProductionLost), "F1")}");
+    lines.Add($"Avg Defender Production Lost: {FormatSummaryStats(iterationResults.Select(result => result.DefenderProductionLost), "F1")}");
+    lines.Add($"Avg Attacker Ships Remaining: {FormatSummaryStats(iterationResults.Select(result => (double)result.AttackerShipsRemaining), "F2")}");
+    lines.Add($"Avg Defender Ships Remaining: {FormatSummaryStats(iterationResults.Select(result => (double)result.DefenderShipsRemaining), "F2")}");
+    lines.Add($"Avg Attacker Ships Retreated: {FormatSummaryStats(iterationResults.Select(result => (double)result.AttackerShipsRetreated), "F2")}");
+    lines.Add($"Avg Defender Ships Retreated: {FormatSummaryStats(iterationResults.Select(result => (double)result.DefenderShipsRetreated), "F2")}");
+    lines.Add($"Avg Retreat events: {FormatSummaryStats(iterationResults.Select(result => (double)result.RetreatEvents), "F2")}");
+    lines.Add($"Avg Re-engagements: {FormatSummaryStats(iterationResults.Select(result => (double)result.Reengagements), "F2")}");
+    lines.Add($"Avg Attacker Planes Lost (Fighters): {FormatSummaryStats(iterationResults.Select(result => (double)result.AttackerPlanesLost.Fighters), "F2")}");
+    lines.Add($"Avg Attacker Planes Lost (Bombers): {FormatSummaryStats(iterationResults.Select(result => (double)result.AttackerPlanesLost.Bombers), "F2")}");
+    lines.Add($"Avg Attacker Planes Lost (Total): {FormatSummaryStats(iterationResults.Select(result => (double)result.AttackerPlanesLost.Total), "F2")}");
+    lines.Add($"Avg Defender Planes Lost (Fighters): {FormatSummaryStats(iterationResults.Select(result => (double)result.DefenderPlanesLost.Fighters), "F2")}");
+    lines.Add($"Avg Defender Planes Lost (Bombers): {FormatSummaryStats(iterationResults.Select(result => (double)result.DefenderPlanesLost.Bombers), "F2")}");
+    lines.Add($"Avg Defender Planes Lost (Total): {FormatSummaryStats(iterationResults.Select(result => (double)result.DefenderPlanesLost.Total), "F2")}");
 
     var attackerDamagePercentages = new List<double>();
     var defenderDamagePercentages = new List<double>();
@@ -863,8 +870,15 @@ static List<string> BuildIterationsAverageSummaryLines(
         defenderDamagePercentages.Add(defenderEnemyHealth <= 0 ? 0 : defenderDamage / defenderEnemyHealth);
     }
 
-    lines.Add($"Avg Attacker Damage (% enemy health): {(attackerDamagePercentages.Average()):P1}");
-    lines.Add($"Avg Defender Damage (% enemy health): {(defenderDamagePercentages.Average()):P1}");
+    lines.Add($"Avg Attacker Damage (% enemy health): {FormatSummaryStats(attackerDamagePercentages, "P1")}");
+    lines.Add($"Avg Defender Damage (% enemy health): {FormatSummaryStats(defenderDamagePercentages, "P1")}");
+
+    lines.Add(string.Empty);
+    lines.Add("Avg damage dealt by types (Attacker)");
+    lines.AddRange(BuildAverageDamageTypeBreakdownLines(iterationScenarios, iterationResults, "Attacker"));
+    lines.Add(string.Empty);
+    lines.Add("Avg damage dealt by types (Defender)");
+    lines.AddRange(BuildAverageDamageTypeBreakdownLines(iterationScenarios, iterationResults, "Defender"));
 
     lines.Add(string.Empty);
     lines.Add("Avg ship types lost (Attacker)");
@@ -891,7 +905,7 @@ static List<string> BuildAverageShipTypeLossLines(
 {
     var allDesignIds = new SortedSet<string>(StringComparer.Ordinal);
     var initialCountsByDesign = new Dictionary<string, int>(StringComparer.Ordinal);
-    var totalLossesByDesign = new Dictionary<string, double>(StringComparer.Ordinal);
+    var lossesByDesign = new Dictionary<string, List<double>>(StringComparer.Ordinal);
 
     for (var i = 0; i < iterationResults.Count; i++)
     {
@@ -923,9 +937,20 @@ static List<string> BuildAverageShipTypeLossLines(
         foreach (var designId in allDesignIds)
         {
             var lossCount = lossesThisRun.TryGetValue(designId, out var value) ? value : 0;
-            totalLossesByDesign[designId] = totalLossesByDesign.TryGetValue(designId, out var current)
-                ? current + lossCount
-                : lossCount;
+
+            if (!lossesByDesign.TryGetValue(designId, out var lossSeries))
+            {
+                lossSeries = [];
+                lossesByDesign[designId] = lossSeries;
+            }
+
+            // If a design was first seen in a later run, pad prior runs with zero losses.
+            while (lossSeries.Count < i)
+            {
+                lossSeries.Add(0);
+            }
+
+            lossSeries.Add(lossCount);
         }
     }
 
@@ -934,18 +959,177 @@ static List<string> BuildAverageShipTypeLossLines(
         return ["- none"];
     }
 
-    var runCount = iterationResults.Count;
     var output = new List<string>();
 
     foreach (var designId in allDesignIds)
     {
         var initialCount = initialCountsByDesign.TryGetValue(designId, out var count) ? count : 0;
-        var avgLost = totalLossesByDesign.TryGetValue(designId, out var losses) ? losses / runCount : 0;
-        var avgLostPercent = initialCount <= 0 ? 0 : avgLost / initialCount;
+        var lossSeries = lossesByDesign.TryGetValue(designId, out var losses) ? losses : [];
 
-        output.Add($"- {designId}: {avgLost:F2} lost/run ({avgLostPercent:P1} of {initialCount})");
+        while (lossSeries.Count < iterationResults.Count)
+        {
+            lossSeries.Add(0);
+        }
+
+        var lossPercentSeries = initialCount <= 0
+            ? lossSeries.Select(_ => 0.0)
+            : lossSeries.Select(lossValue => lossValue / initialCount);
+
+        output.Add($"- {designId}: {FormatSummaryStats(lossSeries, "F2")} lost/run ({FormatSummaryStats(lossPercentSeries, "P1")} of {initialCount})");
     }
 
     return output;
+}
+
+static List<string> BuildAverageDamageTypeBreakdownLines(
+    List<BattleScenario> iterationScenarios,
+    List<BattleResult> iterationResults,
+    string side)
+{
+    var lines = new List<string>();
+
+    lines.Add("- By GUNTYPE");
+    lines.AddRange(BuildAverageDamageBreakdownCategoryLines(iterationScenarios, iterationResults, side, "guntype"));
+    lines.Add("- By SHIPGROUP");
+    lines.AddRange(BuildAverageDamageBreakdownCategoryLines(iterationScenarios, iterationResults, side, "shipgroup"));
+    lines.Add("- By SHIPTYPE");
+    lines.AddRange(BuildAverageDamageBreakdownCategoryLines(iterationScenarios, iterationResults, side, "shiptype"));
+
+    return lines;
+}
+
+static List<string> BuildAverageDamageBreakdownCategoryLines(
+    List<BattleScenario> iterationScenarios,
+    List<BattleResult> iterationResults,
+    string side,
+    string category)
+{
+    var breakdownByRun = new List<Dictionary<string, double>>();
+    var enemyHealthByRun = new List<double>();
+    var allKeys = new SortedSet<string>(StringComparer.Ordinal);
+
+    for (var i = 0; i < iterationResults.Count; i++)
+    {
+        var scenario = iterationScenarios[i];
+        var result = iterationResults[i];
+        var breakdown = BuildDamageBreakdownForRun(scenario, result, side, category);
+        breakdownByRun.Add(breakdown);
+
+        var enemyHealth = side == "Attacker"
+            ? scenario.Defender.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp)
+            : scenario.Attacker.Fleet.Ships.Sum(ship => ship.GetFinalStats().Hp);
+        enemyHealthByRun.Add(enemyHealth);
+
+        foreach (var key in breakdown.Keys)
+        {
+            allKeys.Add(key);
+        }
+    }
+
+    if (allKeys.Count == 0)
+    {
+        return ["  - none"];
+    }
+
+    var output = new List<string>();
+
+    foreach (var key in allKeys)
+    {
+        var damageSeries = new List<double>(iterationResults.Count);
+        var shareSeries = new List<double>(iterationResults.Count);
+
+        for (var i = 0; i < iterationResults.Count; i++)
+        {
+            var damage = breakdownByRun[i].TryGetValue(key, out var value) ? value : 0;
+            damageSeries.Add(damage);
+
+            var enemyHealth = enemyHealthByRun[i];
+            shareSeries.Add(enemyHealth <= 0 ? 0 : damage / enemyHealth);
+        }
+
+        output.Add($"  - {key}: {FormatSummaryStats(damageSeries, "F1")} damage ({FormatSummaryStats(shareSeries, "P1")} of enemy health)");
+    }
+
+    return output;
+}
+
+static Dictionary<string, double> BuildDamageBreakdownForRun(
+    BattleScenario scenario,
+    BattleResult result,
+    string side,
+    string category)
+{
+    var shipById = scenario.Attacker.Fleet.Ships
+        .Concat(scenario.Defender.Fleet.Ships)
+        .ToDictionary(ship => ship.ID, ship => ship, StringComparer.Ordinal);
+
+    var damageEvents = result.ShipReports
+        .Where(report => report.Side == side)
+        .SelectMany(report => report.DamagedShips.Select(evt => (ShooterID: report.ShipID, Event: evt)))
+        .Where(entry => entry.Event.AppliedHpDamage > 0)
+        .ToList();
+
+    var grouped = damageEvents
+        .GroupBy(entry => category switch
+        {
+            "guntype" => entry.Event.Weapon.ToString(),
+            "shipgroup" => ResolveShipGroup(entry.ShooterID, shipById),
+            "shiptype" => ResolveShipType(entry.ShooterID, shipById),
+            _ => "Unknown"
+        })
+        .ToDictionary(
+            group => group.Key,
+            group => group.Sum(entry => entry.Event.AppliedHpDamage),
+            StringComparer.Ordinal);
+
+    var planeDamageByType = side == "Attacker" ? result.AttackerPlaneDamageByType : result.DefenderPlaneDamageByType;
+    var carrierPlaneDamage = side == "Attacker" ? result.AttackerCarrierPlaneDamage : result.DefenderCarrierPlaneDamage;
+
+    if (category == "guntype")
+    {
+        foreach (var planeEntry in planeDamageByType)
+        {
+            var key = $"Plane:{planeEntry.Key}";
+            grouped[key] = grouped.TryGetValue(key, out var current)
+                ? current + planeEntry.Value
+                : planeEntry.Value;
+        }
+    }
+
+    if (category == "shipgroup" && carrierPlaneDamage > 0)
+    {
+        grouped["Carrier line"] = grouped.TryGetValue("Carrier line", out var current)
+            ? current + carrierPlaneDamage
+            : carrierPlaneDamage;
+    }
+
+    if (category == "shiptype" && carrierPlaneDamage > 0)
+    {
+        grouped["Carrier air wing"] = grouped.TryGetValue("Carrier air wing", out var current)
+            ? current + carrierPlaneDamage
+            : carrierPlaneDamage;
+    }
+
+    return grouped;
+}
+
+static string FormatSummaryStats(IEnumerable<double> values, string numericFormat)
+{
+    var series = values.ToList();
+
+    if (series.Count == 0)
+    {
+        return "n/a";
+    }
+
+    series.Sort();
+    var average = series.Average();
+    var min = series[0];
+    var max = series[^1];
+    var median = series.Count % 2 == 0
+        ? (series[series.Count / 2 - 1] + series[series.Count / 2]) / 2.0
+        : series[series.Count / 2];
+
+    return $"{average.ToString(numericFormat)} (Min: {min.ToString(numericFormat)}, Max: {max.ToString(numericFormat)}, Med: {median.ToString(numericFormat)})";
 }
 

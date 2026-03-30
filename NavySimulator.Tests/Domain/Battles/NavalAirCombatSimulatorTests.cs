@@ -237,6 +237,7 @@ public class NavalAirCombatSimulatorTests
             weather: "clear",
             maxHours: 24,
             iterations: 1,
+            seed: 42,
             attacker: attacker,
             defender: defender,
             planesById: planesById,

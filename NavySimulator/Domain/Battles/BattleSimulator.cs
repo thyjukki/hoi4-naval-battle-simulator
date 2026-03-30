@@ -6,7 +6,7 @@ public class BattleSimulator
     {
         public readonly List<string> HourlyLog = [];
         public readonly List<ActionResult> AllActions = [];
-        public readonly Random Random = new(42);
+        public readonly Random Random;
         public readonly Dictionary<string, int> AttackerCarrierSortiesByShipId = new(StringComparer.Ordinal);
         public readonly Dictionary<string, int> DefenderCarrierSortiesByShipId = new(StringComparer.Ordinal);
         public readonly Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>> AttackerCarrierSortiesByShipIdAndHour = new(StringComparer.Ordinal);
@@ -25,8 +25,9 @@ public class BattleSimulator
         public int RetreatEvents;
         public int Reengagements;
 
-        public SimulationState(BattleScenario scenario, NavalAirCombatSimulator navalAirCombatSimulator)
+        public SimulationState(BattleScenario scenario, NavalAirCombatSimulator navalAirCombatSimulator, int seed)
         {
+            Random = new Random(seed);
             AttackerCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Attacker.Fleet);
             DefenderCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
             AttackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
@@ -67,9 +68,10 @@ public class BattleSimulator
         _navalAirCombatSimulator = navalAirCombatSimulator;
     }
 
-    public BattleResult Simulate(BattleScenario scenario)
+    public BattleResult Simulate(BattleScenario scenario, int? seedOverride = null)
     {
-        var state = new SimulationState(scenario, _navalAirCombatSimulator);
+        var seed = seedOverride ?? scenario.Seed ?? Random.Shared.Next();
+        var state = new SimulationState(scenario, _navalAirCombatSimulator, seed);
 
         for (var hour = 1; hour <= scenario.MaxHours; hour++)
         {
