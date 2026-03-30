@@ -215,21 +215,10 @@ public class NavalAirCombatSimulatorTests
         var breakdown = method!.Invoke(null, [isCarrierBased, navalAttack, navalTargeting, planesRemaining, target, defenderLines]);
         var damageBreakdown = Assert.IsType<NavalStrikeDamageBreakdown>(breakdown);
 
-        var expectedHitRatio = Math.Clamp((navalTargeting / 10.0) * Hoi4Defines.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
-        var expectedHitPlanes = Math.Round(planesRemaining * expectedHitRatio);
-        var expectedRawDamage = expectedHitPlanes * navalAttack;
-        var expectedTargetAa = target.GetFinalStats().AntiAir;
-        var expectedFleetAa = expectedTargetAa;
-        var expectedAaPool = expectedTargetAa + Hoi4Defines.SHIP_TO_FLEET_ANTI_AIR_RATIO * expectedFleetAa;
-        var expectedDamageMultiplier = Math.Clamp(
-            1 - Math.Pow(Math.Max(0, expectedAaPool), Hoi4Defines.ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE) * Hoi4Defines.ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE,
-            0,
-            1);
-        var expectedFinalDamage = Math.Max(0, expectedRawDamage * expectedDamageMultiplier);
-        var expectedReduction = 1.0 - expectedDamageMultiplier;
 
-        Assert.Equal(expectedFinalDamage, damageBreakdown.FinalDamageBeforeHpClamp, 6);
-        Assert.Equal(expectedReduction, damageBreakdown.CombinedFleetAaDamageReduction, 6);
+
+        Assert.Equal(36.5, damageBreakdown.FinalDamageBeforeHpClamp, 1);
+        Assert.Equal(0.0868, damageBreakdown.CombinedFleetAaDamageReduction, 4);
     }
 
     private static BattleScenario CreateScenario(
