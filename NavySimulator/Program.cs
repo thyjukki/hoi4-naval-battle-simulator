@@ -1,5 +1,6 @@
 ﻿using NavySimulator.Domain;
 using NavySimulator.Domain.Battles;
+using NavySimulator.Domain.Planes;
 using NavySimulator.Setup;
 
 var dataDirectoryPath = Path.Combine(AppContext.BaseDirectory, "Data");

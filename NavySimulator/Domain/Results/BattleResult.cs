@@ -1,4 +1,5 @@
 using NavySimulator.Domain.Battles;
+using NavySimulator.Domain.Planes;
 
 namespace NavySimulator.Domain;
 

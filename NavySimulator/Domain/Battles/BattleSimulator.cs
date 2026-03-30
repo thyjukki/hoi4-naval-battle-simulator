@@ -2,7 +2,61 @@ namespace NavySimulator.Domain.Battles;
 
 public class BattleSimulator
 {
-    private readonly NavalAirCombatSimulator navalAirCombatSimulator;
+    internal sealed class SimulationState
+    {
+        public readonly List<string> HourlyLog = [];
+        public readonly List<ActionResult> AllActions = [];
+        public readonly Dictionary<(string ShipID, WeaponType Weapon), int> Cooldowns = [];
+        public readonly Random Random = new(42);
+        public readonly Dictionary<string, int> AttackerCarrierSortiesByShipId = new(StringComparer.Ordinal);
+        public readonly Dictionary<string, int> DefenderCarrierSortiesByShipId = new(StringComparer.Ordinal);
+        public readonly Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>> AttackerCarrierSortiesByShipIdAndHour = new(StringComparer.Ordinal);
+        public readonly Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>> DefenderCarrierSortiesByShipIdAndHour = new(StringComparer.Ordinal);
+        public readonly Dictionary<string, double> AttackerPlaneDamageByType = new(StringComparer.Ordinal);
+        public readonly Dictionary<string, double> DefenderPlaneDamageByType = new(StringComparer.Ordinal);
+        public readonly IReadOnlyDictionary<string, CarrierWingState> AttackerCarrierWingStatesByWingKey;
+        public readonly IReadOnlyDictionary<string, CarrierWingState> DefenderCarrierWingStatesByWingKey;
+        public readonly List<Ship> AttackerFiringOrder;
+        public readonly List<Ship> DefenderFiringOrder;
+
+        public int AttackerBombersShotDownByShipAa;
+        public int DefenderBombersShotDownByShipAa;
+        public double AttackerCarrierPlaneDamageDealt;
+        public double DefenderCarrierPlaneDamageDealt;
+        public int RetreatEvents;
+        public int Reengagements;
+
+        public SimulationState(BattleScenario scenario, NavalAirCombatSimulator navalAirCombatSimulator)
+        {
+            AttackerCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Attacker.Fleet);
+            DefenderCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
+            AttackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
+            DefenderFiringOrder = scenario.Defender.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
+        }
+    }
+
+    internal readonly record struct HourSimulationResult(
+        int AttackerAliveCount,
+        int DefenderAliveCount,
+        int AttackerRetreatedCount,
+        int DefenderRetreatedCount,
+        bool ContinueSimulation);
+
+    internal readonly record struct AirPhaseSnapshot(
+        AirSortieSnapshot AttackerSortie,
+        AirSortieSnapshot DefenderSortie,
+        NavalStrikeSelectionSummary AttackerSelections,
+        NavalStrikeSelectionSummary DefenderSelections);
+
+    internal readonly record struct SurfacePhaseSnapshot(
+        List<ActionResult> AttackerActions,
+        List<ActionResult> DefenderActions,
+        int AttackerAliveCount,
+        int DefenderAliveCount,
+        int AttackerRetreatedCount,
+        int DefenderRetreatedCount);
+
+    private readonly NavalAirCombatSimulator _navalAirCombatSimulator;
 
     public BattleSimulator()
         : this(new NavalAirCombatSimulator())
@@ -11,213 +65,40 @@ public class BattleSimulator
 
     internal BattleSimulator(NavalAirCombatSimulator navalAirCombatSimulator)
     {
-        this.navalAirCombatSimulator = navalAirCombatSimulator;
+        _navalAirCombatSimulator = navalAirCombatSimulator;
     }
 
     public BattleResult Simulate(BattleScenario scenario)
     {
-        var hourlyLog = new List<string>();
-        var allActions = new List<ActionResult>();
-        var cooldowns = new Dictionary<(string ShipID, WeaponType Weapon), int>();
-        var random = new Random(42);
-        var attackerBombersShotDownByShipAa = 0;
-        var defenderBombersShotDownByShipAa = 0;
-        var attackerCarrierPlaneDamageDealt = 0.0;
-        var defenderCarrierPlaneDamageDealt = 0.0;
-        var attackerCarrierSortiesByShipId = new Dictionary<string, int>(StringComparer.Ordinal);
-        var defenderCarrierSortiesByShipId = new Dictionary<string, int>(StringComparer.Ordinal);
-        var attackerCarrierSortiesByShipIdAndHour = new Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>>(StringComparer.Ordinal);
-        var defenderCarrierSortiesByShipIdAndHour = new Dictionary<string, Dictionary<int, CarrierSortieHourMetrics>>(StringComparer.Ordinal);
-        var attackerPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
-        var defenderPlaneDamageByType = new Dictionary<string, double>(StringComparer.Ordinal);
-        var attackerCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Attacker.Fleet);
-        var defenderCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
-        var attackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
-        var defenderFiringOrder = scenario.Defender.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
-        var retreatEvents = 0;
-        var reengagements = 0;
+        var state = new SimulationState(scenario, _navalAirCombatSimulator);
 
         for (var hour = 1; hour <= scenario.MaxHours; hour++)
         {
-            var attackerLines = BattleLineCalculator.BuildBattleLinesFromFleet(scenario.Attacker.Fleet.Ships);
-            var defenderLines = BattleLineCalculator.BuildBattleLinesFromFleet(scenario.Defender.Fleet.Ships);
+            var hourResult = SimulateHour(scenario, hour, state);
 
-            var attackerShipCount = BattleLineCalculator.GetLineShipCount(attackerLines);
-            var defenderShipCount = BattleLineCalculator.GetLineShipCount(defenderLines);
-            var attackerPositioning = BattleLineCalculator.CalculateFleetSizePositioning(attackerShipCount, defenderShipCount);
-            var defenderPositioning = BattleLineCalculator.CalculateFleetSizePositioning(defenderShipCount, attackerShipCount);
-
-            var attackerScreening = BattleLineCalculator.CalculateScreening(attackerLines, attackerPositioning);
-            var defenderScreening = BattleLineCalculator.CalculateScreening(defenderLines, defenderPositioning);
-            var attackerAirSortie = navalAirCombatSimulator.CalculateAirSortieSnapshot(
-                scenario,
-                scenario.Attacker,
-                attackerLines,
-                attackerScreening,
-                defenderLines,
-                attackerCarrierWingStatesByWingKey,
-                hour);
-            var defenderAirSortie = navalAirCombatSimulator.CalculateAirSortieSnapshot(
-                scenario,
-                scenario.Defender,
-                defenderLines,
-                defenderScreening,
-                attackerLines,
-                defenderCarrierWingStatesByWingKey,
-                hour);
-            var attackerAirTargetSelections = navalAirCombatSimulator.ResolveNavalStrike(defenderLines, attackerAirSortie, random);
-            var defenderAirTargetSelections = navalAirCombatSimulator.ResolveNavalStrike(attackerLines, defenderAirSortie, random);
-            navalAirCombatSimulator.ApplyCarrierWingLosses(attackerCarrierWingStatesByWingKey, attackerAirTargetSelections.CarrierBombersShotDownByWingKey);
-            navalAirCombatSimulator.ApplyCarrierWingLosses(defenderCarrierWingStatesByWingKey, defenderAirTargetSelections.CarrierBombersShotDownByWingKey);
-            navalAirCombatSimulator.AccumulateCarrierSorties(
-                attackerAirSortie,
-                attackerAirTargetSelections,
-                hour,
-                attackerCarrierSortiesByShipId,
-                attackerCarrierSortiesByShipIdAndHour);
-            navalAirCombatSimulator.AccumulateCarrierSorties(
-                defenderAirSortie,
-                defenderAirTargetSelections,
-                hour,
-                defenderCarrierSortiesByShipId,
-                defenderCarrierSortiesByShipIdAndHour);
-            attackerBombersShotDownByShipAa += attackerAirTargetSelections.BombersShotDown;
-            defenderBombersShotDownByShipAa += defenderAirTargetSelections.BombersShotDown;
-            attackerCarrierPlaneDamageDealt += attackerAirTargetSelections.CarrierDamageDealt;
-            defenderCarrierPlaneDamageDealt += defenderAirTargetSelections.CarrierDamageDealt;
-            MergeDamageByType(attackerPlaneDamageByType, attackerAirTargetSelections.DamageByPlaneType);
-            MergeDamageByType(defenderPlaneDamageByType, defenderAirTargetSelections.DamageByPlaneType);
-
-            var attackerActions = NavalSurfaceCombatSimulator.ResolveActions(
-                attackerFiringOrder,
-                defenderLines,
-                attackerScreening,
-                defenderScreening,
-                attackerPositioning,
-                scenario.DontRetreat,
-                hour,
-                cooldowns,
-                random,
-                out var attackerRetreatEvents);
-            var defenderActions = NavalSurfaceCombatSimulator.ResolveActions(
-                defenderFiringOrder,
-                attackerLines,
-                defenderScreening,
-                attackerScreening,
-                defenderPositioning,
-                scenario.DontRetreat,
-                hour,
-                cooldowns,
-                random,
-                out var defenderRetreatEvents);
-            retreatEvents += attackerRetreatEvents + defenderRetreatEvents;
-
-            NavalSurfaceCombatSimulator.ApplyActionDamage(attackerActions);
-            NavalSurfaceCombatSimulator.ApplyActionDamage(defenderActions);
-            allActions.AddRange(attackerActions);
-            allActions.AddRange(defenderActions);
-
-            var attackerAliveCount = GetAliveShipCount(scenario.Attacker.Fleet.Ships);
-            var defenderAliveCount = GetAliveShipCount(scenario.Defender.Fleet.Ships);
-            var attackerRetreatedCount = GetRetreatedShipCount(scenario.Attacker.Fleet.Ships);
-            var defenderRetreatedCount = GetRetreatedShipCount(scenario.Defender.Fleet.Ships);
-
-            hourlyLog.Add(
-                $"Hour {hour}: " +
-                $"attacker(screen:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
-                $"positioning {attackerPositioning:P0}, screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
-                $"defender(screen:{defenderLines.Screens.Count}, capital:{defenderLines.Capitals.Count}, carrier:{defenderLines.Carriers.Count}, sub:{defenderLines.Submarines.Count}) " +
-                $"positioning {defenderPositioning:P0}, screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
-            hourlyLog.Add(
-                $"Hour {hour}: attacker damage {NavalSurfaceCombatSimulator.GetTotalDamage(attackerActions):F1}, defender damage {NavalSurfaceCombatSimulator.GetTotalDamage(defenderActions):F1}, " +
-                $"attacker ships {attackerAliveCount} (retreated {attackerRetreatedCount}), defender ships {defenderAliveCount} (retreated {defenderRetreatedCount})");
-
-            if (attackerAirSortie.IsSortieHour || defenderAirSortie.IsSortieHour)
-            {
-                hourlyLog.Add(
-                    $"Hour {hour}: air sortie - " +
-                    $"attacker carrier {attackerAirSortie.CarrierSortiePlanes}/{attackerAirSortie.CarrierAssignedPlanes} (sortie x{attackerAirSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{attackerAirSortie.CarrierTrafficMultiplier:F2}), " +
-                    $"external {attackerAirSortie.ExternalPlanesJoining}/{attackerAirSortie.ExternalEligiblePlanes} (cap {attackerAirSortie.ExternalJoinCap:F1}); " +
-                    $"defender carrier {defenderAirSortie.CarrierSortiePlanes}/{defenderAirSortie.CarrierAssignedPlanes} (sortie x{defenderAirSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{defenderAirSortie.CarrierTrafficMultiplier:F2}), " +
-                    $"external {defenderAirSortie.ExternalPlanesJoining}/{defenderAirSortie.ExternalEligiblePlanes} (cap {defenderAirSortie.ExternalJoinCap:F1})");
-                hourlyLog.Add($"Hour {hour}: air disruption - placeholder disabled (fighter interception not implemented yet)");
-                hourlyLog.Add(
-                    $"Hour {hour}: air targets - attacker bomber wings {attackerAirSortie.BomberWings}, picks {navalAirCombatSimulator.FormatAirTargetSelectionSummary(attackerAirTargetSelections)}; " +
-                    $"defender bomber wings {defenderAirSortie.BomberWings}, picks {navalAirCombatSimulator.FormatAirTargetSelectionSummary(defenderAirTargetSelections)}");
-                hourlyLog.Add(
-                    $"Hour {hour}: air AA preemptive - attacker bombers shot down {attackerAirTargetSelections.BombersShotDown}, " +
-                    $"defender bombers shot down {defenderAirTargetSelections.BombersShotDown}");
-                hourlyLog.Add(
-                    $"Hour {hour}: air strike damage - " +
-                    $"attacker HP {attackerAirTargetSelections.TotalDamageDealt:F1}, Org {attackerAirTargetSelections.TotalOrganizationDamageDealt:F1}; " +
-                    $"defender HP {defenderAirTargetSelections.TotalDamageDealt:F1}, Org {defenderAirTargetSelections.TotalOrganizationDamageDealt:F1}");
-            }
-
-            hourlyLog.Add($"Hour {hour}: attacker actions - {NavalSurfaceCombatSimulator.BuildActionSummary(attackerActions)}");
-            hourlyLog.Add($"Hour {hour}: defender actions - {NavalSurfaceCombatSimulator.BuildActionSummary(defenderActions)}");
-            hourlyLog.Add($"Hour {hour}: attacker hit summary - {NavalSurfaceCombatSimulator.BuildHitSummary(attackerActions)}");
-            hourlyLog.Add($"Hour {hour}: defender hit summary - {NavalSurfaceCombatSimulator.BuildHitSummary(defenderActions)}");
-            hourlyLog.Add($"Hour {hour}: attacker skips - {NavalSurfaceCombatSimulator.BuildSkipSummary(attackerActions)}");
-            hourlyLog.Add($"Hour {hour}: defender skips - {NavalSurfaceCombatSimulator.BuildSkipSummary(defenderActions)}");
-
-            if (attackerAliveCount == attackerRetreatedCount || defenderAliveCount == defenderRetreatedCount)
-            {
-                if (scenario.ContinueAfterRetreat)
-                {
-                    reengagements++;
-                    ResetRetreatedShipsForNewEngagement(scenario.Attacker.Fleet.Ships);
-                    ResetRetreatedShipsForNewEngagement(scenario.Defender.Fleet.Ships);
-                    hourlyLog.Add($"Hour {hour}: all remaining ships on one side retreated; immediately starting a new engagement with non-sunk ships");
-                    continue;
-                }
-
-                hourlyLog.Add($"Hour {hour}: Battle ended since one side has retreated");
-                return BattleResultBuilder.BuildResult(
-                    scenario,
-                    hour,
-                    attackerAliveCount,
-                    defenderAliveCount,
-                    attackerRetreatedCount,
-                    defenderRetreatedCount,
-                    attackerBombersShotDownByShipAa,
-                    defenderBombersShotDownByShipAa,
-                    attackerCarrierPlaneDamageDealt,
-                    defenderCarrierPlaneDamageDealt,
-                    attackerPlaneDamageByType,
-                    defenderPlaneDamageByType,
-                    attackerCarrierSortiesByShipId,
-                    defenderCarrierSortiesByShipId,
-                    attackerCarrierSortiesByShipIdAndHour,
-                    defenderCarrierSortiesByShipIdAndHour,
-                    retreatEvents,
-                    reengagements,
-                    hourlyLog,
-                    allActions);
-            }
-
-            if (attackerAliveCount == 0 || defenderAliveCount == 0)
+            if (!hourResult.ContinueSimulation)
             {
                 return BattleResultBuilder.BuildResult(
                     scenario,
                     hour,
-                    attackerAliveCount,
-                    defenderAliveCount,
-                    attackerRetreatedCount,
-                    defenderRetreatedCount,
-                    attackerBombersShotDownByShipAa,
-                    defenderBombersShotDownByShipAa,
-                    attackerCarrierPlaneDamageDealt,
-                    defenderCarrierPlaneDamageDealt,
-                    attackerPlaneDamageByType,
-                    defenderPlaneDamageByType,
-                    attackerCarrierSortiesByShipId,
-                    defenderCarrierSortiesByShipId,
-                    attackerCarrierSortiesByShipIdAndHour,
-                    defenderCarrierSortiesByShipIdAndHour,
-                    retreatEvents,
-                    reengagements,
-                    hourlyLog,
-                    allActions);
+                    hourResult.AttackerAliveCount,
+                    hourResult.DefenderAliveCount,
+                    hourResult.AttackerRetreatedCount,
+                    hourResult.DefenderRetreatedCount,
+                    state.AttackerBombersShotDownByShipAa,
+                    state.DefenderBombersShotDownByShipAa,
+                    state.AttackerCarrierPlaneDamageDealt,
+                    state.DefenderCarrierPlaneDamageDealt,
+                    state.AttackerPlaneDamageByType,
+                    state.DefenderPlaneDamageByType,
+                    state.AttackerCarrierSortiesByShipId,
+                    state.DefenderCarrierSortiesByShipId,
+                    state.AttackerCarrierSortiesByShipIdAndHour,
+                    state.DefenderCarrierSortiesByShipIdAndHour,
+                    state.RetreatEvents,
+                    state.Reengagements,
+                    state.HourlyLog,
+                    state.AllActions);
             }
         }
 
@@ -233,23 +114,340 @@ public class BattleSimulator
             finalDefenderAlive,
             finalAttackerRetreated,
             finalDefenderRetreated,
-            attackerBombersShotDownByShipAa,
-            defenderBombersShotDownByShipAa,
-            attackerCarrierPlaneDamageDealt,
-            defenderCarrierPlaneDamageDealt,
-            attackerPlaneDamageByType,
-            defenderPlaneDamageByType,
-            attackerCarrierSortiesByShipId,
-            defenderCarrierSortiesByShipId,
-            attackerCarrierSortiesByShipIdAndHour,
-            defenderCarrierSortiesByShipIdAndHour,
-            retreatEvents,
-            reengagements,
-            hourlyLog,
-            allActions);
+            state.AttackerBombersShotDownByShipAa,
+            state.DefenderBombersShotDownByShipAa,
+            state.AttackerCarrierPlaneDamageDealt,
+            state.DefenderCarrierPlaneDamageDealt,
+            state.AttackerPlaneDamageByType,
+            state.DefenderPlaneDamageByType,
+            state.AttackerCarrierSortiesByShipId,
+            state.DefenderCarrierSortiesByShipId,
+            state.AttackerCarrierSortiesByShipIdAndHour,
+            state.DefenderCarrierSortiesByShipIdAndHour,
+            state.RetreatEvents,
+            state.Reengagements,
+            state.HourlyLog,
+            state.AllActions);
     }
 
-    private static int GetAliveShipCount(List<Ship> ships)
+    private HourSimulationResult SimulateHour(BattleScenario scenario, int hour, SimulationState state)
+    {
+        var attackerLines = BattleLineCalculator.BuildBattleLinesFromFleet(scenario.Attacker.Fleet.Ships);
+        var defenderLines = BattleLineCalculator.BuildBattleLinesFromFleet(scenario.Defender.Fleet.Ships);
+
+        var attackerShipCount = BattleLineCalculator.GetLineShipCount(attackerLines);
+        var defenderShipCount = BattleLineCalculator.GetLineShipCount(defenderLines);
+        var attackerPositioning = BattleLineCalculator.CalculateFleetSizePositioning(attackerShipCount, defenderShipCount);
+        var defenderPositioning = BattleLineCalculator.CalculateFleetSizePositioning(defenderShipCount, attackerShipCount);
+
+        var attackerScreening = BattleLineCalculator.CalculateScreening(attackerLines, attackerPositioning);
+        var defenderScreening = BattleLineCalculator.CalculateScreening(defenderLines, defenderPositioning);
+        var airPhase = ResolveAirPhase(
+            scenario,
+            hour,
+            state,
+            attackerLines,
+            defenderLines,
+            attackerScreening,
+            defenderScreening);
+        var surfacePhase = ResolveSurfacePhase(
+            scenario,
+            hour,
+            state,
+            attackerLines,
+            defenderLines,
+            attackerScreening,
+            defenderScreening,
+            attackerPositioning,
+            defenderPositioning);
+
+        AppendHourlyLogs(
+            hour,
+            state,
+            attackerLines,
+            defenderLines,
+            attackerPositioning,
+            defenderPositioning,
+            attackerScreening,
+            defenderScreening,
+            airPhase,
+            surfacePhase);
+
+        return EvaluateHourTermination(scenario, hour, state, surfacePhase);
+    }
+
+    private AirPhaseSnapshot ResolveAirPhase(
+        BattleScenario scenario,
+        int hour,
+        SimulationState state,
+        BattleLines attackerLines,
+        BattleLines defenderLines,
+        ScreeningSummary attackerScreening,
+        ScreeningSummary defenderScreening)
+    {
+        var attackerSortie = _navalAirCombatSimulator.CalculateAirSortieSnapshot(
+            scenario,
+            scenario.Attacker,
+            attackerLines,
+            attackerScreening,
+            defenderLines,
+            state.AttackerCarrierWingStatesByWingKey,
+            hour);
+        var defenderSortie = _navalAirCombatSimulator.CalculateAirSortieSnapshot(
+            scenario,
+            scenario.Defender,
+            defenderLines,
+            defenderScreening,
+            attackerLines,
+            state.DefenderCarrierWingStatesByWingKey,
+            hour);
+
+        var attackerSelections = _navalAirCombatSimulator.ResolveNavalStrike(defenderLines, attackerSortie, state.Random);
+        var defenderSelections = _navalAirCombatSimulator.ResolveNavalStrike(attackerLines, defenderSortie, state.Random);
+
+        _navalAirCombatSimulator.ApplyCarrierWingLosses(state.AttackerCarrierWingStatesByWingKey, attackerSelections.CarrierBombersShotDownByWingKey);
+        _navalAirCombatSimulator.ApplyCarrierWingLosses(state.DefenderCarrierWingStatesByWingKey, defenderSelections.CarrierBombersShotDownByWingKey);
+        _navalAirCombatSimulator.AccumulateCarrierSorties(
+            attackerSortie,
+            attackerSelections,
+            hour,
+            state.AttackerCarrierSortiesByShipId,
+            state.AttackerCarrierSortiesByShipIdAndHour);
+        _navalAirCombatSimulator.AccumulateCarrierSorties(
+            defenderSortie,
+            defenderSelections,
+            hour,
+            state.DefenderCarrierSortiesByShipId,
+            state.DefenderCarrierSortiesByShipIdAndHour);
+
+        state.AttackerBombersShotDownByShipAa += attackerSelections.BombersShotDown;
+        state.DefenderBombersShotDownByShipAa += defenderSelections.BombersShotDown;
+        state.AttackerCarrierPlaneDamageDealt += attackerSelections.CarrierDamageDealt;
+        state.DefenderCarrierPlaneDamageDealt += defenderSelections.CarrierDamageDealt;
+        MergeDamageByType(state.AttackerPlaneDamageByType, attackerSelections.DamageByPlaneType);
+        MergeDamageByType(state.DefenderPlaneDamageByType, defenderSelections.DamageByPlaneType);
+
+        return new AirPhaseSnapshot(attackerSortie, defenderSortie, attackerSelections, defenderSelections);
+    }
+
+    private SurfacePhaseSnapshot ResolveSurfacePhase(
+        BattleScenario scenario,
+        int hour,
+        SimulationState state,
+        BattleLines attackerLines,
+        BattleLines defenderLines,
+        ScreeningSummary attackerScreening,
+        ScreeningSummary defenderScreening,
+        double attackerPositioning,
+        double defenderPositioning)
+    {
+        var attackerActions = NavalSurfaceCombatSimulator.ResolveActions(
+            state.AttackerFiringOrder,
+            defenderLines,
+            attackerScreening,
+            defenderScreening,
+            attackerPositioning,
+            scenario.DontRetreat,
+            hour,
+            state.Cooldowns,
+            state.Random,
+            out var attackerRetreatEvents);
+        var defenderActions = NavalSurfaceCombatSimulator.ResolveActions(
+            state.DefenderFiringOrder,
+            attackerLines,
+            defenderScreening,
+            attackerScreening,
+            defenderPositioning,
+            scenario.DontRetreat,
+            hour,
+            state.Cooldowns,
+            state.Random,
+            out var defenderRetreatEvents);
+        state.RetreatEvents += attackerRetreatEvents + defenderRetreatEvents;
+
+        NavalSurfaceCombatSimulator.ApplyActionDamage(attackerActions);
+        NavalSurfaceCombatSimulator.ApplyActionDamage(defenderActions);
+        state.AllActions.AddRange(attackerActions);
+        state.AllActions.AddRange(defenderActions);
+
+        var attackerAliveCount = GetAliveShipCount(scenario.Attacker.Fleet.Ships);
+        var defenderAliveCount = GetAliveShipCount(scenario.Defender.Fleet.Ships);
+        var attackerRetreatedCount = GetRetreatedShipCount(scenario.Attacker.Fleet.Ships);
+        var defenderRetreatedCount = GetRetreatedShipCount(scenario.Defender.Fleet.Ships);
+
+        return new SurfacePhaseSnapshot(
+            attackerActions,
+            defenderActions,
+            attackerAliveCount,
+            defenderAliveCount,
+            attackerRetreatedCount,
+            defenderRetreatedCount);
+    }
+
+    private void AppendHourlyLogs(
+        int hour,
+        SimulationState state,
+        BattleLines attackerLines,
+        BattleLines defenderLines,
+        double attackerPositioning,
+        double defenderPositioning,
+        ScreeningSummary attackerScreening,
+        ScreeningSummary defenderScreening,
+        AirPhaseSnapshot airPhase,
+        SurfacePhaseSnapshot surfacePhase)
+    {
+        AppendPositioningAndFleetStateLog(
+            hour,
+            state,
+            attackerLines,
+            defenderLines,
+            attackerPositioning,
+            defenderPositioning,
+            attackerScreening,
+            defenderScreening,
+            surfacePhase);
+        AppendAirPhaseLogs(hour, state, airPhase);
+        AppendSurfacePhaseLogs(hour, state, surfacePhase);
+    }
+
+    private static void AppendPositioningAndFleetStateLog(
+        int hour,
+        SimulationState state,
+        BattleLines attackerLines,
+        BattleLines defenderLines,
+        double attackerPositioning,
+        double defenderPositioning,
+        ScreeningSummary attackerScreening,
+        ScreeningSummary defenderScreening,
+        SurfacePhaseSnapshot surfacePhase)
+    {
+        state.HourlyLog.Add(
+            $"Hour {hour}: " +
+            $"attacker(screen:{attackerLines.Screens.Count}, capital:{attackerLines.Capitals.Count}, carrier:{attackerLines.Carriers.Count}, sub:{attackerLines.Submarines.Count}) " +
+            $"positioning {attackerPositioning:P0}, screenEff {attackerScreening.ScreeningEfficiency:P0}, carrierScreenEff {attackerScreening.CarrierScreeningEfficiency:P0}; " +
+            $"defender(screen:{defenderLines.Screens.Count}, capital:{defenderLines.Capitals.Count}, carrier:{defenderLines.Carriers.Count}, sub:{defenderLines.Submarines.Count}) " +
+            $"positioning {defenderPositioning:P0}, screenEff {defenderScreening.ScreeningEfficiency:P0}, carrierScreenEff {defenderScreening.CarrierScreeningEfficiency:P0}");
+        state.HourlyLog.Add(
+            $"Hour {hour}: attacker damage {NavalSurfaceCombatSimulator.GetTotalDamage(surfacePhase.AttackerActions):F1}, defender damage {NavalSurfaceCombatSimulator.GetTotalDamage(surfacePhase.DefenderActions):F1}, " +
+            $"attacker ships {surfacePhase.AttackerAliveCount} (retreated {surfacePhase.AttackerRetreatedCount}), defender ships {surfacePhase.DefenderAliveCount} (retreated {surfacePhase.DefenderRetreatedCount})");
+    }
+
+    private void AppendAirPhaseLogs(int hour, SimulationState state, AirPhaseSnapshot airPhase)
+    {
+        if (!airPhase.AttackerSortie.IsSortieHour && !airPhase.DefenderSortie.IsSortieHour)
+        {
+            return;
+        }
+
+        state.HourlyLog.Add(
+            $"Hour {hour}: air sortie - " +
+            $"attacker carrier {airPhase.AttackerSortie.CarrierSortiePlanes}/{airPhase.AttackerSortie.CarrierAssignedPlanes} (sortie x{airPhase.AttackerSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{airPhase.AttackerSortie.CarrierTrafficMultiplier:F2}), " +
+            $"external {airPhase.AttackerSortie.ExternalPlanesJoining}/{airPhase.AttackerSortie.ExternalEligiblePlanes} (cap {airPhase.AttackerSortie.ExternalJoinCap:F1}); " +
+            $"defender carrier {airPhase.DefenderSortie.CarrierSortiePlanes}/{airPhase.DefenderSortie.CarrierAssignedPlanes} (sortie x{airPhase.DefenderSortie.CarrierSortieEfficiencyMultiplier:F2}, night traffic x{airPhase.DefenderSortie.CarrierTrafficMultiplier:F2}), " +
+            $"external {airPhase.DefenderSortie.ExternalPlanesJoining}/{airPhase.DefenderSortie.ExternalEligiblePlanes} (cap {airPhase.DefenderSortie.ExternalJoinCap:F1})");
+        state.HourlyLog.Add($"Hour {hour}: air disruption - placeholder disabled (fighter interception not implemented yet)");
+        state.HourlyLog.Add(
+            $"Hour {hour}: air targets - attacker bomber wings {airPhase.AttackerSortie.BomberWings}, picks {_navalAirCombatSimulator.FormatAirTargetSelectionSummary(airPhase.AttackerSelections)}; " +
+            $"defender bomber wings {airPhase.DefenderSortie.BomberWings}, picks {_navalAirCombatSimulator.FormatAirTargetSelectionSummary(airPhase.DefenderSelections)}");
+        state.HourlyLog.Add(
+            $"Hour {hour}: air AA preemptive - attacker bombers shot down {airPhase.AttackerSelections.BombersShotDown}, " +
+            $"defender bombers shot down {airPhase.DefenderSelections.BombersShotDown}");
+        state.HourlyLog.Add(
+            $"Hour {hour}: air strike damage - " +
+            $"attacker HP {airPhase.AttackerSelections.TotalDamageDealt:F1}, Org {airPhase.AttackerSelections.TotalOrganizationDamageDealt:F1}; " +
+            $"defender HP {airPhase.DefenderSelections.TotalDamageDealt:F1}, Org {airPhase.DefenderSelections.TotalOrganizationDamageDealt:F1}");
+    }
+
+    private static void AppendSurfacePhaseLogs(int hour, SimulationState state, SurfacePhaseSnapshot surfacePhase)
+    {
+        state.HourlyLog.Add($"Hour {hour}: attacker actions - {NavalSurfaceCombatSimulator.BuildActionSummary(surfacePhase.AttackerActions)}");
+        state.HourlyLog.Add($"Hour {hour}: defender actions - {NavalSurfaceCombatSimulator.BuildActionSummary(surfacePhase.DefenderActions)}");
+        state.HourlyLog.Add($"Hour {hour}: attacker hit summary - {NavalSurfaceCombatSimulator.BuildHitSummary(surfacePhase.AttackerActions)}");
+        state.HourlyLog.Add($"Hour {hour}: defender hit summary - {NavalSurfaceCombatSimulator.BuildHitSummary(surfacePhase.DefenderActions)}");
+        state.HourlyLog.Add($"Hour {hour}: attacker skips - {NavalSurfaceCombatSimulator.BuildSkipSummary(surfacePhase.AttackerActions)}");
+        state.HourlyLog.Add($"Hour {hour}: defender skips - {NavalSurfaceCombatSimulator.BuildSkipSummary(surfacePhase.DefenderActions)}");
+    }
+
+    private HourSimulationResult EvaluateHourTermination(
+        BattleScenario scenario,
+        int hour,
+        SimulationState state,
+        SurfacePhaseSnapshot surfacePhase)
+    {
+        var retreatTermination = HandleRetreatTermination(scenario, hour, state, surfacePhase);
+
+        if (retreatTermination is not null)
+        {
+            return retreatTermination.Value;
+        }
+
+        var annihilationTermination = HandleAnnihilationTermination(surfacePhase);
+
+        if (annihilationTermination is not null)
+        {
+            return annihilationTermination.Value;
+        }
+
+        return new HourSimulationResult(
+            surfacePhase.AttackerAliveCount,
+            surfacePhase.DefenderAliveCount,
+            surfacePhase.AttackerRetreatedCount,
+            surfacePhase.DefenderRetreatedCount,
+            true);
+    }
+
+    private HourSimulationResult? HandleRetreatTermination(
+        BattleScenario scenario,
+        int hour,
+        SimulationState state,
+        SurfacePhaseSnapshot surfacePhase)
+    {
+        if (surfacePhase.AttackerAliveCount != surfacePhase.AttackerRetreatedCount &&
+            surfacePhase.DefenderAliveCount != surfacePhase.DefenderRetreatedCount)
+        {
+            return null;
+        }
+
+        if (scenario.ContinueAfterRetreat)
+        {
+            state.Reengagements++;
+            ResetRetreatedShipsForNewEngagement(scenario.Attacker.Fleet.Ships);
+            ResetRetreatedShipsForNewEngagement(scenario.Defender.Fleet.Ships);
+            state.HourlyLog.Add($"Hour {hour}: all remaining ships on one side retreated; immediately starting a new engagement with non-sunk ships");
+            return new HourSimulationResult(
+                surfacePhase.AttackerAliveCount,
+                surfacePhase.DefenderAliveCount,
+                surfacePhase.AttackerRetreatedCount,
+                surfacePhase.DefenderRetreatedCount,
+                true);
+        }
+
+        state.HourlyLog.Add($"Hour {hour}: Battle ended since one side has retreated");
+        return new HourSimulationResult(
+            surfacePhase.AttackerAliveCount,
+            surfacePhase.DefenderAliveCount,
+            surfacePhase.AttackerRetreatedCount,
+            surfacePhase.DefenderRetreatedCount,
+            false);
+    }
+
+    private static HourSimulationResult? HandleAnnihilationTermination(SurfacePhaseSnapshot surfacePhase)
+    {
+        if (surfacePhase.AttackerAliveCount > 0 && surfacePhase.DefenderAliveCount > 0)
+        {
+            return null;
+        }
+
+        return new HourSimulationResult(
+            surfacePhase.AttackerAliveCount,
+            surfacePhase.DefenderAliveCount,
+            surfacePhase.AttackerRetreatedCount,
+            surfacePhase.DefenderRetreatedCount,
+            false);
+    }
+
+
+    public int GetAliveShipCount(List<Ship> ships)
     {
         var count = 0;
 
@@ -264,7 +462,7 @@ public class BattleSimulator
         return count;
     }
 
-    private static int GetRetreatedShipCount(List<Ship> ships)
+    public int GetRetreatedShipCount(List<Ship> ships)
     {
         var count = 0;
 
@@ -279,7 +477,7 @@ public class BattleSimulator
         return count;
     }
 
-    private static void ResetRetreatedShipsForNewEngagement(List<Ship> ships)
+    public void ResetRetreatedShipsForNewEngagement(List<Ship> ships)
     {
         foreach (var ship in ships)
         {

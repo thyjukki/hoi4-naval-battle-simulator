@@ -1,3 +1,5 @@
+using NavySimulator.Domain.Planes;
+
 namespace NavySimulator.Domain.Battles;
 
 internal static class BattleResultBuilder

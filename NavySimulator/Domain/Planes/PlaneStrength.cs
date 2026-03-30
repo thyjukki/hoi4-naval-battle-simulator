@@ -1,4 +1,4 @@
-namespace NavySimulator.Domain.Battles;
+namespace NavySimulator.Domain.Planes;
 
 public record PlaneStrength(int Fighters, int Bombers)
 {
