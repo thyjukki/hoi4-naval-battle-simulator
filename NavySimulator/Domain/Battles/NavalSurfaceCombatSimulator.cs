@@ -10,11 +10,14 @@ internal static class NavalSurfaceCombatSimulator
         ScreeningSummary attackerScreening,
         ScreeningSummary defenderScreening,
         double positioning,
+        bool dontRetreat,
         int hour,
         Dictionary<(string ShipID, WeaponType Weapon), int> cooldowns,
-        Random random)
+        Random random,
+        out int retreatEvents)
     {
         var results = new List<ActionResult>();
+        retreatEvents = 0;
 
         foreach (var ship in firingOrder)
         {
@@ -25,7 +28,10 @@ internal static class NavalSurfaceCombatSimulator
 
             var stats = ship.GetFinalStats();
 
-            ResolveRetreating(ship, hour, attackerScreening);
+            if (ResolveRetreating(ship, hour, attackerScreening, dontRetreat))
+            {
+                retreatEvents++;
+            }
 
             if (ship.CurrentStatus == ShipStatus.Retreated)
             {
@@ -166,8 +172,13 @@ internal static class NavalSurfaceCombatSimulator
             .Select(group => $"{group.Key}:{group.Count()}"));
     }
 
-    private static void ResolveRetreating(Ship ship, int hour, ScreeningSummary screeningSummary)
+    private static bool ResolveRetreating(Ship ship, int hour, ScreeningSummary screeningSummary, bool dontRetreat)
     {
+        if (dontRetreat)
+        {
+            return false;
+        }
+
         if (ship.CurrentStatus == ShipStatus.Retreating)
         {
             var retreatSpeed = Hoi4Defines.BASE_ESCAPE_SPEED;
@@ -189,30 +200,31 @@ internal static class NavalSurfaceCombatSimulator
                 ship.CurrentStatus = ShipStatus.Retreated;
             }
 
-            return;
+            return false;
         }
 
         if (ship.CurrentStatus == ShipStatus.Retreated || hour < Hoi4Defines.COMBAT_MIN_DURATION)
         {
-            return;
+            return false;
         }
 
         var remainingHpRatio = ship.CurrentHP / ship.GetFinalStats().Hp;
 
         if (!(remainingHpRatio < Hoi4Defines.CombatMinStrRetreatChance))
         {
-            return;
+            return false;
         }
 
         var retreatChance = Hoi4Defines.COMBAT_RETREAT_DECISION_CHANCE;
         if (!(Random.Shared.NextDouble() < retreatChance))
         {
-            return;
+            return false;
         }
 
         ship.CurrentStatus = ShipStatus.Retreating;
         ship.AttemptedRetreat = true;
         ship.RetreatProgress = 0;
+        return true;
     }
 
     private static double GetRetreatSpeedFromScreening(Ship ship, ScreeningSummary screeningSummary)

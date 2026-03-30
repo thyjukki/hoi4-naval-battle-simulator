@@ -114,8 +114,8 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
         $"Production Loss Ratio (Defender/Attacker): {FormatRatio(result.DefenderToAttackerProductionLossRatio)}",
         $"Attacker Ships Remaining: {result.AttackerShipsRemaining}",
         $"Defender Ships Remaining: {result.DefenderShipsRemaining}",
-        $"Attacker Ships Retreated: {result.AttackerShipsRetreated}",
-        $"Defender Ships Retreated: {result.DefenderShipsRetreated}",
+        $"Retreat events: {result.RetreatEvents}",
+        $"Re-engagements: {result.Reengagements}",
         $"Attacker Planes (Start/Lost/Remaining): {FormatPlaneStrength(result.AttackerPlanesAtStart)} / {FormatPlaneStrength(result.AttackerPlanesLost)} / {FormatPlaneStrength(GetRemainingPlaneStrength(result.AttackerPlanesAtStart, result.AttackerPlanesLost))}",
         $"Defender Planes (Start/Lost/Remaining): {FormatPlaneStrength(result.DefenderPlanesAtStart)} / {FormatPlaneStrength(result.DefenderPlanesLost)} / {FormatPlaneStrength(GetRemainingPlaneStrength(result.DefenderPlanesAtStart, result.DefenderPlanesLost))}"
     };
@@ -130,15 +130,11 @@ for (var runNumber = 1; runNumber <= iterations; runNumber++)
         Console.WriteLine(line);
     }
 
-    Console.WriteLine($"Ships Dealing Damage (Attacker): {attackerShipsWithDamage}");
-    Console.WriteLine($"Ships Dealing Damage (Defender): {defenderShipsWithDamage}");
     Console.WriteLine($"Top Damage Dealers: {string.Join(", ", topDamageDealers)}");
     Console.WriteLine($"Hourly log file: {hourlyLogFilePath}");
     Console.WriteLine($"Summary file: {summaryFilePath}");
     Console.WriteLine($"Attacker ship-report folder: {shipReportOutput.AttackerFolder}");
     Console.WriteLine($"Defender ship-report folder: {shipReportOutput.DefenderFolder}");
-    Console.WriteLine($"Attacker design reports: {shipReportOutput.AttackerDesignReports}");
-    Console.WriteLine($"Defender design reports: {shipReportOutput.DefenderDesignReports}");
 }
 
 if (iterations > 1)
@@ -839,6 +835,8 @@ static List<string> BuildIterationsAverageSummaryLines(
     lines.Add($"Avg Defender Ships Remaining: {iterationResults.Average(result => result.DefenderShipsRemaining):F2}");
     lines.Add($"Avg Attacker Ships Retreated: {iterationResults.Average(result => result.AttackerShipsRetreated):F2}");
     lines.Add($"Avg Defender Ships Retreated: {iterationResults.Average(result => result.DefenderShipsRetreated):F2}");
+    lines.Add($"Avg Retreat events: {iterationResults.Average(result => result.RetreatEvents):F2}");
+    lines.Add($"Avg Re-engagements: {iterationResults.Average(result => result.Reengagements):F2}");
     lines.Add($"Avg Attacker Planes Lost: Fighters {iterationResults.Average(result => result.AttackerPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.AttackerPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.AttackerPlanesLost.Total):F2}");
     lines.Add($"Avg Defender Planes Lost: Fighters {iterationResults.Average(result => result.DefenderPlanesLost.Fighters):F2}, Bombers {iterationResults.Average(result => result.DefenderPlanesLost.Bombers):F2}, Total {iterationResults.Average(result => result.DefenderPlanesLost.Total):F2}");
 

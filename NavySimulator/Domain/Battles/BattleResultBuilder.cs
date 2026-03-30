@@ -19,6 +19,8 @@ internal static class BattleResultBuilder
         IReadOnlyDictionary<string, int> defenderCarrierSortiesByShipId,
         IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> attackerCarrierSortiesByShipIdAndHour,
         IReadOnlyDictionary<string, Dictionary<int, CarrierSortieHourMetrics>> defenderCarrierSortiesByShipIdAndHour,
+        int retreatEvents,
+        int reengagements,
         List<string> hourlyLog,
         List<ActionResult> allActions)
     {
@@ -73,6 +75,8 @@ internal static class BattleResultBuilder
             defenderCarrierPlaneDamageDealt,
             new Dictionary<string, double>(attackerPlaneDamageByType, StringComparer.Ordinal),
             new Dictionary<string, double>(defenderPlaneDamageByType, StringComparer.Ordinal),
+            retreatEvents,
+            reengagements,
             hourlyLog,
             shipReports);
     }

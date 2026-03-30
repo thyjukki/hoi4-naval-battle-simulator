@@ -22,6 +22,8 @@ public class BattleResult(
     double defenderCarrierPlaneDamage,
     Dictionary<string, double> attackerPlaneDamageByType,
     Dictionary<string, double> defenderPlaneDamageByType,
+    int retreatEvents,
+    int reengagements,
     List<string> hourlyLog,
     List<ShipBattleReport> shipReports)
 {
@@ -44,6 +46,8 @@ public class BattleResult(
     public readonly double DefenderCarrierPlaneDamage = defenderCarrierPlaneDamage;
     public readonly Dictionary<string, double> AttackerPlaneDamageByType = attackerPlaneDamageByType;
     public readonly Dictionary<string, double> DefenderPlaneDamageByType = defenderPlaneDamageByType;
+    public readonly int RetreatEvents = retreatEvents;
+    public readonly int Reengagements = reengagements;
     public readonly List<string> HourlyLog = hourlyLog;
     public readonly List<ShipBattleReport> ShipReports = shipReports;
 }

@@ -336,7 +336,9 @@ public class SetupLoader
             battleScenarioFile.BattleScenario.Iterations ?? 1,
             attacker,
             defender,
-            planeById);
+            planeById,
+            battleScenarioFile.BattleScenario.ContinueAfterRetreat ?? false,
+            battleScenarioFile.BattleScenario.DontRetreat ?? false);
     }
 
     private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(

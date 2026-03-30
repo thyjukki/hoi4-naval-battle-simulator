@@ -7,6 +7,8 @@ public class BattleScenarioDto
     public string Weather { get; set; } = string.Empty;
     public int MaxHours { get; set; }
     public int? Iterations { get; set; }
+    public bool? ContinueAfterRetreat { get; set; }
+    public bool? DontRetreat { get; set; }
     public BattleParticipantDto Attacker { get; set; } = new BattleParticipantDto();
     public BattleParticipantDto Defender { get; set; } = new BattleParticipantDto();
 }

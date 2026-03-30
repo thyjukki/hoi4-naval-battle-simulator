@@ -34,6 +34,8 @@ public class BattleSimulator
         var defenderCarrierWingStatesByWingKey = navalAirCombatSimulator.BuildCarrierWingStatesByWingKey(scenario.Defender.Fleet);
         var attackerFiringOrder = scenario.Attacker.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
         var defenderFiringOrder = scenario.Defender.Fleet.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal).ToList();
+        var retreatEvents = 0;
+        var reengagements = 0;
 
         for (var hour = 1; hour <= scenario.MaxHours; hour++)
         {
@@ -92,18 +94,23 @@ public class BattleSimulator
                 attackerScreening,
                 defenderScreening,
                 attackerPositioning,
+                scenario.DontRetreat,
                 hour,
                 cooldowns,
-                random);
+                random,
+                out var attackerRetreatEvents);
             var defenderActions = NavalSurfaceCombatSimulator.ResolveActions(
                 defenderFiringOrder,
                 attackerLines,
                 defenderScreening,
                 attackerScreening,
                 defenderPositioning,
+                scenario.DontRetreat,
                 hour,
                 cooldowns,
-                random);
+                random,
+                out var defenderRetreatEvents);
+            retreatEvents += attackerRetreatEvents + defenderRetreatEvents;
 
             NavalSurfaceCombatSimulator.ApplyActionDamage(attackerActions);
             NavalSurfaceCombatSimulator.ApplyActionDamage(defenderActions);
@@ -155,6 +162,15 @@ public class BattleSimulator
 
             if (attackerAliveCount == attackerRetreatedCount || defenderAliveCount == defenderRetreatedCount)
             {
+                if (scenario.ContinueAfterRetreat)
+                {
+                    reengagements++;
+                    ResetRetreatedShipsForNewEngagement(scenario.Attacker.Fleet.Ships);
+                    ResetRetreatedShipsForNewEngagement(scenario.Defender.Fleet.Ships);
+                    hourlyLog.Add($"Hour {hour}: all remaining ships on one side retreated; immediately starting a new engagement with non-sunk ships");
+                    continue;
+                }
+
                 hourlyLog.Add($"Hour {hour}: Battle ended since one side has retreated");
                 return BattleResultBuilder.BuildResult(
                     scenario,
@@ -173,6 +189,8 @@ public class BattleSimulator
                     defenderCarrierSortiesByShipId,
                     attackerCarrierSortiesByShipIdAndHour,
                     defenderCarrierSortiesByShipIdAndHour,
+                    retreatEvents,
+                    reengagements,
                     hourlyLog,
                     allActions);
             }
@@ -196,6 +214,8 @@ public class BattleSimulator
                     defenderCarrierSortiesByShipId,
                     attackerCarrierSortiesByShipIdAndHour,
                     defenderCarrierSortiesByShipIdAndHour,
+                    retreatEvents,
+                    reengagements,
                     hourlyLog,
                     allActions);
             }
@@ -223,6 +243,8 @@ public class BattleSimulator
             defenderCarrierSortiesByShipId,
             attackerCarrierSortiesByShipIdAndHour,
             defenderCarrierSortiesByShipIdAndHour,
+            retreatEvents,
+            reengagements,
             hourlyLog,
             allActions);
     }
@@ -255,6 +277,23 @@ public class BattleSimulator
         }
 
         return count;
+    }
+
+    private static void ResetRetreatedShipsForNewEngagement(List<Ship> ships)
+    {
+        foreach (var ship in ships)
+        {
+            if (ship.IsSunk)
+            {
+                continue;
+            }
+
+            if (ship.CurrentStatus is ShipStatus.Retreated or ShipStatus.Retreating)
+            {
+                ship.CurrentStatus = ShipStatus.Active;
+                ship.RetreatProgress = 0;
+            }
+        }
     }
 
     private static void MergeDamageByType(

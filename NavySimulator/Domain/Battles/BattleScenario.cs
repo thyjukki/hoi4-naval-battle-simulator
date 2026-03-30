@@ -10,6 +10,8 @@ public class BattleScenario
     public readonly BattleParticipant Attacker;
     public readonly BattleParticipant Defender;
     public readonly IReadOnlyDictionary<string, PlaneEquipment> PlanesByID;
+    public readonly bool ContinueAfterRetreat;
+    public readonly bool DontRetreat;
 
     public BattleScenario(
         string id,
@@ -19,7 +21,9 @@ public class BattleScenario
         int iterations,
         BattleParticipant attacker,
         BattleParticipant defender,
-        IReadOnlyDictionary<string, PlaneEquipment> planesById)
+        IReadOnlyDictionary<string, PlaneEquipment> planesById,
+        bool continueAfterRetreat,
+        bool dontRetreat)
     {
         ID = id;
         Terrain = terrain;
@@ -29,6 +33,8 @@ public class BattleScenario
         Attacker = attacker;
         Defender = defender;
         PlanesByID = planesById;
+        ContinueAfterRetreat = continueAfterRetreat;
+        DontRetreat = dontRetreat;
     }
 }
 

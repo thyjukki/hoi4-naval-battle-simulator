@@ -250,7 +250,9 @@ public class NavalAirCombatSimulatorTests
             iterations: 1,
             attacker: attacker,
             defender: defender,
-            planesById: planesById);
+            planesById: planesById,
+            continueAfterRetreat: false,
+            dontRetreat: false);
     }
 
     private static BattleParticipant CreateParticipant(Fleet fleet)
