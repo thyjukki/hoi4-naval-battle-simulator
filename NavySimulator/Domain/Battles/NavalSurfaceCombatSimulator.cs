@@ -10,9 +10,10 @@ internal static class NavalSurfaceCombatSimulator
         ScreeningSummary attackerScreening,
         ScreeningSummary defenderScreening,
         double positioning,
+        bool battleHasCarriers,
+        bool battleHasCapitals,
         bool dontRetreat,
         int hour,
-        Dictionary<(string ShipID, WeaponType Weapon), int> cooldowns,
         Random random,
         out int retreatEvents)
     {
@@ -45,7 +46,8 @@ internal static class NavalSurfaceCombatSimulator
                 stats.LightAttack,
                 stats.LightPiercing,
                 hour,
-                cooldowns,
+                battleHasCarriers,
+                battleHasCapitals,
                 positioning,
                 attackerScreening,
                 defenderLines,
@@ -60,7 +62,8 @@ internal static class NavalSurfaceCombatSimulator
                 stats.HeavyAttack,
                 stats.HeavyPiercing,
                 hour,
-                cooldowns,
+                battleHasCarriers,
+                battleHasCapitals,
                 positioning,
                 attackerScreening,
                 defenderLines,
@@ -75,7 +78,8 @@ internal static class NavalSurfaceCombatSimulator
                 stats.TorpedoAttack,
                 1,
                 hour,
-                cooldowns,
+                battleHasCarriers,
+                battleHasCapitals,
                 positioning,
                 attackerScreening,
                 defenderLines,
@@ -252,7 +256,8 @@ internal static class NavalSurfaceCombatSimulator
         double attackValue,
         double piercingValue,
         int hour,
-        Dictionary<(string ShipID, WeaponType Weapon), int> cooldowns,
+        bool battleHasCarriers,
+        bool battleHasCapitals,
         double positioning,
         ScreeningSummary attackerScreening,
         BattleLines defenderLines,
@@ -264,14 +269,12 @@ internal static class NavalSurfaceCombatSimulator
             return ActionResult.Skip(shooter, weapon, hour, "no-weapon");
         }
 
-        if (!HasShipLineActivated(shooter.Design.Hull.Role, hour))
+        if (!HasShipLineActivated(shooter.Design.Hull.Role, hour, battleHasCarriers, battleHasCapitals))
         {
             return ActionResult.Skip(shooter, weapon, hour, "line-not-active");
         }
 
-        var cooldownKey = (shooter.ID, weapon);
-
-        if (cooldowns.TryGetValue(cooldownKey, out var nextAvailableHour) && hour < nextAvailableHour)
+        if (!IsWeaponReadyThisHour(weapon, hour))
         {
             return ActionResult.Skip(shooter, weapon, hour, "cooldown");
         }
@@ -297,7 +300,6 @@ internal static class NavalSurfaceCombatSimulator
             ? defenderStats.SubVisibility
             : defenderStats.SurfaceVisibility;
 
-        cooldowns[cooldownKey] = hour + GetCooldownHours(weapon);
         var finalHitChance = CalculateFinalHitChance(
             shooter,
             selectedTarget.Target,
@@ -329,20 +331,37 @@ internal static class NavalSurfaceCombatSimulator
             didHit);
     }
 
-    private static bool HasShipLineActivated(ShipRole role, int hour)
+    private static bool HasShipLineActivated(ShipRole role, int hour, bool battleHasCarriers, bool battleHasCapitals)
     {
         var elapsedCombatHours = Math.Max(0, hour - 1);
-        return elapsedCombatHours >= GetActivationDelayHours(role);
+        return elapsedCombatHours >= GetActivationDelayHours(role, battleHasCarriers, battleHasCapitals);
     }
 
-    private static int GetActivationDelayHours(ShipRole role)
+    private static int GetActivationDelayHours(ShipRole role, bool battleHasCarriers, bool battleHasCapitals)
     {
         return role switch
         {
             ShipRole.Carrier => Hoi4Defines.CARRIER_ONLY_COMBAT_ACTIVATE_TIME,
-            ShipRole.Capital => Hoi4Defines.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME,
-            _ => Hoi4Defines.ALL_SHIPS_ACTIVATE_TIME
+            ShipRole.Capital => battleHasCarriers ? Hoi4Defines.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME : 0,
+            _ => battleHasCapitals ? Hoi4Defines.ALL_SHIPS_ACTIVATE_TIME : 0
         };
+    }
+
+    private static bool IsWeaponReadyThisHour(WeaponType weapon, int hour)
+    {
+        var cooldownHours = GetCooldownHours(weapon);
+
+        if (cooldownHours <= 0)
+        {
+            return true;
+        }
+
+        if (hour < cooldownHours)
+        {
+            return false;
+        }
+
+        return hour % cooldownHours == 0;
     }
 
     private static double CalculateDamage(Ship target, WeaponType weapon, double attackValue, double piercingValue, double positioning)

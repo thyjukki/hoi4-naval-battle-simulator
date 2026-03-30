@@ -6,7 +6,6 @@ public class BattleSimulator
     {
         public readonly List<string> HourlyLog = [];
         public readonly List<ActionResult> AllActions = [];
-        public readonly Dictionary<(string ShipID, WeaponType Weapon), int> Cooldowns = [];
         public readonly Random Random = new(42);
         public readonly Dictionary<string, int> AttackerCarrierSortiesByShipId = new(StringComparer.Ordinal);
         public readonly Dictionary<string, int> DefenderCarrierSortiesByShipId = new(StringComparer.Ordinal);
@@ -241,15 +240,19 @@ public class BattleSimulator
         double attackerPositioning,
         double defenderPositioning)
     {
+        var battleHasCarriers = attackerLines.Carriers.Count > 0 || defenderLines.Carriers.Count > 0;
+        var battleHasCapitals = attackerLines.Capitals.Count > 0 || defenderLines.Capitals.Count > 0;
+
         var attackerActions = NavalSurfaceCombatSimulator.ResolveActions(
             state.AttackerFiringOrder,
             defenderLines,
             attackerScreening,
             defenderScreening,
             attackerPositioning,
+            battleHasCarriers,
+            battleHasCapitals,
             scenario.DontRetreat,
             hour,
-            state.Cooldowns,
             state.Random,
             out var attackerRetreatEvents);
         var defenderActions = NavalSurfaceCombatSimulator.ResolveActions(
@@ -258,9 +261,10 @@ public class BattleSimulator
             defenderScreening,
             attackerScreening,
             defenderPositioning,
+            battleHasCarriers,
+            battleHasCapitals,
             scenario.DontRetreat,
             hour,
-            state.Cooldowns,
             state.Random,
             out var defenderRetreatEvents);
         state.RetreatEvents += attackerRetreatEvents + defenderRetreatEvents;
