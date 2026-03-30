@@ -120,6 +120,13 @@ public static class Hoi4Defines
         0.10
     ];
 
+    public const double COMBAT_TORPEDO_CRITICAL_CHANCE = 0.25;
+    public const double COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT = 3.75;
+    public const double COMBAT_BASE_CRITICAL_CHANCE = 0.05;
+    public const double COMBAT_CRITICAL_DAMAGE_MULT = 5.0;
+    public const double CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT = 0.1;
+    public const double CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR = 0.1;
+
     public static readonly int CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
     
     public static readonly double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ

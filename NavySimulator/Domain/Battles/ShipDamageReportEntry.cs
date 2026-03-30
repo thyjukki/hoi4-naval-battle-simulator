@@ -9,6 +9,8 @@ public sealed record ShipDamageReportEntry(
     double AppliedHpDamage,
     double AppliedOrganizationDamage,
     bool DidKillingBlow,
+    bool DidCriticalHit,
+    double CriticalDamageMultiplier,
     double AttackerPiercing,
     double AttackerFinalHitChance,
     double DefenderArmor,

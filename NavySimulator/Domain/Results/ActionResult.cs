@@ -18,6 +18,8 @@ internal class ActionResult
     public readonly double DefenderSpeed;
     public readonly double DefenderVisibility;
     public bool DidKillingBlow;
+    public readonly bool DidCriticalHit;
+    public readonly double CriticalDamageMultiplier;
     public readonly int Hour;
     public double AppliedHpDamage;
     public double AppliedOrganizationDamage;
@@ -38,6 +40,8 @@ internal class ActionResult
         double defenderSpeed,
         double defenderVisibility,
         bool didKillingBlow,
+        bool didCriticalHit,
+        double criticalDamageMultiplier,
         int hour,
         double appliedHpDamage,
         double appliedOrganizationDamage)
@@ -57,6 +61,8 @@ internal class ActionResult
         DefenderSpeed = defenderSpeed;
         DefenderVisibility = defenderVisibility;
         DidKillingBlow = didKillingBlow;
+        DidCriticalHit = didCriticalHit;
+        CriticalDamageMultiplier = criticalDamageMultiplier;
         Hour = hour;
         AppliedHpDamage = appliedHpDamage;
         AppliedOrganizationDamage = appliedOrganizationDamage;
@@ -74,7 +80,9 @@ internal class ActionResult
         int hour,
         double finalHitChance,
         double hitRoll,
-        bool didHit)
+        bool didHit,
+        bool didCriticalHit,
+        double criticalDamageMultiplier)
     {
         return new ActionResult(
             shooter.ID,
@@ -92,6 +100,8 @@ internal class ActionResult
             defenderSpeed,
             defenderVisibility,
             didKillingBlow: false,
+            didCriticalHit,
+            criticalDamageMultiplier,
             hour,
             appliedHpDamage: 0,
             appliedOrganizationDamage: 0);
@@ -99,6 +109,6 @@ internal class ActionResult
 
     public static ActionResult Skip(Ship shooter, WeaponType weapon, int hour, string reason)
     {
-        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason, 0, 0, 0, 0, false, hour, 0, 0);
+        return new ActionResult(shooter.ID, weapon, false, null, GroupType.None, 0, 0, 0, false, reason, 0, 0, 0, 0, false, false, 1, hour, 0, 0);
     }
 }

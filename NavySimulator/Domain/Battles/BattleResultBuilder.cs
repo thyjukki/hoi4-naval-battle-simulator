@@ -158,6 +158,8 @@ internal static class BattleResultBuilder
                     action.AppliedHpDamage,
                     action.AppliedOrganizationDamage,
                     action.DidKillingBlow,
+                    action.DidCriticalHit,
+                    action.CriticalDamageMultiplier,
                     action.PiercingValue,
                     action.FinalHitChance,
                     action.DefenderArmor,

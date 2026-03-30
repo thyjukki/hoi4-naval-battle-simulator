@@ -426,6 +426,7 @@ static void AppendShipDetailLines(
         .OrderBy(shot => shot.Event.HourTick)
         .ThenBy(shot => shot.ShooterShipID, StringComparer.Ordinal)
         .ToList();
+    var criticalHitsReceived = incomingDamageEvents.Count(shot => shot.Event.DidCriticalHit);
 
     lines.Add($"{indent}Ship: {shipReport.ShipID} ({shipReport.Side})");
     lines.Add($"{indent}  Design: {ResolveShipType(shipReport.ShipID, shipById)}");
@@ -434,6 +435,7 @@ static void AppendShipDetailLines(
     lines.Add($"{indent}  Retreated: {shipReport.DidRetreat}");
     lines.Add($"{indent}  Attempted Retreat: {shipReport.AttemptedRetreat}");
     lines.Add($"{indent}  Attempted Retreat But Sunk: {shipReport.AttemptedRetreatButSunk}");
+    lines.Add($"{indent}  Critical Hits Received: {criticalHitsReceived}");
     lines.Add($"{indent}  Production Cost: {shipReport.ProductionCost:F1}");
     lines.Add($"{indent}  Total Damage Done: {shipReport.TotalDamageDone:F1}");
 
@@ -476,6 +478,7 @@ static void AppendShipDetailLines(
             lines.Add(
                 $"{indent}    - Hour {damageEvent.HourTick}, Target {damageEvent.TargetShipID} ({targetType}), Weapon {damageEvent.Weapon}, Hit {damageEvent.DidHit}, Damage {damageEvent.Damage:F1}, " +
                 $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
+                $"Critical {damageEvent.DidCriticalHit} (x{damageEvent.CriticalDamageMultiplier:F2}), " +
                 $"Attacker Piercing {damageEvent.AttackerPiercing:F2}, Hit Chance {damageEvent.AttackerFinalHitChance:P1}, " +
                 $"Defender Armor {damageEvent.DefenderArmor:F2}, Speed {damageEvent.DefenderSpeed:F2}, Visibility {damageEvent.DefenderVisibility:F2}");
         }
@@ -495,7 +498,8 @@ static void AppendShipDetailLines(
             var shooterType = ResolveShipType(shot.ShooterShipID, shipById);
             lines.Add(
                 $"{indent}    - Hour {damageEvent.HourTick}, From {shot.ShooterShipID} ({shooterType}), Weapon {damageEvent.Weapon}, Damage {damageEvent.Damage:F1}, " +
-                $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}");
+                $"HP Damage {damageEvent.AppliedHpDamage:F1}, Org Damage {damageEvent.AppliedOrganizationDamage:F1}, Killing Blow {damageEvent.DidKillingBlow}, " +
+                $"Critical {damageEvent.DidCriticalHit} (x{damageEvent.CriticalDamageMultiplier:F2})");
         }
     }
 }

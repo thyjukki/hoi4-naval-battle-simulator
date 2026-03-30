@@ -4,6 +4,8 @@ namespace NavySimulator.Domain.Battles;
 
 internal static class NavalSurfaceCombatSimulator
 {
+    private readonly record struct DamageCalculationResult(double Damage, bool DidCriticalHit, double CriticalDamageMultiplier);
+
     public static List<ActionResult> ResolveActions(
         List<Ship> firingOrder,
         BattleLines defenderLines,
@@ -311,9 +313,14 @@ internal static class NavalSurfaceCombatSimulator
         var didHit = hitRoll <= finalHitChance;
 
         var damage = 0.0;
+        var didCriticalHit = false;
+        var criticalDamageMultiplier = 1.0;
         if (didHit)
         {
-            damage = CalculateDamage(selectedTarget.Target, weapon, attackValue, piercingValue, positioning);
+            var damageResult = CalculateDamage(selectedTarget.Target, weapon, attackValue, piercingValue, positioning, random);
+            damage = damageResult.Damage;
+            didCriticalHit = damageResult.DidCriticalHit;
+            criticalDamageMultiplier = damageResult.CriticalDamageMultiplier;
         }
 
         return ActionResult.Fire(
@@ -328,7 +335,9 @@ internal static class NavalSurfaceCombatSimulator
             hour,
             finalHitChance,
             hitRoll,
-            didHit);
+            didHit,
+            didCriticalHit,
+            criticalDamageMultiplier);
     }
 
     private static bool HasShipLineActivated(ShipRole role, int hour, bool battleHasCarriers, bool battleHasCapitals)
@@ -364,10 +373,17 @@ internal static class NavalSurfaceCombatSimulator
         return hour % cooldownHours == 0;
     }
 
-    private static double CalculateDamage(Ship target, WeaponType weapon, double attackValue, double piercingValue, double positioning)
+    private static DamageCalculationResult CalculateDamage(
+        Ship target,
+        WeaponType weapon,
+        double attackValue,
+        double piercingValue,
+        double positioning,
+        Random random)
     {
         var targetStats = target.GetFinalStats();
         var piercingDamageValue = 1.0;
+        var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
 
         if (weapon is not WeaponType.Torpedo)
         {
@@ -375,7 +391,6 @@ internal static class NavalSurfaceCombatSimulator
             var effectiveArmor = Math.Max(0.0001, targetArmor);
             var piercingRatio = piercingValue / effectiveArmor;
 
-            var piercingThresholdIndex = Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length - 1;
             for (var i = 0; i < Hoi4Defines.NAVY_PIERCING_THRESHOLDS.Length; i++)
             {
                 if (piercingRatio >= Hoi4Defines.NAVY_PIERCING_THRESHOLDS[i])
@@ -388,6 +403,24 @@ internal static class NavalSurfaceCombatSimulator
             piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         }
 
+        var criticalChance = GetCriticalHitChance(weapon, targetStats.Reliability, piercingThresholdIndex);
+        var criticalDamageMultiplier = GetCriticalDamageMultiplier(weapon, targetStats.Reliability);
+        double damageFromCriticalHitMultiplier;
+        if (random.NextDouble() <= criticalChance)
+        {
+            if (random.NextDouble() <= Hoi4Defines.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT)
+            {
+                //TODO Critical hit to a part would reduce the target's stats for the rest of the combat
+                damageFromCriticalHitMultiplier = 1.0;
+            }
+            else
+            {
+                damageFromCriticalHitMultiplier = criticalDamageMultiplier;
+            }
+        }
+        else
+            damageFromCriticalHitMultiplier = 1.0;
+
         var positioningMultiplier = 1.0 - Hoi4Defines.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
         var torpedoReductionMultiplier = 1.0;
 
@@ -396,10 +429,41 @@ internal static class NavalSurfaceCombatSimulator
             torpedoReductionMultiplier = Math.Max(0, 1.0 - targetStats.TorpedoDamageReductionFactor);
         }
 
-        var damage = attackValue * piercingDamageValue * positioningMultiplier * torpedoReductionMultiplier;
+        var damage = attackValue * piercingDamageValue * damageFromCriticalHitMultiplier * positioningMultiplier * torpedoReductionMultiplier;
         damage *= (1.0 - Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS +
-                   Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS * Random.Shared.NextDouble());
-        return Math.Max(0, damage);
+                   Hoi4Defines.COMBAT_DAMAGE_RANDOMNESS * random.NextDouble());
+        var finalDamage = Math.Max(0, damage);
+        return new DamageCalculationResult(finalDamage, damageFromCriticalHitMultiplier > 1.0, damageFromCriticalHitMultiplier);
+    }
+
+    private static double GetCriticalHitChance(WeaponType weapon, double targetReliability, int piercingThresholdIndex)
+    {
+        if (weapon == WeaponType.Torpedo)
+        {
+            return Hoi4Defines.COMBAT_TORPEDO_CRITICAL_CHANCE;
+        }
+
+        var reliabilityFactor = 1.0 - Math.Clamp(targetReliability, 0, 1);
+
+        if (reliabilityFactor <= 0)
+        {
+            return 0;
+        }
+
+        var piercingCriticalModifier = Hoi4Defines.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES[piercingThresholdIndex];
+        var criticalChance = Hoi4Defines.COMBAT_BASE_CRITICAL_CHANCE * piercingCriticalModifier * reliabilityFactor;
+        return Math.Clamp(criticalChance, 0, 1);
+    }
+
+    private static double GetCriticalDamageMultiplier(WeaponType weapon, double targetReliability)
+    {
+        if (weapon == WeaponType.Torpedo)
+        {
+            return Hoi4Defines.COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT;
+        }
+
+        var reliabilityFactor = 1.0 - Math.Clamp(targetReliability, 0, 1);
+        return 1.0 + (Hoi4Defines.COMBAT_CRITICAL_DAMAGE_MULT - 1.0) * reliabilityFactor;
     }
 
     private static double CalculateFinalHitChance(
