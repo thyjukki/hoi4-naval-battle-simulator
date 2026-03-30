@@ -20,6 +20,24 @@
       ]
     },
     {
+      "id": "cl3_armor4_mix",
+      "hullID": "light_cruiser_hull_3",
+      "moduleIDs": [
+        "medium_light_battery_3",
+        "fire_control_3",
+        "radar_4",
+        "engine_cruiser_3",
+        "armor_cruiser_4",
+        "anti_air_4",
+        "light_secondaries_2",
+        "torpedo_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3"
+      ]
+    },
+    {
       "id": "39_cl3_la_2aa",
       "hullID": "light_cruiser_hull_3",
       "moduleIDs": [

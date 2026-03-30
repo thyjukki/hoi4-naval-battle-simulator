@@ -8,6 +8,20 @@
         "torpedo_cruiser_torpattack": 24,
         "cl3_armor4_full_la": 42
       }
+    },
+    {
+      "id": "25torpca_42_cl_la",
+      "shipDesigns": {
+        "torpedo_cruiser_torpattack": 24,
+        "cl3_armor4_full_la": 42
+      }
+    },
+    {
+      "id": "25torpca_42_cl_mix",
+      "shipDesigns": {
+        "torpedo_cruiser_torpattack": 24,
+        "cl3_armor4_mix": 42
+      }
     }
   ]
 }

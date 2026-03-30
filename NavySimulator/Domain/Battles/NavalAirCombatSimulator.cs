@@ -191,19 +191,19 @@ internal class NavalAirCombatSimulator
         if (snapshot.BomberWings <= 0)
         {
             return new NavalStrikeSelectionSummary(
-                targetSelections: selections,
-                carrierTargetSelections: new Dictionary<string, int>(StringComparer.Ordinal),
-                carrierBombersShotDownByShipId: carrierBombersShotDownByShipId,
-                carrierBombersShotDownByWingKey: carrierBombersShotDownByWingKey,
-                bombersShotDown: 0,
-                carrierBombersShotDown: 0,
-                totalDamageDealt: 0,
-                totalOrganizationDamageDealt: 0,
-                carrierDamageDealt: 0,
-                carrierOrganizationDamageDealt: 0,
-                carrierAverageTargetAaDefense: 0,
-                carrierAverageCombinedFleetAaDamageReduction: 0,
-                damageByPlaneType: damageByPlaneType);
+                TargetSelections: selections,
+                CarrierTargetSelections: new Dictionary<string, int>(StringComparer.Ordinal),
+                CarrierBombersShotDownByShipId: carrierBombersShotDownByShipId,
+                CarrierBombersShotDownByWingKey: carrierBombersShotDownByWingKey,
+                BombersShotDown: 0,
+                CarrierBombersShotDown: 0,
+                TotalDamageDealt: 0,
+                TotalOrganizationDamageDealt: 0,
+                CarrierDamageDealt: 0,
+                CarrierOrganizationDamageDealt: 0,
+                CarrierAverageTargetAaDefense: 0,
+                CarrierAverageCombinedFleetAaDamageReduction: 0,
+                DamageByPlaneType: damageByPlaneType);
         }
 
         var candidates = BuildAirTargetCandidates(enemyLines).ToList();
@@ -211,19 +211,19 @@ internal class NavalAirCombatSimulator
         if (candidates.Count == 0)
         {
             return new NavalStrikeSelectionSummary(
-                targetSelections: selections,
-                carrierTargetSelections: new Dictionary<string, int>(StringComparer.Ordinal),
-                carrierBombersShotDownByShipId: carrierBombersShotDownByShipId,
-                carrierBombersShotDownByWingKey: carrierBombersShotDownByWingKey,
-                bombersShotDown: 0,
-                carrierBombersShotDown: 0,
-                totalDamageDealt: 0,
-                totalOrganizationDamageDealt: 0,
-                carrierDamageDealt: 0,
-                carrierOrganizationDamageDealt: 0,
-                carrierAverageTargetAaDefense: 0,
-                carrierAverageCombinedFleetAaDamageReduction: 0,
-                damageByPlaneType: damageByPlaneType);
+                TargetSelections: selections,
+                CarrierTargetSelections: new Dictionary<string, int>(StringComparer.Ordinal),
+                CarrierBombersShotDownByShipId: carrierBombersShotDownByShipId,
+                CarrierBombersShotDownByWingKey: carrierBombersShotDownByWingKey,
+                BombersShotDown: 0,
+                CarrierBombersShotDown: 0,
+                TotalDamageDealt: 0,
+                TotalOrganizationDamageDealt: 0,
+                CarrierDamageDealt: 0,
+                CarrierOrganizationDamageDealt: 0,
+                CarrierAverageTargetAaDefense: 0,
+                CarrierAverageCombinedFleetAaDamageReduction: 0,
+                DamageByPlaneType: damageByPlaneType);
         }
 
         foreach (var carrierWing in snapshot.CarrierStrikeWingProfiles)
@@ -466,7 +466,7 @@ internal class NavalAirCombatSimulator
                     wing.CarrierShipID,
                     wing.PlaneID,
                     sortiePlanes,
-                    isCarrierBased: true));
+                    IsCarrierBased: true));
 
                 sortiePlaneBudget -= sortiePlanes;
 
@@ -657,7 +657,7 @@ internal class NavalAirCombatSimulator
     {
         var hitRatio = Math.Clamp((navalTargeting / 10.0) * Hoi4Defines.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
         var hitPlanes = Math.Round(planesRemaining * hitRatio);
-        var rawDamage = hitPlanes * navalAttack;
+        var rawDamage = hitPlanes * navalAttack * 0.1;
 
         if (isCarrierBased)
         {

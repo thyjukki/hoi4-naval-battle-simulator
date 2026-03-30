@@ -4,20 +4,21 @@
     {
       "id": "1cv_no_plane",
       "shipDesigns": {
-        "39_carrier": 1
+        "39_carrier_no_aa": 1
       }
     },
     {
       "id": "1cv_1_plane",
       "shipDesigns": {
-        "39_carrier": 1
+        "39_carrier_no_aa": 1
       },
       "carrierAirwings": {
-        "39_carrier": [
+        "39_carrier_no_aa": [
           {
             "planeID": "bomber_1936_untrained",
             "type": "bomber",
-            "airwings": 1
+            "airwings": 1,
+            "planeCount": 8
           }
         ]
       }

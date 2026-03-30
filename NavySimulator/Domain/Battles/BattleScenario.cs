@@ -2,14 +2,14 @@ namespace NavySimulator.Domain;
 
 public class BattleScenario
 {
-    public string ID;
-    public string Terrain;
-    public string Weather;
-    public int MaxHours;
-    public int Iterations;
-    public BattleParticipant Attacker;
-    public BattleParticipant Defender;
-    public IReadOnlyDictionary<string, PlaneEquipment> PlanesByID;
+    public readonly string ID;
+    public readonly string Terrain;
+    public readonly string Weather;
+    public readonly int MaxHours;
+    public readonly int Iterations;
+    public readonly BattleParticipant Attacker;
+    public readonly BattleParticipant Defender;
+    public readonly IReadOnlyDictionary<string, PlaneEquipment> PlanesByID;
 
     public BattleScenario(
         string id,

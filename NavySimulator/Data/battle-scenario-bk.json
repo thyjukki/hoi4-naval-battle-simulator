@@ -5,9 +5,9 @@
     "terrain": "ocean",
     "weather": "clear",
     "maxHours": 1000000,
-    "iterations": 1,
+    "iterations": 5,
     "attacker": {
-      "fleetID": "75_cl3_armor4_full_la",
+      "fleetID": "2cv_25torpca_42_cl",
       "commander": "",
       "doctrine": "",
       "externalNavalStrikePlanes": 0,
@@ -16,7 +16,7 @@
       "shipExperienceLevel": 0
     },
     "defender": {
-      "fleetID": "75_cl3_armor4_mix",
+      "fleetID": "4cv_10bb_29_cl",
       "commander": "",
       "doctrine": "",
       "externalNavalStrikePlanes": 0,

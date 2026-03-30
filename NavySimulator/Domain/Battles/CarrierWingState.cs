@@ -2,10 +2,10 @@ namespace NavySimulator.Domain.Battles;
 
 internal sealed class CarrierWingState
 {
-    public string WingKey;
-    public string CarrierShipID;
-    public string PlaneID;
-    public AirwingType Type;
+    public readonly string WingKey;
+    public readonly string CarrierShipID;
+    public readonly string PlaneID;
+    public readonly AirwingType Type;
     public int CurrentPlanes;
 
     public CarrierWingState(

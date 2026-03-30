@@ -4,13 +4,13 @@ namespace NavySimulator.Domain;
 
 public class BattleParticipant
 {
-    public Fleet Fleet;
-    public string Commander;
-    public string Doctrine;
+    public readonly Fleet Fleet;
+    public readonly string Commander;
+    public readonly string Doctrine;
     public int? ShipExperienceLevelOverride;
-    public int ExternalNavalStrikePlanes;
-    public List<Research> Researches;
-    public List<Spirit> Spirits;
+    public readonly int ExternalNavalStrikePlanes;
+    public readonly List<Research> Researches;
+    public readonly List<Spirit> Spirits;
 
     public BattleParticipant(
         Fleet fleet,

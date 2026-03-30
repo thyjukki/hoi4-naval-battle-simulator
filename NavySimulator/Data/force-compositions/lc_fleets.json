@@ -1,0 +1,18 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "75_cl3_armor4_full_la",
+      "shipDesigns": {
+        "cl3_armor4_full_la": 75
+      }
+    },
+    {
+      "id": "75_cl3_armor4_mix",
+      "shipDesigns": {
+        "cl3_armor4_mix": 75
+      }
+    }
+  ]
+}
+

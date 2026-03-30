@@ -26,7 +26,7 @@ public static class Hoi4Defines
     public const double PositioningContributionScale = 0.5;
 
     public const double COMBAT_RETREAT_DECISION_CHANCE = 0.2;
-    public const double CombatMinStrRetreatChance = 0.0; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
+    public const double CombatMinStrRetreatChance = 0.4; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
     public const double BASE_ESCAPE_SPEED = 0.06;
     public const double SPEED_TO_ESCAPE_SPEED = 1.15;
     public const double MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION = 0.20;
@@ -81,7 +81,7 @@ public static class Hoi4Defines
     public const double NAVAL_STRIKE_DAMAGE_TO_STR = 1.25;
     public const double NAVAL_STRIKE_DAMAGE_TO_ORG = 1.25;
 
-    public static double[] NAVY_PIERCING_THRESHOLDS =
+    public static readonly double[] NAVY_PIERCING_THRESHOLDS =
     [
         2.00,
         1.50,
@@ -107,7 +107,7 @@ public static class Hoi4Defines
         0.00
     ];
 
-    public static double[] NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES =
+    public static readonly double[] NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES =
     [
         1.00,
         1.00,
@@ -120,30 +120,30 @@ public static class Hoi4Defines
         0.10
     ];
 
-    public static int CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
+    public static readonly int CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
     
-    public static double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
-    public static double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
-    public static double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 30;
-    public static double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 100;
-    public static double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE = 5;                         // how much score factor from low health (scales between 0->this number)
-    public static double NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE = 5;
+    public static readonly double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
+    public static readonly double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
+    public static readonly double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 30;
+    public static readonly double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 100;
+    public static readonly double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE = 5;                         // how much score factor from low health (scales between 0->this number)
+    public static readonly double NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE = 5;
 
-    public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO = 0.1;
-    public static double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY = 0.25;
-    public static double NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP = 30;
+    public static readonly double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO = 0.1;
+    public static readonly double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY = 0.25;
+    public static readonly double NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP = 30;
 
-    public static double ANTI_AIR_TARGETTING_TO_CHANCE = 0.2;
-    public static double ANTI_AIR_TARGETING = 0.4;
-    public static double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY = 0.02;
-    public static double ANTI_AIR_ATTACK_TO_AMOUNT = 0.01;
+    public static readonly double ANTI_AIR_TARGETTING_TO_CHANCE = 0.2;
+    public static readonly double ANTI_AIR_TARGETING = 0.4;
+    public static readonly double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY = 0.02;
+    public static readonly double ANTI_AIR_ATTACK_TO_AMOUNT = 0.01;
     public static double MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE = 0.75;
-    public static double ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE = 0.03;
-    public static double ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE = 0.58;
-    public static double SHIP_TO_FLEET_ANTI_AIR_RATIO = 0.25;
+    public static readonly double ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE = 0.03;
+    public static readonly double ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE = 0.58;
+    public static readonly double SHIP_TO_FLEET_ANTI_AIR_RATIO = 0.25;
 
-    public static double NAVAL_STRIKE_CARRIER_MULTIPLIER = 1.75;
-    public static double NAVAL_STRIKE_TARGETTING_TO_AMOUNT = 0.4;
+    public static readonly double NAVAL_STRIKE_CARRIER_MULTIPLIER = 1.75;
+    public static readonly double NAVAL_STRIKE_TARGETTING_TO_AMOUNT = 0.4;
 
     public const double BASE_CARRIER_SORTIE_EFFICIENCY = 0.20;
     public const double CARRIER_SORTIE_EFFICIENCY_FROM_SCREENING = 0.35;
@@ -151,9 +151,9 @@ public static class Hoi4Defines
 
     public const int COMBAT_MIN_DURATION = 8;
     public const int COMBAT_INITIAL_DURATION = 6;
-    public static int ALL_SHIPS_ACTIVATE_TIME = 12;
-    public static int CAPITAL_ONLY_COMBAT_ACTIVATE_TIME = 8;
-    public static int CARRIER_ONLY_COMBAT_ACTIVATE_TIME = 0;
+    public static readonly int ALL_SHIPS_ACTIVATE_TIME = 12;
+    public static readonly int CAPITAL_ONLY_COMBAT_ACTIVATE_TIME = 8;
+    public static readonly int CARRIER_ONLY_COMBAT_ACTIVATE_TIME = 0;
 
     public const int SHIP_EXPERIENCE_LEVEL_UNTRAINED = 0;
     public const int SHIP_EXPERIENCE_LEVEL_REGULAR = 1;

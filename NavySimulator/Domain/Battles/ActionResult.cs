@@ -3,22 +3,22 @@ using NavySimulator.Domain.Battles;
 
 internal class ActionResult
 {
-    public string ShooterID;
-    public WeaponType Weapon;
-    public bool Fired;
-    public Ship? Target;
-    public GroupType TargetGroup;
-    public double Damage;
-    public double FinalHitChance;
+    public readonly string ShooterId;
+    public readonly WeaponType Weapon;
+    public readonly bool Fired;
+    public readonly Ship? Target;
+    public readonly GroupType TargetGroup;
+    public readonly double Damage;
+    public readonly double FinalHitChance;
     public double HitRoll;
-    public bool DidHit;
-    public string SkipReason;
-    public double PiercingValue;
-    public double DefenderArmor;
-    public double DefenderSpeed;
-    public double DefenderVisibility;
+    public readonly bool DidHit;
+    public readonly string SkipReason;
+    public readonly double PiercingValue;
+    public readonly double DefenderArmor;
+    public readonly double DefenderSpeed;
+    public readonly double DefenderVisibility;
     public bool DidKillingBlow;
-    public int Hour;
+    public readonly int Hour;
     public double AppliedHpDamage;
     public double AppliedOrganizationDamage;
 
@@ -42,7 +42,7 @@ internal class ActionResult
         double appliedHpDamage,
         double appliedOrganizationDamage)
     {
-        ShooterID = shooterId;
+        ShooterId = shooterId;
         Weapon = weapon;
         Fired = fired;
         Target = target;

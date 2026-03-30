@@ -142,7 +142,7 @@ internal static class BattleResultBuilder
         foreach (var entry in allShips)
         {
             var damagedShips = allActions
-                .Where(action => action.ShooterID == entry.Ship.ID && action.Fired && action.Target is not null)
+                .Where(action => action.ShooterId == entry.Ship.ID && action.Fired && action.Target is not null)
                 .Select(action => new ShipDamageReportEntry(
                     action.Hour,
                     action.Target!.ID,

@@ -46,6 +46,10 @@
                   "airwings": {
                     "type": "integer",
                     "minimum": 1
+                  },
+                  "planeCount": {
+                    "type": "integer",
+                    "minimum": 0
                   }
                 },
                 "additionalProperties": false
