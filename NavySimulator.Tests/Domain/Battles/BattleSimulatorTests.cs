@@ -36,14 +36,81 @@ public class BattleSimulatorTests
         Assert.Equal(1, result.HoursElapsed);
     }
 
+    [Fact]
+    public void Simulate_DoesNotShootAlreadySunkShipAgainInSameHour()
+    {
+        var attackerShipOne = CreateShip(
+            "attacker_dd_001",
+            "attacker_dd",
+            new ShipStats(
+                Speed: 30,
+                Organization: 100,
+                Hp: 500,
+                LightAttack: 200,
+                LightPiercing: 200,
+                SurfaceVisibility: 30,
+                SubVisibility: 5,
+                LightHitChanceFactor: 100,
+                ProductionCost: 2000));
+        var attackerShipTwo = CreateShip(
+            "attacker_dd_002",
+            "attacker_dd",
+            new ShipStats(
+                Speed: 30,
+                Organization: 100,
+                Hp: 500,
+                LightAttack: 200,
+                LightPiercing: 200,
+                SurfaceVisibility: 30,
+                SubVisibility: 5,
+                LightHitChanceFactor: 100,
+                ProductionCost: 2000));
+        var defenderShip = CreateShip(
+            "defender_dd_001",
+            "defender_dd",
+            new ShipStats(
+                Speed: 1,
+                Organization: 10,
+                Hp: 1,
+                SurfaceVisibility: 1000,
+                SubVisibility: 10,
+                ProductionCost: 100));
+
+        var attackerFleet = new Fleet("attacker_fleet", [attackerShipOne, attackerShipTwo], new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal));
+        var defenderFleet = new Fleet("defender_fleet", [defenderShip], new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal));
+
+        var scenario = new BattleScenario(
+            id: "single-target-overkill-check",
+            terrain: "ocean",
+            weather: "clear",
+            maxHours: 30,
+            iterations: 1,
+            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+            continueAfterRetreat: false,
+            dontRetreat: true);
+
+        var simulator = new BattleSimulator();
+        var result = simulator.Simulate(scenario);
+
+        Assert.Equal(0, result.DefenderShipsRemaining);
+
+        var hpDamageEventsOnDefender = result.ShipReports
+            .Where(report => report.Side == "Attacker")
+            .SelectMany(report => report.DamagedShips)
+            .Where(damageEvent => damageEvent.TargetShipID == defenderShip.ID && damageEvent.AppliedHpDamage > 0)
+            .ToList();
+
+        Assert.Single(hpDamageEventsOnDefender);
+    }
+
     private static Ship CreateShip(string shipId, string designId)
     {
-        var hull = new Hull(
-            id: $"{designId}-hull",
-            role: ShipRole.Screen,
-            types: ["Destroyer"],
-            manpower: 400,
-            baseStats: new ShipStats(
+        return CreateShip(
+            shipId,
+            designId,
+            new ShipStats(
                 Speed: 30,
                 Organization: 50,
                 Hp: 100,
@@ -52,6 +119,16 @@ public class BattleSimulatorTests
                 SurfaceVisibility: 20,
                 SubVisibility: 5,
                 ProductionCost: 1000));
+    }
+
+    private static Ship CreateShip(string shipId, string designId, ShipStats baseStats)
+    {
+        var hull = new Hull(
+            id: $"{designId}-hull",
+            role: ShipRole.Screen,
+            types: ["Destroyer"],
+            manpower: 400,
+            baseStats: baseStats);
 
         var design = new ShipDesign(designId, hull, []);
         return new Ship(shipId, design);
