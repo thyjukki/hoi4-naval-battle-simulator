@@ -2,7 +2,7 @@
 
 NavySimulator simulates HOI4 naval battles from JSON-defined content (hulls, modules, mios, designs, fleets, researches, spirits, and planes).
 
-70% 20% headsmashing and 10% actuall coding....
+70% vibing 20% headsmashing and 10% actuall coding....
 
 ## Current Scope
 - Setup is loaded into an in-memory `BattleScenario` by `SetupLoader`.
