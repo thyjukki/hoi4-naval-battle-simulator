@@ -7,9 +7,9 @@ public static class Hoi4Defines
     public const double CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CARRIERS = 1.0;
     public const double CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CONVOYS = 0.25;
 
-    public const int BASE_GUN_COOLDOWNS_LIGHT = 2;
     public const int BASE_GUN_COOLDOWNS_HEAVY = 3;
     public const int BASE_GUN_COOLDOWNS_TORPEDO = 5;
+    public const int BASE_GUN_COOLDOWNS_LIGHT = 2;
     public const int BASE_GUN_COOLDOWNS = 1;
 
     public const double DEPTH_CHARGES_HIT_CHANCE_MULT = 1.25;
