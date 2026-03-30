@@ -696,7 +696,7 @@ static void PrintFleetPreview(string sideLabel, Fleet fleet, Fleet opposingFleet
         Console.WriteLine(
             $"    - {designGroup.Key} x{designGroup.Count()} [{sampleShip.Design.Hull.ID}] " +
             $"HP {designStats.Hp:F1}, Org {designStats.Organization:F1}, Speed {designStats.Speed:F1}, Armor {designStats.Armor:F1}, " +
-            $"LA {designStats.LightAttack:F1}, HA {designStats.HeavyAttack:F1}, Torp {designStats.TorpedoAttack:F1}, Depth {designStats.DepthChargeAttack:F1}, AA {designStats.AntiAir:F1}");
+            $"LA {designStats.LightAttack:F1}, LAP {designStats.LightPiercing:F1}, HA {designStats.HeavyAttack:F1}, HAP {designStats.HeavyPiercing:F1}, Torp {designStats.TorpedoAttack:F1}, Depth {designStats.DepthChargeAttack:F1}, AA {designStats.AntiAir:F1}");
     }
 
     Console.WriteLine(
