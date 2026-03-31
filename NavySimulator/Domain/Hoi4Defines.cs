@@ -14,7 +14,7 @@ public static class Hoi4Defines
 
     public const double DEPTH_CHARGES_HIT_CHANCE_MULT = 1.25;
     public const double DEPTH_CHARGES_HIT_PROFILE = 80.0;
-    
+
     public const double COMBAT_BASE_HIT_CHANCE = 0.1;
     public const double COMBAT_MIN_HIT_CHANCE = 0.02;
 
@@ -26,7 +26,10 @@ public static class Hoi4Defines
     public const double PositioningContributionScale = 0.5;
 
     public const double COMBAT_RETREAT_DECISION_CHANCE = 0.2;
-    public const double CombatMinStrRetreatChance = 0.4; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
+
+    public const double
+        CombatMinStrRetreatChance = 0.4; //Testing, normally 4 this is REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
+
     public const double BASE_ESCAPE_SPEED = 0.06;
     public const double SPEED_TO_ESCAPE_SPEED = 1.15;
     public const double MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION = 0.20;
@@ -36,7 +39,7 @@ public static class Hoi4Defines
     public const double CapitalScreeningBonusRetreatSpeed = 0.2;
 
     public const double ScreeningVisibiliityBonus = -0.1;
-    
+
     public const double NightRetreatSpeed = 0.1;
     public const double NightHitChance = -0.25;
     public const double NightCarrierTraffic = -0.75;
@@ -46,14 +49,25 @@ public static class Hoi4Defines
     public const double RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR = 0.01;
     public const double MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION = 0.05;
 
-    public const double HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR = 0.4; // if one side has more ships than the other, that side will get this penalty for each +100% ship ratio it has
-    public const double MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO = 1.2;  // maximum penalty to get from larger fleets
-    public const double MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY = 99;    // the minimum fleet size in ships that a fleet must be before having the large fleet penalty applied to them
-    
-    public const double DAMAGE_PENALTY_ON_MINIMUM_POSITIONING = 0.75;	// damage penalty at 0% positioning
-    public const double SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING = 0.4;  // screening efficiency (screen to capital ratio) at 0% positioning
-    public const double AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING = 0.4;  // AA penalty at 0% positioning
-    public const double SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING = 2.0;  // submarine reveal change on 0% positioning
+    public const double
+        HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR =
+            0.4; // if one side has more ships than the other, that side will get this penalty for each +100% ship ratio it has
+
+    public const double
+        MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO = 1.2; // maximum penalty to get from larger fleets
+
+    public const double
+        MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY =
+            99; // the minimum fleet size in ships that a fleet must be before having the large fleet penalty applied to them
+
+    public const double DAMAGE_PENALTY_ON_MINIMUM_POSITIONING = 0.75; // damage penalty at 0% positioning
+
+    public const double
+        SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING =
+            0.4; // screening efficiency (screen to capital ratio) at 0% positioning
+
+    public const double AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING = 0.4; // AA penalty at 0% positioning
+    public const double SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING = 2.0; // submarine reveal change on 0% positioning
 
     public const double HIT_PROFILE_MULT = 100.0;
     public const double HIT_PROFILE_SPEED_FACTOR = 0.85;
@@ -128,12 +142,19 @@ public static class Hoi4Defines
     public const double CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR = 0.1;
 
     public static readonly int CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT = 8;
-    
-    public static readonly double NAVAL_COMBAT_AIR_SUB_TARGET_SCALE = 10;                             // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
+
+    public static readonly double
+        NAVAL_COMBAT_AIR_SUB_TARGET_SCALE =
+            10; // scaled scoring for target picking for planes inside naval combat, max value when zero screening efficency, one define per ship typ
+
     public static readonly double NAVAL_COMBAT_AIR_SCREEN_TARGET_SCALE = 10;
     public static readonly double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCALE = 30;
     public static readonly double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCALE = 100;
-    public static readonly double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE = 5;                         // how much score factor from low health (scales between 0->this number)
+
+    public static readonly double
+        NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE =
+            5; // how much score factor from low health (scales between 0->this number)
+
     public static readonly double NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE = 5;
 
     public static readonly double NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO = 0.1;
@@ -182,13 +203,19 @@ public static class Hoi4Defines
         };
     }
 
-    public const double EXPERIENCE_LOSS_FACTOR = 1.00; // percentage of experienced solders who die when manpower is removed
+    public const double
+        EXPERIENCE_LOSS_FACTOR = 1.00; // percentage of experienced solders who die when manpower is removed
+
     public const double UNIT_EXPERIENCE_PER_COMBAT_HOUR = 2;
     public const double UNIT_EXPERIENCE_SCALE = 1;
 
     public const double EXPERIENCE_FACTOR_CONVOY_ATTACK = 0.04;
     public const double EXPERIENCE_FACTOR_NON_CARRIER_GAIN = 0.02;
     public const double EXPERIENCE_FACTOR_CARRIER_GAIN = 0.04;
+    public static readonly double[] UNIT_EXP_LEVELS = [
+        0.1, 0.2, 0.3, 0.4, 0.55, 0.7, 0.9
+    ];
+    public const int TRAINING_MAX_LEVEL = 4;
     
     public const int NightEndHour = 0; // 5
     public const int NightStartHour = 24; //17
