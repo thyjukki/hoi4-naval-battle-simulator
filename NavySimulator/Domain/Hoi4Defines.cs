@@ -169,6 +169,7 @@ public static class Hoi4Defines
     public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_UNTRAINED = -0.10;
     public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_REGULAR = 0.0;
     public const double SHIP_EXPERIENCE_ATTACK_MODIFIER_TRAINED = 0.06;
+    public const double ship_experience_bonus_max = 0.15;
 
     public static double GetShipExperienceAttackModifier(int experienceLevel)
     {
@@ -181,6 +182,14 @@ public static class Hoi4Defines
         };
     }
 
+    public const double EXPERIENCE_LOSS_FACTOR = 1.00; // percentage of experienced solders who die when manpower is removed
+    public const double UNIT_EXPERIENCE_PER_COMBAT_HOUR = 2;
+    public const double UNIT_EXPERIENCE_SCALE = 1;
+
+    public const double EXPERIENCE_FACTOR_CONVOY_ATTACK = 0.04;
+    public const double EXPERIENCE_FACTOR_NON_CARRIER_GAIN = 0.02;
+    public const double EXPERIENCE_FACTOR_CARRIER_GAIN = 0.04;
+    
     public const int NightEndHour = 0; // 5
     public const int NightStartHour = 24; //17
 }
