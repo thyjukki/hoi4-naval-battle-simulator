@@ -403,7 +403,11 @@ internal static class NavalSurfaceCombatSimulator
             piercingDamageValue = Hoi4Defines.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[piercingThresholdIndex];
         }
 
-        var criticalChance = GetCriticalHitChance(weapon, targetStats.Reliability, piercingThresholdIndex);
+        var criticalChance = GetCriticalHitChance(
+            weapon,
+            targetStats.Reliability,
+            targetStats.TorpedoEnemyCriticalChanceFactor,
+            piercingThresholdIndex);
         var criticalDamageMultiplier = GetCriticalDamageMultiplier(weapon, targetStats.Reliability);
         double damageFromCriticalHitMultiplier;
         if (random.NextDouble() <= criticalChance)
@@ -436,11 +440,17 @@ internal static class NavalSurfaceCombatSimulator
         return new DamageCalculationResult(finalDamage, damageFromCriticalHitMultiplier > 1.0, damageFromCriticalHitMultiplier);
     }
 
-    private static double GetCriticalHitChance(WeaponType weapon, double targetReliability, int piercingThresholdIndex)
+    private static double GetCriticalHitChance(
+        WeaponType weapon,
+        double targetReliability,
+        double torpedoEnemyCriticalChanceFactor,
+        int piercingThresholdIndex)
     {
         if (weapon == WeaponType.Torpedo)
         {
-            return Hoi4Defines.COMBAT_TORPEDO_CRITICAL_CHANCE;
+            var modifiedTorpedoCriticalChance =
+                Hoi4Defines.COMBAT_TORPEDO_CRITICAL_CHANCE * (1.0 + torpedoEnemyCriticalChanceFactor);
+            return Math.Clamp(modifiedTorpedoCriticalChance, 0, 1);
         }
 
         var reliabilityFactor = 1.0 - Math.Clamp(targetReliability, 0, 1);
