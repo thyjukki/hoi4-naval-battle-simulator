@@ -1,6 +1,7 @@
 using NavySimulator.Domain;
 using NavySimulator.Domain.Battles;
 using NavySimulator.Domain.Stats;
+using NavySimulator.Tests.TestSupport;
 using System.Reflection;
 using Xunit;
 
@@ -12,14 +13,14 @@ public class NavalAirCombatSimulatorTests
     public void CalculateAirSortieSnapshot_UsesBaseSortieEfficiency_WhenNoScreenAndCapitalSupport()
     {
         var simulator = new NavalAirCombatSimulator();
-        var carrier = CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
+        var carrier = TestEntityFactory.CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
         var ownFleet = CreateFleet(
             "own",
             [carrier],
             carrier.Design.ID,
             airwings: 8,
             planeId: "bomber-basic");
-        var enemyFleet = CreateFleet("enemy", [CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
+        var enemyFleet = CreateFleet("enemy", [TestEntityFactory.CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
 
         var ownParticipant = CreateParticipant(ownFleet);
         var enemyParticipant = CreateParticipant(enemyFleet);
@@ -48,16 +49,16 @@ public class NavalAirCombatSimulatorTests
     public void CalculateAirSortieSnapshot_IncreasesSorties_WithScreenAndCapitalSupport()
     {
         var simulator = new NavalAirCombatSimulator();
-        var carrier = CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
-        var supportingScreen = CreateShip("screen-1", "screen-design", ShipRole.Screen);
-        var supportingCapital = CreateShip("capital-1", "capital-design", ShipRole.Capital);
+        var carrier = TestEntityFactory.CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
+        var supportingScreen = TestEntityFactory.CreateShip("screen-1", "screen-design", ShipRole.Screen);
+        var supportingCapital = TestEntityFactory.CreateShip("capital-1", "capital-design", ShipRole.Capital);
         var ownFleet = CreateFleet(
             "own",
             [carrier, supportingScreen, supportingCapital],
             carrier.Design.ID,
             airwings: 8,
             planeId: "bomber-basic");
-        var enemyFleet = CreateFleet("enemy", [CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
+        var enemyFleet = CreateFleet("enemy", [TestEntityFactory.CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
 
         var ownParticipant = CreateParticipant(ownFleet);
         var enemyParticipant = CreateParticipant(enemyFleet);
@@ -86,7 +87,7 @@ public class NavalAirCombatSimulatorTests
     public void CalculateAirSortieSnapshot_UsesBaseSortieEfficiency_1_should_be_0()
     {
         var simulator = new NavalAirCombatSimulator();
-        var carrier = CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
+        var carrier = TestEntityFactory.CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
         var ownFleet = CreateFleet(
             "own",
             [carrier],
@@ -94,7 +95,7 @@ public class NavalAirCombatSimulatorTests
             airwings: 1,
             planeCount: 1,
             planeId: "bomber-basic");
-        var enemyFleet = CreateFleet("enemy", [CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
+        var enemyFleet = CreateFleet("enemy", [TestEntityFactory.CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
 
         var ownParticipant = CreateParticipant(ownFleet);
         var enemyParticipant = CreateParticipant(enemyFleet);
@@ -123,7 +124,7 @@ public class NavalAirCombatSimulatorTests
     public void CalculateAirSortieSnapshot_UsesBaseSortieEfficiency_7_should_be_1()
     {
         var simulator = new NavalAirCombatSimulator();
-        var carrier = CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
+        var carrier = TestEntityFactory.CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
         var ownFleet = CreateFleet(
             "own",
             [carrier],
@@ -131,7 +132,7 @@ public class NavalAirCombatSimulatorTests
             airwings: 1,
             planeCount: 7,
             planeId: "bomber-basic");
-        var enemyFleet = CreateFleet("enemy", [CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
+        var enemyFleet = CreateFleet("enemy", [TestEntityFactory.CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
 
         var ownParticipant = CreateParticipant(ownFleet);
         var enemyParticipant = CreateParticipant(enemyFleet);
@@ -161,14 +162,14 @@ public class NavalAirCombatSimulatorTests
     public void CalculateAirSortieSnapshot_UsesBaseSortieEfficiency_10_should_be_2()
     {
         var simulator = new NavalAirCombatSimulator();
-        var carrier = CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
+        var carrier = TestEntityFactory.CreateShip("carrier-1", "carrier-design", ShipRole.Carrier);
         var ownFleet = CreateFleet(
             "own",
             [carrier],
             carrier.Design.ID,
             airwings: 1,
             planeId: "bomber-basic");
-        var enemyFleet = CreateFleet("enemy", [CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
+        var enemyFleet = CreateFleet("enemy", [TestEntityFactory.CreateShip("enemy-screen", "enemy-screen-design", ShipRole.Screen)]);
 
         var ownParticipant = CreateParticipant(ownFleet);
         var enemyParticipant = CreateParticipant(enemyFleet);
@@ -197,7 +198,7 @@ public class NavalAirCombatSimulatorTests
     [Fact]
     public void CalculateNavalStrikeDamageBreakdown_ComputesExpectedFinalReductionAndDamage()
     {
-        var target = CreateShip("target", "target-design", ShipRole.Screen);
+        var target = TestEntityFactory.CreateShip("target", "target-design", ShipRole.Screen);
         var defenderFleet = CreateFleet("defender", [target]);
         var defenderLines = BattleLineCalculator.BuildBattleLinesFromFleet(defenderFleet.Ships);
 
@@ -278,24 +279,6 @@ public class NavalAirCombatSimulatorTests
         return new Fleet(id, ships, assignments);
     }
 
-    private static Ship CreateShip(string shipId, string designId, ShipRole role)
-    {
-        var hull = new Hull(
-            id: $"{designId}-hull",
-            role: role,
-            types: [role.ToString()],
-            manpower: 400,
-            baseStats: new ShipStats(
-                Speed: 30,
-                Organization: 40,
-                Hp: 100,
-                SurfaceVisibility: 20,
-                SubVisibility: 5,
-                AntiAir: 5,
-                ProductionCost: 1000));
-        var design = new ShipDesign(designId, hull, []);
-        return new Ship(shipId, design);
-    }
 }
 
 

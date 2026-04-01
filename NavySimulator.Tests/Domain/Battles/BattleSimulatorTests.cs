@@ -1,6 +1,7 @@
 using NavySimulator.Domain;
 using NavySimulator.Domain.Battles;
 using NavySimulator.Domain.Stats;
+using NavySimulator.Tests.TestSupport;
 using Xunit;
 
 namespace NavySimulator.Tests.Domain.Battles;
@@ -10,8 +11,8 @@ public class BattleSimulatorTests
     [Fact]
     public void Test()
     {
-        var attackerShip = CreateShip("attacker_dd_001", "attacker_dd");
-        var defenderShip = CreateShip("defender_dd_001", "defender_dd");
+        var attackerShip = TestEntityFactory.CreateShip("attacker_dd_001", "attacker_dd");
+        var defenderShip = TestEntityFactory.CreateShip("defender_dd_001", "defender_dd");
 
         var attackerFleet = new Fleet("attacker_fleet", [attackerShip], new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal));
         var defenderFleet = new Fleet("defender_fleet", [defenderShip], new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal));
@@ -40,7 +41,7 @@ public class BattleSimulatorTests
     [Fact]
     public void Simulate_DoesNotShootAlreadySunkShipAgainInSameHour()
     {
-        var attackerShipOne = CreateShip(
+        var attackerShipOne = TestEntityFactory.CreateShip(
             "attacker_dd_001",
             "attacker_dd",
             new ShipStats(
@@ -53,7 +54,7 @@ public class BattleSimulatorTests
                 SubVisibility: 5,
                 LightHitChanceFactor: 100,
                 ProductionCost: 2000));
-        var attackerShipTwo = CreateShip(
+        var attackerShipTwo = TestEntityFactory.CreateShip(
             "attacker_dd_002",
             "attacker_dd",
             new ShipStats(
@@ -66,7 +67,7 @@ public class BattleSimulatorTests
                 SubVisibility: 5,
                 LightHitChanceFactor: 100,
                 ProductionCost: 2000));
-        var defenderShip = CreateShip(
+        var defenderShip = TestEntityFactory.CreateShip(
             "defender_dd_001",
             "defender_dd",
             new ShipStats(
@@ -108,9 +109,178 @@ public class BattleSimulatorTests
     }
 
     [Fact]
+    public void Simulate_ExperienceSetup_XpGainFromBattleFirstTime()
+    {
+        var cruiser = TestEntityFactory.CreateShip(
+            shipId: "attacker_cl3_001",
+            designId: "cl3_armor4_nogun",
+            role: ShipRole.Screen,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                LightAttack: 10,
+                Speed: 32,
+                Organization: 60,
+                Hp: 250,
+                SurfaceVisibility: 25,
+                SubVisibility: 8,
+                ProductionCost: 5000));
+        var defCruiser = TestEntityFactory.CreateShip(
+            shipId: "defender_cl3_001",
+            designId: "cl3_armor4_nogun",
+            role: ShipRole.Screen,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                Speed: 28,
+                Organization: 80,
+                Hp: 400,
+                SurfaceVisibility: 35,
+                SubVisibility: 10,
+                AntiAir: 0,
+                ProductionCost: 9000));
+
+        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
+
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+
+        var scenario = new BattleScenario(
+            id: "xp_setup_cl_vs_cl",
+            terrain: "ocean",
+            weather: "clear",
+            maxHours: 4,
+            iterations: 1,
+            seed: 42,
+            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+            continueAfterRetreat: false,
+            dontRetreat: true);
+
+        var simulator = new BattleSimulator();
+        var result = simulator.Simulate(scenario, seedOverride: 42);
+
+        Assert.Equal(4, result.HoursElapsed);
+        Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+    }
+
+    [Fact]
+    public void Simulate_ExperienceSetup_XpGainFromBattleFirstTimeWhenCarrierEnemy()
+    {
+        var cruiser = TestEntityFactory.CreateShip(
+            shipId: "attacker_cl3_001",
+            designId: "cl3_armor4_nogun",
+            role: ShipRole.Screen,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                LightAttack: 10,
+                Speed: 32,
+                Organization: 60,
+                Hp: 250,
+                SurfaceVisibility: 25,
+                SubVisibility: 8,
+                ProductionCost: 5000));
+        var carrier = TestEntityFactory.CreateShip(
+            shipId: "defender_cv_001",
+            designId: "cv",
+            role: ShipRole.Carrier,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                Speed: 28,
+                Organization: 80,
+                Hp: 400,
+                SurfaceVisibility: 35,
+                SubVisibility: 10,
+                AntiAir: 0,
+                ProductionCost: 9000));
+
+        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+        var defenderFleet = new Fleet("defender_fleet", [carrier]);
+
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+
+        var scenario = new BattleScenario(
+            id: "xp_setup_cl_vs_cl",
+            terrain: "ocean",
+            weather: "clear",
+            maxHours: 16,
+            iterations: 1,
+            seed: 42,
+            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+            continueAfterRetreat: false,
+            dontRetreat: true);
+
+        var simulator = new BattleSimulator();
+        var result = simulator.Simulate(scenario, seedOverride: 42);
+
+        Assert.Equal(16, result.HoursElapsed);
+        Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+    }
+
+    [Fact]
+    public void Simulate_ExperienceSetup_XpGainFromBattleLevel1ShouldBe505Hours()
+    {
+        var cruiser = TestEntityFactory.CreateShip(
+            shipId: "attacker_cl3_001",
+            designId: "cl3_armor4_nogun",
+            role: ShipRole.Screen,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                LightAttack: 10,
+                Speed: 32,
+                Organization: 60,
+                Hp: 250,
+                SurfaceVisibility: 25,
+                SubVisibility: 8,
+                ProductionCost: 5000));
+        var defCruiser = TestEntityFactory.CreateShip(
+            shipId: "defender_cl3_001",
+            designId: "cl3_armor4_nogun",
+            role: ShipRole.Screen,
+            experienceLevel: 0,
+            baseStats: new ShipStats(
+                Speed: 28,
+                Organization: 80,
+                Hp: 400,
+                SurfaceVisibility: 35,
+                SubVisibility: 10,
+                AntiAir: 0,
+                ProductionCost: 9000));
+
+        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
+
+        var scenario = new BattleScenario(
+            id: "xp_setup_cl_vs_cl",
+            terrain: "ocean",
+            weather: "clear",
+            maxHours: 505,
+            iterations: 1,
+            seed: 42,
+            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+            continueAfterRetreat: false,
+            dontRetreat: true);
+        
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+
+        var simulator = new BattleSimulator();
+        var result = simulator.Simulate(scenario, seedOverride: 42);
+
+        Assert.Equal(505, result.HoursElapsed);
+        Assert.True(cruiser.Experience > 10, $"Expected experience to be above 10, but was {cruiser.Experience}");
+        Assert.Equal(1, cruiser.ExperienceLevel);
+    }
+
+    [Fact]
     public void Simulate_ExperienceSetup_OneUntrainedCruiserVsMaxLevelCarrier_RunsFor24Hours()
     {
-        var cruiser = CreateShip(
+        var cruiser = TestEntityFactory.CreateShip(
             shipId: "attacker_cl3_001",
             designId: "cl3_armor4_mix",
             role: ShipRole.Screen,
@@ -122,7 +292,7 @@ public class BattleSimulatorTests
                 SurfaceVisibility: 25,
                 SubVisibility: 8,
                 ProductionCost: 5000));
-        var carrier = CreateShip(
+        var carrier = TestEntityFactory.CreateShip(
             shipId: "defender_cv_001",
             designId: "39_carrier_no_aa",
             role: ShipRole.Carrier,
@@ -160,145 +330,6 @@ public class BattleSimulatorTests
         Assert.Equal(7, carrier.ExperienceLevel);
     }
 
-    [Fact]
-    public void Simulate_ExperienceSetup_NoXpDuringInitialHours()
-    {
-        var cruiser = CreateShip(
-            shipId: "attacker_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 32,
-                Organization: 60,
-                Hp: 250,
-                SurfaceVisibility: 25,
-                SubVisibility: 8,
-                ProductionCost: 5000));
-        var defCruiser = CreateShip(
-            shipId: "defender_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 28,
-                Organization: 80,
-                Hp: 400,
-                SurfaceVisibility: 35,
-                SubVisibility: 10,
-                AntiAir: 0,
-                ProductionCost: 9000));
-
-        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
-        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
-
-        var scenario = new BattleScenario(
-            id: "xp_setup_cl_vs_cl",
-            terrain: "ocean",
-            weather: "clear",
-            maxHours: 6,
-            iterations: 1,
-            seed: 42,
-            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
-            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
-            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
-            continueAfterRetreat: false,
-            dontRetreat: true);
-
-        var simulator = new BattleSimulator();
-        var result = simulator.Simulate(scenario, seedOverride: 42);
-
-        Assert.Equal(6, result.HoursElapsed);
-        Assert.Equal(0, cruiser.ExperienceLevel);
-        Assert.Equal(0, defCruiser.ExperienceLevel);
-    }
-
-    [Fact]
-    public void Simulate_ExperienceSetup_NoXpGainYet()
-    {
-        var cruiser = CreateShip(
-            shipId: "attacker_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 32,
-                Organization: 60,
-                Hp: 250,
-                SurfaceVisibility: 25,
-                SubVisibility: 8,
-                ProductionCost: 5000));
-        var defCruiser = CreateShip(
-            shipId: "defender_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 28,
-                Organization: 80,
-                Hp: 400,
-                SurfaceVisibility: 35,
-                SubVisibility: 10,
-                AntiAir: 0,
-                ProductionCost: 9000));
-
-        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
-        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
-
-        var scenario = new BattleScenario(
-            id: "xp_setup_cl_vs_cl",
-            terrain: "ocean",
-            weather: "clear",
-            maxHours: 7,
-            iterations: 1,
-            seed: 42,
-            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
-            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
-            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
-            continueAfterRetreat: false,
-            dontRetreat: true);
-
-        var simulator = new BattleSimulator();
-        var result = simulator.Simulate(scenario, seedOverride: 42);
-
-        Assert.Equal(7, result.HoursElapsed);
-        Assert.Equal(0, cruiser.ExperienceLevel);
-        Assert.Equal(0, defCruiser.ExperienceLevel);
-    }
-
-    private static Ship CreateShip(string shipId, string designId)
-    {
-        return CreateShip(
-            shipId,
-            designId,
-            new ShipStats(
-                Speed: 30,
-                Organization: 50,
-                Hp: 100,
-                LightAttack: 1,
-                LightPiercing: 1,
-                SurfaceVisibility: 20,
-                SubVisibility: 5,
-                ProductionCost: 1000));
-    }
-
-    private static Ship CreateShip(string shipId, string designId, ShipStats baseStats)
-    {
-        return CreateShip(shipId, designId, ShipRole.Screen, 20, baseStats);
-    }
-
-    private static Ship CreateShip(string shipId, string designId, ShipRole role, int experienceLevel, ShipStats baseStats)
-    {
-        var hull = new Hull(
-            id: $"{designId}-hull",
-            role: role,
-            types: [role.ToString()],
-            manpower: 400,
-            baseStats: baseStats);
-
-        var design = new ShipDesign(designId, hull, []);
-        return new Ship(shipId, design, experienceLevel);
-    }
 }
 
 

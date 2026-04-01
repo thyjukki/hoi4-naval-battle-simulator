@@ -1,5 +1,6 @@
 using NavySimulator.Domain;
 using NavySimulator.Domain.Stats;
+using NavySimulator.Tests.TestSupport;
 using Xunit;
 
 namespace NavySimulator.Tests.Domain.Ships;
@@ -20,7 +21,7 @@ public class ShipTests
             SurfaceVisibility: 25,
             SubVisibility: 8,
             ProductionCost: 1000);
-        var ship = CreateShip("ship_001", "test_design", ShipRole.Screen, 7, baseStats);
+        var ship = TestEntityFactory.CreateShip("ship_001", "test_design", ShipRole.Screen, 7, baseStats);
 
         var finalStats = ship.GetFinalStats();
         var expectedAttackMultiplier = 1.0 + Hoi4Defines.ShipExperienceBonusMaxNavalDamageFactor;
@@ -47,7 +48,7 @@ public class ShipTests
             TorpedoAttack: 5,
             DepthChargeAttack: 2,
             ProductionCost: 500);
-        var ship = CreateShip("ship_001", "test_design", ShipRole.Screen, 2, baseStats);
+        var ship = TestEntityFactory.CreateShip("ship_001", "test_design", ShipRole.Screen, 2, baseStats);
 
         var modifiers = new ShipStats(Hp: 10, Organization: 5, LightAttack: 3, HeavyAttack: 2, TorpedoAttack: 1, DepthChargeAttack: 1);
         var averages = new ShipStats(Hp: 5, Organization: 5, LightAttack: 2, HeavyAttack: 1, TorpedoAttack: 1, DepthChargeAttack: 0.5);
@@ -75,7 +76,7 @@ public class ShipTests
     [Fact]
     public void ExperienceLevel_MapsFromXpThresholdsAndClamps()
     {
-        var ship = CreateShip("ship_001", "test_design", ShipRole.Screen, 2, new ShipStats(Hp: 100, Organization: 50));
+        var ship = TestEntityFactory.CreateShip("ship_001", "test_design", ShipRole.Screen, 2, new ShipStats(Hp: 100, Organization: 50));
 
         var expectedLevel2Xp = Hoi4Defines.UNIT_EXP_LEVELS[1] * Hoi4Defines.NAVY_MAX_XP;
         Assert.Equal(expectedLevel2Xp, ship.Experience, 6);
@@ -92,17 +93,5 @@ public class ShipTests
         Assert.Equal(Hoi4Defines.ShipExperienceBonusMaxNavalDamageFactor, ship.GetShipExperienceAttackModifier(), 6);
     }
 
-    private static Ship CreateShip(string shipId, string designId, ShipRole role, int experienceLevel, ShipStats baseStats)
-    {
-        var hull = new Hull(
-            id: $"{designId}-hull",
-            role: role,
-            types: [role.ToString()],
-            manpower: 400,
-            baseStats: baseStats);
-
-        var design = new ShipDesign(designId, hull, []);
-        return new Ship(shipId, design, experienceLevel);
-    }
 }
 

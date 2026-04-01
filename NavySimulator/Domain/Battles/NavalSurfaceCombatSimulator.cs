@@ -271,12 +271,14 @@ internal static class NavalSurfaceCombatSimulator
             return ActionResult.Skip(shooter, weapon, hour, "no-weapon");
         }
 
-        if (!HasShipLineActivated(shooter.Design.Hull.Role, hour, battleHasCarriers, battleHasCapitals))
+        var firstEligibleHour = GetFirstEligibleFireHour(shooter.Design.Hull.Role, battleHasCarriers, battleHasCapitals);
+
+        if (hour < firstEligibleHour)
         {
             return ActionResult.Skip(shooter, weapon, hour, "line-not-active");
         }
 
-        if (!IsWeaponReadyThisHour(weapon, hour))
+        if (!IsWeaponReadyThisHour(weapon, hour, firstEligibleHour))
         {
             return ActionResult.Skip(shooter, weapon, hour, "cooldown");
         }
@@ -340,10 +342,9 @@ internal static class NavalSurfaceCombatSimulator
             criticalDamageMultiplier);
     }
 
-    private static bool HasShipLineActivated(ShipRole role, int hour, bool battleHasCarriers, bool battleHasCapitals)
+    private static int GetFirstEligibleFireHour(ShipRole role, bool battleHasCarriers, bool battleHasCapitals)
     {
-        var elapsedCombatHours = Math.Max(0, hour - 1);
-        return elapsedCombatHours >= GetActivationDelayHours(role, battleHasCarriers, battleHasCapitals);
+        return GetActivationDelayHours(role, battleHasCarriers, battleHasCapitals) + 1;
     }
 
     private static int GetActivationDelayHours(ShipRole role, bool battleHasCarriers, bool battleHasCapitals)
@@ -352,25 +353,28 @@ internal static class NavalSurfaceCombatSimulator
         {
             ShipRole.Carrier => Hoi4Defines.CARRIER_ONLY_COMBAT_ACTIVATE_TIME,
             ShipRole.Capital => battleHasCarriers ? Hoi4Defines.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME : 0,
-            _ => battleHasCapitals ? Hoi4Defines.ALL_SHIPS_ACTIVATE_TIME : 0
+            _ => battleHasCarriers ? Hoi4Defines.ALL_SHIPS_ACTIVATE_TIME : battleHasCapitals ? Hoi4Defines.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME : 0
         };
     }
 
-    private static bool IsWeaponReadyThisHour(WeaponType weapon, int hour)
+    private static bool IsWeaponReadyThisHour(WeaponType weapon, int hour, int firstEligibleHour)
     {
         var cooldownHours = GetCooldownHours(weapon);
 
         if (cooldownHours <= 0)
         {
-            return true;
+            return hour > firstEligibleHour;
         }
 
-        if (hour < cooldownHours)
+        var hoursSinceFirstEligible = hour - firstEligibleHour;
+        var firstFireDelay = cooldownHours + 1;
+
+        if (hoursSinceFirstEligible < firstFireDelay)
         {
             return false;
         }
 
-        return hour % cooldownHours == 0;
+        return (hoursSinceFirstEligible - firstFireDelay) % cooldownHours == 0;
     }
 
     private static DamageCalculationResult CalculateDamage(

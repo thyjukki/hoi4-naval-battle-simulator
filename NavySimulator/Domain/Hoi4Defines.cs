@@ -89,8 +89,8 @@ public static class Hoi4Defines
     public const double RetreatingTargetWeightMult = 0.5;
 
     public const double COMBAT_DAMAGE_RANDOMNESS = 0.20;
-    public const double COMBAT_DAMAGE_TO_STR_FACTOR = 0.5;
-    public const double COMBAT_DAMAGE_TO_ORG_FACTOR = 1.0;
+    public static double COMBAT_DAMAGE_TO_STR_FACTOR = 0.5;
+    public static double COMBAT_DAMAGE_TO_ORG_FACTOR = 1.0;
 
     public const double NAVAL_STRIKE_DAMAGE_TO_STR = 1.25;
     public const double NAVAL_STRIKE_DAMAGE_TO_ORG = 1.25;

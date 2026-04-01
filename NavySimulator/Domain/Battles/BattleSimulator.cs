@@ -278,6 +278,17 @@ public class BattleSimulator
         var attackerRetreatedCount = GetRetreatedShipCount(scenario.Attacker.Fleet.Ships);
         var defenderRetreatedCount = GetRetreatedShipCount(scenario.Defender.Fleet.Ships);
 
+        ApplyCombatExperienceGainForSide(
+            attackerActions,
+            scenario.Attacker.Fleet.Ships,
+            defenderAliveCount,
+            attackerAliveCount);
+        ApplyCombatExperienceGainForSide(
+            defenderActions,
+            scenario.Defender.Fleet.Ships,
+            attackerAliveCount,
+            defenderAliveCount);
+
         return new SurfacePhaseSnapshot(
             attackerActions,
             defenderActions,
@@ -285,6 +296,45 @@ public class BattleSimulator
             defenderAliveCount,
             attackerRetreatedCount,
             defenderRetreatedCount);
+    }
+
+    private static void ApplyCombatExperienceGainForSide(
+        List<ActionResult> sideActions,
+        List<Ship> ownShips,
+        int enemyShipCount,
+        int ownShipCount)
+    {
+        if (ownShipCount <= 0)
+        {
+            return;
+        }
+
+        var firedShipIds = sideActions
+            .Where(action => action.Fired)
+            .Select(action => action.ShooterId)
+            .ToHashSet(StringComparer.Ordinal);
+
+        if (firedShipIds.Count == 0)
+        {
+            return;
+        }
+
+        var experienceGain =
+            Hoi4Defines.UNIT_EXPERIENCE_PER_COMBAT_HOUR *
+            Hoi4Defines.UNIT_EXPERIENCE_SCALE *
+            Hoi4Defines.EXPERIENCE_FACTOR_NON_CARRIER_GAIN *
+            enemyShipCount /
+            ownShipCount;
+
+        foreach (var ship in ownShips)
+        {
+            if (!firedShipIds.Contains(ship.ID))
+            {
+                continue;
+            }
+
+            ship.Experience += experienceGain;
+        }
     }
 
     private void AppendHourlyLogs(
