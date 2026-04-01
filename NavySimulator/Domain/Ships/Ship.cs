@@ -21,7 +21,7 @@ public class Ship
     public bool AttemptedRetreat;
     private ShipStats? effectiveStats;
 
-    public Ship(string id, ShipDesign design, int experienceLevel)
+    public Ship(string id, ShipDesign design, int experienceLevel = 2)
     {
         ID = id;
         Design = design;
@@ -29,16 +29,6 @@ public class Ship
         effectiveStats = design.GetFinalStats();
         CurrentOrganization = effectiveStats.Organization;
         CurrentHP = effectiveStats.Hp;
-    }
-
-    public Ship(string id, ShipDesign design)
-        : this(id, design, 2)
-    {
-    }
-
-    public Ship(ShipDesign design)
-        : this(Guid.NewGuid().ToString("N"), design, 2)
-    {
     }
 
     public bool IsSunk => CurrentHP <= 0;
