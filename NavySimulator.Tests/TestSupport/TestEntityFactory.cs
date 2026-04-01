@@ -58,5 +58,18 @@ internal static class TestEntityFactory
         var design = new ShipDesign(designId, hull, []);
         return new Ship(shipId, design, experienceLevel);
     }
+
+    public static Ship CreateShip(string shipId, string designId, ShipRole role, int experienceLevel, ShipStats baseStats, int manpower)
+    {
+        var hull = new Hull(
+            id: $"{designId}-hull",
+            role: role,
+            types: [role.ToString()],
+            manpower: manpower,
+            baseStats: baseStats);
+
+        var design = new ShipDesign(designId, hull, []);
+        return new Ship(shipId, design, experienceLevel);
+    }
 }
 

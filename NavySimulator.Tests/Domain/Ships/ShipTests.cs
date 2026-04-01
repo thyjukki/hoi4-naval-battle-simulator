@@ -96,6 +96,8 @@ public class ShipTests
     [Fact]
     public void ApplyDamage_TracksManpowerLossWithFloor_AndDailyRecovery()
     {
+        var originalStrFactor = Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR;
+
         var ship = TestEntityFactory.CreateShip(
             "ship_001",
             "test_design",
@@ -118,6 +120,42 @@ public class ShipTests
         ship.ApplyDailyManpowerRecovery();
         var expectedAfterRecovery = expectedMinManpower + ship.MaxManpower * Hoi4Defines.DAILY_MANPOWER_GAIN_RATIO;
         Assert.Equal(expectedAfterRecovery, ship.CurrentManpower, 6);
+    }
+
+    [Fact]
+    public void ApplyDamage_WhenManpowerDrops_AlsoReducesExperience()
+    {
+        var ship = TestEntityFactory.CreateShip(
+            "ship_001",
+            "test_design",
+            ShipRole.Carrier,
+            4,
+            new ShipStats(Hp: 325, Organization: 40),
+            7000);
+
+        ship.Experience = 40;
+
+        ship.ApplyDamage(18.33462*2);
+
+        Assert.Equal(306.66538, ship.CurrentHP, 2);
+        Assert.Equal(40.00, ship.CurrentOrganization, 2);
+        Assert.Equal(6803, ship.CurrentManpower);
+        Assert.Equal(37.75, ship.Experience, 2);
+        
+        ship.ApplyDamage(18.0063*2);
+        ship.ApplyDailyManpowerRecovery();
+        
+        Assert.Equal(288.65908, ship.CurrentHP, 2);
+        Assert.Equal(37.96817, ship.CurrentOrganization, 2);
+        Assert.Equal(6959, ship.CurrentManpower);
+        Assert.Equal(35.60, ship.Experience, 2);
+        
+        ship.ApplyDamage(18.99159*2);
+        
+        Assert.Equal(269.66749, ship.CurrentHP, 2);
+        Assert.Equal(33.7209, ship.CurrentOrganization, 2);
+        Assert.Equal(6754, ship.CurrentManpower);
+        Assert.Equal(33.5, ship.Experience, 2);
     }
 
 }

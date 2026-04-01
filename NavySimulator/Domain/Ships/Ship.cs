@@ -14,8 +14,8 @@ public class Ship
     }
 
     public int ExperienceLevel => GetExperienceLevelFromXp(Experience);
-    public double MaxManpower { get; }
-    public double CurrentManpower { get; private set; }
+    public int MaxManpower { get; }
+    public int CurrentManpower { get; private set; }
     public double CurrentOrganization;
     public double CurrentHP;
     public ShipStatus CurrentStatus;
@@ -124,15 +124,11 @@ public class Ship
         }
 
         var recovery = MaxManpower * Hoi4Defines.DAILY_MANPOWER_GAIN_RATIO;
-        CurrentManpower = Math.Min(MaxManpower, CurrentManpower + recovery);
+        CurrentManpower = Math.Min(MaxManpower, CurrentManpower + (int)Math.Round(recovery));
     }
 
     public (double HpDamage, double OrganizationDamage) ApplyDamage(double damage)
     {
-        // Damage is applied against both the target's HP (by 60%[33]) and organization (by 100%[34]).
-        // Additionally ships start out immune against organization damage, scaling up to the nominal value as the ship's HP level goes down.
-        // As an example, assume a ship with 100/50 HP/Org receives multiple hits of 50 damage each.
-        // The consecutive hits will do 30/0, 30/15, 30/30, and 30/45 HP/Org damage, with the fourth hit sinking the ship.
         
         var hpBefore = CurrentHP;
         var orgBefore = CurrentOrganization;
@@ -143,16 +139,26 @@ public class Ship
 
         if (appliedHpDamage > 0 && MaxManpower > 0)
         {
+            var manpowerBefore = CurrentManpower;
             var maxHp = GetFinalStats().Hp;
             var hpLossRatio = maxHp <= 0 ? 0 : appliedHpDamage / maxHp;
-            var manpowerLoss = hpLossRatio * MaxManpower * Hoi4Defines.MANPOWER_LOSS_RATIO_ON_STR_LOSS;
-            var minManpower = MaxManpower * Hoi4Defines.MIN_MANPOWER_RATIO_TO_DROP;
+            var manpowerLoss = (int)Math.Round(hpLossRatio * MaxManpower * Hoi4Defines.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
+            var minManpower = (int)Math.Round(MaxManpower * Hoi4Defines.MIN_MANPOWER_RATIO_TO_DROP);
             CurrentManpower = Math.Max(minManpower, CurrentManpower - manpowerLoss);
+
+            var appliedManpowerLoss = Math.Max(0, manpowerBefore - CurrentManpower);
+
+            if (appliedManpowerLoss > 0)
+            {
+                var manpowerLossRatioOfTotal = (double)appliedManpowerLoss / manpowerBefore;
+                var experienceLoss = Experience * manpowerLossRatioOfTotal * Hoi4Defines.EXPERIENCE_LOSS_FACTOR;
+                Experience = Math.Max(0, Experience - experienceLoss);
+            }
         }
         
         var orgDamage = damage * Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
         var maxHpForOrg = GetFinalStats().Hp;
-        var hpLossRatioForOrg = maxHpForOrg <= 0 ? 1.0 : 1.0 - (CurrentHP / maxHpForOrg);
+        var hpLossRatioForOrg = 1.0 - (hpBefore / maxHpForOrg);
         orgDamage *= Math.Clamp(hpLossRatioForOrg, 0, 1);
         
         CurrentOrganization = Math.Max(0, CurrentOrganization - orgDamage);

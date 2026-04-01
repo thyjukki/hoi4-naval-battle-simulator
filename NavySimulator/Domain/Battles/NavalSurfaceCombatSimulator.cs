@@ -572,6 +572,9 @@ internal static class NavalSurfaceCombatSimulator
         var orgagnisatonPercentage = shooter.CurrentOrganization / stats.Organization;
 
         modifier *= 1.0 + Hoi4Defines.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - orgagnisatonPercentage);
+        
+        var manpowerPercentage = shooter.CurrentManpower / (double)shooter.MaxManpower;
+        modifier *= 1.0 + Hoi4Defines.COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY * (1.0 - manpowerPercentage);
 
         if (shooter.Design.Hull.Role is ShipRole.Capital or ShipRole.Carrier)
         {

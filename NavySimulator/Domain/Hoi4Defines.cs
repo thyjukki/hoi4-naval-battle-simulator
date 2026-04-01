@@ -74,6 +74,7 @@ public static class Hoi4Defines
     public const double HIT_PROFILE_SPEED_BASE = 5.0;
 
     public const double COMBAT_LOW_ORG_HIT_CHANCE_PENALTY = -0.5;
+    public const double COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY = -0.25;
 
     public const double TargetWeightCapitalLight = 2.0;
     public const double TargetWeightCapitalHeavyTorpedo = 30.0;
@@ -165,7 +166,7 @@ public static class Hoi4Defines
     public static readonly double ANTI_AIR_TARGETING = 0.4;
     public static readonly double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY = 0.02;
     public static readonly double ANTI_AIR_ATTACK_TO_AMOUNT = 0.01;
-    public static double MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE = 0.75;
+    public static readonly double MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE = 0.75;
     public static readonly double ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE = 0.03;
     public static readonly double ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE = 0.58;
     public static readonly double SHIP_TO_FLEET_ANTI_AIR_RATIO = 0.25;
@@ -187,7 +188,7 @@ public static class Hoi4Defines
     public const double ShipExperienceBonusMaxNavalDamageFactor = 0.15;
 
 
-    public const double EXPERIENCE_LOSS_FACTOR = 1.00; // percentage of experienced solders who die when manpower is removed
+    public const double EXPERIENCE_LOSS_FACTOR = 2.00; // percentage of experienced solders who die when manpower is removed
     public const double DAILY_MANPOWER_GAIN_RATIO = 0.05;
     public const double MANPOWER_LOSS_RATIO_ON_STR_LOSS = 0.5;
     public const double MIN_MANPOWER_RATIO_TO_DROP = 0.1;
