@@ -38,7 +38,7 @@ public class BattleParticipant
         {
             if (ShipExperienceLevelOverride.HasValue)
             {
-                ship.ExperienceLevel = ShipExperienceLevelOverride.Value;
+                ship.SetExperienceLevel(ShipExperienceLevelOverride.Value);
             }
 
             var role = ship.Design.Hull.Role;

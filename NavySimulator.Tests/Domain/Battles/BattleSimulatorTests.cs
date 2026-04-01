@@ -114,7 +114,7 @@ public class BattleSimulatorTests
             shipId: "attacker_cl3_001",
             designId: "cl3_armor4_mix",
             role: ShipRole.Screen,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED,
+            experienceLevel: 0,
             baseStats: new ShipStats(
                 Speed: 32,
                 Organization: 60,
@@ -126,7 +126,7 @@ public class BattleSimulatorTests
             shipId: "defender_cv_001",
             designId: "39_carrier_no_aa",
             role: ShipRole.Carrier,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_TRAINED,
+            experienceLevel: 7,
             baseStats: new ShipStats(
                 Speed: 28,
                 Organization: 80,
@@ -156,8 +156,8 @@ public class BattleSimulatorTests
         var result = simulator.Simulate(scenario, seedOverride: 42);
 
         Assert.Equal(24, result.HoursElapsed);
-        Assert.Equal(Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED, cruiser.ExperienceLevel);
-        Assert.Equal(Hoi4Defines.SHIP_EXPERIENCE_LEVEL_TRAINED, carrier.ExperienceLevel);
+        Assert.Equal(0, cruiser.ExperienceLevel);
+        Assert.Equal(7, carrier.ExperienceLevel);
     }
 
     [Fact]
@@ -167,7 +167,7 @@ public class BattleSimulatorTests
             shipId: "attacker_cl3_001",
             designId: "cl3_armor4_nogun",
             role: ShipRole.Screen,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED,
+            experienceLevel: 0,
             baseStats: new ShipStats(
                 Speed: 32,
                 Organization: 60,
@@ -179,7 +179,7 @@ public class BattleSimulatorTests
             shipId: "defender_cl3_001",
             designId: "cl3_armor4_nogun",
             role: ShipRole.Screen,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED,
+            experienceLevel: 0,
             baseStats: new ShipStats(
                 Speed: 28,
                 Organization: 80,
@@ -214,13 +214,13 @@ public class BattleSimulatorTests
     }
 
     [Fact]
-    public void Simulate_ExperienceSetup_ExperienceGain()
+    public void Simulate_ExperienceSetup_NoXpGainYet()
     {
         var cruiser = CreateShip(
             shipId: "attacker_cl3_001",
             designId: "cl3_armor4_nogun",
             role: ShipRole.Screen,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED,
+            experienceLevel: 0,
             baseStats: new ShipStats(
                 Speed: 32,
                 Organization: 60,
@@ -232,7 +232,7 @@ public class BattleSimulatorTests
             shipId: "defender_cl3_001",
             designId: "cl3_armor4_nogun",
             role: ShipRole.Screen,
-            experienceLevel: Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED,
+            experienceLevel: 0,
             baseStats: new ShipStats(
                 Speed: 28,
                 Organization: 80,
@@ -262,7 +262,8 @@ public class BattleSimulatorTests
         var result = simulator.Simulate(scenario, seedOverride: 42);
 
         Assert.Equal(7, result.HoursElapsed);
-        Assert.Equal(0.2, cruiser.ExperienceLevel);
+        Assert.Equal(0, cruiser.ExperienceLevel);
+        Assert.Equal(0, defCruiser.ExperienceLevel);
     }
 
     private static Ship CreateShip(string shipId, string designId)
@@ -283,7 +284,7 @@ public class BattleSimulatorTests
 
     private static Ship CreateShip(string shipId, string designId, ShipStats baseStats)
     {
-        return CreateShip(shipId, designId, ShipRole.Screen, Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR, baseStats);
+        return CreateShip(shipId, designId, ShipRole.Screen, 20, baseStats);
     }
 
     private static Ship CreateShip(string shipId, string designId, ShipRole role, int experienceLevel, ShipStats baseStats)

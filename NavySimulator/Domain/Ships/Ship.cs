@@ -6,7 +6,14 @@ public class Ship
 {
     public string ID;
     public ShipDesign Design;
-    public int ExperienceLevel;
+    private double experience;
+    public double Experience
+    {
+        get => experience;
+        set => experience = ClampExperience(value);
+    }
+
+    public int ExperienceLevel => GetExperienceLevelFromXp(Experience);
     public double CurrentOrganization;
     public double CurrentHP;
     public ShipStatus CurrentStatus;
@@ -18,19 +25,19 @@ public class Ship
     {
         ID = id;
         Design = design;
-        ExperienceLevel = experienceLevel;
+        Experience = GetExperienceForLevel(experienceLevel);
         effectiveStats = design.GetFinalStats();
         CurrentOrganization = effectiveStats.Organization;
         CurrentHP = effectiveStats.Hp;
     }
 
     public Ship(string id, ShipDesign design)
-        : this(id, design, Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR)
+        : this(id, design, 2)
     {
     }
 
     public Ship(ShipDesign design)
-        : this(Guid.NewGuid().ToString("N"), design, Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR)
+        : this(Guid.NewGuid().ToString("N"), design, 2)
     {
     }
 
@@ -39,7 +46,7 @@ public class Ship
     public ShipStats GetFinalStats()
     {
         var stats = effectiveStats ?? Design.GetFinalStats();
-        var attackMultiplier = Math.Max(0, 1.0 + Hoi4Defines.GetShipExperienceAttackModifier(ExperienceLevel));
+        var attackMultiplier = Math.Max(0, 1.0 + GetShipExperienceAttackModifier());
 
         return stats with
         {
@@ -48,6 +55,60 @@ public class Ship
             TorpedoAttack = stats.TorpedoAttack * attackMultiplier,
             DepthChargeAttack = stats.DepthChargeAttack * attackMultiplier
         };
+    }
+
+    public double GetShipExperienceAttackModifier()
+    {
+        var level = ExperienceLevel;
+        var maxLevel = Hoi4Defines.UNIT_EXP_LEVELS.Length;
+
+        if (maxLevel <= 0)
+        {
+            return Hoi4Defines.ShipExperienceBonusMinNavalDamageFactor;
+        }
+
+        var step = (Hoi4Defines.ShipExperienceBonusMaxNavalDamageFactor - Hoi4Defines.ShipExperienceBonusMinNavalDamageFactor) / maxLevel;
+        return Hoi4Defines.ShipExperienceBonusMinNavalDamageFactor + step * level;
+    }
+
+    private static int GetExperienceLevelFromXp(double experience)
+    {
+        var normalizedExperience = ClampExperience(experience) / Hoi4Defines.NAVY_MAX_XP;
+        var level = 0;
+
+        foreach (var threshold in Hoi4Defines.UNIT_EXP_LEVELS)
+        {
+            if (normalizedExperience < threshold)
+            {
+                break;
+            }
+
+            level++;
+        }
+
+        return level;
+    }
+
+    public static double GetExperienceForLevel(int experienceLevel)
+    {
+        var clampedLevel = Math.Clamp(experienceLevel, 0, Hoi4Defines.UNIT_EXP_LEVELS.Length);
+
+        if (clampedLevel <= 0)
+        {
+            return 0;
+        }
+
+        return Hoi4Defines.UNIT_EXP_LEVELS[clampedLevel - 1] * Hoi4Defines.NAVY_MAX_XP;
+    }
+
+    public void SetExperienceLevel(int experienceLevel)
+    {
+        Experience = GetExperienceForLevel(experienceLevel);
+    }
+
+    private static double ClampExperience(double experience)
+    {
+        return Math.Clamp(experience, 0, Hoi4Defines.NAVY_MAX_XP);
     }
 
     public void ApplyExternalModifiers(ShipStats statModifiers, ShipStats statAverages, ShipStats statMultipliers)

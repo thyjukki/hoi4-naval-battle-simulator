@@ -186,7 +186,7 @@ public class SetupLoader
 
                 if (!IsValidShipExperienceLevel(shipExperienceByDesign.Value))
                 {
-                    errors.Add($"fleet '{fleet.ID}' has unsupported ship experience level {shipExperienceByDesign.Value} for shipDesignID '{shipExperienceByDesign.Key}'. Supported levels are 0 (untrained), 1 (regular), and 2 (trained).");
+                    errors.Add($"fleet '{fleet.ID}' has unsupported ship experience level {shipExperienceByDesign.Value} for shipDesignID '{shipExperienceByDesign.Key}'. Supported levels are 0 to {Hoi4Defines.UNIT_EXP_LEVELS.Length}.");
                 }
             }
 
@@ -313,7 +313,7 @@ public class SetupLoader
                 var design = designById[shipDesign.Key];
                 var shipExperienceLevel = fleet.ShipExperienceLevels.TryGetValue(shipDesign.Key, out var configuredExperienceLevel)
                     ? configuredExperienceLevel
-                    : Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR;
+                    : 2;
 
                 for (var i = 1; i <= shipDesign.Value; i++)
                 {
@@ -838,7 +838,7 @@ public class SetupLoader
         if (participant.ShipExperienceLevel.HasValue &&
             !IsValidShipExperienceLevel(participant.ShipExperienceLevel.Value))
         {
-            errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 (untrained), 1 (regular), and 2 (trained).");
+            errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 to {Hoi4Defines.UNIT_EXP_LEVELS.Length}.");
         }
     }
 
@@ -864,9 +864,7 @@ public class SetupLoader
 
     private static bool IsValidShipExperienceLevel(int level)
     {
-        return level is Hoi4Defines.SHIP_EXPERIENCE_LEVEL_UNTRAINED or
-            Hoi4Defines.SHIP_EXPERIENCE_LEVEL_REGULAR or
-            Hoi4Defines.SHIP_EXPERIENCE_LEVEL_TRAINED;
+        return level >= 0 && level <= Hoi4Defines.UNIT_EXP_LEVELS.Length;
     }
 
     private static void ValidateScopedRoleFilters(

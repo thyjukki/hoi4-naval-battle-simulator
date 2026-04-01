@@ -27,7 +27,8 @@
             "type": "object",
             "additionalProperties": {
               "type": "integer",
-              "enum": [0, 1, 2]
+              "minimum": 0,
+              "maximum": 7
             }
           },
           "carrierAirwings": {

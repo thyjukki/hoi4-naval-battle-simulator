@@ -36,7 +36,8 @@
         "doctrine": { "type": "string" },
         "shipExperienceLevel": {
           "type": "integer",
-          "enum": [0, 1, 2]
+          "minimum": 0,
+          "maximum": 7
         },
         "externalNavalStrikePlanes": { "type": "integer", "minimum": 0 },
         "researchIDs": {
