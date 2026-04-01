@@ -16,6 +16,16 @@ public class Fleet
         Ships = ships;
         CarrierAirwingsByShipDesign = carrierAirwingsByShipDesign ?? [];
     }
+
+    public Fleet(
+        string id,
+        List<Ship> ships
+        )
+    {
+        ID = id;
+        Ships = ships;
+        CarrierAirwingsByShipDesign = new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal);
+    }
 }
 
 
