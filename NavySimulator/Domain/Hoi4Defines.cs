@@ -188,6 +188,9 @@ public static class Hoi4Defines
 
 
     public const double EXPERIENCE_LOSS_FACTOR = 1.00; // percentage of experienced solders who die when manpower is removed
+    public const double DAILY_MANPOWER_GAIN_RATIO = 0.05;
+    public const double MANPOWER_LOSS_RATIO_ON_STR_LOSS = 0.5;
+    public const double MIN_MANPOWER_RATIO_TO_DROP = 0.1;
 
     public const double UNIT_EXPERIENCE_PER_COMBAT_HOUR = 2;
     public const double UNIT_EXPERIENCE_SCALE = 1;
@@ -202,6 +205,6 @@ public static class Hoi4Defines
     public const int NAVY_MAX_XP = 100;
     
     public const int NightEndHour = 0; // 5
-    public const int NightStartHour = 24; //17
+    public const int NightStartHour = 24; //17 
 }
 

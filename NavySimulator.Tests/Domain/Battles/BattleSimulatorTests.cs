@@ -111,170 +111,200 @@ public class BattleSimulatorTests
     [Fact]
     public void Simulate_ExperienceSetup_XpGainFromBattleFirstTime()
     {
-        var cruiser = TestEntityFactory.CreateShip(
-            shipId: "attacker_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                LightAttack: 10,
-                Speed: 32,
-                Organization: 60,
-                Hp: 250,
-                SurfaceVisibility: 25,
-                SubVisibility: 8,
-                ProductionCost: 5000));
-        var defCruiser = TestEntityFactory.CreateShip(
-            shipId: "defender_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 28,
-                Organization: 80,
-                Hp: 400,
-                SurfaceVisibility: 35,
-                SubVisibility: 10,
-                AntiAir: 0,
-                ProductionCost: 9000));
+        var originalStrFactor = Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR;
+        var originalOrgFactor = Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
+        try
+        {
+            var cruiser = TestEntityFactory.CreateShip(
+                shipId: "attacker_cl3_001",
+                designId: "cl3_armor4_nogun",
+                role: ShipRole.Screen,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    LightAttack: 10,
+                    Speed: 32,
+                    Organization: 60,
+                    Hp: 250,
+                    SurfaceVisibility: 25,
+                    SubVisibility: 8,
+                    ProductionCost: 5000));
+            var defCruiser = TestEntityFactory.CreateShip(
+                shipId: "defender_cl3_001",
+                designId: "cl3_armor4_nogun",
+                role: ShipRole.Screen,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    Speed: 28,
+                    Organization: 80,
+                    Hp: 400,
+                    SurfaceVisibility: 35,
+                    SubVisibility: 10,
+                    AntiAir: 0,
+                    ProductionCost: 9000));
 
-        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
-        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
+            var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+            var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
 
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = 0;
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
 
-        var scenario = new BattleScenario(
-            id: "xp_setup_cl_vs_cl",
-            terrain: "ocean",
-            weather: "clear",
-            maxHours: 4,
-            iterations: 1,
-            seed: 42,
-            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
-            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
-            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
-            continueAfterRetreat: false,
-            dontRetreat: true);
+            var scenario = new BattleScenario(
+                id: "xp_setup_cl_vs_cl",
+                terrain: "ocean",
+                weather: "clear",
+                maxHours: 4,
+                iterations: 1,
+                seed: 42,
+                attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+                defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+                planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+                continueAfterRetreat: false,
+                dontRetreat: true);
 
-        var simulator = new BattleSimulator();
-        var result = simulator.Simulate(scenario, seedOverride: 42);
+            var simulator = new BattleSimulator();
+            var result = simulator.Simulate(scenario, seedOverride: 42);
 
-        Assert.Equal(4, result.HoursElapsed);
-        Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+            Assert.Equal(4, result.HoursElapsed);
+            Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+        }
+        finally
+        {
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = originalStrFactor;
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = originalOrgFactor;
+        }
     }
 
     [Fact]
     public void Simulate_ExperienceSetup_XpGainFromBattleFirstTimeWhenCarrierEnemy()
     {
-        var cruiser = TestEntityFactory.CreateShip(
-            shipId: "attacker_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                LightAttack: 10,
-                Speed: 32,
-                Organization: 60,
-                Hp: 250,
-                SurfaceVisibility: 25,
-                SubVisibility: 8,
-                ProductionCost: 5000));
-        var carrier = TestEntityFactory.CreateShip(
-            shipId: "defender_cv_001",
-            designId: "cv",
-            role: ShipRole.Carrier,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 28,
-                Organization: 80,
-                Hp: 400,
-                SurfaceVisibility: 35,
-                SubVisibility: 10,
-                AntiAir: 0,
-                ProductionCost: 9000));
+        var originalStrFactor = Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR;
+        var originalOrgFactor = Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
+        try
+        {
+            var cruiser = TestEntityFactory.CreateShip(
+                shipId: "attacker_cl3_001",
+                designId: "cl3_armor4_nogun",
+                role: ShipRole.Screen,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    LightAttack: 10,
+                    Speed: 32,
+                    Organization: 60,
+                    Hp: 250,
+                    SurfaceVisibility: 25,
+                    SubVisibility: 8,
+                    ProductionCost: 5000));
+            var carrier = TestEntityFactory.CreateShip(
+                shipId: "defender_cv_001",
+                designId: "cv",
+                role: ShipRole.Carrier,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    Speed: 28,
+                    Organization: 80,
+                    Hp: 400,
+                    SurfaceVisibility: 35,
+                    SubVisibility: 10,
+                    AntiAir: 0,
+                    ProductionCost: 9000));
 
-        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
-        var defenderFleet = new Fleet("defender_fleet", [carrier]);
+            var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+            var defenderFleet = new Fleet("defender_fleet", [carrier]);
 
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = 0;
 
-        var scenario = new BattleScenario(
-            id: "xp_setup_cl_vs_cl",
-            terrain: "ocean",
-            weather: "clear",
-            maxHours: 16,
-            iterations: 1,
-            seed: 42,
-            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
-            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
-            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
-            continueAfterRetreat: false,
-            dontRetreat: true);
+            var scenario = new BattleScenario(
+                id: "xp_setup_cl_vs_cl",
+                terrain: "ocean",
+                weather: "clear",
+                maxHours: 16,
+                iterations: 1,
+                seed: 42,
+                attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+                defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+                planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+                continueAfterRetreat: false,
+                dontRetreat: true);
 
-        var simulator = new BattleSimulator();
-        var result = simulator.Simulate(scenario, seedOverride: 42);
+            var simulator = new BattleSimulator();
+            var result = simulator.Simulate(scenario, seedOverride: 42);
 
-        Assert.Equal(16, result.HoursElapsed);
-        Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+            Assert.Equal(16, result.HoursElapsed);
+            Assert.Equal(0.04, cruiser.Experience, double.Epsilon);
+        }
+        finally
+        {
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = originalOrgFactor;
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = originalStrFactor;
+        }
     }
 
     [Fact]
     public void Simulate_ExperienceSetup_XpGainFromBattleLevel1ShouldBe505Hours()
     {
-        var cruiser = TestEntityFactory.CreateShip(
-            shipId: "attacker_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                LightAttack: 10,
-                Speed: 32,
-                Organization: 60,
-                Hp: 250,
-                SurfaceVisibility: 25,
-                SubVisibility: 8,
-                ProductionCost: 5000));
-        var defCruiser = TestEntityFactory.CreateShip(
-            shipId: "defender_cl3_001",
-            designId: "cl3_armor4_nogun",
-            role: ShipRole.Screen,
-            experienceLevel: 0,
-            baseStats: new ShipStats(
-                Speed: 28,
-                Organization: 80,
-                Hp: 400,
-                SurfaceVisibility: 35,
-                SubVisibility: 10,
-                AntiAir: 0,
-                ProductionCost: 9000));
+        var originalStrFactor = Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR;
+        var originalOrgFactor = Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR;
+        try
+        {
+            var cruiser = TestEntityFactory.CreateShip(
+                shipId: "attacker_cl3_001",
+                designId: "cl3_armor4_nogun",
+                role: ShipRole.Screen,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    LightAttack: 10,
+                    Speed: 32,
+                    Organization: 60,
+                    Hp: 250,
+                    SurfaceVisibility: 25,
+                    SubVisibility: 8,
+                    ProductionCost: 5000));
+            var defCruiser = TestEntityFactory.CreateShip(
+                shipId: "defender_cl3_001",
+                designId: "cl3_armor4_nogun",
+                role: ShipRole.Screen,
+                experienceLevel: 0,
+                baseStats: new ShipStats(
+                    Speed: 28,
+                    Organization: 80,
+                    Hp: 400,
+                    SurfaceVisibility: 35,
+                    SubVisibility: 10,
+                    AntiAir: 0,
+                    ProductionCost: 9000));
 
-        var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
-        var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
+            var attackerFleet = new Fleet("attacker_fleet", [cruiser]);
+            var defenderFleet = new Fleet("defender_fleet", [defCruiser]);
 
-        var scenario = new BattleScenario(
-            id: "xp_setup_cl_vs_cl",
-            terrain: "ocean",
-            weather: "clear",
-            maxHours: 505,
-            iterations: 1,
-            seed: 42,
-            attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
-            defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
-            planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
-            continueAfterRetreat: false,
-            dontRetreat: true);
-        
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
-        Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+            var scenario = new BattleScenario(
+                id: "xp_setup_cl_vs_cl",
+                terrain: "ocean",
+                weather: "clear",
+                maxHours: 505,
+                iterations: 1,
+                seed: 42,
+                attacker: new BattleParticipant(attackerFleet, "", "", null, 0, [], []),
+                defender: new BattleParticipant(defenderFleet, "", "", null, 0, [], []),
+                planesById: new Dictionary<string, PlaneEquipment>(StringComparer.Ordinal),
+                continueAfterRetreat: false,
+                dontRetreat: true);
 
-        var simulator = new BattleSimulator();
-        var result = simulator.Simulate(scenario, seedOverride: 42);
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = 0;
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = 0;
 
-        Assert.Equal(505, result.HoursElapsed);
-        Assert.True(cruiser.Experience > 10, $"Expected experience to be above 10, but was {cruiser.Experience}");
-        Assert.Equal(1, cruiser.ExperienceLevel);
+            var simulator = new BattleSimulator();
+            var result = simulator.Simulate(scenario, seedOverride: 42);
+
+            Assert.Equal(505, result.HoursElapsed);
+            Assert.True(cruiser.Experience > 10, $"Expected experience to be above 10, but was {cruiser.Experience}");
+            Assert.Equal(1, cruiser.ExperienceLevel);
+        }
+        finally
+        {
+            Hoi4Defines.COMBAT_DAMAGE_TO_ORG_FACTOR = originalOrgFactor;
+            Hoi4Defines.COMBAT_DAMAGE_TO_STR_FACTOR = originalStrFactor;
+        }
     }
 
     [Fact]

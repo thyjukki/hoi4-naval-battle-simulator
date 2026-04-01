@@ -174,7 +174,26 @@ public class BattleSimulator
             airPhase,
             surfacePhase);
 
+        if (hour % 24 == 0)
+        {
+            ApplyDailyManpowerRecovery(scenario.Attacker.Fleet.Ships);
+            ApplyDailyManpowerRecovery(scenario.Defender.Fleet.Ships);
+        }
+
         return EvaluateHourTermination(scenario, hour, state, surfacePhase);
+    }
+
+    private static void ApplyDailyManpowerRecovery(List<Ship> ships)
+    {
+        foreach (var ship in ships)
+        {
+            if (ship.IsSunk)
+            {
+                continue;
+            }
+
+            ship.ApplyDailyManpowerRecovery();
+        }
     }
 
     private AirPhaseSnapshot ResolveAirPhase(

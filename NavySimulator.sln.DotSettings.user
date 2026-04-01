@@ -11,5 +11,6 @@
     &lt;TestId&gt;xUnit::14F36F2C-5A47-4162-BAD8-AF5E5A045771::net10.0::NavySimulator.Tests.Domain.Battles.BattleSimulatorTests.Simulate_ExperienceSetup_XpGainFromBattleLevel1ShouldBe505Hours&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::14F36F2C-5A47-4162-BAD8-AF5E5A045771::net10.0::NavySimulator.Tests.Domain.Battles.BattleSimulatorTests.Simulate_ExperienceSetup_XpGainFromBattleFirstTime&lt;/TestId&gt;&#xD;
     &lt;TestId&gt;xUnit::14F36F2C-5A47-4162-BAD8-AF5E5A045771::net10.0::NavySimulator.Tests.Domain.Battles.BattleSimulatorTests.Simulate_ExperienceSetup_XpGainFromBattleFirstTimeWhenCarrierEnemy&lt;/TestId&gt;&#xD;
+    &lt;TestId&gt;xUnit::14F36F2C-5A47-4162-BAD8-AF5E5A045771::net10.0::NavySimulator.Tests.Domain.Ships.ShipTests.ApplyDamage_TracksManpowerLossWithFloor_AndDailyRecovery&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

@@ -93,5 +93,32 @@ public class ShipTests
         Assert.Equal(Hoi4Defines.ShipExperienceBonusMaxNavalDamageFactor, ship.GetShipExperienceAttackModifier(), 6);
     }
 
+    [Fact]
+    public void ApplyDamage_TracksManpowerLossWithFloor_AndDailyRecovery()
+    {
+        var ship = TestEntityFactory.CreateShip(
+            "ship_001",
+            "test_design",
+            ShipRole.Screen,
+            2,
+            new ShipStats(Hp: 100, Organization: 50));
+
+        var maxHp = ship.GetFinalStats().Hp;
+
+        // Repeated full-strength hits simulate repeated STR loss events and validate manpower floor.
+        for (var i = 0; i < 10; i++)
+        {
+            ship.CurrentHP = maxHp;
+            ship.ApplyDamage(400);
+        }
+
+        var expectedMinManpower = ship.MaxManpower * Hoi4Defines.MIN_MANPOWER_RATIO_TO_DROP;
+        Assert.Equal(expectedMinManpower, ship.CurrentManpower, 6);
+
+        ship.ApplyDailyManpowerRecovery();
+        var expectedAfterRecovery = expectedMinManpower + ship.MaxManpower * Hoi4Defines.DAILY_MANPOWER_GAIN_RATIO;
+        Assert.Equal(expectedAfterRecovery, ship.CurrentManpower, 6);
+    }
+
 }
 
