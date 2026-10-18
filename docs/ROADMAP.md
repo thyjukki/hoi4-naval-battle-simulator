@@ -2,6 +2,26 @@
 
 The aim is a simulator that reproduces HOI4 naval combat as closely as possible, verified against the game's own files, its executable, and recorded battles ([mechanics/README.md](mechanics/README.md)).
 
+## Status (2026-10-18)
+
+**Matches hoi4.exe 1.19.3** (decoded, engine rewritten to it): ship stats (S-STATS), hour loop and firing order, activation and cooldowns, targeting and screening, hit chance, damage, crits, retreat, submarines, positioning, experience and manpower, and air combat. Built-in defines and static modifiers are vanilla 1.19.3; a mod folder (`--defines`) overrides them.
+
+**Not yet compared against a recorded battle.** "Matches the code" is not "matches the results" until calibration cases exist.
+
+**Gaps, by impact:**
+1. Combat-time modifier layer: doctrines, admiral skills/traits, spirits, `naval_*_factor` attack/armor/speed (formulas decoded in S-STATS-COMBAT). `data/spirits` is ignored with loader warnings until then.
+2. Weather (hit chance, carrier traffic, naval strike targeting).
+3. Darkness per sea region; currently [ASSUMED] full dark 20:00 to 06:00.
+4. Critical part damage and lasting penalties (S-CRIT-PART, S-STATS-PARTS).
+5. Late-joining ships, aggression (strength) retreat, task-force retreat; air: kamikaze, port strikes, the top-speed interception term, plane experience, loss split across wings.
+6. Nine unsettled cross-finding disagreements ([findings README](reverse-engineering/findings/README.md)); none changes current results.
+
+**Next steps:**
+- Record 3 to 5 TFB battles per [calibration.md](calibration.md):
+  - a mirror match (the attacker should win about two thirds);
+  - one carrier battle, noting the hours air damage appears (strike timing and region phase);
+  - a small battle with the hourly log (hit rates, damage).
+- Build the combat-modifier layer (gap 1) in parallel.
 ## Milestone 1: foundation and surface combat (done)
 
 - Projects split into `Engine` (pure simulation), `GameData` (loading and parsing), `Cli`.
