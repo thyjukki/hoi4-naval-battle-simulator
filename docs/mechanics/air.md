@@ -1,125 +1,177 @@
 # Naval air combat spec
 
-Status: **design for milestone 2; not implemented.** The previous air simulator was removed in milestone 1 (see "Why the old model was dropped" below). The engine currently reports carrier wings and land-based planes as ignored.
+Status: **implemented** in `src/NavySimulator.Engine/Battles/Air/` (`AirRules`, `AirPhase`, `AirGroup`, `AirWing`). The rules come from the reverse-engineering findings in [A-air-combat.md](../reverse-engineering/findings/A-air-combat.md) (hoi4.exe 1.19.3, `naval_fire_exchange_air.cpp`); each rule below names the function it was decoded from. Tags are explained in [README.md](README.md).
 
-Tags are explained in [README.md](README.md). Sources are collected in the research notes summarised here. The wiki's naval battle page mixes values from 1.7–1.11 with newer ones, so [WIKI] claims about air rank lower than define comments ([PDX]).
+Planes do not use hit profiles, armor or piercing. [RE]
 
-## Overview of one air phase
+## Overview of one air step
 
-For each side, at a sortie hour (A-CADENCE):
-1. Work out how many planes fly: carrier planes (A-SORTIE, A-STANCE, A-STACK) and land-based naval strike planes (A-EXTERNAL).
-2. Air-to-air: enemy fighters (carrier CAP, fighters in the airzone) engage the bombers (A-INTERCEPT). Disrupted or destroyed bombers do not strike.
-3. Each surviving bomber wing picks a target (A-TARGET).
-4. The target's AA may shoot down part of the wing before it strikes (A-AA-PREEMPT).
-5. Hits and damage (A-HIT, A-DMG), reduced by fleet AA (A-AA-REDUCE), with crits (A-CRIT).
+An air step runs for each side **after that side's surface fire**, in air hours only (A-CADENCE). Within the step, each air group in turn does the following:
+1. Planes flying: `round(planes × clamp(sortie, 0, 1))` for a carrier group (A-SORTIE); all joined planes for a land-based group (A-EXTERNAL).
+2. Pick one target (A-TARGET).
+3. Enemy carrier fighters intercept (A-INTERCEPT).
+4. The target's AA fires once before the strike (A-AA-PREEMPT).
+5. Hits (A-HIT) and damage (A-DMG), reduced by fleet AA (A-AA-REDUCE), with a possible crit (A-CRIT).
 
-Planes do not use hit profiles, armor or piercing. [WIKI]
+Air groups: one per carrier with wings (`fleet.carrierAirwingsByShipDesign`), plus one land-based group per side when `externalNavalStrikePlanes > 0` and `externalPlaneID` names a plane type. A sunk or escaped carrier's group stops flying.
 
-## A-CADENCE: when planes strike
+## A-CADENCE: when planes strike [RE]
 
-**Candidates.**
-- Carriers every `2 × CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` (6 h): the define comment says delays are "generally used as double because of roundtrip". [PDX] [WIKI]
-- Carriers every `2 × HOURS_DELAY_AFTER_EACH_COMBAT` (8 h), aligned to the global air clock "close to high noon". The wiki marks the 6 h statement obsolete, and a mod author says the carrier define "doesn't work". [WIKI] [COMMUNITY]
-- Land-based planes every 8 h at 04:00 / 12:00 / 20:00. [WIKI]
-- Carriers may act from hour 0 (S-ACTIVATE).
+`airHour ⇔ hourOfDay mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT) == regionPhase` (`0xe24530`). With the vanilla 4 h delay, every air group in the battle acts at the three hours of each day where `hour % 8 == regionId % 8`. The phase follows the game clock and the strategic region, not the battle start. Hour 0 counts.
+- `rules.airRegionPhase` (default 4, which gives the wiki's 04/12/20) and `rules.startHourOfDay` set the phase and the clock.
+- `CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` **has no effect**: the cooldown it sets is written but read only by a dead eligibility list. Land-based groups also strike at every air hour (their "struck once" flag is dead too).
+- The air step does not check S-ACTIVATE.
 
-**Plan.** `BattleRules.CarrierSortiePeriodHours` and `SortieClockAligned` (time-of-day phase vs. battle-start phase). **First [RE] target for air**, since cadence sets the volume of all air damage. Calibration signal: the hours at which carrier damage appears in the battle log.
+## A-SORTIE: how many carrier planes fly [RE]
 
-## A-SORTIE: how many carrier planes can fly
+`0x1976db0` / `0x19786c0`:
+```
+ratio   = CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance]; defender uses 1 − ratio
+base    = (hour < SELECTED_SORTIE_INITIAL_TIME ? ratio : BASE_CARRIER_SORTIE_EFFICIENCY)
+        + carrier sortie_efficiency modifiers (spirits with sortieEffiency)
+        + screeningEff × screening_bonus.sortie_efficiency
+        + carrierScreening × capital_screening_bonus.sortie_efficiency     (vanilla 0.1)
+        + fighter_sortie_efficiency from carrier experience, if the first wing is a fighter
+crowd   = planes ≤ cap ? 1 : (r = (planes − cap)/cap) > 0.9 ? 0 : clamp(1 − CAPACITY_PENALTY × r, 0, 1)
+          with cap = deck size × CARRIER_SIZE_STAT_INCREMENT
+night   = clamp(1 + darkness × night.carrier_traffic, 0, 1)                 (vanilla −1: no sorties at night)
+sortie  = max(0, base × crowd × night) × org / maxOrg
+flying  = round(allPlanesOnTheCarrier × clamp(sortie, 0, 1))
+```
+- The clamp comes only at the end, so a sortie efficiency above 1 offsets low org.
+- `planes` counts all wings on the carrier, fighters included.
+- The stance does not split planes into offence and defence (A-STANCE).
+- Not modelled: weather `carrier_traffic`, the country `carrier_night_traffic`, `carrier_capacity_penalty_reduction`, doctrine and leader modifiers.
 
-**Rule (best estimate).** `sortieEfficiency = BASE_CARRIER_SORTIE_EFFICIENCY (0.5) + 0.10 × carrierScreening + doctrine/trait/spirit/veterancy modifiers`. [DEFINE] [WIKI]
-`flyable = planes × clamp(sortieEfficiency × (1 - CAPACITY_PENALTY (2) × overcrowdFraction), 0, 1)`, with capacity = deck size × `CARRIER_SIZE_STAT_INCREMENT` (10). This matches the wiki's 100-planes-on-an-80-deck example: above-100% sortie efficiency only offsets overcrowding. [WIKI]
-Then `× clamp(1 + carrier traffic modifiers, 0, 1)`: night −100%, storm −80%. [WIKI]
+## A-STANCE [RE]
 
-**Open.** The +10% carrier screening bonus has no define name. The previous simulator multiplied by carrier organization, which no source supports. Carrier veterancy affects sortie efficiency rather than damage; the exact values belong to the experience-levels script (S-XP).
+The stance index comes from `carrierStanceIndex` per participant, with default `CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX`. It is used in two places:
+1. As the sortie base for the first 24 h (A-SORTIE).
+2. In interception: `defShare = 1 − ratio` of the defending side's stance.
 
-## A-STANCE: carrier stances (1.17+)
+## A-STACK: stacking factor [RE]
 
-**Rule.** The offensive share is `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[index]`, default index `CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX` (2, i.e. 50%); the defensive share is the rest. The selected stance overrides the default for the first `SELECTED_SORTIE_INITIAL_TIME` (24) hours. [PDX define comments, patch 1.17]
+`0x161e9a0` / `0x1c6a540`:
+```
+cap = max(NAVAL_COMBAT_PLANE_MIN_STACKING_PENALTY,
+          10·capitals + 16·carriers + 7·subs + 4·convoys + ceil(5·screens / (1 + SCREEN_CAP_REDUCTION_FACTOR × 10·capitals)))
+F   = ownCarrierPlanes > cap ? 1 / (1 + NAVAL_COMBAT_PLANE_STACKING_PENALTY_EFFECT × excess) : 1
+```
+- The cap counts the enemy's visible ships that are still in the battle; hidden subs do not count. Land-based planes are not in `ownCarrierPlanes`.
+- The game also counts support ships at 3 (`SHIP_SILHOUETTE_VALUE_PLANES_SUPPORT`). The simulator has no support role.
+- F does **not** reduce the planes that fly. It shrinks two things: the strike wings used for the stat averages (`max(1, round(n × F))`), and the AA base (`ceil((flying − intercepted) × F)`).
 
-**Open.** [ASSUMED] the offensive share strikes ships and the defensive share flies CAP/interception (A-INTERCEPT). Community reports call stances buggy. Input: per-participant stance index.
+## A-EXTERNAL: land-based planes [RE]
 
-## A-STACK: plane cap per battle (replaces the old 4-carrier rule)
+```
+cap = max(NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP,
+          floor(Σ enemy warship current HP × JOIN_RATIO × (1 + JOIN_RATIO_PER_DAY × floor(hour / 24))))
+```
+- The cap is **cumulative** over the battle; lost planes do not free room.
+- Land-based planes skip the sortie step and get no carrier multiplier.
+- Their attack is multiplied by `externalMissionEfficiency`, an input (range, weather, airbase and fuel are not simulated).
+- Port strikes are not modelled.
 
-**Rule.** Planes without penalty `= NAVAL_COMBAT_PLANE_MIN_STACKING_PENALTY (80) + SHIP_SILHOUETTE_VALUE_PLANES_CARRIER (16) × enemyCarriers + _CAPITAL (10) × enemyCapitals + _SCREEN (5) × enemyScreens / (1 + SCREEN_CAP_REDUCTION_FACTOR (0.02) × enemyCapitals) + _CONVOY (4) × convoys + _SUBMARINE (7) × subs`. Each plane above the cap reduces takeoffs by `NAVAL_COMBAT_PLANE_STACKING_PENALTY_EFFECT` (0.5%), "subject to diminishing returns". [PDX define comments]
+## A-INTERCEPT: carrier fighters vs strike planes [RE]
 
-**Open.** The diminishing-returns curve: candidates `1 / (1 + 0.005 × excess)` and `0.995^excess` (`BattleRules` variant). Whether land-based planes count. `CARRIER_STACK_PENALTY`/`_EFFECT` were removed in 1.17. The TFB profile still sets them, but the engine will not read them.
+`0x197b380`. The defenders are all fighter wings on the target side's carriers that are still in the battle; land-based fighters are not used.
+```
+D       = CARRIER_PERCENTAGE_DEFEND × Σ defender planes × defShare
+engaged = min(D, Σ attacking strike-wing planes × COMBAT_MULTIPLANE_CAP)
+dmg     = engaged × CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER × avg defender air attack
+agiRed  = aAgi > dAgi ? (min(aAgi/dAgi, BIGGEST_AGILITY_FACTOR_DIFF) − 1) × dmg × COMBAT_BETTER_AGILITY_DAMAGE_REDUCTION : 0
+spdInc  = dSpd > aSpd ? (min(dSpd/aSpd, BIGGEST_SPEED_FACTOR_DIFF) − 1) × dmg × COMBAT_BETTER_SPEED_DAMAGE_INCREASE : 0
+x       = max(0.001, (dmg + spdInc − agiRed) × 0.01 / avg attacker air defence)
+losses  = floor(x) + (frac(x) > U ? 1 : 0)
+```
+- The averages are unweighted means per wing.
+- Defenders take no losses, and there is no disruption.
+- The top-speed term of the speed helper is not decoded and not modelled. [RE, partial]
+- `COMBAT_DAMAGE_SCALE_CARRIER` and `DISRUPTION_FACTOR_CARRIER` are not read in naval combat.
 
-## A-EXTERNAL: land-based planes joining
+## A-TARGET: target selection [RE]
 
-**Rule.** Eligible = planes on Naval Strike in the airzone × mission efficiency. Join cap per sortie `= max(NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP (20), sumEnemyCurrentHp × NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO (0.05) × (1 + NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY (0.2) × combatDays))`. [DEFINE] [WIKI]
+`0x197a700`, a weighted random draw over the visible enemy ships that are in the battle:
+```
+t      = TYPE_BASE × S + TYPE_SCALE × (1 − S)          S = target side's screening efficiency
+weight = maxHP × t × (1 + NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE × (1 − HP/maxHP))
+       + NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE × clamp(5 − AA, 0, 5)
+```
+The low-AA term is additive and, at real weights, negligible. Each group picks one target per strike.
 
-**Open.** Whole vs fractional days. Mission efficiency is an input (range, weather, airbase overcrowding, fuel), not simulated. `NAVAL_STRIKE_CARRIER_MULTIPLIER` (A-DMG) is why land planes look about 10× weaker than carrier planes per plane.
+## A-AA-PREEMPT: preemptive shoot-down [RE]
 
-## A-INTERCEPT: air-to-air
+`0x197c8b0`. Only the target fires.
+```
+chance = ANTI_AIR_TARGETTING_TO_CHANCE × max(1.5 × ANTI_AIR_TARGETING − 0.5 × agi, 0.01)
+         agi = AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY × average agility of the selected strike wings
+fires if U ≤ chance
+kills  = randomly rounded ceil((flying − intercepted) × F) × clamp(targetAA × ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1)
+```
+Convoys have no AA. Kamikaze is not modelled.
 
-**Rule (outline).** Normal air-combat math, scaled by `COMBAT_DAMAGE_SCALE_CARRIER` (5) between carrier planes, with disruption factor `DISRUPTION_FACTOR_CARRIER` (6) when both sides are carrier wings: `damage = attackers × air_attack × COMBAT_DAMAGE_STATS_MULTILPIER (0.2) × agility mitigation (COMBAT_BETTER_AGILITY_DAMAGE_REDUCTION 0.45) × speed factor (COMBAT_BETTER_SPEED_DAMAGE_INCREASE 0.65) × top-speed bonus`. [DEFINE] [WIKI Air_combat]
-Since 1.17, carrier fighters intercept land-based naval strikes: "the number of carrier fighters determines interception strength; bomber agility, defense and speed determine survival chances". [PDX] `CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER` (0.35) and `CARRIER_PERCENTAGE_DEFEND` (0.35, "percentage of planes able to defend a carrier from air attacks") are new in 1.17. [DEFINE]
+## A-AA-REDUCE: fleet AA damage reduction [RE]
 
-**Open.** The largest gap in the air model; no published formula. Needs [RE] of the air-combat routine called from naval combat. Milestone 2 will ship this as an explicit [ASSUMED] model behind a rule switch, or leave fighters out and report them as ignored.
+`0x196fca0`:
+```
+fleetAA   = Σ warship AA on the target side × SHIP_TO_FLEET_ANTI_AIR_RATIO × side positioning
+reduction = min(MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE,
+                ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE × (fleetAA + targetAA)^ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE)
+```
+Convoys add nothing, either to the side total or as the target.
 
-## A-TARGET: target selection
+## A-HIT: how many planes hit [RE]
 
-**Candidates.**
-- Wiki (old defines): weight = `maxHp × typeScore × (1 + NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE (5) × missingHpFraction) × lowAa`, with type scores 10/50/200 for sub/capital/carrier and `lowAa = 5 × (5 - AA)` when AA < 5. [WIKI]
-- Current define names: `typeScore = NAVAL_COMBAT_AIR_<TYPE>_TARGET_BASE + NAVAL_COMBAT_AIR_<TYPE>_TARGET_SCALE × (1 - screeningEfficiency)`, per the comments "based on screening efficiency" and "max value when zero screening efficiency". Base 10 (convoy 1); scale 10/10/50/200/1 for sub/screen/capital/carrier/convoy. [PDX define comments]; the combination is [ASSUMED].
-- Low-AA factor "scales between 0 → NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE" (5). [PDX]
+```
+strikers = flying − intercepted − aaKills
+hits     = round(strikers × clamp(avgTargeting × NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1) × U)
+```
+- `avgTargeting` is `0.1 × designer naval targeting`, plane-weighted over the selected strike wings.
+- The uniform U halves the expected hits.
+- Strikers include fighters, because `flying` counts all carrier planes.
+- Weather `naval_strike` is not modelled.
 
-Hidden submarines are excluded. [WIKI]
+## A-DMG: strike damage [RE]
 
-**Open.** Which screening efficiency applies to which group; whether max HP still multiplies; the low-AA curve (the wiki form is not monotonic near AA 5). `BattleRules.AirTargetingModel` with both candidates.
+```
+attack = 0.1 × plane-weighted designer naval attack of the selected strike wings
+       × (NAVAL_STRIKE_CARRIER_MULTIPLIER for a carrier group | externalMissionEfficiency for land-based)
+base   = hits × attack × (1 − reduction)
+HP    -= base × NAVAL_STRIKE_DAMAGE_TO_STR;  org -= base × NAVAL_STRIKE_DAMAGE_TO_ORG
+```
+There is no damage randomness and no HP-scaled org damage. Sinking and retreat follow the surface rules (`DamageRules.Apply`).
 
-## A-AA-PREEMPT: preemptive shoot-down
+## A-CRIT: crits from air [RE]
 
-**Rule.** Only the targeted ship fires. Chance `= ANTI_AIR_TARGETTING_TO_CHANCE (0.2) × max(ANTI_AIR_TARGETING (0.9) - AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY (0.02) × wingAverageAgility, 0.01)`, so at most 18%. On success it destroys `shipAA × ANTI_AIR_ATTACK_TO_AMOUNT (0.01)` of the planes in the attacking wing, randomly rounded. [DEFINE] [WIKI]
+```
+chance = max(0.001, COMBAT_BASE_CRITICAL_CHANCE × (1 + COMBAT_ARMOR_PIERCING_CRITICAL_BONUS) × (1 − min(rel, 1)))   (0 if rel ≥ 1)
+mult   = 1 + COMBAT_CRITICAL_DAMAGE_MULT × (1 − rel) / hits
+```
+- Air crits use the gun crit defines, not the torpedo ones.
+- In the game, a part hit (`CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR / rel`) replaces the multiplier. No part data is loaded, so the simulator always applies the multiplier and consumes the roll.
+- `critical_receive_chance` is not modelled. In the game it acts as `(1 − v)`, so a negative value raises the chance.
 
-**Open.** Positioning reduces AA by up to `AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING` (0.7); where exactly is unknown. What a "wing" is for land-based planes. The previous simulator assumed 10 planes for every land-based wing.
+## A-LOSSES [RE + ASSUMED]
 
-## A-AA-REDUCE: fleet AA damage reduction
+- Planes are lost to interception and to preemptive AA. Air groups persist for the whole battle.
+- [ASSUMED] Losses come off the wings in order. The game's split across wings is not decoded.
+- Plane experience is not modelled.
 
-**Rule.** `reduction = min(ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE (0.18) × (targetAA + SHIP_TO_FLEET_ANTI_AIR_RATIO (0.25) × sideTotalAA)^ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE (0.225), MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE (0.75))`; damage `× (1 - reduction)`. The side total includes the target. Convoys count 0 as the target but add to the total. [PDX define comment] [WIKI]
-Worked values: target 10 / side 100 → 40%; target 30 / side 300 → 51%; the cap needs a pool of about 566.
+## Experience from sorties [RE]
 
-**Open.** "Side" means every ship on that side in the battle (wiki) rather than only the target's task force; to be confirmed.
+Carriers gain experience per sortie as part of S-XP (`ExperienceRules`).
 
-## A-HIT: how many planes hit
+## Not modelled
 
-**Rule.** `hits = planesAfterAA × clamp(navalTargeting / 10 × NAVAL_STRIKE_TARGETTING_TO_AMOUNT (0.3), 0, 1)`. Target speed, visibility and armor do not matter. [DEFINE] [WIKI]
+The weather terms (`carrier_traffic`, `naval_strike`), the country, doctrine and leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, plane experience, and how losses are split across wings.
 
-**Open.** Expected value or a per-plane roll (`BattleRules` variant).
+## Inputs
 
-## A-DMG: strike damage
-
-**Rule.** `base = navalAttack × hits`, `× NAVAL_STRIKE_CARRIER_MULTIPLIER` (10 in 1.17 copies, 12 reported for 1.18.3) if the planes' carrier is in this battle, `× (1 - AA reduction)`. HP `-= base × NAVAL_STRIKE_DAMAGE_TO_STR` (1); org `-= base × NAVAL_STRIKE_DAMAGE_TO_ORG` (1.5). [DEFINE] [PDX define comments]
-`DamageRules.Apply` already takes the HP/org factors as parameters, so strikes reuse it.
-
-**Open.** Whether the full-HP org immunity (S-DMG-APPLY) and damage randomness also apply to strikes. Whether naval attack is per plane (the designer stat) or per wing. The previous simulator's extra `× 0.1` has no source and is dropped.
-
-## A-CRIT: crits from air
-
-**Rule.** As torpedoes: chance `COMBAT_TORPEDO_CRITICAL_CHANCE` (0.1), multiplier `COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT` (2); part damage chance `CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR / reliability`. [WIKI]
-
-## A-LOSSES: plane losses and wing state
-
-Planes are lost to A-INTERCEPT and A-AA-PREEMPT (and kamikaze self-losses: `AIR_NAVAL_KAMIKAZE_LOSSES_MULT`). Carrier wings keep their state for the rest of the battle; damaged wings fly with fewer planes. Plane experience changes per `AIR_WING_XP_*` (milestone 3).
-
-## Why the old model was dropped
-
-| # | Old behavior | Problem |
+| Field | Where | Meaning |
 |---|---|---|
-| 1 | AA reduction `1 - pool^POW × MULT`, clamped to [0, 1] | Ignored the 0.75 cap; with the TFB values (0.03 / 0.58) a large AA pool did very little |
-| 2 | Damage `hits × navalAttack × 0.1 × carrierMult` | Unsourced `× 0.1`; HP/org strike factors unused (the ship's 0.5/1.0 gun factors applied instead) |
-| 3 | Land-based wings fell back to *carrier* plane stats | With no carriers on that side, land planes had 0 naval attack and did nothing |
-| 4 | Preemptive AA always killed out of 10 planes | Wrong for land-based groups |
-| 5 | Sortie efficiency used non-vanilla define names, an "any screen gives the full bonus" rule, and × carrier organization | No source |
-| 6 | Night disabled by testing values | Night is the main limiter of carrier operations |
-| 7 | Fighters, interception, stacking cap, stances, air crits | Not modelled |
-| 8 | Sortie every 8 h from battle start | Candidates: 6 h, or 8 h aligned to the clock |
+| `carrierAirwingsByShipDesign` | force composition | wings per carrier design (plane ID, type, count, planes per wing) |
+| `externalNavalStrikePlanes`, `externalPlaneID`, `externalMissionEfficiency` | participant | land-based naval strike planes |
+| `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
+| `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
 
-## Milestone 2 implementation outline
-
-1. `Battles/Air/`: `AirPhase` (orchestration per S-HOUR step 2), `CarrierWingState`, rules classes per item above (`SortieRules`, `AirTargetingRules`, `AntiAirRules`, `NavalStrikeRules`), each citing its `A-*` ID.
-2. Inputs: per-participant carrier stance, land-based wing groups (plane design, count, mission efficiency) instead of a bare plane count.
-3. `BattleRules` variants: cadence period/phase, targeting model, stacking curve, hit rounding.
-4. Results: per-sortie records (planes flown, intercepted, shot down, hits, damage) as `ShotRecord` does for guns.
-5. Tests: unit tests for each formula's worked values above, plus an engine test that land planes do damage without carriers (old bug 3).
+Each strike is reported as an `AirStrikeRecord`: hour, side, source, target, planes flying, intercepted, shot down, hits, AA reduction, crit, HP and org damage, and sunk.

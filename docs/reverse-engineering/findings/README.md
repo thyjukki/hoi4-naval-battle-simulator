@@ -19,7 +19,7 @@ Addresses are RVAs (image base 0x140000000). They are evidence for this build on
 | [S-DMG-damage-and-application.md](S-DMG-damage-and-application.md) | S-DMG, S-DMG-RANDOM, S-DMG-APPLY, S-CRIT-PART, damage-side S-XP |
 | [S-POS-positioning.md](S-POS-positioning.md) | S-POS-* |
 | [S-XP-experience.md](S-XP-experience.md) | S-XP, S-MANPOWER |
-| [A-air-combat.md](A-air-combat.md) | A-* (not implemented yet) |
+| [A-air-combat.md](A-air-combat.md) | A-* (implemented in `Engine/Battles/Air/`) |
 
 ## Shared facts
 

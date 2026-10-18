@@ -7,7 +7,7 @@ Simulates Hearts of Iron IV naval battles, aiming to reproduce the game's combat
 ## Status
 
 - **Surface combat**: checked against the HOI4 1.19.3 executable by static analysis. Every rule in [docs/mechanics/surface.md](docs/mechanics/surface.md) is tagged with its source; the evidence is in [docs/reverse-engineering/findings/](docs/reverse-engineering/findings/README.md).
-- **Air combat**: decoded from the executable ([docs/mechanics/air.md](docs/mechanics/air.md)) but not simulated yet. Carrier wings and land-based planes in a scenario are ignored, and the run prints a note saying so.
+- **Air combat**: decoded from the executable and simulated ([docs/mechanics/air.md](docs/mechanics/air.md)): sortie cadence and efficiency, stances, stacking, land-based planes, interception, AA, hits, damage and crits. Weather, kamikaze and port strikes are not modelled.
 - Plan: [docs/ROADMAP.md](docs/ROADMAP.md). All docs: [docs/README.md](docs/README.md).
 
 ## Build, run, test

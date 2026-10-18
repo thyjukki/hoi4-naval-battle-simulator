@@ -30,7 +30,7 @@
 - Rules live in `Engine/Battles/Mechanics/` as static classes, one concern each: `PositioningRules`, `ScreeningRules`, `WeaponCadenceRules`, `HitChanceRules`, `TargetingRules`, `DamageRules`, `RetreatRules`, `SubmarineRules`, `ExperienceRules`.
 - All randomness goes through `IRandomSource` (seeded `SeededRandomSource`; scripted in tests).
 - Results: `BattleResult` with per-shot `ShotRecord`s, `ShipResult`s, `SideResult`s, hourly log and notes about ignored inputs.
-- Air combat is decoded (`docs/mechanics/air.md`) but not implemented yet.
+- Air combat (`Engine/Battles/Air/`: `AirPhase`, `AirRules`) runs after each side's surface fire in air hours; spec `docs/mechanics/air.md`.
 - Reverse-engineering: findings in `docs/reverse-engineering/findings/` (hoi4.exe 1.19.3, with SHA-256), tooling in `tools/re/`. Re-run it after game patches before trusting the [RE] tags.
 
 ## Code Patterns to Follow Here

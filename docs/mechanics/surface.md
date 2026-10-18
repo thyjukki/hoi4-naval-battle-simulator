@@ -14,7 +14,7 @@ Each hour:
    3. **Fighting**: escape progress is reset; from tick `COMBAT_MIN_DURATION` (8) it may decide to retreat (S-RETREAT). A ship that starts retreating does not fire this hour. Otherwise it fires (S-COOLDOWN, S-TARGET);
    4. **Retreating**: fires, then advances its escape (S-RETREAT-SPEED).
    
-   After its ships, the side's air phase runs (A-*, not implemented). If the enemy has only hidden submarines left (nothing the side can target) and no air acted, all of the side's ships start retreating.
+   After its ships, the side's air step runs in air hours (A-*, [air.md](air.md)). If the enemy has only hidden submarines left (nothing the side can target) and no air acted, all of the side's ships start retreating.
 3. Experience gain (S-XP), end check (S-END).
 
 **Code.** `BattleEngine.cs`. Fire-exchange groups: with `COMBAT_MAX_GROUPS` (1) each side forms one group paired with the other side's, so groups have no effect in vanilla and are not modelled.
@@ -33,7 +33,9 @@ The previous `Interleaved` and `Simultaneous` variants are removed.
 - **S-POS-DMG**: `DAMAGE_PENALTY_ON_MINIMUM_POSITIONING (0.5) × (1 - positioning)` is subtracted inside the additive damage multiplier (S-DMG).
 - **S-POS-SCREEN**: see S-SCREEN.
 
-**Not modelled** (no inputs for them yet): country/admiral positioning modifiers; the defender's initial-phase modifier during `COMBAT_INITIAL_DURATION`; the carrier-ratio penalty (needs air; formula in the air finding); the penalty for ships joining a running battle (`POSITIONING_PENALTY_FOR_SHIPS_JOINED_COMBAT_AFTER_IT_STARTS` with hourly decay); the convoy-escort dominance bonus. Carriers' detection should include `carrier_surface_detection` scaled by how full the deck is (needs air).
+**Carrier ratio** [RE] (0x161c217): `penalty = clamp((1 - ownA / enemyA) × HIGHER_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR × enemyB, 0, MAX_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR)`, where `A` = Σ sortie efficiency × planes over a side's carriers and `B` = their mean sortie efficiency × min(1, planes / CARRIER_PLANES_AMOUNT_FOR_POSITIONING). No penalty if the enemy has no carrier air.
+
+**Not modelled** (no inputs for them yet): country/admiral positioning modifiers; the defender's initial-phase modifier during `COMBAT_INITIAL_DURATION`; the penalty for ships joining a running battle (`POSITIONING_PENALTY_FOR_SHIPS_JOINED_COMBAT_AFTER_IT_STARTS` with hourly decay); the convoy-escort dominance bonus. Carriers' detection should include `carrier_surface_detection` scaled by how full the deck is (needs air).
 
 ## S-SCREEN: screening efficiency [RE]
 

@@ -17,6 +17,11 @@ public static class ReportWriter
         File.WriteAllLines(Path.Combine(directory, "hourly.log"), result.HourlyLog);
         File.WriteAllText(Path.Combine(directory, "shots.csv"), BuildShotsCsv(result));
         File.WriteAllText(Path.Combine(directory, "ships.csv"), BuildShipsCsv(result));
+
+        if (result.AirStrikes.Count > 0)
+        {
+            File.WriteAllText(Path.Combine(directory, "air.csv"), BuildAirCsv(result));
+        }
     }
 
     public static List<string> BuildRunSummary(BattleResult result)
@@ -34,6 +39,7 @@ public static class ReportWriter
             lines.Add($"{side.Label} ({side.FleetId}): {side.ShipsAtStart} ships, sunk {side.ShipsSunk}, retreated {side.ShipsRetreated}, remaining {side.ShipsRemaining}");
             lines.Add($"  HP lost {side.HpLost:F1} / {side.HpAtStart:F1} ({Ratio(side.HpLost, side.HpAtStart):P1}), HP damage dealt {side.HpDamageDealt:F1}");
             lines.AddRange(BuildWeaponLines(result, side.Label).Select(line => "  " + line));
+            lines.AddRange(BuildAirLines(result, side.Label).Select(line => "  " + line));
             lines.AddRange(BuildDesignLines(result.Ships.Where(ship => ship.Side == side.Label)).Select(line => "  " + line));
         }
 
@@ -108,6 +114,49 @@ public static class ReportWriter
             .Select(group =>
                 $"{group.Key}: {group.Count()} shots, {group.Count(shot => shot.Hit)} hits ({Ratio(group.Count(shot => shot.Hit), group.Count()):P1}, " +
                 $"avg chance {group.Average(shot => shot.HitChance):P1}), crits {group.Count(shot => shot.Critical)}, HP damage {group.Sum(shot => shot.HpDamage):F1}");
+    }
+
+    private static IEnumerable<string> BuildAirLines(BattleResult result, string side)
+    {
+        var strikes = result.AirStrikes.Where(strike => strike.Side == side).ToList();
+
+        if (strikes.Count == 0)
+        {
+            return [];
+        }
+
+        return
+        [
+            $"air: {strikes.Count} strikes, {strikes.Sum(strike => strike.Flying)} planes flown, {strikes.Sum(strike => strike.Intercepted)} intercepted, " +
+            $"{strikes.Sum(strike => strike.ShotDownByAntiAir)} shot down by AA, {strikes.Sum(strike => strike.Hits)} hits, " +
+            $"crits {strikes.Count(strike => strike.Critical)}, HP damage {strikes.Sum(strike => strike.HpDamage):F1}"
+        ];
+    }
+
+    private static string BuildAirCsv(BattleResult result)
+    {
+        var builder = new StringBuilder();
+        builder.AppendLine("hour,side,source,target,flying,intercepted,shotDownByAa,hits,aaReduction,critical,hpDamage,orgDamage,killingBlow");
+
+        foreach (var strike in result.AirStrikes)
+        {
+            builder.AppendLine(string.Join(',',
+                strike.Hour.ToString(Invariant),
+                strike.Side,
+                strike.Source,
+                strike.TargetId,
+                strike.Flying.ToString(Invariant),
+                strike.Intercepted.ToString(Invariant),
+                strike.ShotDownByAntiAir.ToString(Invariant),
+                strike.Hits.ToString(Invariant),
+                strike.AntiAirReduction.ToString("F4", Invariant),
+                strike.Critical,
+                strike.HpDamage.ToString("F3", Invariant),
+                strike.OrganizationDamage.ToString("F3", Invariant),
+                strike.KillingBlow));
+        }
+
+        return builder.ToString();
     }
 
     private static IEnumerable<string> BuildDesignLines(IEnumerable<ShipResult> ships)

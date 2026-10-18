@@ -14,16 +14,16 @@ The aim is a simulator that reproduces HOI4 naval combat as closely as possible,
 
 Static analysis of the executable decoded the hour loop, firing order, activation, cooldowns, targeting, hit chance, damage, crits, retreat, submarines, positioning, screening, experience and air ([reverse-engineering/findings/](reverse-engineering/findings/README.md)). The surface engine was rewritten to match; built-in defines and static modifiers are now 1.19.3.
 
-## Milestone 2: air combat overhaul
+## Milestone 2: air combat overhaul (done)
 
-Implement [mechanics/air.md](mechanics/air.md): sortie cadence and efficiency, carrier stances, the dynamic plane cap, land-based planes joining, targeting, preemptive AA, fleet AA reduction, hits and damage, air crits, plane losses. Scenario inputs for land-based wing groups and carrier stance. Interception is modelled only as far as [RE] allows, otherwise as an explicit [ASSUMED] variant.
+Implemented from the [RE] findings: [mechanics/air.md](mechanics/air.md): sortie cadence and efficiency, carrier stances, the dynamic plane cap, land-based planes joining, targeting, preemptive AA, fleet AA reduction, hits and damage, air crits, plane losses. Scenario inputs for land-based wing groups and carrier stance. Left open: weather terms, kamikaze, port strikes, the top-speed interception term, plane experience.
 
 ## Milestone 3: surface completeness
 
-- Submarines: hide/reveal, escape, air sub detection (S-SUB).
+- Submarines: hide/reveal, escape (done), air sub detection (S-SUB).
 - Critical part damage with lasting effects (S-CRIT-PART); needs module categories on designs.
-- Weather, sea region and night as data-driven modifiers; admiral skills and traits; doctrines as battle modifiers.
-- Late-joining ships, carrier-ratio positioning, task-force-level retreat.
+- Weather, sea region and night as data-driven modifiers; admiral skills and traits; doctrines and spirits as battle modifiers (`data/spirits` uses keys such as positioning, hitChance and retreatDecisionChance that the stat model cannot express; the loader warns about them).
+- Late-joining ships, task-force-level retreat.
 
 ## Milestone 4: import everything from game files
 
