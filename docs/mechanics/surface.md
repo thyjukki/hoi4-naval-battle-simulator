@@ -4,6 +4,20 @@ Status: implemented (`src/NavySimulator.Engine/Battles/`) and checked against **
 
 "Tick" is the game's combat hour counter. It is 1 during battle hour 0, 2 during hour 1, and so on.
 
+## S-STATS: ship stats before combat [RE]
+
+Finding: [S-STATS-design-stats.md](../reverse-engineering/findings/S-STATS-design-stats.md). Code: `ShipDesign.ComputeStats`, `Ship.ApplyExternalModifiers`.
+- **S-STATS-DESIGN** (0xbdfc80): `variant = (hull base + Σ module add_stats + avg + MIO hit chance factors) × (1 + Σ module multiply_stats + MIO + equipment bonuses)`.
+  - `avg = Σ add_average_stats / modules declaring the stat`.
+  - All multipliers form one additive sum; nothing compounds.
+  - Carrier size: `floor(add + avg + multiplier)` (its multiplier is a flat add).
+- **S-STATS-MIO**: the MIO's `equipment_bonus` sum. Light, heavy and torpedo hit chance factors are added; every other stat joins the multiplier, so a percentage on a stat the design has 0 of does nothing. The JSON's `statModifiers`/`statMultipliers` split is notation only; both are summed.
+- **S-STATS-BONUS**: idea and named equipment bonuses (`add_equipment_bonus`, e.g. TFB special projects) are multiplicative for every stat, hit chance factors included. In the data they are researches with `"equipmentBonus": true`.
+- **S-STATS-SHIP** (0xc3d090): technology blocks are sub-unit bonuses. `ship = variant × (1 + tech) + tech` for the additive set: org, HP, reliability, hit chance factors, torpedo damage reduction, torpedo enemy crit chance and naval weather penalty. Organization comes from the sub-unit, so it is never scaled.
+- **S-STATS-CLAMP**: reliability ≥ 0, production cost ≥ 0.1.
+- **S-STATS-PARTS** (lasting stat penalties from damaged parts) is not modelled (S-CRIT-PART).
+- **S-STATS-COMBAT**: attack (`max(0, stat × (1 + Σ attack factors + naval_damage_factor + …))`), armor (`× max(0, 1 + defence factors + naval_defense_factor + …)`) and speed (`× max(0.1, 1 + naval_speed_factor + …)`) modifiers are combat-time, not design stats. Only the experience and night terms are modelled. Spirits are still applied as [LEGACY] stat modifiers; their real effects belong here.
+
 ## S-HOUR: hour structure [RE]
 
 Each hour:

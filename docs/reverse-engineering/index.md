@@ -248,6 +248,66 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x29e3f08 / 0x29e3f30 / 0x29e3f48 / 0x29e3f98 | combatant slots +0x70 (0x161f790), +0x98 (0x161f810), +0xb0 (0x161e400), +0x100 (0x1621a70) | [HOUR/hour] |
 | 0x2d218e8 | CNavalCombat RTTI | [HOUR/chain] |
 
+### Design stats (S-STATS)
+
+From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment variant, ship refresh and combat stat getters).
+
+| RVA / field | Role |
+|---|---|
+| 0xbe0260 | CEquipmentVariant::RecalculateStats |
+| 0xbdfc80 | variant final stats with breakdown → `variant+0x100` |
+| 0xbdfa70 | variant final stats, no breakdown |
+| 0x193cdf0 | stat_helper: size assert, calls 0x193b080 |
+| 0x193b080 | gather stat components from all variant sources |
+| 0x193ade0 / 0x193cc10 | single-stat gather |
+| 0x193d170 | add stat container × weight (add/avg/mult) |
+| 0x193ca70 | single-stat version of 0x193d170 |
+| 0x6f3920 | variant idea bonuses (`+0xd0`) |
+| 0xbd5b40 | variant named equipment bonuses (handles `+0xe8`) |
+| 0xbd3b80 | refresh variant MIO bonus (`+0x498`) |
+| 0xdb7800 / 0xdb7a10 / 0xdb7a30 | MIO trait/initial/policy bonus sum (equipment / production) |
+| 0xa4fe60 | MIO trait limit_to_equipment_type check |
+| 0xe5f600 / 0xe5f740 | country add idea equipment bonus (instant → existing variants) |
+| 0xe65f30 | country remove idea equipment bonuses |
+| 0x631e70 | equipment bonus applies to type |
+| 0x13e81b0 | token id → EEquipmentStats |
+| 0x831c0 | static token registration (name → id) |
+| 0xc3d090 | CShip::RefreshStats |
+| 0x1019e50 / 0x1429cb0 / 0x142b5f0 | add variant stats to ship × (1 + sub-unit stat) |
+| 0x1019ea0 / 0x1429d30 | add sub-unit stat set (direct or base path) + clamps |
+| 0x1429580 | sub-unit additive stat list |
+| 0x1019fb0 | ship stat block finalize (not decoded) |
+| 0xd11ae0 | country per-sub-unit stats lookup (`country+0xf70`) |
+| 0xd0e200 | create country sub-unit copy, apply techs |
+| 0x101b1b0 / 0x193d370 / 0x193d2a0 | apply technology sub-unit bonuses (type and categories, × level) |
+| 0xee3e70 | technology researched handler (enables sub-units) |
+| 0xc34a50 | combat attack/armor getter (kind 0 light, 1 heavy, 2 sub, 3 torpedo, 4 armor) |
+| 0xc3a5d0 / 0xc3a580 / 0xc3a890 / 0xc3ac00 / 0xc3a520 | light / heavy / sub / torpedo attack, armor |
+| 0xc3a740 | combat speed getter |
+| 0x152d4f0 | module stat description (container `+0x128`) |
+| 0x6317f0 | stat container tooltip (EQUIPMENT_MODULE_STAT_AVERAGED) |
+| type `+0x148+8s` | hull base stats |
+| variant `+0x3f0` | equipment type |
+| variant `+0x68`/`+0x70`/`+0x7c` | upgrades {upgrade*, level} |
+| variant `+0xb8`/`+0xc4` | modules, one per filled slot |
+| variant `+0xd0`/`+0xdc` | idea bonuses |
+| variant `+0xe8`/`+0xf4` | named bonus handles |
+| variant `+0x100+8s` | final stats |
+| variant `+0x414` | Σ upgrade levels |
+| variant `+0x488` | MIO handle |
+| variant `+0x498`/`+0x4a4` | MIO bonus list |
+| module `+0x128` (`+0x138` add, `+0x158` avg, `+0x178` mult) | module stat container |
+| upgrade `+0x40` | upgrade stat container |
+| bonus `+0x40` (idea) / `+0x48` (named) | bonus stat lists |
+| bonus `+0x70` | instant flag |
+| country `+0x160` | idea equipment bonuses |
+| country `+0xa0` | country variants |
+| country `+0xf70` | per-country sub-units |
+| ship `+0x120+8s` | ship stat block |
+| ship `+0x6f8` / `+0x700` | current HP / current org |
+| ship `+0x918`/`+0x924` | damaged critical parts {part*, count} |
+| sub-unit stats `+0x60+8s` | sub-unit stat array |
+
 ## 2. Struct fields
 
 ### Ship (ship.cpp object)

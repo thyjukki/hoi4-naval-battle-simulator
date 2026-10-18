@@ -295,7 +295,8 @@ public class SetupLoader
                 research.StatAverages.ToDomain(),
                 research.StatMultipliers.ToDomain(),
                 ParseRoles(research.AppliesToRoles),
-                ParseTypes(research.AppliesToTypes ?? [])));
+                ParseTypes(research.AppliesToTypes ?? []),
+                research.EquipmentBonus));
         var spiritById = spirits.ToDictionary(
             spirit => spirit.ID,
             spirit => new Spirit(

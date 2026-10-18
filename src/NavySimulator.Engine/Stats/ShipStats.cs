@@ -94,6 +94,40 @@ public record ShipStats(
             ProductionCost * (1 + percentBonus.ProductionCost));
     }
 
+    /// <summary>
+    /// S-STATS-SHIP [RE] 0x1429580: the stats a technology value is also added to flat, on top of
+    /// <c>variant × (1 + value)</c>. Depth charges use the light-gun hit chance factor in the game.
+    /// </summary>
+    public ShipStats AdditiveSetOnly()
+    {
+        return new ShipStats(
+            Organization: Organization,
+            Hp: Hp,
+            Reliability: Reliability,
+            TorpedoDamageReductionFactor: TorpedoDamageReductionFactor,
+            TorpedoEnemyCriticalChanceFactor: TorpedoEnemyCriticalChanceFactor,
+            NavalWeatherPenaltyFactor: NavalWeatherPenaltyFactor,
+            LightHitChanceFactor: LightHitChanceFactor,
+            HeavyHitChanceFactor: HeavyHitChanceFactor,
+            TorpedoHitChanceFactor: TorpedoHitChanceFactor,
+            DepthChargeHitChanceFactor: DepthChargeHitChanceFactor);
+    }
+
+    /// <summary>S-STATS-MIO [RE]: the light, heavy and torpedo hit chance factors (stats 0x25-0x27).</summary>
+    public ShipStats HitChanceFactorsOnly()
+    {
+        return new ShipStats(
+            LightHitChanceFactor: LightHitChanceFactor,
+            HeavyHitChanceFactor: HeavyHitChanceFactor,
+            TorpedoHitChanceFactor: TorpedoHitChanceFactor,
+            DepthChargeHitChanceFactor: DepthChargeHitChanceFactor);
+    }
+
+    public ShipStats WithoutHitChanceFactors()
+    {
+        return this with { LightHitChanceFactor = 0, HeavyHitChanceFactor = 0, TorpedoHitChanceFactor = 0, DepthChargeHitChanceFactor = 0 };
+    }
+
     public static ShipStats AverageNonZero(IEnumerable<ShipStats> stats)
     {
         var statList = stats.ToList();

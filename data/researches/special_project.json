@@ -3,6 +3,7 @@
   "researches": [
     {
       "id": "sp_torpedo_cruiser_eq_bonus_torpedo",
+      "equipmentBonus": true,
       "statModifiers": {
         "torpedoHitChanceFactor": 0.05
       },
@@ -13,6 +14,7 @@
     },
     {
       "id": "sp_torpedo_cruiser_eq_bonus_light_attack",
+      "equipmentBonus": true,
       "statModifiers": {
         "lightHitChanceFactor": 0.075
       },

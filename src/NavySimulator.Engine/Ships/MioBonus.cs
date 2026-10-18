@@ -29,6 +29,16 @@ public class MioBonus
 
         return (statModifiers, statAverages, statMultipliers);
     }
+
+    /// <summary>
+    /// S-STATS-MIO [RE] 0xdb7800: the MIO's equipment_bonus as one sum per stat. The script has a single value per
+    /// stat; the JSON split into modifiers/multipliers is only notation, so both blocks are summed.
+    /// </summary>
+    public ShipStats GetEquipmentBonus(ShipRole role, List<string> hullTypes)
+    {
+        var (statModifiers, _, statMultipliers) = GetCombinedForRoleAndTypes(role, hullTypes);
+        return statModifiers.Add(statMultipliers);
+    }
 }
 
 

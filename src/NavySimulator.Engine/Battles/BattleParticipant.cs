@@ -62,18 +62,18 @@ public class BattleParticipant
             var applicableResearches = Researches.Where(research => research.AppliesTo(role, hullTypes)).ToList();
             var applicableSpirits = Spirits.Where(spirit => spirit.AppliesTo(role, hullTypes)).ToList();
 
-            var modifiers = applicableResearches.Select(research => research.StatModifiers)
-                .Concat(applicableSpirits.Select(spirit => spirit.StatModifiers));
-            var averages = applicableResearches.Select(research => research.StatAverages)
-                .Concat(applicableSpirits.Select(spirit => spirit.StatAverages));
-            var multipliers = applicableResearches.Select(research => research.StatMultipliers)
-                .Concat(applicableSpirits.Select(spirit => spirit.StatMultipliers));
+            // S-STATS-BONUS / S-STATS-SHIP: equipment bonuses go into the design, technologies onto the ship.
+            var equipmentBonuses = applicableResearches.Where(research => research.IsEquipmentBonus)
+                .Select(research => research.Values)
+                .ToList();
+            var technology = applicableResearches.Where(research => !research.IsEquipmentBonus)
+                .Aggregate(new ShipStats(), (current, research) => current.Add(research.Values));
 
-            var combinedModifiers = modifiers.Aggregate(new ShipStats(), (current, value) => current.Add(value));
-            var combinedAverages = ShipStats.AverageNonZero(averages);
-            var combinedMultipliers = multipliers.Aggregate(new ShipStats(), (current, value) => current.Add(value));
+            var spiritModifiers = applicableSpirits.Aggregate(new ShipStats(), (current, spirit) => current.Add(spirit.StatModifiers));
+            var spiritAverages = ShipStats.AverageNonZero(applicableSpirits.Select(spirit => spirit.StatAverages));
+            var spiritMultipliers = applicableSpirits.Aggregate(new ShipStats(), (current, spirit) => current.Add(spirit.StatMultipliers));
 
-            ship.ApplyExternalModifiers(combinedModifiers, combinedAverages, combinedMultipliers);
+            ship.ApplyExternalModifiers(equipmentBonuses, technology, spiritModifiers, spiritAverages, spiritMultipliers);
         }
     }
 }

@@ -18,6 +18,10 @@
           "statModifiers": { "$ref": "#/$defs/shipStats" },
           "statMultipliers": { "$ref": "#/$defs/shipStats" },
           "statAverages": { "$ref": "#/$defs/shipStats" },
+          "equipmentBonus": {
+            "type": "boolean",
+            "description": "True for an idea or named equipment bonus (add_equipment_bonus, e.g. special projects): its values join the design multiplier for every stat (S-STATS-BONUS). False (default) for a technology sub-unit bonus applied on the ship (S-STATS-SHIP)."
+          },
           "appliesToRoles": {
             "type": "array",
             "items": { "$ref": "#/$defs/shipRole" },

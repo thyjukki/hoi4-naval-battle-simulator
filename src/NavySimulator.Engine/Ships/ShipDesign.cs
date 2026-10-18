@@ -18,31 +18,27 @@ public class ShipDesign
         MioBonus = mioBonus;
     }
 
+    /// <summary>Design stats without country equipment bonuses.</summary>
     public ShipStats GetFinalStats()
     {
-        if (cachedFinalStats is not null)
-        {
-            return cachedFinalStats;
-        }
+        return cachedFinalStats ??= ComputeStats([]);
+    }
 
-        var emptyStats = new ShipStats();
-        var multipliers = Modules.Aggregate(emptyStats, (current, module) => current.Add(module.StatMultipliers));
-        // StatModifiers are additive, averaged statAverages are added once, then statMultipliers are applied.
-        var stats = Modules.Aggregate(Hull.BaseStats, (current, module) => current.Add(module.StatModifiers));
-        var averagedStats = ShipStats.AverageNonZero(Modules.Select(module => module.StatAverages));
-        stats = stats.Add(averagedStats);
-        
-        stats = stats.Scale(multipliers);
+    /// <summary>
+    /// S-STATS-DESIGN [RE] 0xbdfc80: <c>final = (base + Σ add_stats + avg + MIO hit chance factors) × (1 + Σ multiply_stats + MIO + equipment bonuses)</c>.
+    /// avg = Σ add_average_stats / number of modules declaring the stat. All multipliers are one additive sum;
+    /// MIO light/heavy/torpedo hit chance factors go to the add bucket (S-STATS-MIO). Carrier size's multiplier is a
+    /// flat add and the result is floored. Equipment bonuses (idea or named, S-STATS-BONUS) are multiplicative for every stat.
+    /// </summary>
+    public ShipStats ComputeStats(IReadOnlyList<ShipStats> equipmentBonuses)
+    {
+        var mio = MioBonus?.GetEquipmentBonus(Hull.Role, Hull.Types) ?? new ShipStats();
+        var add = Modules.Aggregate(Hull.BaseStats, (current, module) => current.Add(module.StatModifiers))
+            .Add(ShipStats.AverageNonZero(Modules.Select(module => module.StatAverages)))
+            .Add(mio.HitChanceFactorsOnly());
+        var multiplier = Modules.Aggregate(mio.WithoutHitChanceFactors(), (current, module) => current.Add(module.StatMultipliers));
+        multiplier = equipmentBonuses.Aggregate(multiplier, (current, bonus) => current.Add(bonus));
 
-        if (MioBonus is not null)
-        {
-            var mioEffects = MioBonus.GetCombinedForRoleAndTypes(Hull.Role, Hull.Types);
-            stats = stats.Add(mioEffects.StatModifiers);
-            stats = stats.Add(mioEffects.StatAverages);
-            stats = stats.Scale(mioEffects.StatMultipliers);
-        }
-
-        cachedFinalStats = stats;
-        return cachedFinalStats;
+        return add.Scale(multiplier) with { CarrierSize = Math.Floor(add.CarrierSize + multiplier.CarrierSize) };
     }
 }

@@ -21,6 +21,7 @@ Lookup index of every function, struct field, modifier id and define read site i
 | [S-DMG-damage-and-application.md](S-DMG-damage-and-application.md) | S-DMG, S-DMG-RANDOM, S-DMG-APPLY, S-CRIT-PART, damage-side S-XP |
 | [S-POS-positioning.md](S-POS-positioning.md) | S-POS-* |
 | [S-XP-experience.md](S-XP-experience.md) | S-XP, S-MANPOWER |
+| [S-STATS-design-stats.md](S-STATS-design-stats.md) | S-STATS-* (design, MIO, equipment bonuses, technologies, combat getters) |
 | [A-air-combat.md](A-air-combat.md) | A-* (implemented in `Engine/Battles/Air/`) |
 
 ## Shared facts

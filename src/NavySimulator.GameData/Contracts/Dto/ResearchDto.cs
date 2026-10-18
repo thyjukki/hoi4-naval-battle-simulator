@@ -8,5 +8,6 @@ public class ResearchDto
     public ShipStatsDto StatMultipliers { get; set; } = new();
     public List<string> AppliesToRoles { get; set; } = [];
     public List<string> AppliesToTypes { get; set; } = [];
+    public bool EquipmentBonus { get; set; }
 }
 

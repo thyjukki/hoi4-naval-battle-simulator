@@ -8,7 +8,8 @@ public class Research(
     ShipStats statAverages,
     ShipStats statMultipliers,
     List<ShipRole> appliesToRoles,
-    List<string> appliesToTypes)
+    List<string> appliesToTypes,
+    bool isEquipmentBonus = false)
 {
     public string ID { get; } = id;
     public ShipStats StatModifiers { get; } = statModifiers;
@@ -16,6 +17,15 @@ public class Research(
     public ShipStats StatMultipliers { get; } = statMultipliers;
     public List<ShipRole> AppliesToRoles { get; } = appliesToRoles;
     public List<string> AppliesToTypes { get; } = appliesToTypes;
+
+    /// <summary>
+    /// S-STATS-BONUS: an idea or named equipment bonus (e.g. a special project's add_equipment_bonus) that feeds the
+    /// design multiplier, instead of a technology's sub-unit bonus applied on the ship (S-STATS-SHIP).
+    /// </summary>
+    public bool IsEquipmentBonus { get; } = isEquipmentBonus;
+
+    /// <summary>The script's single value per stat; the JSON split into modifiers and multipliers is only notation.</summary>
+    public ShipStats Values => StatModifiers.Add(StatMultipliers);
 
     public bool AppliesTo(ShipRole role, List<string> hullTypes)
     {

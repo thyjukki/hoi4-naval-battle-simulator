@@ -4,7 +4,7 @@
 - Simulate Hearts of Iron 4 (HOI4) naval battles as close to the real game as possible, down to decoded formulas.
 - Sources of truth, in order: reverse-engineering findings (`docs/reverse-engineering/findings/`), calibration against recorded in-game battles (`docs/calibration.md`), the game's own files (defines, unit/equipment scripts). The wiki and community testing are secondary.
 - The spec lives in `docs/mechanics/`. Every rule has an ID (`S-*` surface, `A-*` air) and provenance tags ([DEFINE], [RE], [CAL], [WIKI], [PDX], [COMMUNITY], [LEGACY], [ASSUMED]). Code cites the ID where it implements the rule.
-- Fleets consist of ships; ships have a design = hull + modules + optional MIO; researches and spirits add stat modifiers.
+- Fleets consist of ships; ships have a design = hull + modules + optional MIO; researches (technologies and equipment bonuses) and spirits add stat modifiers, combined as decoded in S-STATS (`docs/mechanics/surface.md`).
 - Battles are between 2 sides, each with a fleet, researches, spirits, repair (retreat) priority and submarine engagement risk.
 
 ## Possible stats

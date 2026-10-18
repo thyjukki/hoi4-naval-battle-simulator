@@ -49,13 +49,28 @@ public class Ship
         return stats;
     }
 
-    public void ApplyExternalModifiers(ShipStats statModifiers, ShipStats statAverages, ShipStats statMultipliers)
+    /// <summary>
+    /// S-STATS-SHIP [RE] 0xc3d090: <c>ship = variant × (1 + tech) + tech</c> for the additive set (org, HP, reliability,
+    /// hit chance factors, torpedo factors). Organization comes from the sub-unit in the game, so it is never scaled.
+    /// Spirits are applied afterwards as before [LEGACY]; their real effects are combat modifiers (S-STATS-COMBAT).
+    /// </summary>
+    public void ApplyExternalModifiers(
+        IReadOnlyList<ShipStats> equipmentBonuses,
+        ShipStats technology,
+        ShipStats spiritModifiers,
+        ShipStats spiritAverages,
+        ShipStats spiritMultipliers)
     {
-        var updated = Design.GetFinalStats();
-        updated = updated.Add(statModifiers);
-        updated = updated.Add(statAverages);
-        updated = updated.Scale(statMultipliers);
-        stats = updated;
+        var variant = Design.ComputeStats(equipmentBonuses);
+        var updated = variant.Scale(technology with { Organization = 0 }).Add(technology.AdditiveSetOnly());
+        updated = updated.Add(spiritModifiers).Add(spiritAverages).Scale(spiritMultipliers);
+
+        // S-STATS-CLAMP [RE] 0x142a217.
+        stats = updated with
+        {
+            Reliability = Math.Max(0, updated.Reliability),
+            ProductionCost = Math.Max(0.1, updated.ProductionCost)
+        };
         ResetCombatState();
     }
 
