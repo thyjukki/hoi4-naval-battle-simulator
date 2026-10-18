@@ -36,6 +36,12 @@ public static class LuaDefinesParser
             var statementStart = reader.Position;
             var statementLine = reader.Line;
 
+            // Plain Lua code such as the loop that merges NDefines_Graphics in 00_graphics.lua defines nothing.
+            if (reader.TrySkipControlStatement())
+            {
+                continue;
+            }
+
             try
             {
                 var path = reader.ReadDottedName();
@@ -142,6 +148,89 @@ public static class LuaDefinesParser
             {
                 index++;
             }
+        }
+
+        private static readonly HashSet<string> ControlKeywords = ["for", "while", "if", "function", "do", "repeat", "local", "return"];
+
+        /// <summary>
+        /// Skips a statement that starts with a Lua keyword: a whole block up to its matching <c>end</c>/<c>until</c>,
+        /// or the rest of the line for <c>local</c> and <c>return</c>.
+        /// </summary>
+        public bool TrySkipControlStatement()
+        {
+            var start = index;
+            var word = PeekWord();
+
+            if (word is null || !ControlKeywords.Contains(word))
+            {
+                return false;
+            }
+
+            if (word is "local" or "return")
+            {
+                SkipStatementFrom(start, line);
+                return true;
+            }
+
+            var depth = 0;
+
+            while (true)
+            {
+                SkipTrivia();
+
+                if (AtEnd)
+                {
+                    return true;
+                }
+
+                var character = Peek(0);
+
+                if (character is '"' or '\'')
+                {
+                    ReadString();
+                    continue;
+                }
+
+                if (!IsIdentifierStart(character))
+                {
+                    index++;
+                    continue;
+                }
+
+                var token = ReadIdentifier();
+
+                // "for"/"while" open their block with the following "do".
+                if (token is "function" or "if" or "do" or "repeat")
+                {
+                    depth++;
+                }
+                else if (token is "end" or "until")
+                {
+                    depth--;
+
+                    if (depth <= 0)
+                    {
+                        if (token == "until")
+                        {
+                            SkipStatementFrom(index, line);
+                        }
+
+                        return true;
+                    }
+                }
+            }
+        }
+
+        private string? PeekWord()
+        {
+            var end = index;
+
+            while (end < source.Length && (char.IsLetterOrDigit(source[end]) || source[end] == '_'))
+            {
+                end++;
+            }
+
+            return end > index ? source[index..end] : null;
         }
 
         public int? TryReadIndex()

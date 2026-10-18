@@ -18,7 +18,7 @@ public sealed class GameDefines
     /// <summary>
     /// Human-readable list of the define sources applied on top of the built-in vanilla defaults, in order.
     /// </summary>
-    public List<string> Sources { get; init; } = ["built-in vanilla 1.17"];
+    public List<string> Sources { get; init; } = ["built-in vanilla 1.19.3"];
 
     public static GameDefines Vanilla()
     {

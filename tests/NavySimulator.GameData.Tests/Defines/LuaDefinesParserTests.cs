@@ -87,6 +87,25 @@ public class LuaDefinesParserTests
         Assert.Null(table.Get("NGraphics", "X"));
         Assert.Contains(table.Warnings, warning => warning.Contains("bad.lua:3"));
         Assert.Contains(table.Warnings, warning => warning.Contains("NDefines.NNavy.X * 2"));
+        Assert.Equal(2, table.Warnings.Count);
+    }
+
+    [Fact]
+    public void Parse_SkipsMultiLineControlBlocksSilently()
+    {
+        var table = LuaDefinesParser.Parse("""
+            NDefines.NNavy.A = 1
+            for k, v in pairs(NDefines_Graphics) do
+                if v ~= nil then
+                    NDefines[k] = v -- "end" in a comment
+                end
+            end
+            NDefines.NNavy.B = 2
+            """);
+
+        Assert.Equal(1, table.Get("NNavy", "A")!.Number);
+        Assert.Equal(2, table.Get("NNavy", "B")!.Number);
+        Assert.Empty(table.Warnings);
     }
 
     [Fact]
