@@ -61,7 +61,7 @@ For each calibration case and each `BattleRules` variant combination:
 
 ## Cheap, high-value experiments
 
-- **Mirror match** (identical fleets): the attacker's win rate tests S-ORDER directly. The previous simulator's attacker-first order gives a clear attacker edge.
+- **Mirror match** (identical fleets): the attacker's win rate tests S-ORDER directly. The decoded attacker-first order predicts a clear attacker edge; the game confirming it validates the side order and the "who is attacker" mapping.
 - **Screens only, no capitals or carriers**: whether shooting starts at hour 0 or hour 8 settles S-ACTIVATE.
 - **One weapon type per side** (for example only torpedo cruisers): isolates cooldown, hit profile and crit rules.
 - **Carrier vs carrier at different start times**: when strikes happen settles A-CADENCE and the night penalty.

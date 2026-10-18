@@ -15,19 +15,16 @@ Script files only tell us constant values. The *formulas*, the order of operatio
 3. **Follow the hour tick.** From a known per-shot function, walk up the call graph to the per-hour loop. That loop answers S-ORDER, S-HOUR and A-CADENCE in one place.
 4. **Cross-check with defines.** Change one define in a test mod, observe the effect in game, and confirm it matches your reading.
 
-## Priorities
+## Status
 
-Ordered by how much they move battle outcomes and how little we know (spec IDs in [../mechanics/](../mechanics/)):
+The first pass over hoi4.exe 1.19.3 decoded every surface and air spec item; see [findings/README.md](findings/README.md). The tooling is in `tools/re/`. Open questions that remain, ordered by impact:
 
-1. **S-ORDER / S-HOUR**: the per-hour loop. Do both sides fire simultaneously, interleaved, or by side? When are lines and screening recomputed?
-2. **S-DMG-RANDOM**: which randomness formula current versions use (the two candidates differ by about 1.6× in mean damage).
-3. **A-CADENCE**: carrier and land-based sortie timing, and their clock alignment.
-4. **S-RETREAT / S-RETREAT-SPEED**: the retreat decision and escape speed.
-5. **A-TARGET, A-STACK, A-INTERCEPT**: the new 1.17 air formulas.
-6. **S-ACTIVATE**: whether activation delays depend on battle composition.
-7. **S-HIT-MODS**: whether hit modifiers add or multiply; the screening bonus constant; night and weather.
-8. **S-TARGET-WEIGHT**: the hard-coded target weights.
-9. **S-XP**: the experience levels and their effects (probably a script file, not the executable).
+1. **Aggression retreat** (S-RETREAT): the strength score `0x1989c60` that makes outmatched task forces retreat.
+2. **Darkness** (S-NIGHT): how the province darkness value is computed from the time of day.
+3. **Critical parts** (S-CRIT-PART): how `0xc31030` aggregates part instance caps; needs part data loaded from `common/units/critical_parts`.
+4. **Light-slot submarine weight** (S-TARGET-DC): which shooter stat (ship+0x228) gates targeting submarines.
+5. **Air**: what sets the "air every hour" flag, the external efficiency source, and the port-strike branch (A-*).
+6. Positioning and retreat modifiers by name (admiral and doctrine effects).
 
 ## Turning a finding into code
 

@@ -1,62 +1,54 @@
 # Defines: sources and versions
 
-The engine reads every numeric combat constant from a `GameDefines` instance (`src/NavySimulator.Engine/Defines/`). Property names are the exact game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), so the loader binds them from any defines file by name.
+The engine reads every numeric combat constant from a `GameDefines` instance (`src/NavySimulator.Engine/Defines/`):
+- `NNavy`, `NAir`, `NMilitary`: properties named exactly like the game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), bound by name from any defines file;
+- `StaticModifiers`: the blocks of `common/modifiers/00_static_modifiers.txt` that naval combat applies directly (`screening_bonus`, `capital_screening_bonus`, `ship_experience_bonus_max`, `ship_experience_malus_min`, `carrier_experience_*`, `night`);
+- `HardcodedValues`: constants that are in no script file, tagged [RE] (read from hoi4.exe) or [ASSUMED].
 
 ## Loading order
 
-1. Built-in defaults: vanilla 1.17 (below).
-2. The scenario's `"defines"` list, in order. Each entry is a `.lua` file, or a game/mod root directory whose `common/defines/*.lua` files are applied in file-name order, as the game does. Relative paths resolve against the data directory.
+1. Built-in defaults: vanilla **1.19.3**, generated from the game's own `00_defines.lua` and `00_static_modifiers.txt`.
+2. The scenario's `"defines"` list, in order.
 3. Each `--defines <path>` on the command line, in order.
 
-A later value overrides an earlier one. The CLI prints how many values were applied. Type mismatches (for example a string where a number is expected) become warnings, and the default is kept.
+A source is a `.lua` file, a folder of `.lua` files, or a game/mod root. For a root, every `common/defines/*.lua` is applied in file-name order (as the game does), and the static modifier blocks above are taken from `common/modifiers/*.txt`; a block found later replaces the earlier one completely. Later sources override earlier ones, so list the game first and mods after it in load order:
 
-To match your game exactly, point at your install: `--defines "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV"`, followed by each mod's folder in load order.
+```powershell
+dotnet run --project src/NavySimulator.Cli -- `
+  --defines "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV" `
+  --defines "C:\Program Files (x86)\Steam\steamapps\workshop\content\394360\2559317737"
+```
 
-## Where the built-in values come from
+The CLI prints how many values were applied. Type mismatches, unreadable statements and bad array shapes (S-COOLDOWN and S-DMG-PIERCE index into arrays) are reported; Lua control flow such as the loop in `00_graphics.lua` is skipped silently.
 
-Paradox does not publish `00_defines.lua` separately. The built-in values were taken from complete copies of the file shipped inside public mods, and a value counts as vanilla only when independent copies for the same game version agree:
+## How the game stores defines
 
-| Version | Primary copy (pinned) | Cross-checked against |
-|---|---|---|
-| 1.16.9 | [sams7891/hoi4_latvia_mod@917a183](https://raw.githubusercontent.com/sams7891/hoi4_latvia_mod/917a183ea3f9832fc1b8020551eaf8b7bcb21bb9/common/defines/00_defines.lua) | 6 more mod copies for 1.16.x; all agree on every NNavy/NAir/NMilitary key |
-| 1.17.x | [TheEmperor-1/WorldWarI@9ac92ee](https://raw.githubusercontent.com/TheEmperor-1/WorldWarI/9ac92ee1c6e7ed19ea43ca4ace93470d2c1708db/common/defines/00_defines.lua) | VVUH/VVUH and Musvage/The-Second-Sengoku; all agree on every NNavy/NAir key |
+hoi4.exe 1.19.3 converts most numeric defines to **int64 fixed point with scale 100000** (`round(float32(value) × 100000)`), a few to binary fixed point (2^15), and integer defines (activation times, `COMBAT_MIN_DURATION`) to int32. Combat arithmetic then truncates every product and quotient to 5 decimals. The simulator uses doubles; the difference only shows for very small values. Details: [findings/README.md](../reverse-engineering/findings/README.md).
 
-`NGame.SAVE_VERSION` confirms the versions (25 in 1.16.9, 30 in the 1.17 copies). The 1.17 data comes from fewer copies, so it is somewhat less certain. Keys removed in 1.17 keep their 1.16.9 value and say so in their doc comment (for example `CARRIER_STACK_PENALTY`).
+## Version history of the built-in values
 
-Only combat-relevant keys are properties (about 190 of roughly 600 NNavy/NAir keys). To use another key, add a property with the exact game name and its vanilla default to the matching class; the binder picks it up automatically.
+| Version | Source |
+|---|---|
+| 1.19.3 (current) | The installed game's `common/defines/00_defines.lua` and `common/modifiers/00_static_modifiers.txt` |
+| 1.17 / 1.16.9 (milestone 1) | Mod copies of `00_defines.lua` cross-checked across several repositories |
 
-## Known differences between versions
+1.17 → 1.19.3, combat-relevant changes:
+- `COMBAT_MIN_HIT_CHANCE` 0.05 → **0.005**; heavy `GUN_HIT_PROFILES` 80 → **70**.
+- `REPAIR_AND_RETURN_PRIO_{LOW,MEDIUM,HIGH}_COMBAT` 0.6/0.3/0.1 → **0.9/0.6/0.4**; new `CAPITAL_SHIP_COMBAT_RETREAT_MULT` (0.5).
+- `COMBAT_RETREAT_DECISION_CHANCE` 0.22 → 0.2.
+- Escape speeds: `BASE_ESCAPE_SPEED` 0.05, `SPEED_TO_ESCAPE_SPEED` 0.5, `ESCAPE_SPEED_PER_COMBAT_DAY` 0.015, `MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION` 0.5, `ESCAPE_SPEED_SUB_BASE` 0.1, `ESCAPE_SPEED_HIDDEN_SUB` 0.35.
+- Submarine reveal reworked: `SUBMARINE_BASE_STEALTH_VALUE`, `SUBMARINE_REVEAL_DETECTION_MULTIPLIER`, `SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER`; `SUBMARINE_HIDE_TIMEOUT` 20 → 8, `SUBMARINE_REVEALED_TIMEOUT` 16 → 12. The old reveal chance/pow defines are no longer read.
+- Air: `NAVAL_STRIKE_CARRIER_MULTIPLIER` 10 → 12, `CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER` 0.35 → 0.5, `ANTI_AIR_ATTACK_TO_DAMAGE_REDUCTION_FACTOR` 1 → 2.5.
+- Removed keys: `CARRIER_STACK_PENALTY*`, `NAVAL_COMBAT_AIR_*_TARGET_SCORE` (replaced by `*_TARGET_BASE`/`*_TARGET_SCALE`).
 
-1.16.9 → 1.17, combat-relevant:
-- `MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION` 0.0 → 0.25; `MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY` 0 → 4.
-- `CARRIER_STACK_PENALTY`/`_EFFECT` removed, replaced by `NAVAL_COMBAT_PLANE_MIN_STACKING_PENALTY`, `NAVAL_COMBAT_PLANE_STACKING_PENALTY_EFFECT` and `SHIP_SILHOUETTE_VALUE_PLANES_*` (A-STACK).
-- `NAVAL_COMBAT_AIR_*_TARGET_SCORE` replaced by `*_TARGET_BASE` and `*_TARGET_SCALE` (A-TARGET).
-- New: carrier stances (`CARRIER_OFFENSIVE_STANCE_*`, `SELECTED_SORTIE_INITIAL_TIME`), `CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER`, `CARRIER_PERCENTAGE_DEFEND`.
+Defines that exist but are not read by naval combat in 1.19.3: `COMBAT_EVASION_TO_HIT_CHANCE`, `REPAIR_AND_RETURN_UNIT_DYING_STR`, `XP_GAIN_FACTOR` (for ship combat XP), `COMBAT_CHASE_RESIGNATION_HOURS` (stored, never used in the tick), `AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING` (tooltip only), `CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` (written to a cooldown nothing uses).
 
-Later than 1.17 (not verified): `NAVAL_STRIKE_CARRIER_MULTIPLIER` is reported as 12 at 1.18.3 (10 in the 1.17 copies), and the 1.18.1 notes mention carrier planes about 20% stronger. Load your own install's defines.
+## The TFB mod
 
-## Values that did not match vanilla
+The previous simulator's constants matched the TFB mod ("Their Finest Bruh", workshop item 2559317737), and the ship data in `data/` was entered from TFB. With the mod installed, load its folder after the game (see above). That applies `TFB_defines.lua` and TFB's own `00_static_modifiers.txt`.
 
-Many constants in the previous `Hoi4Defines.cs` differed from vanilla. Commit history says they were matched to the TFB mod's define file, and the research matched several of them to the changelog of Steam Workshop item 2559317737, the same mod `tools/import_hoi4_ship_modules.py` reads modules from. They are preserved in [`data/defines/tfb-legacy.lua`](../../data/defines/tfb-legacy.lua); add `"defines": ["defines/tfb-legacy.lua"]` to a scenario to use them. Prefer loading the mod's own `common/defines` when it is available, since the legacy file was never re-checked against it.
-
-| Define | Previous code | Vanilla 1.17 |
-|---|---|---|
-| `BASE_GUN_COOLDOWNS` {heavy, torpedo, light} | {3, 5, 2} | {1, 4, 1} |
-| `GUN_HIT_PROFILES` {heavy, torpedo, light} | {95, 130, 60} | {80, 100, 45} |
-| `HIT_PROFILE_SPEED_FACTOR` / `_BASE` | 0.85 / 5 | 0.5 / 20 |
-| `COMBAT_MIN_HIT_CHANCE` | 0.02 | 0.05 |
-| `COMBAT_DAMAGE_RANDOMNESS` | 0.2 | 0.5 |
-| `COMBAT_DAMAGE_TO_STR_FACTOR` | 0.5 | 0.6 |
-| `COMBAT_TORPEDO_CRITICAL_CHANCE` / `_DAMAGE_MULT` | 0.25 / 3.75 | 0.1 / 2 |
-| `NAVY_PIERCING_THRESHOLDS` | 9 tiers | 6 tiers |
-| `ALL_SHIPS_ACTIVATE_TIME` / `CAPITAL_ONLY_COMBAT_ACTIVATE_TIME` | 12 / 8 | 8 / 6 |
-| `ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE` / `_POW_` | 0.03 / 0.58 | 0.18 / 0.225 |
-| `ANTI_AIR_TARGETING` | 0.4 | 0.9 |
-| `NAVAL_STRIKE_CARRIER_MULTIPLIER` | 1.75 | 10 |
-| `BASE_CARRIER_SORTIE_EFFICIENCY` | 0.2 | 0.5 |
-
-Three previous values were marked as testing overrides and are commented out in the profile: `MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY = 99`, the 40% retreat threshold, and night hours 24/0.
+`data/defines/tfb-legacy.lua` is a snapshot of an older TFB version (for example cooldowns `{3, 5, 2}`, where current TFB has `{3, 6, 2}`). It remains only for machines without the mod.
 
 ## Values that are not defines
 
-`HardcodedValues` holds constants the model needs that are not in any defines file: surface target weights, the +40% screening hit bonus, retreat speed bonuses, experience levels, night. Each one carries a [WIKI], [LEGACY] or [ASSUMED] tag. They are the main targets for [reverse-engineering](../reverse-engineering/README.md), and some (experience levels) probably live in other game script files.
+`HardcodedValues` holds the decoded constants of the target weights (S-TARGET-WEIGHT), the detection divisor (S-POS-DETECT), the floors in screening, hit profile and submarine reveal, and the [ASSUMED] night hours. Spec items cite each one.

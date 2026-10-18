@@ -35,8 +35,8 @@ The goal is to replace every [WIKI], [COMMUNITY], [LEGACY] and [ASSUMED] tag on 
 
 ## Variants instead of guesses
 
-When sources disagree, or none exist, the engine implements the candidates side by side and exposes them as `BattleRules` options (`src/NavySimulator.Engine/Battles/BattleRules.cs`), each pointing at its spec item. Calibration then picks the variant that matches the game, and the losing variants are deleted. Examples: `FiringOrder` (S-ORDER), `DamageRandomness` (S-DMG-RANDOM).
+When sources disagree, or none exist, the engine implements the candidates side by side and exposes them as `BattleRules` options (`src/NavySimulator.Engine/Battles/BattleRules.cs`), each pointing at its spec item. Calibration or reverse-engineering then picks the variant that matches the game, and the losing variants are deleted. That happened for the firing order (S-ORDER) and the damage randomness (S-DMG-RANDOM) once hoi4.exe 1.19.3 was decoded; night (S-NIGHT) is the main option left.
 
 ## Game version
 
-Built-in defaults are vanilla **1.17** ([defines.md](defines.md)). The game is at 1.18/1.19 by now, and some values have changed since (for example `NAVAL_STRIKE_CARRIER_MULTIPLIER`). Exact results need your own install's defines: `--defines "<HOI4 install dir>"`, or a mod directory.
+Built-in defaults and every [RE] item are **1.19.3** ([defines.md](defines.md), [findings](../reverse-engineering/findings/README.md)). After a patch, reload your install's defines (`--defines "<HOI4 install dir>"`, then mod folders) and re-run the analysis in `tools/re/` to see whether formulas moved.

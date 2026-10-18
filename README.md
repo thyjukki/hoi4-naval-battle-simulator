@@ -6,8 +6,8 @@ Simulates Hearts of Iron IV naval battles, aiming to reproduce the game's combat
 
 ## Status
 
-- **Surface combat**: rewritten in milestone 1. Every rule is in [docs/mechanics/surface.md](docs/mechanics/surface.md) with its source, and uncertain mechanics can be switched between candidate behaviors.
-- **Air combat**: not simulated yet. The design for milestone 2 is in [docs/mechanics/air.md](docs/mechanics/air.md). Carrier wings and land-based planes in a scenario are ignored, and the run prints a note saying so.
+- **Surface combat**: checked against the HOI4 1.19.3 executable by static analysis. Every rule in [docs/mechanics/surface.md](docs/mechanics/surface.md) is tagged with its source; the evidence is in [docs/reverse-engineering/findings/](docs/reverse-engineering/findings/README.md).
+- **Air combat**: decoded from the executable ([docs/mechanics/air.md](docs/mechanics/air.md)) but not simulated yet. Carrier wings and land-based planes in a scenario are ignored, and the run prints a note saying so.
 - Plan: [docs/ROADMAP.md](docs/ROADMAP.md). All docs: [docs/README.md](docs/README.md).
 
 ## Build, run, test
@@ -57,8 +57,8 @@ Everything lives in `data/`:
 
 Scenario additions:
 - `"defines": ["defines/tfb-legacy.lua"]` applies define overrides.
-- `"rules": { "firingOrder": "Simultaneous" }` selects mechanic variants ([docs/mechanics/README.md](docs/mechanics/README.md)).
-- Per side, `"retreatPriority": "Low" | "Medium" | "High"` and `"submarineEngagementRisk"`.
+- `"rules": { "nightEnabled": false, "startHourOfDay": 6 }` sets the remaining options ([docs/mechanics/README.md](docs/mechanics/README.md)).
+- Per side, `"engagementLevel": "DoNotEngage" | "Low" | "Medium" | "High" | "DeathIncarnate"`: the task force setting that decides retreat thresholds and which lines submarines attack.
 
 ## Layout
 
@@ -69,5 +69,5 @@ src/NavySimulator.Cli        command line entrypoint and report writing
 tests/                       xUnit tests for Engine and GameData
 data/                        scenario and content JSON, defines profiles
 docs/                        mechanics spec, roadmap, reverse-engineering and calibration guides
-tools/                       Python helpers (module import from game files, data splitting)
+tools/                       Python helpers: module import, data splitting, re/ (hoi4.exe static analysis)
 ```

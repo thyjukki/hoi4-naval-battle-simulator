@@ -1,6 +1,7 @@
 -- Values from the previous simulator's Hoi4Defines.cs that differ from vanilla 1.17.
 -- Commit history ("corrected defines to match tfb") says they were copied from the TFB mod's define file.
--- They have NOT been re-checked against that file: load the mod's own common/defines instead when it is available.
+-- This is an OLDER TFB version (current TFB differs, e.g. BASE_GUN_COOLDOWNS { 3, 6, 2 }). If the mod is installed,
+-- load its folder instead: --defines "<Steam>\steamapps\workshop\content\394360\2559317737".
 -- Use from a scenario with:  "defines": ["defines/tfb-legacy.lua"]
 
 -- Surface combat

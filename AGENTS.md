@@ -23,14 +23,15 @@
 - Target runtime `.NET 10`, implicit usings, nullable enabled, no NuGet packages outside tests.
 
 ## Architecture
-- `GameDefines` (`Engine/Defines/`) holds `NNavy`, `NAir`, `NMilitary` define classes whose property names are the exact game keys, defaulting to vanilla 1.17, plus `HardcodedValues` for constants that are not defines. It is an instance per scenario: never add static mutable state.
+- `GameDefines` (`Engine/Defines/`) holds `NNavy`, `NAir`, `NMilitary` define classes whose property names are the exact game keys, defaulting to vanilla 1.19.3, plus `StaticModifiers` (blocks of `00_static_modifiers.txt`) and `HardcodedValues` for decoded constants that are in no script file. It is an instance per scenario: never add static mutable state.
 - `DefinesLoader` (GameData) applies `.lua` files or game/mod folders over the vanilla defaults; `DefinesBinder` binds by property name.
-- `BattleRules` (`Engine/Battles/BattleRules.cs`) holds variants for unconfirmed mechanics (firing order, damage randomness, activation, cooldown, night). Add a variant here instead of guessing silently, and document it in the spec.
-- `BattleEngine` runs the hour loop: lines, positioning and screening, surface phase, retreat phase, experience, end check.
-- Rules live in `Engine/Battles/Mechanics/` as static classes, one concern each: `PositioningRules`, `ScreeningRules`, `WeaponCadenceRules`, `HitChanceRules`, `TargetingRules`, `DamageRules`, `RetreatRules`, `ExperienceRules`.
+- `BattleRules` (`Engine/Battles/BattleRules.cs`) holds the few options left after reverse-engineering (night, start hour, tooling switches). If a mechanic is uncertain, add a variant here instead of guessing silently, and document it in the spec.
+- `BattleEngine` runs the hour loop as hoi4.exe does: positioning/screening for both sides, then the attacker's turn, then the defender's (per ship: submarine reveal, state machine, retreat decision, firing), experience, end check.
+- Rules live in `Engine/Battles/Mechanics/` as static classes, one concern each: `PositioningRules`, `ScreeningRules`, `WeaponCadenceRules`, `HitChanceRules`, `TargetingRules`, `DamageRules`, `RetreatRules`, `SubmarineRules`, `ExperienceRules`.
 - All randomness goes through `IRandomSource` (seeded `SeededRandomSource`; scripted in tests).
 - Results: `BattleResult` with per-shot `ShotRecord`s, `ShipResult`s, `SideResult`s, hourly log and notes about ignored inputs.
-- Air combat is not implemented (milestone 2, `docs/mechanics/air.md`).
+- Air combat is decoded (`docs/mechanics/air.md`) but not implemented yet.
+- Reverse-engineering: findings in `docs/reverse-engineering/findings/` (hoi4.exe 1.19.3, with SHA-256), tooling in `tools/re/`. Re-run it after game patches before trusting the [RE] tags.
 
 ## Code Patterns to Follow Here
 - Use `var` wherever possible.

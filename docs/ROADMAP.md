@@ -10,6 +10,10 @@ The aim is a simulator that reproduces HOI4 naval combat as closely as possible,
 - Legacy bugs fixed (see the table at the end of [mechanics/surface.md](mechanics/surface.md)); the TFB-tuned values are kept as an optional defines profile.
 - Spec: [surface](mechanics/surface.md), [air (design)](mechanics/air.md), [defines](mechanics/defines.md); [reverse-engineering](reverse-engineering/README.md) and [calibration](calibration.md) workflows.
 
+## Verification against hoi4.exe 1.19.3 (done)
+
+Static analysis of the executable decoded the hour loop, firing order, activation, cooldowns, targeting, hit chance, damage, crits, retreat, submarines, positioning, screening, experience and air ([reverse-engineering/findings/](reverse-engineering/findings/README.md)). The surface engine was rewritten to match; built-in defines and static modifiers are now 1.19.3.
+
 ## Milestone 2: air combat overhaul
 
 Implement [mechanics/air.md](mechanics/air.md): sortie cadence and efficiency, carrier stances, the dynamic plane cap, land-based planes joining, targeting, preemptive AA, fleet AA reduction, hits and damage, air crits, plane losses. Scenario inputs for land-based wing groups and carrier stance. Interception is modelled only as far as [RE] allows, otherwise as an explicit [ASSUMED] variant.
