@@ -3,19 +3,24 @@
   "researches": [
     {
       "id": "sp_torpedo_cruiser_eq_bonus_torpedo",
+      "statModifiers": {
+        "torpedoHitChanceFactor": 0.05
+      },
       "statMultipliers": {
-        "torpedoHitChanceFactor": 0.05,
         "torpedoAttack": 0.075
-      }
+      },
+      "appliesToTypes": ["Torpedo Cruiser"]
     },
     {
       "id": "sp_torpedo_cruiser_eq_bonus_light_attack",
+      "statModifiers": {
+        "lightHitChanceFactor": 0.075
+      },
       "statMultipliers": {
-        "lightHitChanceFactor": 0.075,
         "lightAttack": 0.05,
         "lightPiercing": 0.05
-      }
+      },
+      "appliesToTypes": ["Torpedo Cruiser"]
     }
   ]
 }
-

@@ -4,7 +4,7 @@
     {
       "id": "torpedo_1",
       "statModifiers": {
-        "torpedoAttack": 14,
+        "torpedoAttack": 18,
         "productionCost": 90
       },
       "statMultipliers": {
@@ -14,8 +14,9 @@
     {
       "id": "torpedo_2",
       "statModifiers": {
-        "torpedoAttack": 18,
-        "productionCost": 120
+        "torpedoAttack": 25,
+        "productionCost": 120,
+        "torpedoHitChanceFactor": 0.01
       },
       "statMultipliers": {
         "speed": -0.02
@@ -24,8 +25,9 @@
     {
       "id": "torpedo_3",
       "statModifiers": {
-        "torpedoAttack": 22,
-        "productionCost": 150
+        "torpedoAttack": 34,
+        "productionCost": 150,
+        "torpedoHitChanceFactor": 0.015
       },
       "statMultipliers": {
         "speed": -0.03
@@ -34,8 +36,9 @@
     {
       "id": "torpedo_4",
       "statModifiers": {
-        "torpedoAttack": 26,
-        "productionCost": 180
+        "torpedoAttack": 44,
+        "productionCost": 180,
+        "torpedoHitChanceFactor": 0.02
       },
       "statMultipliers": {
         "speed": -0.04
@@ -44,7 +47,7 @@
     {
       "id": "torpedo_sub_1",
       "statModifiers": {
-        "torpedoAttack": 8,
+        "torpedoAttack": 16,
         "productionCost": 80
       },
       "statMultipliers": {
@@ -54,7 +57,7 @@
     {
       "id": "torpedo_sub_2",
       "statModifiers": {
-        "torpedoAttack": 10,
+        "torpedoAttack": 20,
         "productionCost": 100,
         "torpedoHitChanceFactor": 0.005
       },
@@ -65,7 +68,7 @@
     {
       "id": "torpedo_sub_3",
       "statModifiers": {
-        "torpedoAttack": 12,
+        "torpedoAttack": 26,
         "productionCost": 120,
         "torpedoHitChanceFactor": 0.01
       },
@@ -76,7 +79,7 @@
     {
       "id": "torpedo_sub_4",
       "statModifiers": {
-        "torpedoAttack": 14,
+        "torpedoAttack": 32,
         "productionCost": 140,
         "torpedoHitChanceFactor": 0.015
       },

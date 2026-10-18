@@ -6,16 +6,14 @@
       "statModifiers": {
         "heavyAttack": 10,
         "productionCost": 800,
-        "hp": 5,
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
+        "hp": 5
       },
       "statAverages": {
         "heavyPiercing": 22
       },
       "statMultipliers": {
         "speed": -0.07,
-        "hp": 0.2
+        "hp": 0.1
       }
     },
     {
@@ -23,9 +21,7 @@
       "statModifiers": {
         "heavyAttack": 14,
         "productionCost": 850,
-        "hp": 10,
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
+        "hp": 10
       },
       "statAverages": {
         "heavyPiercing": 28
@@ -40,9 +36,7 @@
       "statModifiers": {
         "heavyAttack": 18,
         "productionCost": 900,
-        "hp": 15,
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
+        "hp": 15
       },
       "statAverages": {
         "heavyPiercing": 34
@@ -57,9 +51,7 @@
       "statModifiers": {
         "heavyAttack": 22,
         "productionCost": 950,
-        "hp": 20,
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
+        "hp": 20
       },
       "statAverages": {
         "heavyPiercing": 40

@@ -51,8 +51,10 @@
         "torpedoDamageReductionFactor": { "type": "number" },
         "torpedoEnemyCriticalChanceFactor": { "type": "number" },
         "torpedoHitChanceFactor": { "type": "number" },
+        "depthChargeHitChanceFactor": { "type": "number" },
         "lightHitChangeFactor": { "type": "number" },
         "lightHitChanceFactor": { "type": "number" },
+        "heavyHitChanceFactor": { "type": "number" },
         "navalWeatherPenaltyFactor": { "type": "number" },
         "productionCost": { "type": "number" }
       },
@@ -77,7 +79,6 @@
               "type": "object",
               "properties": {
                 "statModifiers": { "$ref": "#/$defs/shipStats" },
-                "statMultiplier": { "$ref": "#/$defs/shipStats" },
                 "statMultipliers": { "$ref": "#/$defs/shipStats" },
                 "statAverages": { "$ref": "#/$defs/shipStats" },
                 "appliesToRoles": {
@@ -94,7 +95,6 @@
               "additionalProperties": false,
               "anyOf": [
                 { "required": ["statModifiers"] },
-                { "required": ["statMultiplier"] },
                 { "required": ["statMultipliers"] },
                 { "required": ["statAverages"] }
               ]

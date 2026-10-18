@@ -3,7 +3,7 @@
   "shipDesigns": [
     {
       "id": "39_battlecruiser_balanced",
-      "hullID": "heavy_hull_3",
+      "hullID": "heavy_bc_hull_3",
       "moduleIDs": [
         "heavy_battery_3",
         "heavy_battery_3",
@@ -22,7 +22,7 @@
     },
     {
       "id": "39_battlecruiser_pure_la",
-      "hullID": "heavy_hull_3",
+      "hullID": "heavy_bc_hull_3",
       "moduleIDs": [
         "heavy_battery_3",
         "heavy_battery_3",
@@ -41,7 +41,7 @@
     },
     {
       "id": "39_battlecruiser_pure_aa",
-      "hullID": "heavy_hull_3",
+      "hullID": "heavy_bc_hull_3",
       "moduleIDs": [
         "heavy_battery_3",
         "heavy_battery_3",

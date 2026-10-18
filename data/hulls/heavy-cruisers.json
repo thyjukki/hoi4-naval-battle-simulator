@@ -5,7 +5,7 @@
       "id": "heavy_cruiser_hull_1",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 600,
       "baseStats": {
         "speed": 28,
         "organization": 40,
@@ -15,14 +15,15 @@
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.8,
-        "productionCost": 2000
+        "productionCost": 2000,
+        "armor": 3
       }
     },
     {
       "id": "heavy_cruiser_hull_2",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 800,
       "baseStats": {
         "speed": 29,
         "organization": 40,
@@ -32,14 +33,15 @@
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.85,
-        "productionCost": 2100
+        "productionCost": 2100,
+        "armor": 5
       }
     },
     {
       "id": "heavy_cruiser_hull_3",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 1200,
       "baseStats": {
         "speed": 30,
         "organization": 40,
@@ -49,14 +51,15 @@
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.9,
-        "productionCost": 2200
+        "productionCost": 2200,
+        "armor": 7
       }
     },
     {
       "id": "heavy_cruiser_hull_4",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 1400,
       "baseStats": {
         "speed": 31,
         "organization": 40,
@@ -66,14 +69,15 @@
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.95,
-        "productionCost": 2300
+        "productionCost": 2300,
+        "armor": 9
       }
     },
     {
       "id": "torpedo_cruiser_hull",
       "role": "Capital",
       "type": ["Torpedo Cruiser", "Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 960,
       "baseStats": {
         "speed": 30,
         "organization": 40,
@@ -82,8 +86,9 @@
         "surfaceDetection": 18,
         "subVisibility": 0,
         "subDetection": 1,
-        "reliability": 0.95,
-        "productionCost": 2300
+        "reliability": 0.85,
+        "productionCost": 2100,
+        "armor": 6.5
       }
     }
   ]

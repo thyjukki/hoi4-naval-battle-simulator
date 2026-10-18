@@ -4,7 +4,7 @@
     {
       "id": "light_secondaries_1",
       "statModifiers": {
-        "lightAttack": 4,
+        "lightAttack": 2,
         "productionCost": 200
       },
       "statAverages": {
@@ -17,36 +17,22 @@
     {
       "id": "light_secondaries_2",
       "statModifiers": {
-        "lightAttack": 6,
-        "productionCost": 250
+        "lightAttack": 4,
+        "productionCost": 230
       },
       "statAverages": {
         "lightPiercing": 6
       },
       "statMultipliers": {
-        "speed": -0.02
+        "speed": -0.015
       }
     },
     {
       "id": "dp_secondaries_1",
       "statModifiers": {
         "lightAttack": 2,
-        "antiAir": 1,
+        "antiAir": 1.5,
         "productionCost": 180
-      },
-      "statAverages": {
-        "lightPiercing": 3
-      },
-      "statMultipliers": {
-        "speed": -0.01
-      }
-    },
-    {
-      "id": "dp_secondaries_2",
-      "statModifiers": {
-        "lightAttack": 3,
-        "antiAir": 2,
-        "productionCost": 240
       },
       "statAverages": {
         "lightPiercing": 4
@@ -56,14 +42,28 @@
       }
     },
     {
+      "id": "dp_secondaries_2",
+      "statModifiers": {
+        "lightAttack": 3,
+        "antiAir": 3,
+        "productionCost": 220
+      },
+      "statAverages": {
+        "lightPiercing": 5
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
       "id": "dp_secondaries_3",
       "statModifiers": {
         "lightAttack": 4,
-        "antiAir": 2.5,
-        "productionCost": 300
+        "antiAir": 4.5,
+        "productionCost": 260
       },
       "statAverages": {
-        "lightPiercing": 7
+        "lightPiercing": 6
       },
       "statMultipliers": {
         "speed": -0.03

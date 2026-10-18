@@ -5,7 +5,7 @@
       "id": "panzerschiff_cruiser_hull",
       "role": "Capital",
       "type": ["Heavy Cruiser"],
-      "manpower": 400,
+      "manpower": 1800,
       "baseStats": {
         "speed": 25,
         "organization": 40,
@@ -15,7 +15,8 @@
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.8,
-        "productionCost": 3000
+        "productionCost": 3000,
+        "armor": 6
       }
     }
   ]

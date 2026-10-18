@@ -16,7 +16,7 @@
         "subDetection": 1,
         "reliability": 0.8,
         "productionCost": 2800,
-        "armor": 26
+        "armor": 28
       }
     },
     {
@@ -34,7 +34,7 @@
         "subDetection": 1,
         "reliability": 0.85,
         "productionCost": 3000,
-        "armor": 28
+        "armor": 30
       }
     },
     {
@@ -52,14 +52,14 @@
         "subDetection": 1,
         "reliability": 0.9,
         "productionCost": 3200,
-        "armor": 30
+        "armor": 34
       }
     },
     {
       "id": "heavy_hull_4",
       "role": "Capital",
       "type": ["Battleship"],
-      "manpower": 400,
+      "manpower": 6000,
       "baseStats": {
         "speed": 30,
         "organization": 50,
@@ -70,7 +70,7 @@
         "subDetection": 1,
         "reliability": 0.95,
         "productionCost": 3400,
-        "armor": 34
+        "armor": 40
       }
     },
     {
@@ -88,7 +88,7 @@
         "subDetection": 1,
         "reliability": 0.8,
         "productionCost": 2800,
-        "armor": 26
+        "armor": 28
       }
     },
     {
@@ -106,7 +106,7 @@
         "subDetection": 1,
         "reliability": 0.85,
         "productionCost": 3000,
-        "armor": 28
+        "armor": 30
       }
     },
     {
@@ -124,14 +124,14 @@
         "subDetection": 1,
         "reliability": 0.9,
         "productionCost": 3200,
-        "armor": 30
+        "armor": 34
       }
     },
     {
       "id": "heavy_bc_hull_4",
       "role": "Capital",
       "type": ["Battlecruiser"],
-      "manpower": 400,
+      "manpower": 6000,
       "baseStats": {
         "speed": 30,
         "organization": 50,
@@ -142,7 +142,7 @@
         "subDetection": 1,
         "reliability": 0.95,
         "productionCost": 3400,
-        "armor": 34
+        "armor": 40
       }
     }
   ]

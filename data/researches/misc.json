@@ -2,11 +2,7 @@
   "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
-      "id": "smoke_generators",
-      "statMultipliers": {
-        "fleetSpeedWhileRetreating": 0.2
-      }
+      "id": "smoke_generators"
     }
   ]
 }
-

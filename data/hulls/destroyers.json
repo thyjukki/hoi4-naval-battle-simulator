@@ -5,36 +5,40 @@
       "id": "destroyer_hull_1",
       "role": "Screen",
       "type": ["Destroyer"],
-      "manpower": 400,
+      "manpower": 250,
       "baseStats": {
         "speed": 32,
         "organization": 35,
-        "hp": 30,
+        "hp": 26,
         "surfaceVisibility": 12.5,
         "surfaceDetection": 20,
         "depthChargeAttack": 1,
         "subVisibility": 0,
         "subDetection": 1,
         "reliability": 0.8,
-        "productionCost": 450
+        "productionCost": 450,
+        "torpedoDamageReductionFactor": 0.45,
+        "torpedoEnemyCriticalChanceFactor": -0.05
       }
     },
     {
       "id": "destroyer_hull_2",
       "role": "Screen",
       "type": ["Destroyer"],
-      "manpower": 400,
+      "manpower": 325,
       "baseStats": {
         "speed": 33,
         "organization": 35,
-        "hp": 30,
+        "hp": 40,
         "surfaceVisibility": 12.5,
         "surfaceDetection": 20,
         "depthChargeAttack": 1,
         "subVisibility": 0,
         "subDetection": 1.5,
         "reliability": 0.85,
-        "productionCost": 550
+        "productionCost": 550,
+        "torpedoDamageReductionFactor": 0.5,
+        "torpedoEnemyCriticalChanceFactor": -0.1
       }
     },
     {
@@ -45,32 +49,36 @@
       "baseStats": {
         "speed": 34,
         "organization": 35,
-        "hp": 60,
+        "hp": 50,
         "surfaceVisibility": 12.5,
         "surfaceDetection": 20,
         "depthChargeAttack": 1,
         "subVisibility": 0,
         "subDetection": 2,
         "reliability": 0.9,
-        "productionCost": 600
+        "productionCost": 600,
+        "torpedoDamageReductionFactor": 0.55,
+        "torpedoEnemyCriticalChanceFactor": -0.15
       }
     },
     {
       "id": "destroyer_hull_4",
       "role": "Screen",
       "type": ["Destroyer"],
-      "manpower": 400,
+      "manpower": 500,
       "baseStats": {
         "speed": 35,
         "organization": 35,
-        "hp": 30,
+        "hp": 65,
         "surfaceVisibility": 12.5,
         "surfaceDetection": 20,
         "depthChargeAttack": 1,
         "subVisibility": 0,
         "subDetection": 2.5,
         "reliability": 0.95,
-        "productionCost": 650
+        "productionCost": 650,
+        "torpedoDamageReductionFactor": 0.6,
+        "torpedoEnemyCriticalChanceFactor": -0.2
       }
     }
   ]

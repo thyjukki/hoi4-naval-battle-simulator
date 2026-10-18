@@ -5,7 +5,8 @@
       "id": "depth_charge_1",
       "statModifiers": {
         "depthChargeAttack": 8,
-        "productionCost": 90
+        "productionCost": 90,
+        "torpedoDamageReductionFactor": 0.03
       },
       "statMultipliers": {
         "speed": -0.01
@@ -15,7 +16,8 @@
       "id": "depth_charge_2",
       "statModifiers": {
         "depthChargeAttack": 12,
-        "productionCost": 120
+        "productionCost": 120,
+        "torpedoDamageReductionFactor": 0.04
       },
       "statMultipliers": {
         "speed": -0.01
@@ -25,7 +27,8 @@
       "id": "depth_charge_3",
       "statModifiers": {
         "depthChargeAttack": 16,
-        "productionCost": 150
+        "productionCost": 150,
+        "torpedoDamageReductionFactor": 0.05
       },
       "statMultipliers": {
         "speed": -0.02
@@ -35,7 +38,8 @@
       "id": "depth_charge_4",
       "statModifiers": {
         "depthChargeAttack": 20,
-        "productionCost": 180
+        "productionCost": 180,
+        "torpedoDamageReductionFactor": 0.06
       },
       "statMultipliers": {
         "speed": -0.02

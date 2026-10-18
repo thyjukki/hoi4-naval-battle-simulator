@@ -2,18 +2,10 @@
   "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
-      "id": "damage_control_1",
-      "statMultipliers": {
-        "chanceToReceiveCriticalHit": -0.1,
-        "effectsOfSustainedCriticalHits": -0.1
-      }
+      "id": "damage_control_1"
     },
     {
-      "id": "damage_control_2",
-      "statMultipliers": {
-        "chanceToReceiveCriticalHit": -0.1,
-        "effectsOfSustainedCriticalHits": -0.1
-      }
+      "id": "damage_control_2"
     },
     {
       "id": "fire_control_methods_1",
@@ -29,7 +21,15 @@
         "lightAttack": 0.1,
         "heavyAttack": 0.1
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser", "Heavy Cruiser"]
+      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+    },
+    {
+      "id": "fire_control_methods_2_ca",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "heavyAttack": 0.05
+      },
+      "appliesToTypes": ["Heavy Cruiser"]
     },
     {
       "id": "fire_control_methods_3",
@@ -37,8 +37,23 @@
         "lightAttack": 0.15,
         "heavyAttack": 0.15
       },
-      "appliesToRoles": ["Capital", "Screen"]
+      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+    },
+    {
+      "id": "fire_control_methods_3_cruiser",
+      "statMultipliers": {
+        "lightAttack": 0.1,
+        "heavyAttack": 0.1
+      },
+      "appliesToTypes": ["Heavy Cruiser", "Light Cruiser"]
+    },
+    {
+      "id": "fire_control_methods_3_dd",
+      "statMultipliers": {
+        "lightAttack": 0.05,
+        "heavyAttack": 0.05
+      },
+      "appliesToTypes": ["Destroyer"]
     }
   ]
 }
-

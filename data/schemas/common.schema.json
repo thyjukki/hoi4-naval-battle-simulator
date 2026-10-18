@@ -21,12 +21,17 @@
         "damage_control_2",
         "fire_control_methods_1",
         "fire_control_methods_2",
+        "fire_control_methods_2_ca",
         "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
         "heavy_upgrade_1",
         "heavy_upgrade_2",
         "light_upgrade_1",
         "light_upgrade_2",
         "smoke_generators",
+        "sp_torpedo_cruiser_eq_bonus_light_attack",
+        "sp_torpedo_cruiser_eq_bonus_torpedo",
         "torpedo_upgrade_1",
         "torpedo_upgrade_2"
       ]
@@ -77,6 +82,7 @@
         "depthChargeHitChanceFactor": { "type": "number" },
         "lightHitChangeFactor": { "type": "number" },
         "lightHitChanceFactor": { "type": "number" },
+        "heavyHitChanceFactor": { "type": "number" },
         "navalWeatherPenaltyFactor": { "type": "number" },
         "productionCost": { "type": "number" }
       },
