@@ -3,71 +3,84 @@ using NavySimulator.Engine.Defines;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-ACTIVATE and S-COOLDOWN: when each line starts firing and how often each weapon fires. Spec: docs/mechanics/surface.md.
+/// S-ACTIVATE and S-COOLDOWN [RE]: when a ship's line activates and how many shots a weapon slot fires per hour.
+/// Spec: docs/mechanics/surface.md. "Tick" is the game's combat hour counter, which is 1 during the first hour.
 /// </summary>
 public static class WeaponCadenceRules
 {
-    public static int ActivationHour(ShipRole role, bool battleHasCarriers, bool battleHasCapitals, GameDefines defines, BattleRules rules)
+    /// <summary>
+    /// [RE] 0x1971610: activation threshold for a ship. Composition is pooled over both sides and counts only visible
+    /// ships still in the battle: carrier-like = carriers, capital-like = capitals and submarines.
+    /// </summary>
+    public static int ActivationThreshold(Ship ship, IEnumerable<Ship> allShipsInBattle, GameDefines defines)
     {
         var navy = defines.NNavy;
+        var carrierTime = (int)navy.CARRIER_ONLY_COMBAT_ACTIVATE_TIME;
+        var capitalTime = (int)navy.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME;
+        var allTime = (int)navy.ALL_SHIPS_ACTIVATE_TIME;
 
-        if (!rules.ActivationDependsOnComposition)
+        var visible = allShipsInBattle.Where(other => other.IsInBattle && other.IsVisible).ToList();
+        var hasCarriers = visible.Any(other => other.Role == ShipRole.Carrier);
+        var hasCapitals = visible.Any(other => other.Role is ShipRole.Capital or ShipRole.Submarine);
+
+        if (!hasCarriers)
         {
-            return (int)(role switch
+            allTime = allTime + carrierTime - capitalTime;
+            capitalTime = carrierTime;
+
+            if (!hasCapitals)
             {
-                ShipRole.Carrier => navy.CARRIER_ONLY_COMBAT_ACTIVATE_TIME,
-                ShipRole.Capital => navy.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME,
-                _ => navy.ALL_SHIPS_ACTIVATE_TIME
-            });
+                allTime = carrierTime;
+            }
         }
 
-        return (int)(role switch
+        return ship.Role switch
         {
-            ShipRole.Carrier => navy.CARRIER_ONLY_COMBAT_ACTIVATE_TIME,
-            ShipRole.Capital => battleHasCarriers ? navy.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME : 0,
-            _ => battleHasCarriers ? navy.ALL_SHIPS_ACTIVATE_TIME : battleHasCapitals ? navy.CAPITAL_ONLY_COMBAT_ACTIVATE_TIME : 0
-        });
+            ShipRole.Convoy => allTime,
+            ShipRole.Carrier => carrierTime,
+            ShipRole.Capital or ShipRole.Submarine => capitalTime,
+            _ => allTime
+        };
     }
 
-    // [DEFINE] BASE_GUN_COOLDOWNS is ordered { heavy, torpedo, light } (same order as GUN_HIT_PROFILES).
-    // Depth charges use the light cooldown [ASSUMED].
-    public static double CooldownHours(WeaponType weapon, GameDefines defines)
+    /// <summary>[RE] A waiting ship becomes active at the first tick strictly above its threshold; it fires from the next tick.</summary>
+    public static bool IsActivated(Ship ship, int tick, IEnumerable<Ship> allShipsInBattle, GameDefines defines)
+    {
+        return tick > (int)defines.NNavy.ALL_SHIPS_ACTIVATE_TIME || tick > ActivationThreshold(ship, allShipsInBattle, defines);
+    }
+
+    // [RE] 0x1972a70: BASE_GUN_COOLDOWNS is indexed by slot { heavy, torpedo, light }; at least MIN_GUN_COOLDOWN.
+    // naval_torpedo_cooldown_factor (torpedo only) is not modelled.
+    public static double CooldownHours(WeaponSlot slot, GameDefines defines)
     {
         var navy = defines.NNavy;
-        var cooldown = weapon switch
-        {
-            WeaponType.Heavy => navy.BASE_GUN_COOLDOWNS[0],
-            WeaponType.Torpedo => navy.BASE_GUN_COOLDOWNS[1],
-            _ => navy.BASE_GUN_COOLDOWNS[2]
-        };
-
-        return Math.Max(navy.MIN_GUN_COOLDOWN, cooldown);
+        return Math.Max(navy.MIN_GUN_COOLDOWN, navy.BASE_GUN_COOLDOWNS[(int)slot]);
     }
 
     /// <summary>
-    /// Returns null if the weapon fires this hour (and schedules its next shot), otherwise the skip reason.
+    /// [RE] 0x1973e20: called once per hour for a slot that has attack. Adds one hour of charge (capped at one rounded-up
+    /// cooldown) and returns true if the slot has enough charge to fire.
     /// </summary>
-    public static string? TryFire(Ship ship, WeaponType weapon, int hour, int activationHour, GameDefines defines, BattleRules rules)
+    public static bool Charge(Ship ship, WeaponSlot slot, GameDefines defines)
     {
-        if (hour < activationHour)
+        var cooldown = CooldownHours(slot, defines);
+        var index = (int)slot;
+        ship.SlotCharge[index] = Math.Min(ship.SlotCharge[index] + 1.0, Math.Ceiling(cooldown));
+        return ship.SlotCharge[index] >= cooldown;
+    }
+
+    /// <summary>[RE] 0x19740c0: spends one cooldown of charge for a shot; returns false when the slot is out of charge.</summary>
+    public static bool TrySpendShot(Ship ship, WeaponSlot slot, GameDefines defines)
+    {
+        var cooldown = CooldownHours(slot, defines);
+        var index = (int)slot;
+
+        if (ship.SlotCharge[index] < cooldown)
         {
-            return SkipReasons.LineNotActive;
+            return false;
         }
 
-        var cooldown = CooldownHours(weapon, defines);
-
-        if (!ship.NextFireHour.TryGetValue(weapon, out var nextFireHour))
-        {
-            nextFireHour = activationHour + (rules.FirstShotWaitsForCooldown ? cooldown : 0);
-        }
-
-        if (hour + 1e-9 < nextFireHour)
-        {
-            ship.NextFireHour[weapon] = nextFireHour;
-            return SkipReasons.Cooldown;
-        }
-
-        ship.NextFireHour[weapon] = Math.Max(nextFireHour, hour) + cooldown;
-        return null;
+        ship.SlotCharge[index] -= cooldown;
+        return true;
     }
 }

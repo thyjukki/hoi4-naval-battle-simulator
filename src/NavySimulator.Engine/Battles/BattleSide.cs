@@ -1,7 +1,8 @@
 namespace NavySimulator.Engine.Battles;
 
 /// <summary>
-/// Per-side battle state, including the values computed at the start of each hour.
+/// Per-side battle state, including the values the game computes at the start of each hour (positioning, screening)
+/// and at the start of the side's own turn (enemy line counts, submarine detection).
 /// </summary>
 public sealed class BattleSide
 {
@@ -18,7 +19,13 @@ public sealed class BattleSide
 
     public BattleLines Lines { get; set; }
     public double Positioning { get; set; } = 1;
-    public ScreeningSummary Screening { get; set; }
+    public ScreeningSummary Screening { get; set; } = new(1, 1);
+
+    /// <summary>S-TARGET: visible enemy ships per line, taken at the start of this side's turn (game group+0xa0).</summary>
+    public EnemyLineCounts EnemyCounts { get; set; }
+
+    /// <summary>S-SUB: this side's submarine detection value (mean sub detection of ships that have any).</summary>
+    public double SubmarineDetection { get; set; }
 
     public bool HasShipsInBattle => Ships.Any(ship => ship.IsInBattle);
 }

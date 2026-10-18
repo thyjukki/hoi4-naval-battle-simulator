@@ -10,8 +10,7 @@ public class BattleParticipant
     public readonly int ExternalNavalStrikePlanes;
     public readonly List<Research> Researches;
     public readonly List<Spirit> Spirits;
-    public readonly RetreatPriority RetreatPriority;
-    public readonly SubmarineEngagementRisk SubmarineEngagementRisk;
+    public readonly EngagementLevel EngagementLevel;
 
     public BattleParticipant(
         Fleet fleet,
@@ -20,8 +19,7 @@ public class BattleParticipant
         int externalNavalStrikePlanes,
         List<Research> researches,
         List<Spirit> spirits,
-        RetreatPriority retreatPriority = RetreatPriority.Medium,
-        SubmarineEngagementRisk submarineEngagementRisk = SubmarineEngagementRisk.Medium)
+        EngagementLevel engagementLevel = EngagementLevel.Medium)
     {
         Fleet = fleet;
         Commander = commander;
@@ -29,8 +27,7 @@ public class BattleParticipant
         ExternalNavalStrikePlanes = externalNavalStrikePlanes;
         Researches = researches;
         Spirits = spirits;
-        RetreatPriority = retreatPriority;
-        SubmarineEngagementRisk = submarineEngagementRisk;
+        EngagementLevel = engagementLevel;
 
         ApplyFleetModifiers();
     }

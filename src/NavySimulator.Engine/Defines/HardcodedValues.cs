@@ -1,47 +1,44 @@
 namespace NavySimulator.Engine.Defines;
 
 /// <summary>
-/// Combat constants that do not come from <c>00_defines.lua</c>. Each value is tagged with where it comes from:
-/// [WIKI] the HOI4 wiki (which states the target weights are hard-coded in the executable),
-/// [LEGACY] carried over from the previous version of this simulator, source unknown,
-/// [ASSUMED] a placeholder chosen for this simulator, to be replaced by reverse-engineering or calibration.
+/// Combat constants that are not in any defines or script file. Each value is tagged:
+/// [RE] read from hoi4.exe 1.19.3 (docs/reverse-engineering/findings), [ASSUMED] a placeholder for something not yet decoded.
 /// See docs/mechanics/README.md for the provenance legend.
 /// </summary>
 public sealed class HardcodedValues
 {
-    // [WIKI] Surface target selection base weights by target group: heavy/torpedo weight, then light gun weight.
-    public double TargetWeightCapital { get; set; } = 30;
-    public double TargetWeightCapitalLight { get; set; } = 2;
-    public double TargetWeightScreen { get; set; } = 3;
-    public double TargetWeightScreenLight { get; set; } = 6;
-    public double TargetWeightCarrier { get; set; } = 15;
-    public double TargetWeightCarrierLight { get; set; } = 1;
-    public double TargetWeightConvoy { get; set; } = 60;
-    public double TargetWeightConvoyLight { get; set; } = 4;
-    public double TargetWeightConvoyFromSubmarine { get; set; } = 600;
-    public double TargetWeightConvoyFromSubmarineLight { get; set; } = 40;
-    public double TargetWeightSubmarine { get; set; } = 4;
+    // [RE] S-TARGET-WEIGHT (0x1971440): base weight by target type, x15 for heavy/torpedo against capitals, carriers and
+    // convoys, x2 for the light slot against screens; convoy base is 40 when the shooter is a submarine.
+    public double TargetBaseCapital { get; set; } = 2;
+    public double TargetBaseScreen { get; set; } = 3;
+    public double TargetBaseSubmarine { get; set; } = 4;
+    public double TargetBaseOther { get; set; } = 1;
+    public double TargetBaseConvoy { get; set; } = 4;
+    public double TargetBaseConvoyFromSubmarine { get; set; } = 40;
+    public double TargetHeavyTorpedoMultiplier { get; set; } = 15;
+    public double TargetLightScreenMultiplier { get; set; } = 2;
 
-    // [WIKI] "Damaged target up to +100%", "escaping target x0.5", "actively fighting target +50%".
-    public double TargetWeightMaxDamagedBonus { get; set; } = 1.0;
-    public double TargetWeightRetreatingMultiplier { get; set; } = 0.5;
-    public double TargetWeightActivelyFightingBonus { get; set; } = 0.5;
+    // [RE] Damaged targets: ships x(2 - hpRatio), convoys x(1 + 10 * missing ratio).
+    public double TargetConvoyDamagedFactor { get; set; } = 10;
 
-    // [WIKI] Full screening gives up to +40% hit chance to the battle line and carrier group.
-    public double ScreeningHitChanceBonus { get; set; } = 0.4;
+    // [RE] Target state multiplier (exclusive): fighting x1.5, retreating x0.5, waiting x1.
+    public double TargetFightingMultiplier { get; set; } = 1.5;
+    public double TargetRetreatingMultiplier { get; set; } = 0.5;
 
-    // [WIKI] Full screening gives up to +20% retreat speed to the battle line and carrier group,
-    // full carrier screening another +20% to carriers and convoys.
-    public double ScreeningRetreatSpeedBonus { get; set; } = 0.2;
-    public double CarrierScreeningRetreatSpeedBonus { get; set; } = 0.2;
+    // [RE] S-POS-DETECT: the summed surface detection difference is divided by this before the define factor.
+    public double DetectionPositioningDivisor { get; set; } = 100;
 
-    // [LEGACY] Navy experience level thresholds as a fraction of NAVY_MAX_XP, and the damage modifier range across levels.
-    public double[] ShipExperienceLevels { get; set; } = [0.1, 0.2, 0.3, 0.4, 0.55, 0.7, 0.9];
-    public double ShipExperienceMinDamageFactor { get; set; } = -0.1;
-    public double ShipExperienceMaxDamageFactor { get; set; } = 0.15;
+    // [RE] S-SCREEN: lower bound of the screening contribution factor.
+    public double MinScreeningFactor { get; set; } = 0.01;
 
-    // [ASSUMED] Hit chance multiplier applied at night (time of day in [NightStartHour, NightEndHour)).
-    public double NightHitChanceFactor { get; set; } = -0.25;
+    // [RE] S-HIT-SHIP: lower bound of the speed term before HIT_PROFILE_SPEED_BASE is added.
+    public double MinHitProfileSpeedTerm { get; set; } = 0.1;
+
+    // [RE] S-SUB: lower bound of (SUBMARINE_BASE_STEALTH_VALUE - visibility) in the reveal chance.
+    public double MinSubmarineStealthDivider { get; set; } = 0.1;
+
+    // [ASSUMED] S-NIGHT: province darkness is 1 from NightStartHour to NightEndHour and 0 otherwise. The game computes
+    // darkness per province from the day/night terminator; that model is not decoded.
     public int NightStartHour { get; set; } = 20;
     public int NightEndHour { get; set; } = 6;
 }

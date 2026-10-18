@@ -375,13 +375,9 @@ public class SetupLoader
 
         return rules with
         {
-            FiringOrder = ParseEnum(dto.FiringOrder, rules.FiringOrder, "battleScenario.rules.firingOrder", errors),
             DamageRandomness = ParseEnum(dto.DamageRandomness, rules.DamageRandomness, "battleScenario.rules.damageRandomness", errors),
-            ActivationDependsOnComposition = dto.ActivationDependsOnComposition ?? rules.ActivationDependsOnComposition,
-            FirstShotWaitsForCooldown = dto.FirstShotWaitsForCooldown ?? rules.FirstShotWaitsForCooldown,
             NightEnabled = dto.NightEnabled ?? rules.NightEnabled,
-            StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
-            DailyManpowerRecoveryInBattle = dto.DailyManpowerRecoveryInBattle ?? rules.DailyManpowerRecoveryInBattle
+            StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay
         };
     }
 
@@ -924,8 +920,7 @@ public class SetupLoader
             errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 to {ExperienceRules.MaxLevel(defines)}.");
         }
 
-        ParseEnum(participant.RetreatPriority, RetreatPriority.Medium, $"battleScenario.{role}.retreatPriority", errors);
-        ParseEnum(participant.SubmarineEngagementRisk, SubmarineEngagementRisk.Medium, $"battleScenario.{role}.submarineEngagementRisk", errors);
+        ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, $"battleScenario.{role}.engagementLevel", errors);
     }
 
     private static BattleParticipant BuildParticipant(
@@ -948,8 +943,7 @@ public class SetupLoader
             participant.ExternalNavalStrikePlanes,
             participantResearches,
             participantSpirits,
-            ParseEnum(participant.RetreatPriority, RetreatPriority.Medium, "retreatPriority", []),
-            ParseEnum(participant.SubmarineEngagementRisk, SubmarineEngagementRisk.Medium, "submarineEngagementRisk", []));
+            ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, "engagementLevel", []));
     }
 
     private static bool IsValidShipExperienceLevel(int level, GameDefines defines)

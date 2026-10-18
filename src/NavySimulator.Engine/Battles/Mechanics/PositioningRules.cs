@@ -3,52 +3,48 @@ using NavySimulator.Engine.Defines;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-POS: positioning (0..1) and its effects. Spec: docs/mechanics/surface.md.
+/// S-POS: positioning (0..1), computed for both sides at the start of every hour (0x161b960). Spec: docs/mechanics/surface.md.
+/// Not modelled (no inputs for them): admiral/country positioning modifiers, the carrier-ratio penalty (needs air),
+/// the penalty for ships joining a running battle, and the convoy-escort dominance bonus.
 /// </summary>
 public static class PositioningRules
 {
     public static double Calculate(BattleLines own, BattleLines enemy, GameDefines defines)
     {
-        var navy = defines.NNavy;
-        var positioning = navy.BASE_POSITIONING;
+        var positioning = defines.NNavy.BASE_POSITIONING;
         positioning -= FleetSizePenalty(own.Count, enemy.Count, defines);
         positioning += DetectionBonus(own, enemy, defines);
         return Math.Clamp(positioning, 0, 1);
     }
 
-    // S-POS-SIZE [DEFINE + ASSUMED shape]: penalty for each +100% ship ratio above the enemy, capped.
+    // S-POS-SIZE [RE]: every ship in the battle counts 1 (all lines, retreating included).
     public static double FleetSizePenalty(int ownShips, int enemyShips, GameDefines defines)
     {
         var navy = defines.NNavy;
 
-        if (enemyShips <= 0 || ownShips < navy.MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY || ownShips <= enemyShips)
+        if (enemyShips <= 0 || ownShips < navy.MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY)
         {
             return 0;
         }
 
-        var ratioAboveParity = ownShips / (double)enemyShips - 1.0;
-        return Math.Min(navy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO, ratioAboveParity * navy.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR);
+        var penalty = (ownShips / (double)enemyShips - 1.0) * navy.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR;
+        return Math.Clamp(penalty, 0, navy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO);
     }
 
-    // S-POS-DETECT [DEFINE + ASSUMED aggregation]: bonus from out-detecting the enemy, using each side's best surface detection.
+    // S-POS-DETECT [RE]: summed surface detection of all ships in the battle, difference / 100 * factor, only if positive.
     public static double DetectionBonus(BattleLines own, BattleLines enemy, GameDefines defines)
     {
         var navy = defines.NNavy;
-        var ownDetection = own.All.Select(ship => ship.GetFinalStats().SurfaceDetection).DefaultIfEmpty(0).Max();
-        var enemyDetection = enemy.All.Select(ship => ship.GetFinalStats().SurfaceDetection).DefaultIfEmpty(0).Max();
-        var bonus = (ownDetection - enemyDetection) * navy.RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR;
-        return Math.Clamp(bonus, 0, navy.MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION);
+        var ownDetection = own.All.Sum(ship => ship.GetFinalStats().SurfaceDetection);
+        var enemyDetection = enemy.All.Sum(ship => ship.GetFinalStats().SurfaceDetection);
+        var bonus = (ownDetection - enemyDetection) / defines.Hardcoded.DetectionPositioningDivisor *
+                    navy.RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR;
+        return bonus > 0 ? Math.Min(bonus, navy.MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION) : 0;
     }
 
-    // S-POS-SCREEN [DEFINE]: share of each ship's screening contribution kept at this positioning.
-    public static double ScreeningContributionFactor(double positioning, GameDefines defines)
+    // S-POS-DMG [RE]: penalty subtracted inside the additive damage multiplier (see DamageRules.DamageMultiplier).
+    public static double DamagePenalty(double positioning, GameDefines defines)
     {
-        return 1.0 - defines.NNavy.SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
-    }
-
-    // S-POS-DMG [DEFINE]: damage multiplier at this positioning.
-    public static double DamageFactor(double positioning, GameDefines defines)
-    {
-        return 1.0 - defines.NNavy.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
+        return defines.NNavy.DAMAGE_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
     }
 }

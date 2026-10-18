@@ -15,6 +15,9 @@ public sealed class GameDefines
     /// </summary>
     public HardcodedValues Hardcoded { get; init; } = new();
 
+    /// <summary>Static modifier blocks naval combat applies directly (screening bonuses, experience, night).</summary>
+    public StaticModifiers StaticModifiers { get; init; } = new();
+
     /// <summary>
     /// Human-readable list of the define sources applied on top of the built-in vanilla defaults, in order.
     /// </summary>

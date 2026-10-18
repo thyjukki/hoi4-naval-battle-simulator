@@ -9,87 +9,130 @@ public class TargetingRulesTests
 {
     private readonly GameDefines defines = GameDefines.Vanilla();
 
-    private static Ship Carrier(string id)
+    [Fact]
+    public void MaxLine_LightReachesTheClosestNonEmptyLine()
     {
-        return TestEntityFactory.CreateShip(id, ShipRole.Carrier, TestEntityFactory.CapitalStats());
+        var anyRoll = new ScriptedRandomSource(0.5);
+        var full = new ScreeningSummary(1, 1);
+
+        Assert.Equal(1, TargetingRules.MaxLine(WeaponSlot.Light, new EnemyLineCounts(1, 1, 1, 0, 0), full, anyRoll));
+        Assert.Equal(2, TargetingRules.MaxLine(WeaponSlot.Light, new EnemyLineCounts(0, 1, 1, 0, 0), full, anyRoll));
+        Assert.Equal(3, TargetingRules.MaxLine(WeaponSlot.Light, new EnemyLineCounts(0, 0, 1, 0, 0), full, anyRoll));
     }
 
     [Fact]
-    public void LightGuns_TargetClosestGroup()
+    public void MaxLine_HeavyReachesTheFirstTwoNonEmptyLines()
     {
-        var enemy = TestEntityFactory.Side("enemy", TestEntityFactory.Screen("dd"), TestEntityFactory.Capital("bb"));
+        var anyRoll = new ScriptedRandomSource(0.5);
+        var full = new ScreeningSummary(1, 1);
 
-        var groups = TargetingRules.ReachableGroups(TestEntityFactory.Screen("shooter"), WeaponType.Light, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.5));
+        Assert.Equal(2, TargetingRules.MaxLine(WeaponSlot.Heavy, new EnemyLineCounts(1, 1, 1, 0, 0), full, anyRoll));
+        Assert.Equal(3, TargetingRules.MaxLine(WeaponSlot.Heavy, new EnemyLineCounts(0, 1, 1, 0, 0), full, anyRoll));
+        Assert.Equal(3, TargetingRules.MaxLine(WeaponSlot.Heavy, new EnemyLineCounts(1, 0, 1, 0, 0), full, anyRoll));
+    }
 
-        Assert.Equal([GroupType.Screen], groups);
+    [Theory]
+    [InlineData(0.40, 1)]
+    [InlineData(0.50, 1)]
+    [InlineData(0.60, 3)]
+    public void MaxLine_TorpedoesUseOneRollAgainstBothScreeningValues(double roll, int expected)
+    {
+        var screening = new ScreeningSummary(0.5, 0.3);
+
+        Assert.Equal(expected, TargetingRules.MaxLine(WeaponSlot.Torpedo, new EnemyLineCounts(1, 1, 1, 0, 0), screening, new ScriptedRandomSource(roll)));
     }
 
     [Fact]
-    public void LightGuns_MoveToNextGroupWhenClosestGroupSankEarlierThisHour()
+    public void MinLine_SubmarinesKeepToTheCarrierLineOnLowEngagementUntilItIsEmpty()
     {
-        var screen = TestEntityFactory.Screen("dd");
-        var enemy = TestEntityFactory.Side("enemy", screen, TestEntityFactory.Capital("bb"));
-        screen.CurrentHP = 0;
+        var submarine = TestEntityFactory.Submarine("ss");
 
-        var groups = TargetingRules.ReachableGroups(TestEntityFactory.Screen("shooter"), WeaponType.Light, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.5));
-
-        Assert.Equal([GroupType.Capital], groups);
+        Assert.Equal(3, TargetingRules.MinLine(submarine, EngagementLevel.Low, new EnemyLineCounts(1, 1, 0, 2, 0)));
+        Assert.Equal(2, TargetingRules.MinLine(submarine, EngagementLevel.Low, new EnemyLineCounts(1, 1, 0, 0, 0)));
+        Assert.Equal(2, TargetingRules.MinLine(submarine, EngagementLevel.Medium, new EnemyLineCounts(1, 1, 0, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(submarine, EngagementLevel.Medium, new EnemyLineCounts(1, 0, 0, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(submarine, EngagementLevel.High, new EnemyLineCounts(1, 1, 1, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(TestEntityFactory.Screen("dd"), EngagementLevel.Low, new EnemyLineCounts(1, 1, 1, 0, 0)));
     }
 
     [Fact]
-    public void LightGuns_FromCarriersNeverTargetCarrierGroup()
+    public void TargetWeight_MatchesTheDecodedTable()
     {
-        var enemy = TestEntityFactory.Side("enemy", Carrier("cv"));
+        var gunship = TestEntityFactory.Capital("bb");
+        var capital = TestEntityFactory.Capital("target_bb");
+        var screen = TestEntityFactory.Screen("target_dd");
+        var carrier = TestEntityFactory.Carrier("target_cv");
 
-        var groups = TargetingRules.ReachableGroups(Carrier("shooter"), WeaponType.Light, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.5));
-
-        Assert.Empty(groups);
+        Assert.Equal(30, TargetingRules.TargetWeight(gunship, WeaponSlot.Heavy, capital, defines), 9);
+        Assert.Equal(2, TargetingRules.TargetWeight(gunship, WeaponSlot.Light, capital, defines), 9);
+        Assert.Equal(3, TargetingRules.TargetWeight(gunship, WeaponSlot.Heavy, screen, defines), 9);
+        Assert.Equal(6, TargetingRules.TargetWeight(gunship, WeaponSlot.Light, screen, defines), 9);
+        Assert.Equal(15, TargetingRules.TargetWeight(gunship, WeaponSlot.Torpedo, carrier, defines), 9);
+        Assert.Equal(1, TargetingRules.TargetWeight(gunship, WeaponSlot.Light, carrier, defines), 9);
     }
 
     [Fact]
-    public void HeavyGuns_ReachFirstTwoGroups()
+    public void TargetWeight_StateMultipliersAreExclusive()
     {
-        var enemy = TestEntityFactory.Side("enemy", TestEntityFactory.Screen("dd"), TestEntityFactory.Capital("bb"), Carrier("cv"));
+        var shooter = TestEntityFactory.Screen("dd");
+        var target = TestEntityFactory.Screen("target");
 
-        var groups = TargetingRules.ReachableGroups(TestEntityFactory.Capital("shooter"), WeaponType.Heavy, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.5));
+        target.CurrentStatus = ShipStatus.Active;
+        Assert.Equal(6 * 1.5, TargetingRules.TargetWeight(shooter, WeaponSlot.Light, target, defines), 9);
 
-        Assert.Equal([GroupType.Screen, GroupType.Capital], groups);
-    }
-
-    [Fact]
-    public void Torpedoes_BypassScreensOnlyWithMissingScreeningEfficiency()
-    {
-        var enemy = TestEntityFactory.Side("enemy", TestEntityFactory.Screen("dd"), TestEntityFactory.Capital("bb"), Carrier("cv"));
-        var shooter = TestEntityFactory.Screen("shooter", torpedoAttack: 5);
-
-        enemy.Screening = new ScreeningSummary(1, 1);
-        var screened = TargetingRules.ReachableGroups(shooter, WeaponType.Torpedo, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.0));
-
-        enemy.Screening = new ScreeningSummary(0, 0);
-        var unscreened = TargetingRules.ReachableGroups(shooter, WeaponType.Torpedo, enemy, SubmarineEngagementRisk.Medium, new ScriptedRandomSource(0.0));
-
-        Assert.Equal([GroupType.Screen], screened);
-        Assert.Equal([GroupType.Screen, GroupType.Capital, GroupType.Carrier], unscreened);
-    }
-
-    [Fact]
-    public void TargetWeight_AppliesRetreatPenaltyOnceAndActiveBonus()
-    {
-        var shooter = TestEntityFactory.Capital("bb");
-        var target = TestEntityFactory.Screen("dd");
         target.CurrentStatus = ShipStatus.Retreating;
-
-        Assert.Equal(3 * 0.5, TargetingRules.TargetWeight(shooter, WeaponType.Heavy, target, false, defines), 6);
-        Assert.Equal(3 * 0.5 * 1.5, TargetingRules.TargetWeight(shooter, WeaponType.Heavy, target, true, defines), 6);
+        Assert.Equal(6 * 0.5, TargetingRules.TargetWeight(shooter, WeaponSlot.Light, target, defines), 9);
     }
 
     [Fact]
-    public void TargetWeight_DoublesForFullyDamagedTargets()
+    public void TargetWeight_DamagedShipsUpToDoubleAndDamagedConvoysUpToElevenfold()
     {
-        var shooter = TestEntityFactory.Screen("shooter");
-        var target = TestEntityFactory.Screen("dd");
-        target.CurrentHP = 0.001;
+        var shooter = TestEntityFactory.Submarine("ss");
+        var ship = TestEntityFactory.Screen("target");
+        ship.CurrentHP = 0.0001;
+        var convoy = TestEntityFactory.CreateShip("convoy", ShipRole.Convoy, TestEntityFactory.ScreenStats());
+        convoy.CurrentHP = convoy.GetFinalStats().Hp / 2;
 
-        Assert.Equal(6 * 2, TargetingRules.TargetWeight(shooter, WeaponType.Light, target, false, defines), 3);
+        Assert.Equal(3 * 2, TargetingRules.TargetWeight(shooter, WeaponSlot.Torpedo, ship, defines), 3);
+        Assert.Equal(600 * (1 + 10 * 0.5), TargetingRules.TargetWeight(shooter, WeaponSlot.Torpedo, convoy, defines), 6);
+    }
+
+    [Fact]
+    public void SelectTarget_HiddenSubmarinesCannotBeTargetedButRevealedOnesCanByTheLightSlot()
+    {
+        var hunter = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { DepthChargeAttack = 10 });
+        var submarine = TestEntityFactory.Submarine("ss");
+
+        var (own, enemy) = TestEntityFactory.Sides([hunter], [submarine]);
+        Assert.Null(TargetingRules.SelectTarget(hunter, WeaponSlot.Light, own, enemy, defines, new ScriptedRandomSource(0.0)));
+
+        // Building sides resets combat state, so reveal the submarine afterwards.
+        (own, enemy) = TestEntityFactory.Sides([hunter], [submarine]);
+        submarine.RevealTimer = 8;
+        Assert.Same(submarine, TargetingRules.SelectTarget(hunter, WeaponSlot.Light, own, enemy, defines, new ScriptedRandomSource(0.0)));
+    }
+
+    [Fact]
+    public void SelectTarget_TorpedoWithNothingInReachDoesNotFire()
+    {
+        var shooter = TestEntityFactory.Screen("dd", torpedoAttack: 5);
+        var (own, enemy) = TestEntityFactory.Sides([shooter], [TestEntityFactory.Capital("bb")]);
+
+        // No enemy screens and screening 1: the roll keeps the torpedo on line 1, which is empty.
+        enemy.Screening = new ScreeningSummary(1, 1);
+
+        Assert.Null(TargetingRules.SelectTarget(shooter, WeaponSlot.Torpedo, own, enemy, defines, new ScriptedRandomSource(0.5)));
+    }
+
+    [Fact]
+    public void WeightedPick_TestsTheHeaviestCandidateFirst()
+    {
+        var light = TestEntityFactory.Screen("light");
+        var heavy = TestEntityFactory.Screen("heavy");
+        (Ship, double)[] candidates = [(light, 1), (heavy, 3)];
+
+        Assert.Same(heavy, TargetingRules.WeightedPick(candidates, new ScriptedRandomSource(0.0)));
+        Assert.Same(heavy, TargetingRules.WeightedPick(candidates, new ScriptedRandomSource(0.74)));
+        Assert.Same(light, TargetingRules.WeightedPick(candidates, new ScriptedRandomSource(0.76)));
     }
 }

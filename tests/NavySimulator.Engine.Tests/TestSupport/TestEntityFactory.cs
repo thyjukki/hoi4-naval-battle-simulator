@@ -13,6 +13,7 @@ internal static class TestEntityFactory
         Hp: 100,
         SurfaceVisibility: 15,
         SurfaceDetection: 20,
+        SubDetection: 1,
         Reliability: 0.8,
         LightAttack: lightAttack,
         LightPiercing: 5,
@@ -32,6 +33,15 @@ internal static class TestEntityFactory
         HeavyPiercing: 60,
         Armor: 50);
 
+    public static ShipStats SubmarineStats() => new(
+        Speed: 15,
+        Organization: 30,
+        Hp: 50,
+        SubVisibility: 10,
+        Reliability: 0.8,
+        TorpedoAttack: 20,
+        Armor: 0);
+
     public static Ship CreateShip(string id, ShipRole role, ShipStats stats, double experience = 0, int manpower = 400)
     {
         var hull = new Hull($"{id}_hull", role, [role.ToString()], manpower, stats);
@@ -49,16 +59,27 @@ internal static class TestEntityFactory
         return CreateShip(id, ShipRole.Capital, CapitalStats());
     }
 
-    public static BattleParticipant Participant(string fleetId, IEnumerable<Ship> ships, RetreatPriority priority = RetreatPriority.Medium)
+    public static Ship Carrier(string id)
     {
-        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), string.Empty, string.Empty, 0, [], [], priority);
+        return CreateShip(id, ShipRole.Carrier, CapitalStats() with { HeavyAttack = 0 });
+    }
+
+    public static Ship Submarine(string id)
+    {
+        return CreateShip(id, ShipRole.Submarine, SubmarineStats());
+    }
+
+    public static BattleParticipant Participant(string fleetId, IEnumerable<Ship> ships, EngagementLevel level = EngagementLevel.Medium)
+    {
+        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), string.Empty, string.Empty, 0, [], [], level);
     }
 
     public static BattleScenario Scenario(
         IEnumerable<Ship> attackerShips,
         IEnumerable<Ship> defenderShips,
         BattleRules? rules = null,
-        GameDefines? defines = null)
+        GameDefines? defines = null,
+        EngagementLevel attackerLevel = EngagementLevel.Medium)
     {
         return new BattleScenario(
             "test",
@@ -66,17 +87,23 @@ internal static class TestEntityFactory
             "clear",
             1,
             null,
-            Participant("attacker_fleet", attackerShips),
+            Participant("attacker_fleet", attackerShips, attackerLevel),
             Participant("defender_fleet", defenderShips),
             new Dictionary<string, PlaneEquipment>(),
             defines ?? GameDefines.Vanilla(),
             rules ?? new BattleRules());
     }
 
-    public static BattleSide Side(string label, params Ship[] ships)
+    /// <summary>Two sides facing each other, with the shooter side's enemy snapshot taken as the engine would.</summary>
+    public static (BattleSide Own, BattleSide Enemy) Sides(
+        IEnumerable<Ship> ownShips,
+        IEnumerable<Ship> enemyShips,
+        EngagementLevel ownLevel = EngagementLevel.Medium)
     {
-        var side = new BattleSide(label, Participant(label, ships));
-        side.Screening = new ScreeningSummary(1, 1);
-        return side;
+        var own = new BattleSide("own", Participant("own", ownShips, ownLevel));
+        var enemy = new BattleSide("enemy", Participant("enemy", enemyShips));
+        own.EnemyCounts = EnemyLineCounts.Of(enemy.Ships);
+        enemy.EnemyCounts = EnemyLineCounts.Of(own.Ships);
+        return (own, enemy);
     }
 }

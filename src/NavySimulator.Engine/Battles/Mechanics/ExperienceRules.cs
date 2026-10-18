@@ -3,55 +3,83 @@ using NavySimulator.Engine.Defines;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-XP: ship experience levels, their damage modifier, combat gain, and losses from manpower casualties.
-/// Spec: docs/mechanics/surface.md. Most of this is carried over from the previous simulator [LEGACY].
+/// S-XP [RE]: ship experience levels, their combat modifiers, hourly combat gain, and losses from damage.
+/// Spec: docs/mechanics/surface.md.
 /// </summary>
 public static class ExperienceRules
 {
+    // [RE] level = number of NMilitary.UNIT_EXP_LEVELS thresholds reached by xp / NAVY_MAX_XP (0..4 in vanilla).
     public static int Level(Ship ship, GameDefines defines)
     {
-        var normalized = Math.Clamp(ship.Experience / defines.NNavy.NAVY_MAX_XP, 0, 1);
-        return defines.Hardcoded.ShipExperienceLevels.Count(threshold => normalized >= threshold);
-    }
-
-    public static double ExperienceForLevel(int level, GameDefines defines)
-    {
-        var levels = defines.Hardcoded.ShipExperienceLevels;
-        var clamped = Math.Clamp(level, 0, levels.Length);
-        return clamped == 0 ? 0 : levels[clamped - 1] * defines.NNavy.NAVY_MAX_XP;
+        var ratio = Math.Clamp(ship.Experience / defines.NNavy.NAVY_MAX_XP, 0, 1);
+        return defines.NMilitary.UNIT_EXP_LEVELS.Count(threshold => ratio >= threshold);
     }
 
     public static int MaxLevel(GameDefines defines)
     {
-        return defines.Hardcoded.ShipExperienceLevels.Length;
+        return defines.NMilitary.UNIT_EXP_LEVELS.Length;
     }
 
-    // [LEGACY] Damage modifier spread linearly from the min to the max value across levels.
-    public static double DamageFactor(Ship ship, GameDefines defines)
+    public static double ExperienceForLevel(int level, GameDefines defines)
     {
-        var hardcoded = defines.Hardcoded;
+        var levels = defines.NMilitary.UNIT_EXP_LEVELS;
+        var clamped = Math.Clamp(level, 0, levels.Length);
+        return clamped == 0 ? 0 : levels[clamped - 1] * defines.NNavy.NAVY_MAX_XP;
+    }
+
+    /// <summary>
+    /// [RE] 0xc3ce50: share of the static modifier <c>ship_experience_bonus_max</c> (above ARMY_EXP_BASE_LEVEL) or
+    /// <c>ship_experience_malus_min</c> (below it) applied to the ship, as (block, scale).
+    /// </summary>
+    public static (string Block, double Scale) LevelModifier(Ship ship, GameDefines defines)
+    {
+        var level = Level(ship, defines);
+        var baseLevel = (int)defines.NMilitary.ARMY_EXP_BASE_LEVEL;
         var maxLevel = MaxLevel(defines);
 
-        if (maxLevel == 0)
+        if (level < baseLevel && baseLevel > 0)
         {
-            return 1.0;
+            return (StaticModifiers.ShipExperienceMalusMin, (baseLevel - level) / (double)baseLevel);
         }
 
-        var step = (hardcoded.ShipExperienceMaxDamageFactor - hardcoded.ShipExperienceMinDamageFactor) / maxLevel;
-        return Math.Max(0, 1.0 + hardcoded.ShipExperienceMinDamageFactor + step * Level(ship, defines));
+        if (level > baseLevel && maxLevel > baseLevel)
+        {
+            return (StaticModifiers.ShipExperienceBonusMax, (level - baseLevel) / (double)(maxLevel - baseLevel));
+        }
+
+        return (StaticModifiers.ShipExperienceBonusMax, 0);
     }
 
-    // [DEFINE + LEGACY formula] Hourly gain for a ship that fired this hour, scaled by the enemy/own ship ratio.
-    public static double HourlyGain(int enemyShips, int ownShips, GameDefines defines)
+    /// <summary>[RE] naval_damage_factor the ship gets from its experience level.</summary>
+    public static double NavalDamageFactor(Ship ship, GameDefines defines)
     {
-        if (ownShips <= 0)
+        var (block, scale) = LevelModifier(ship, defines);
+        return scale * defines.StaticModifiers.Get(block, StaticModifiers.NavalDamageFactor);
+    }
+
+    /// <summary>[RE] naval_defense_factor the ship gets from its experience level.</summary>
+    public static double NavalDefenseFactor(Ship ship, GameDefines defines)
+    {
+        var (block, scale) = LevelModifier(ship, defines);
+        return scale * defines.StaticModifiers.Get(block, StaticModifiers.NavalDefenseFactor);
+    }
+
+    /// <summary>
+    /// [RE] Hourly gain for a ship that fired this hour: UNIT_EXPERIENCE_PER_COMBAT_HOUR * UNIT_EXPERIENCE_SCALE *
+    /// (enemy group size + 1) / (own group size + 1) * EXPERIENCE_FACTOR_NON_CARRIER_GAIN, times
+    /// EXPERIENCE_FACTOR_CONVOY_ATTACK if its last target was a convoy. Carrier sortie gain needs air (milestone 2).
+    /// </summary>
+    public static double HourlyGain(int enemyGroupSize, int ownGroupSize, bool lastTargetWasConvoy, GameDefines defines)
+    {
+        var navy = defines.NNavy;
+        var factor = (enemyGroupSize + 1.0) / (ownGroupSize + 1.0) * navy.EXPERIENCE_FACTOR_NON_CARRIER_GAIN;
+
+        if (lastTargetWasConvoy)
         {
-            return 0;
+            factor *= navy.EXPERIENCE_FACTOR_CONVOY_ATTACK;
         }
 
-        var navy = defines.NNavy;
-        return navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * navy.EXPERIENCE_FACTOR_NON_CARRIER_GAIN *
-               enemyShips / ownShips;
+        return navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * factor;
     }
 
     public static void AddExperience(Ship ship, double amount, GameDefines defines)
@@ -59,39 +87,43 @@ public static class ExperienceRules
         ship.Experience = Math.Clamp(ship.Experience + amount, 0, defines.NNavy.NAVY_MAX_XP);
     }
 
-    // [DEFINE + LEGACY formula] Manpower lost in proportion to HP lost, floored at MIN_MANPOWER_RATIO_TO_DROP;
-    // experience drops by the lost share of crew times EXPERIENCE_LOSS_FACTOR.
-    public static int ApplyManpowerLoss(Ship ship, double hpDamage, double maxHp, GameDefines defines)
+    /// <summary>
+    /// [RE] 0xc3e0e0, before HP is reduced: experience keeps the share of current HP the hit leaves; manpower drops in
+    /// proportion to strDamage / maxHp. strDamage is the unclamped value (it may exceed the remaining HP).
+    /// </summary>
+    public static int ApplyDamageLosses(Ship ship, double strDamage, GameDefines defines)
     {
-        if (hpDamage <= 0 || ship.MaxManpower <= 0 || maxHp <= 0)
+        var navy = defines.NNavy;
+        var maxHp = Math.Max(ship.GetFinalStats().Hp, 0.001);
+        var hpBefore = ship.CurrentHP;
+
+        if (hpBefore > 0)
+        {
+            var keep = Math.Clamp(hpBefore - strDamage * navy.EXPERIENCE_LOSS_FACTOR, 0, maxHp);
+            ship.Experience = Math.Min(ship.Experience * (keep / hpBefore), navy.NAVY_MAX_XP);
+        }
+
+        if (strDamage <= 0 || ship.MaxManpower <= 0)
         {
             return 0;
         }
 
-        var navy = defines.NNavy;
-        var manpowerBefore = ship.CurrentManpower;
-        var loss = (int)Math.Round(hpDamage / maxHp * ship.MaxManpower * navy.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
-        var floor = (int)Math.Round(ship.MaxManpower * navy.MIN_MANPOWER_RATIO_TO_DROP);
-        ship.CurrentManpower = Math.Max(Math.Min(floor, manpowerBefore), manpowerBefore - loss);
-        var lost = manpowerBefore - ship.CurrentManpower;
+        // naval_casualty_on_hit_factor is not modelled.
+        var floor = RoundHalfAway(ship.MaxManpower * navy.MIN_MANPOWER_RATIO_TO_DROP);
 
-        if (lost > 0 && manpowerBefore > 0)
+        if (ship.CurrentManpower <= floor)
         {
-            var lostShare = lost / (double)manpowerBefore;
-            ship.Experience = Math.Max(0, ship.Experience - ship.Experience * lostShare * navy.EXPERIENCE_LOSS_FACTOR);
+            return 0;
         }
 
-        return lost;
+        var loss = RoundHalfAway(ship.MaxManpower * (strDamage / maxHp) * navy.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
+        var applied = Math.Min(loss, ship.CurrentManpower - floor);
+        ship.CurrentManpower -= applied;
+        return applied;
     }
 
-    public static void ApplyDailyManpowerRecovery(Ship ship, GameDefines defines)
+    private static int RoundHalfAway(double value)
     {
-        if (ship.IsSunk || ship.CurrentManpower >= ship.MaxManpower)
-        {
-            return;
-        }
-
-        var recovery = (int)Math.Round(ship.MaxManpower * defines.NNavy.DAILY_MANPOWER_GAIN_RATIO);
-        ship.CurrentManpower = Math.Min(ship.MaxManpower, ship.CurrentManpower + recovery);
+        return (int)Math.Round(value, MidpointRounding.AwayFromZero);
     }
 }

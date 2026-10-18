@@ -9,8 +9,7 @@ public class BattleParticipantDto
     public int ExternalNavalStrikePlanes { get; set; }
     public List<string> ResearchIDs { get; set; } = [];
     public List<string> SpiritIDs { get; set; } = [];
-    public string? RetreatPriority { get; set; }
-    public string? SubmarineEngagementRisk { get; set; }
+    public string? EngagementLevel { get; set; }
 }
 
 

@@ -52,6 +52,34 @@ public class DefinesBinderTests
     }
 
     [Fact]
+    public void Load_ReadsStaticModifierBlocksFromGameAndModRoots()
+    {
+        var root = Directory.CreateTempSubdirectory("hoi4-mod-");
+
+        try
+        {
+            var modifiers = Directory.CreateDirectory(Path.Combine(root.FullName, "common", "modifiers"));
+            File.WriteAllText(Path.Combine(modifiers.FullName, "00_static_modifiers.txt"), """
+                screening_bonus = {
+                    naval_hit_chance = 0.3   # modded
+                }
+                unrelated_block = { naval_hit_chance = 9 }
+                """);
+
+            var (defines, report) = DefinesLoader.Load([root.FullName]);
+
+            Assert.Equal(0.3, defines.StaticModifiers.Get(StaticModifiers.ScreeningBonus, StaticModifiers.NavalHitChance));
+            Assert.Equal(0, defines.StaticModifiers.Get(StaticModifiers.ScreeningBonus, StaticModifiers.NavalRetreatSpeed));
+            Assert.Equal(0.2, defines.StaticModifiers.Get(StaticModifiers.CapitalScreeningBonus, StaticModifiers.NavalRetreatSpeed));
+            Assert.Empty(report.ParseWarnings);
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    [Fact]
     public void Load_RejectsDirectoryWithoutLuaFiles()
     {
         var root = Directory.CreateTempSubdirectory("hoi4-defines-empty-");

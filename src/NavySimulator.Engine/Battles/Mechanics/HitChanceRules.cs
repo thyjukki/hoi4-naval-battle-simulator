@@ -3,41 +3,34 @@ using NavySimulator.Engine.Defines;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-HIT: hit chance = max(base * modifiers * min((shipProfile / weaponProfile)^2, 1), COMBAT_MIN_HIT_CHANCE).
-/// Spec: docs/mechanics/surface.md.
+/// S-HIT [RE] (0x1970b48): hit = max(base * profileFactor * crewFactor * modifierSum, COMBAT_MIN_HIT_CHANCE), with no upper
+/// cap; the shot hits when U &lt; hit. Spec: docs/mechanics/surface.md.
 /// </summary>
 public static class HitChanceRules
 {
     public static HitChanceBreakdown Calculate(
         Ship shooter,
         Ship target,
-        WeaponType weapon,
+        WeaponSlot slot,
         ScreeningSummary shooterScreening,
-        bool isNight,
-        GameDefines defines,
-        BattleRules rules)
+        double darkness,
+        GameDefines defines)
     {
         var navy = defines.NNavy;
-        var baseChance = BaseHitChance(weapon, defines);
+        var againstSubmarine = target.Role == ShipRole.Submarine;
+        var baseChance = navy.COMBAT_BASE_HIT_CHANCE * (againstSubmarine ? navy.DEPTH_CHARGES_HIT_CHANCE_MULT : 1.0);
         var shipProfile = ShipHitProfile(target, defines);
-        var weaponProfile = WeaponHitProfile(weapon, defines);
-        var profileFactor = Math.Max(navy.MIN_HIT_PROFILE_MULT, Math.Min(Math.Pow(shipProfile / weaponProfile, 2), 1.0));
-        var modifier = Modifier(shooter, weapon, shooterScreening, isNight && rules.NightEnabled, defines);
-        var final = Math.Max(baseChance * modifier * profileFactor, navy.COMBAT_MIN_HIT_CHANCE);
+        var weaponProfile = WeaponHitProfile(slot, againstSubmarine, defines);
+        var ratio = shipProfile / weaponProfile;
+        var profileFactor = Math.Clamp(ratio * ratio, navy.MIN_HIT_PROFILE_MULT, 1.0);
+        var modifier = CrewFactor(shooter, defines) * ModifierSum(shooter, slot, shooterScreening, darkness, defines);
+        var final = Math.Max(baseChance * profileFactor * modifier, navy.COMBAT_MIN_HIT_CHANCE);
 
         return new HitChanceBreakdown(baseChance, shipProfile, weaponProfile, profileFactor, modifier, final);
     }
 
-    // S-HIT-BASE [DEFINE]
-    public static double BaseHitChance(WeaponType weapon, GameDefines defines)
-    {
-        var navy = defines.NNavy;
-        return weapon == WeaponType.DepthCharge
-            ? navy.COMBAT_BASE_HIT_CHANCE * navy.DEPTH_CHARGES_HIT_CHANCE_MULT
-            : navy.COMBAT_BASE_HIT_CHANCE;
-    }
-
-    // S-HIT-SHIP [DEFINE + WIKI]: 100 * visibility / (0.5 * speed + 20); convoys use a fixed profile, subs their sub visibility.
+    // S-HIT-SHIP [RE] 0xc37006: 100 * visibility / (max(0.5 * speed, 0.1) + 20); convoys use CONVOY_HIT_PROFILE.
+    // naval_visibility_factor and the per-ship hit profile multiplier are not modelled (1.0).
     public static double ShipHitProfile(Ship target, GameDefines defines)
     {
         var navy = defines.NNavy;
@@ -48,60 +41,60 @@ public static class HitChanceRules
         }
 
         var stats = target.GetFinalStats();
-        var visibility = target.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility;
-        var denominator = navy.HIT_PROFILE_SPEED_FACTOR * stats.Speed + navy.HIT_PROFILE_SPEED_BASE;
-        return denominator <= 0 ? navy.HIT_PROFILE_MULT : navy.HIT_PROFILE_MULT * visibility / denominator;
+        var visibility = Math.Max(0, target.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility);
+        var speedTerm = Math.Max(stats.Speed * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
+        return visibility * navy.HIT_PROFILE_MULT / (speedTerm + navy.HIT_PROFILE_SPEED_BASE);
     }
 
-    // S-HIT-WEAPON [DEFINE]: GUN_HIT_PROFILES is ordered { heavy, torpedo, light }.
-    public static double WeaponHitProfile(WeaponType weapon, GameDefines defines)
+    // S-HIT-WEAPON [RE]: GUN_HIT_PROFILES[slot] { heavy, torpedo, light }; the light slot against a submarine (depth
+    // charges) uses DEPTH_CHARGES_HIT_PROFILE.
+    public static double WeaponHitProfile(WeaponSlot slot, bool againstSubmarine, GameDefines defines)
     {
         var navy = defines.NNavy;
-        return weapon switch
-        {
-            WeaponType.Heavy => navy.GUN_HIT_PROFILES[0],
-            WeaponType.Torpedo => navy.GUN_HIT_PROFILES[1],
-            WeaponType.Light => navy.GUN_HIT_PROFILES[2],
-            _ => navy.DEPTH_CHARGES_HIT_PROFILE
-        };
+        return slot == WeaponSlot.Light && againstSubmarine ? navy.DEPTH_CHARGES_HIT_PROFILE : navy.GUN_HIT_PROFILES[(int)slot];
     }
 
-    // S-HIT-MODS: each modifier multiplies the chance [ASSUMED: multiplicative stacking].
-    public static double Modifier(Ship shooter, WeaponType weapon, ScreeningSummary shooterScreening, bool isNight, GameDefines defines)
+    // [RE] Missing organization and manpower of the shooter, added into one factor and floored at 0.
+    public static double CrewFactor(Ship shooter, GameDefines defines)
     {
         var navy = defines.NNavy;
         var stats = shooter.GetFinalStats();
-        var modifier = 1.0 + weapon switch
+        var orgRatio = stats.Organization > 0 ? Math.Clamp(shooter.CurrentOrganization / stats.Organization, 0, 1) : 1;
+        var manpowerRatio = shooter.MaxManpower > 0 ? Math.Clamp(shooter.CurrentManpower / (double)shooter.MaxManpower, 0, 1) : 1;
+        return Math.Max(0, 1.0 + navy.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - orgRatio) +
+                           navy.COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY * (1.0 - manpowerRatio));
+    }
+
+    /// <summary>
+    /// S-HIT-MODS [RE]: 1 + naval_hit_chance + the shooter's hit chance factor for the slot. naval_hit_chance includes
+    /// the static modifier <c>screening_bonus</c> scaled by screening for the battle line and carrier line, and the
+    /// <c>night</c> modifier scaled by darkness. Not clamped.
+    /// </summary>
+    public static double ModifierSum(Ship shooter, WeaponSlot slot, ScreeningSummary shooterScreening, double darkness, GameDefines defines)
+    {
+        var stats = shooter.GetFinalStats();
+        var modifiers = defines.StaticModifiers;
+        var navalHitChance = darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.NavalHitChance);
+
+        if (TargetingRules.LineOf(shooter) is 2 or 3)
         {
-            WeaponType.Light => stats.LightHitChanceFactor,
-            WeaponType.Heavy => stats.HeavyHitChanceFactor,
-            WeaponType.Torpedo => stats.TorpedoHitChanceFactor,
-            _ => stats.DepthChargeHitChanceFactor
+            navalHitChance += shooterScreening.ScreeningEfficiency *
+                              modifiers.Get(StaticModifiers.ScreeningBonus, StaticModifiers.NavalHitChance);
+        }
+
+        if (TargetingRules.LineOf(shooter) == 3)
+        {
+            navalHitChance += ScreeningRules.CombinedCarrierScreening(shooterScreening) *
+                              modifiers.Get(StaticModifiers.CapitalScreeningBonus, StaticModifiers.NavalHitChance);
+        }
+
+        var weaponFactor = slot switch
+        {
+            WeaponSlot.Heavy => stats.HeavyHitChanceFactor,
+            WeaponSlot.Torpedo => stats.TorpedoHitChanceFactor,
+            _ => stats.LightHitChanceFactor
         };
 
-        // [DEFINE] Linear penalty with missing organization and manpower.
-        if (stats.Organization > 0)
-        {
-            modifier *= 1.0 + navy.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - Math.Clamp(shooter.CurrentOrganization / stats.Organization, 0, 1));
-        }
-
-        if (shooter.MaxManpower > 0)
-        {
-            modifier *= 1.0 + navy.COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY * (1.0 - shooter.CurrentManpower / (double)shooter.MaxManpower);
-        }
-
-        // [WIKI] Screening gives up to +40% hit chance to the battle line and carrier group.
-        if (shooter.Role is ShipRole.Capital or ShipRole.Carrier or ShipRole.Convoy)
-        {
-            modifier *= 1.0 + defines.Hardcoded.ScreeningHitChanceBonus * shooterScreening.ScreeningEfficiency;
-        }
-
-        // [ASSUMED] Night penalty value.
-        if (isNight)
-        {
-            modifier *= 1.0 + defines.Hardcoded.NightHitChanceFactor;
-        }
-
-        return Math.Max(0, modifier);
+        return 1.0 + navalHitChance + weaponFactor;
     }
 }

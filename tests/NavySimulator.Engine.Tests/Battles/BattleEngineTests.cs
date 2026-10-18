@@ -13,7 +13,7 @@ public class BattleEngineTests
 
     private static List<Ship> Sharpshooters(string prefix, int count)
     {
-        var stats = TestEntityFactory.ScreenStats(lightAttack: 500) with { LightHitChanceFactor = 9 };
+        var stats = TestEntityFactory.ScreenStats(lightAttack: 500) with { LightHitChanceFactor = 20 };
         return Enumerable.Range(1, count).Select(i => TestEntityFactory.CreateShip($"{prefix}{i:D2}", ShipRole.Screen, stats)).ToList();
     }
 
@@ -39,20 +39,19 @@ public class BattleEngineTests
         var scenario = TestEntityFactory.Scenario(Screens("a", 8, 30), Screens("d", 8, 30), new BattleRules { MaxHours = 200 });
 
         var result = new BattleEngine().Simulate(scenario, 7);
-        var sunkAtShot = new Dictionary<string, int>();
+        var sunk = new HashSet<string>();
 
-        for (var i = 0; i < result.Shots.Count; i++)
+        foreach (var shot in result.Shots)
         {
-            var shot = result.Shots[i];
-            Assert.False(sunkAtShot.ContainsKey(shot.TargetId), $"shot {i} targets {shot.TargetId}, which already sank");
+            Assert.DoesNotContain(shot.TargetId, sunk);
 
             if (shot.KillingBlow)
             {
-                sunkAtShot[shot.TargetId] = i;
+                sunk.Add(shot.TargetId);
             }
         }
 
-        Assert.NotEmpty(sunkAtShot);
+        Assert.NotEmpty(sunk);
     }
 
     [Fact]
@@ -65,48 +64,47 @@ public class BattleEngineTests
 
         Assert.Equal(BattleOutcome.AttackerVictory, result.Outcome);
         Assert.True(result.HoursFought < 500);
-        Assert.Equal(0, result.Reengagements);
     }
 
     [Fact]
-    public void Simulate_FirstShotsHappenWhenScreensActivate()
+    public void Simulate_ScreensOnlyBattleStartsShootingInTheSecondHour()
     {
+        // No carriers or capitals: every line activates at tick 1 and fires from the next tick (battle hour 1).
         var scenario = TestEntityFactory.Scenario(Screens("a", 2), Screens("d", 2), new BattleRules { MaxHours = 20 });
 
         var result = new BattleEngine().Simulate(scenario, 3);
 
-        Assert.Equal(8, result.Shots.Min(shot => shot.Hour));
+        Assert.Equal(1, result.Shots.Min(shot => shot.Hour));
     }
 
     [Fact]
-    public void Simulate_SimultaneousFiringLetsBothShipsSinkEachOther()
+    public void Simulate_ScreensWaitTwoHoursLongerThanCapitalsWithoutCarriers()
     {
-        // Every roll is 0: all shots hit and pick the first candidate; one hit is enough to sink either ship.
-        var rules = new BattleRules { FiringOrder = FiringOrder.Simultaneous, MaxHours = 20 };
-        var scenario = TestEntityFactory.Scenario(Screens("a", 1, 500), Screens("d", 1, 500), rules);
+        var scenario = TestEntityFactory.Scenario(
+            [TestEntityFactory.Capital("a_bb"), TestEntityFactory.Screen("a_dd")],
+            [TestEntityFactory.Capital("d_bb"), TestEntityFactory.Screen("d_dd")],
+            new BattleRules { MaxHours = 20 });
 
-        var result = new BattleEngine().Simulate(scenario, new ScriptedRandomSource(0.0));
+        var result = new BattleEngine().Simulate(scenario, 3);
 
-        Assert.Equal(BattleOutcome.BothSidesGone, result.Outcome);
+        Assert.Equal(1, result.Shots.Where(shot => shot.ShooterId.EndsWith("bb")).Min(shot => shot.Hour));
+        Assert.Equal(3, result.Shots.Where(shot => shot.ShooterId.EndsWith("dd")).Min(shot => shot.Hour));
     }
 
     [Fact]
-    public void Simulate_InterleavedFiringLetsOnlyTheFirstShooterSurvive()
+    public void Simulate_AttackerFiresFirst_SoTheDefenderSunkInTheSameHourNeverShoots()
     {
-        var rules = new BattleRules { FiringOrder = FiringOrder.Interleaved, MaxHours = 20 };
-        var scenario = TestEntityFactory.Scenario(Screens("a", 1, 500), Screens("d", 1, 500), rules);
+        // Every roll is 0: every shot hits, and one hit sinks either ship.
+        var scenario = TestEntityFactory.Scenario(Sharpshooters("a", 1), Sharpshooters("d", 1), new BattleRules { MaxHours = 20 });
 
         var result = new BattleEngine().Simulate(scenario, new ScriptedRandomSource(0.0));
 
-        Assert.NotEqual(BattleOutcome.BothSidesGone, result.Outcome);
-        Assert.Single(result.Shots);
+        Assert.Equal(BattleOutcome.AttackerVictory, result.Outcome);
+        Assert.All(result.Shots, shot => Assert.Equal("attacker", shot.ShooterSide));
     }
 
-    [Theory]
-    [InlineData(FiringOrder.Interleaved, 0.35, 0.65)]
-    [InlineData(FiringOrder.Simultaneous, 0.35, 0.65)]
-    [InlineData(FiringOrder.AttackerFirst, 0.65, 1.0)]
-    public void Simulate_MirrorMatchWinRateDependsOnFiringOrder(FiringOrder firingOrder, double minAttackerWinShare, double maxAttackerWinShare)
+    [Fact]
+    public void Simulate_MirrorMatchFavoursTheAttacker()
     {
         var engine = new BattleEngine();
         var attackerWins = 0;
@@ -114,50 +112,64 @@ public class BattleEngineTests
 
         for (var seed = 0; seed < runs; seed++)
         {
-            var rules = new BattleRules { FiringOrder = firingOrder, MaxHours = 300, RetreatEnabled = false };
-            // Nearly every shot hits and one hit sinks a ship, so whoever shoots first in an hour wins unless the order is fair.
-            var scenario = TestEntityFactory.Scenario(Sharpshooters("a", 3), Sharpshooters("d", 3), rules);
-            var result = engine.Simulate(scenario, seed);
+            var scenario = TestEntityFactory.Scenario(Sharpshooters("a", 3), Sharpshooters("d", 3), new BattleRules { MaxHours = 300, RetreatEnabled = false });
 
-            if (result.Outcome == BattleOutcome.AttackerVictory)
+            if (engine.Simulate(scenario, seed).Outcome == BattleOutcome.AttackerVictory)
             {
                 attackerWins++;
             }
         }
 
-        Assert.InRange(attackerWins / (double)runs, minAttackerWinShare, maxAttackerWinShare);
+        Assert.InRange(attackerWins / (double)runs, 0.65, 1.0);
     }
 
     [Fact]
-    public void Simulate_DamagedShipsRetreat_AndRetreatIsSeeded()
+    public void Simulate_DamagedShipsRetreatAndKeepFiring()
     {
-        var rules = new BattleRules { MaxHours = 400 };
         var engine = new BattleEngine();
+        var scenario = TestEntityFactory.Scenario(Screens("a", 6, 3), Screens("d", 6, 3), new BattleRules { MaxHours = 400 });
 
-        BattleResult Run()
-        {
-            var scenario = TestEntityFactory.Scenario(Screens("a", 6, 3), Screens("d", 6, 3), rules);
-            return engine.Simulate(scenario, 11);
-        }
+        var result = engine.Simulate(scenario, 11);
+        var retreatLines = result.HourlyLog.Where(line => line.Contains("is retreating")).ToList();
 
-        var first = Run();
-        var second = Run();
-
-        Assert.Contains(first.HourlyLog, line => line.Contains("is retreating"));
-        Assert.Equal(first.Ships, second.Ships);
+        Assert.NotEmpty(retreatLines);
+        var retreatingShip = retreatLines[0].Split(' ')[3];
+        var retreatHour = int.Parse(retreatLines[0].Split(' ')[1].TrimEnd(':'));
+        Assert.Contains(result.Shots, shot => shot.ShooterId == retreatingShip && shot.Hour > retreatHour);
     }
 
     [Fact]
-    public void Simulate_SubmarinesOnlyFireTorpedoes()
+    public void Simulate_LowEngagementSubmarinesOnlyAttackTheCarrierLineWhileItHasShips()
     {
-        var stats = TestEntityFactory.ScreenStats(lightAttack: 3, torpedoAttack: 20) with { SubVisibility = 5 };
+        var stats = TestEntityFactory.SubmarineStats() with { LightAttack = 3 };
         var submarine = TestEntityFactory.CreateShip("ss", ShipRole.Submarine, stats);
-        var scenario = TestEntityFactory.Scenario([submarine], Screens("d", 1, 0), new BattleRules { MaxHours = 30 });
+        var screen = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats(lightAttack: 0) with { SubDetection = 0 });
+        var convoy = TestEntityFactory.CreateShip("co", ShipRole.Convoy, TestEntityFactory.ScreenStats(lightAttack: 0) with { Hp = 5000 });
+        var scenario = TestEntityFactory.Scenario([submarine], [screen, convoy], new BattleRules { MaxHours = 60 },
+            attackerLevel: EngagementLevel.Low);
 
         var result = new BattleEngine().Simulate(scenario, 5);
+        var submarineShots = result.Shots.Where(shot => shot.ShooterId == "ss").ToList();
+        var convoyEscapedHour = result.Ships.Single(ship => ship.ShipId == "co").RetreatedHour;
 
-        // Medium engagement risk: screens are not valid submarine targets, so nothing fires at all.
-        Assert.DoesNotContain(result.Shots, shot => shot.ShooterId == "ss");
+        // The convoy is fully screened, so the single torpedo roll never reaches it and the sub may not shoot the
+        // screen either: it holds fire until the convoy has escaped and the minimum line falls back to the screens.
+        Assert.NotNull(convoyEscapedHour);
+        Assert.NotEmpty(submarineShots);
+        Assert.All(submarineShots, shot => Assert.True(shot.Hour >= convoyEscapedHour, $"shot at hour {shot.Hour} before the convoy escaped"));
+    }
+
+    [Fact]
+    public void Simulate_ShipsThatCannotSeeTheSubmarinesDisengage()
+    {
+        // No sub detection on the surface side: the submarine is never revealed, so the surface ship retreats.
+        var blind = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SubDetection = 0, DepthChargeAttack = 10 });
+        var scenario = TestEntityFactory.Scenario([blind], [TestEntityFactory.Submarine("ss")], new BattleRules { MaxHours = 200 });
+
+        var result = new BattleEngine().Simulate(scenario, 2);
+
+        Assert.DoesNotContain(result.Shots, shot => shot.ShooterId == "dd");
+        Assert.Contains(result.HourlyLog, line => line.Contains("disengages"));
     }
 
     [Fact]

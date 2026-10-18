@@ -4,57 +4,114 @@ using NavySimulator.Engine.Random;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-DMG and S-CRIT: damage of a hit and how it is applied to HP, organization, manpower and experience.
-/// Spec: docs/mechanics/surface.md.
+/// S-DMG, S-CRIT and S-DMG-APPLY [RE] (0x1970a90, 0x19740c0, 0xc3e0e0). Spec: docs/mechanics/surface.md.
+/// Order: attack x piercing, x (1 - positioning penalty + damage factor - defense factor), x randomness, x torpedo
+/// reduction, split into HP and organization damage, x critical multiplier.
 /// </summary>
 public static class DamageRules
 {
-    public static ShotDamage Calculate(
-        Ship shooter,
-        Ship target,
-        WeaponType weapon,
-        double attack,
-        double piercing,
-        double shooterPositioning,
-        GameDefines defines,
-        BattleRules rules,
-        IRandomSource random)
+    public static ShotProfile Profile(Ship shooter, Ship target, WeaponSlot slot, double shooterPositioning, GameDefines defines)
     {
         var navy = defines.NNavy;
+        var shooterStats = shooter.GetFinalStats();
         var targetStats = target.GetFinalStats();
-        var ignoresArmor = weapon is WeaponType.Torpedo or WeaponType.DepthCharge;
-        var tier = ignoresArmor ? 0 : PiercingTier(piercing, targetStats.Armor, defines);
-        var piercingDamageFactor = ignoresArmor ? 1.0 : navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES[tier];
+        var againstSubmarine = target.Role == ShipRole.Submarine;
+        var reliability = Math.Min(targetStats.Reliability, 1);
 
-        var critical = RollCritical(weapon, target, tier, defines, random);
+        double attack;
+        var tier = -1;
+        var piercingFactor = 1.0;
+        double? torpedoFactor = null;
+        double criticalChance;
+        double criticalMultiplier;
 
-        var damage = attack;
-        damage *= ExperienceRules.DamageFactor(shooter, defines);
-        damage *= piercingDamageFactor;
-        damage *= critical.Multiplier;
-        damage *= PositioningRules.DamageFactor(shooterPositioning, defines);
-
-        if (weapon == WeaponType.Torpedo)
+        if (slot == WeaponSlot.Torpedo)
         {
-            damage *= Math.Max(0, 1.0 - targetStats.TorpedoDamageReductionFactor);
+            attack = shooterStats.TorpedoAttack;
+            torpedoFactor = 1.0 - targetStats.TorpedoDamageReductionFactor;
+            criticalChance = navy.COMBAT_TORPEDO_CRITICAL_CHANCE * Math.Max(0, 1.0 + targetStats.TorpedoEnemyCriticalChanceFactor);
+            criticalMultiplier = navy.COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT;
+        }
+        else
+        {
+            // Heavy guns do nothing to submarines; the light slot fires depth charges at them. Depth charges still go
+            // through the piercing tiers, with the shooter's light piercing against the submarine's armor.
+            var piercing = slot == WeaponSlot.Heavy ? shooterStats.HeavyPiercing : shooterStats.LightPiercing;
+            attack = slot switch
+            {
+                WeaponSlot.Heavy => againstSubmarine ? 0 : shooterStats.HeavyAttack,
+                _ => againstSubmarine ? shooterStats.DepthChargeAttack * navy.DEPTH_CHARGES_DAMAGE_MULT : shooterStats.LightAttack
+            };
+            tier = PiercingTier(piercing, targetStats.Armor, defines);
+            piercingFactor = TierValue(navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES, tier);
+            criticalChance = navy.COMBAT_BASE_CRITICAL_CHANCE * (1.0 - reliability) * TierValue(navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES, tier);
+            criticalMultiplier = 1.0 + (1.0 - reliability) * navy.COMBAT_CRITICAL_DAMAGE_MULT;
+            // COMBAT_ARMOR_PIERCING_DAMAGE_REDUCTION (0 in vanilla, "deprecated") is not modelled.
         }
 
-        if (weapon == WeaponType.DepthCharge)
-        {
-            damage *= navy.DEPTH_CHARGES_DAMAGE_MULT;
-        }
-
-        var randomFactor = RandomFactor(rules.DamageRandomness, navy.COMBAT_DAMAGE_RANDOMNESS, random);
-        damage *= randomFactor;
-
-        return new ShotDamage(Math.Max(0, damage), tier, piercingDamageFactor, critical.IsCritical, critical.Multiplier, critical.IsPartHit, randomFactor);
+        // naval_critical_score_chance_factor / naval_critical_receive_chance_factor modifiers are not modelled.
+        var baseDamage = Math.Max(0, attack * piercingFactor * DamageMultiplier(shooter, target, shooterPositioning, defines));
+        return new ShotProfile(baseDamage, tier, piercingFactor, criticalChance, criticalMultiplier, torpedoFactor,
+            slot == WeaponSlot.Light && againstSubmarine);
     }
 
-    // S-DMG-PIERCE [DEFINE]: first tier whose threshold the piercing/armor ratio reaches.
+    /// <summary>[RE] max(0, 1 - positioning penalty + shooter naval_damage_factor - target naval_defense_factor).</summary>
+    public static double DamageMultiplier(Ship shooter, Ship target, double shooterPositioning, GameDefines defines)
+    {
+        var multiplier = 1.0 - PositioningRules.DamagePenalty(shooterPositioning, defines) +
+                         ExperienceRules.NavalDamageFactor(shooter, defines) -
+                         ExperienceRules.NavalDefenseFactor(target, defines);
+        return Math.Max(0, multiplier);
+    }
+
+    /// <summary>
+    /// Damage of one hit against the target's current state. RNG order (as in the game): damage randomness, crit roll
+    /// (only when the crit chance and the damage are positive), part-damage roll (only on a crit).
+    /// </summary>
+    public static ShotDamage RollHit(Ship target, ShotProfile profile, GameDefines defines, BattleRules rules, IRandomSource random)
+    {
+        var navy = defines.NNavy;
+        var randomFactor = RandomFactor(rules.DamageRandomness, navy.COMBAT_DAMAGE_RANDOMNESS, random);
+        var damage = Math.Max(0, profile.BaseDamage * randomFactor);
+
+        if (damage <= 0)
+        {
+            return new ShotDamage(0, 0, 0, profile.PiercingTier, profile.PiercingDamageFactor, false, 1, false, randomFactor);
+        }
+
+        var critical = profile.CriticalChance > 0 && random.NextDouble() <= profile.CriticalChance;
+
+        if (profile.TorpedoFactor is { } torpedoFactor)
+        {
+            damage *= torpedoFactor;
+        }
+
+        // S-DMG-APPLY: organization damage scales with the HP the target had already lost before this shot.
+        var strDamage = damage * navy.COMBAT_DAMAGE_TO_STR_FACTOR;
+        var orgDamage = damage * (1.0 - TargetingRules.HpRatio(target)) * navy.COMBAT_DAMAGE_TO_ORG_FACTOR;
+        var partHit = false;
+        var multiplier = 1.0;
+
+        if (critical)
+        {
+            partHit = RollPartDamage(target, defines, random);
+
+            // S-CRIT-PART: a damaged part replaces the critical multiplier with the part's own damage multipliers.
+            // No part data is loaded yet, so the game's "no part candidates" path applies: the regular multiplier.
+            multiplier = profile.CriticalMultiplier;
+            strDamage *= multiplier;
+            orgDamage *= multiplier;
+        }
+
+        return new ShotDamage(damage, strDamage, orgDamage, profile.PiercingTier, profile.PiercingDamageFactor, critical,
+            multiplier, partHit, randomFactor);
+    }
+
+    // S-DMG-PIERCE [RE] 0x196fd60: first tier whose threshold piercing/armor reaches; armor 0 counts as ratio 100.
     public static int PiercingTier(double piercing, double armor, GameDefines defines)
     {
         var thresholds = defines.NNavy.NAVY_PIERCING_THRESHOLDS;
-        var ratio = armor <= 0 ? double.PositiveInfinity : piercing / armor;
+        var ratio = armor == 0 ? 100.0 : piercing / armor;
 
         for (var i = 0; i < thresholds.Length; i++)
         {
@@ -64,76 +121,56 @@ public static class DamageRules
             }
         }
 
-        return thresholds.Length - 1;
+        return -1;
     }
 
-    // S-DMG-RANDOM: see DamageRandomnessModel.
+    // [RE] When no threshold matches (only possible with modded tables) the game returns table[0] + 1.
+    public static double TierValue(double[] table, int tier)
+    {
+        return tier >= 0 ? table[tier] : table[0] + 1.0;
+    }
+
+    // S-DMG-RANDOM [RE]: 1 + R * (U - 0.05).
     public static double RandomFactor(DamageRandomnessModel model, double randomness, IRandomSource random)
     {
-        return model switch
-        {
-            DamageRandomnessModel.WikiDecoded => 1.0 + randomness * (random.NextDouble() - 0.05),
-            DamageRandomnessModel.DefineComment => 1.0 - randomness * random.NextDouble(),
-            _ => 1.0
-        };
+        return model == DamageRandomnessModel.Game ? 1.0 + randomness * (random.NextDouble() - 0.05) : 1.0;
     }
 
-    // S-CRIT [DEFINE + WIKI]: torpedoes crit at a flat chance and multiplier; guns scale with the piercing tier and
-    // the target's missing reliability. A crit may also damage a part (effects not modelled yet, S-CRIT-PART).
-    private static (bool IsCritical, double Multiplier, bool IsPartHit) RollCritical(
-        WeaponType weapon,
-        Ship target,
-        int piercingTier,
-        GameDefines defines,
-        IRandomSource random)
+    // S-CRIT-PART [RE]: chance CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT / reliability (critical_part_damage_chance_mult = 1);
+    // no roll when that is >= 1 or reliability is 0.
+    private static bool RollPartDamage(Ship target, GameDefines defines, IRandomSource random)
     {
-        var navy = defines.NNavy;
-        var targetStats = target.GetFinalStats();
-        var reliability = Math.Clamp(targetStats.Reliability, 0, 1);
-        double chance;
-        double multiplier;
-
-        if (weapon == WeaponType.Torpedo)
+        if (target.Role == ShipRole.Convoy)
         {
-            chance = navy.COMBAT_TORPEDO_CRITICAL_CHANCE * (1.0 + targetStats.TorpedoEnemyCriticalChanceFactor);
-            multiplier = navy.COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT;
-        }
-        else
-        {
-            var tierFactor = weapon == WeaponType.DepthCharge ? 1.0 : navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES[piercingTier];
-            chance = navy.COMBAT_BASE_CRITICAL_CHANCE * tierFactor * (1.0 - reliability);
-            multiplier = 1.0 + (navy.COMBAT_CRITICAL_DAMAGE_MULT - 1.0) * (1.0 - reliability);
+            return false;
         }
 
-        if (random.NextDouble() >= Math.Clamp(chance, 0, 1))
+        var reliability = Math.Min(target.GetFinalStats().Reliability, 1);
+        var chance = defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT;
+
+        if (reliability <= 0)
         {
-            return (false, 1.0, false);
+            return true;
         }
 
-        var partChance = navy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT / Math.Max(reliability, 0.01);
-        var isPartHit = random.NextDouble() < Math.Clamp(partChance, 0, 1);
-        return (true, multiplier, isPartHit);
+        chance /= reliability;
+        return chance >= 1 || random.NextDouble() < chance;
     }
 
     /// <summary>
-    /// S-DMG-APPLY [DEFINE + WIKI]: HP takes damage * COMBAT_DAMAGE_TO_STR_FACTOR. Organization takes
-    /// damage * COMBAT_DAMAGE_TO_ORG_FACTOR scaled by the share of HP the ship had already lost before the hit
-    /// (wiki example: a 100 HP / 50 org ship hit for 50 four times loses 30 HP each time and 0, 15, 30, 45 org).
+    /// [RE] 0xc3e0e0: experience and manpower losses first (from the unclamped HP damage), then HP and organization are
+    /// reduced and clamped at 0.
     /// </summary>
-    public static AppliedDamage Apply(Ship target, double damage, double strFactor, double orgFactor, GameDefines defines)
+    public static AppliedDamage Apply(Ship target, double strDamage, double orgDamage, GameDefines defines)
     {
-        var maxHp = target.GetFinalStats().Hp;
         var hpBefore = target.CurrentHP;
         var orgBefore = target.CurrentOrganization;
+        var manpowerLost = ExperienceRules.ApplyDamageLosses(target, strDamage, defines);
 
-        target.CurrentHP = Math.Max(0, hpBefore - damage * strFactor);
-        var hpDamage = hpBefore - target.CurrentHP;
+        target.CurrentHP = Math.Clamp(hpBefore - strDamage, 0, target.GetFinalStats().Hp);
+        target.CurrentOrganization = Math.Clamp(orgBefore - orgDamage, 0, target.GetFinalStats().Organization);
 
-        var missingHpBefore = maxHp <= 0 ? 0 : Math.Clamp(1.0 - hpBefore / maxHp, 0, 1);
-        target.CurrentOrganization = Math.Max(0, orgBefore - damage * orgFactor * missingHpBefore);
-        var orgDamage = orgBefore - target.CurrentOrganization;
-
-        var manpowerLost = ExperienceRules.ApplyManpowerLoss(target, hpDamage, maxHp, defines);
-        return new AppliedDamage(hpDamage, orgDamage, manpowerLost, target.IsSunk && hpBefore > 0);
+        return new AppliedDamage(hpBefore - target.CurrentHP, orgBefore - target.CurrentOrganization, manpowerLost,
+            target.IsSunk && hpBefore > 0);
     }
 }

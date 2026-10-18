@@ -108,7 +108,7 @@ static void PrintSide(string label, BattleParticipant participant)
         .GroupBy(ship => ship.Role)
         .OrderBy(group => group.Key)
         .Select(group => $"{group.Key} {group.Count()}");
-    Console.WriteLine($"{label}: fleet {participant.Fleet.ID} ({string.Join(", ", roles)}), retreat priority {participant.RetreatPriority}");
+    Console.WriteLine($"{label}: fleet {participant.Fleet.ID} ({string.Join(", ", roles)}), engagement level {participant.EngagementLevel}");
 }
 
 static string Sanitize(string value)

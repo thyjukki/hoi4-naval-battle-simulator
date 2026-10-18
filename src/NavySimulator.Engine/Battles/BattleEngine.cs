@@ -6,16 +6,18 @@ using NavySimulator.Engine.Results;
 namespace NavySimulator.Engine.Battles;
 
 /// <summary>
-/// Runs a battle hour by hour. Per hour (S-HOUR in docs/mechanics/surface.md):
-/// 1. rebuild battle lines, positioning and screening for both sides;
-/// 2. air phase (not implemented yet, milestone 2);
-/// 3. surface phase: every ship fires each ready weapon, in the order set by <see cref="BattleRules.FiringOrder"/>;
-/// 4. retreat phase: retreating ships move away, damaged ships may decide to retreat;
-/// 5. experience gain, optional daily manpower recovery, end-of-battle check.
+/// Runs a battle hour by hour, in the order hoi4.exe 1.19.3 uses (S-HOUR, S-ORDER in docs/mechanics/surface.md):
+/// 1. positioning and screening for both sides;
+/// 2. the attacker's turn, then the defender's turn. In a turn every ship, in fleet order, steps its submarine reveal
+///    timer, advances its state (waiting, fighting, retreating), decides whether to retreat, and fires its weapon slots
+///    (heavy, torpedo, light) at one target per slot. Damage applies immediately, so ships sunk by the attacker do not
+///    fire in the defender's turn. Air strikes would follow each side's surface fire (milestone 2);
+/// 3. experience gain, then the end-of-battle check.
+/// "Tick" is the game's combat hour counter, which is 1 in battle hour 0.
 /// </summary>
 public sealed class BattleEngine
 {
-    private static readonly WeaponType[] WeaponOrder = [WeaponType.Light, WeaponType.Heavy, WeaponType.Torpedo, WeaponType.DepthCharge];
+    private static readonly WeaponSlot[] SlotOrder = [WeaponSlot.Heavy, WeaponSlot.Torpedo, WeaponSlot.Light];
 
     public BattleResult Simulate(BattleScenario scenario, int seed)
     {
@@ -36,6 +38,7 @@ public sealed class BattleEngine
         private readonly IRandomSource random;
         private readonly BattleSide attacker;
         private readonly BattleSide defender;
+        private readonly List<Ship> allShips;
         private readonly Dictionary<Ship, BattleSide> sideByShip = [];
         private readonly Dictionary<Ship, ShipTally> tallies = [];
         private readonly List<ShotRecord> shots = [];
@@ -59,6 +62,7 @@ public sealed class BattleEngine
 
             attacker = new BattleSide("attacker", scenario.Attacker);
             defender = new BattleSide("defender", scenario.Defender);
+            allShips = attacker.Ships.Concat(defender.Ships).ToList();
 
             foreach (var side in new[] { attacker, defender })
             {
@@ -80,20 +84,12 @@ public sealed class BattleEngine
 
             for (; hour < rules.MaxHours; hour++)
             {
-                BeginHour(hour);
+                var tick = hour + 1;
                 var hourStartShots = shots.Count;
-                ResolveSurfacePhase(hour);
-                ResolveRetreatPhase(hour);
-                ApplyExperienceGain(hour, hourStartShots);
-
-                if (rules.DailyManpowerRecoveryInBattle && hour > 0 && hour % 24 == 0)
-                {
-                    foreach (var ship in sideByShip.Keys)
-                    {
-                        ExperienceRules.ApplyDailyManpowerRecovery(ship, defines);
-                    }
-                }
-
+                BeginHour();
+                SideTurn(attacker, defender, hour, tick);
+                SideTurn(defender, attacker, hour, tick);
+                ApplyExperienceGain();
                 LogHour(hour, hourStartShots);
 
                 if (IsBattleOver(hour))
@@ -106,7 +102,8 @@ public sealed class BattleEngine
             return BuildResult(seed, hour);
         }
 
-        private void BeginHour(int hour)
+        // [RE] Positioning, screening and detection for both sides from the same pre-fire state.
+        private void BeginHour()
         {
             attacker.Lines = new BattleLines(attacker.Ships);
             defender.Lines = new BattleLines(defender.Ships);
@@ -114,206 +111,212 @@ public sealed class BattleEngine
             defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines);
             attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines);
             defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines);
+            attacker.SubmarineDetection = SubmarineRules.Detection(attacker.Ships, defines);
+            defender.SubmarineDetection = SubmarineRules.Detection(defender.Ships, defines);
+
+            foreach (var tally in tallies.Values)
+            {
+                tally.FiredThisHour = false;
+            }
         }
 
-        private void ResolveSurfacePhase(int hour)
+        private void SideTurn(BattleSide own, BattleSide enemy, int hour, int tick)
         {
-            var shooters = BuildFiringOrder();
-            var simultaneous = rules.FiringOrder == FiringOrder.Simultaneous;
-            var pending = new List<(Ship Shooter, Ship Target, double Damage, int ShotIndex)>();
-            var isNight = IsNight(hour);
-            var battleHasCarriers = attacker.Lines.Carriers.Count > 0 || defender.Lines.Carriers.Count > 0;
-            var battleHasCapitals = attacker.Lines.Capitals.Count > 0 || defender.Lines.Capitals.Count > 0;
+            // [RE] Reach decisions use the enemy's visible line counts taken at the start of this side's turn.
+            own.EnemyCounts = EnemyLineCounts.Of(enemy.Ships);
+            var darkness = Darkness(hour);
 
-            bool IsActivelyFighting(Ship ship)
+            foreach (var ship in own.Ships)
             {
-                return hour >= WeaponCadenceRules.ActivationHour(ship.Role, battleHasCarriers, battleHasCapitals, defines, rules);
-            }
-
-            foreach (var shooter in shooters)
-            {
-                if (!shooter.IsInBattle)
+                if (!ship.IsInBattle)
                 {
                     continue;
                 }
 
-                var ownSide = sideByShip[shooter];
-                var enemySide = ReferenceEquals(ownSide, attacker) ? defender : attacker;
-                var activationHour = WeaponCadenceRules.ActivationHour(shooter.Role, battleHasCarriers, battleHasCapitals, defines, rules);
-                var stats = shooter.GetFinalStats();
-
-                foreach (var weapon in WeaponOrder)
+                if (ship.Role == ShipRole.Submarine)
                 {
-                    var (attack, piercing) = weapon switch
-                    {
-                        WeaponType.Light => (stats.LightAttack, stats.LightPiercing),
-                        WeaponType.Heavy => (stats.HeavyAttack, stats.HeavyPiercing),
-                        WeaponType.Torpedo => (stats.TorpedoAttack, 0.0),
-                        _ => (stats.DepthChargeAttack, 0.0)
-                    };
+                    SubmarineRules.HourlyReveal(ship, enemy.SubmarineDetection, own.Positioning, defines, random);
+                }
 
-                    // S-TARGET-SUB: submarines only use torpedoes.
-                    if (attack <= 0 || (shooter.Role == ShipRole.Submarine && weapon != WeaponType.Torpedo))
-                    {
-                        continue;
-                    }
+                switch (ship.CurrentStatus)
+                {
+                    case ShipStatus.Waiting:
+                        if (WeaponCadenceRules.IsActivated(ship, tick, allShips, defines))
+                        {
+                            // [RE] Convoys start escaping as soon as their line activates.
+                            ship.CurrentStatus = ship.Role == ShipRole.Convoy ? ShipStatus.Retreating : ShipStatus.Active;
+                        }
+                        else
+                        {
+                            CountSkip(SkipReasons.LineNotActive);
+                        }
 
-                    // Depth charges are only used when submarines are present.
-                    if (weapon == WeaponType.DepthCharge && !TargetingRules.ShipsInGroup(enemySide, GroupType.Submarine).Any())
-                    {
-                        continue;
-                    }
+                        break;
+                    case ShipStatus.Active:
+                        ship.RetreatProgress = 0;
 
-                    var skipReason = WeaponCadenceRules.TryFire(shooter, weapon, hour, activationHour, defines, rules);
+                        if (rules.RetreatEnabled &&
+                            RetreatRules.TryStartRetreat(ship, tick, own.Participant.EngagementLevel, defines, random))
+                        {
+                            log.Add($"Hour {hour}: {own.Label} {ship.ID} is retreating (HP {ship.CurrentHP:F1}/{ship.GetFinalStats().Hp:F1})");
+                            break;
+                        }
 
-                    if (skipReason is not null)
-                    {
-                        CountSkip(skipReason);
-                        continue;
-                    }
+                        FireSlots(ship, own, enemy, hour);
+                        break;
+                    case ShipStatus.Retreating:
+                        FireSlots(ship, own, enemy, hour);
 
-                    var groups = TargetingRules.ReachableGroups(shooter, weapon, enemySide, ownSide.Participant.SubmarineEngagementRisk, random);
-                    var target = TargetingRules.SelectTarget(shooter, weapon, groups, enemySide, IsActivelyFighting, defines, random);
+                        if (RetreatRules.AdvanceRetreat(ship, tick, own.Screening, darkness, defines))
+                        {
+                            tallies[ship].RetreatedHour = hour;
+                            log.Add($"Hour {hour}: {own.Label} {ship.ID} escaped the battle");
+                        }
 
-                    if (target is null)
-                    {
-                        CountSkip(SkipReasons.NoTarget);
-                        continue;
-                    }
-
-                    var hitChance = HitChanceRules.Calculate(shooter, target, weapon, ownSide.Screening, isNight, defines, rules);
-                    var hit = random.NextDouble() < hitChance.Final;
-                    var damage = hit
-                        ? DamageRules.Calculate(shooter, target, weapon, attack, piercing, ownSide.Positioning, defines, rules, random)
-                        : default;
-
-                    var tally = tallies[shooter];
-                    tally.ShotsFired++;
-
-                    var record = new ShotRecord(
-                        hour,
-                        ownSide.Label,
-                        shooter.ID,
-                        weapon,
-                        target.ID,
-                        BattleLines.GetGroup(target.Role),
-                        hitChance.Final,
-                        hitChance.ProfileFactor,
-                        hitChance.Modifier,
-                        hit,
-                        damage.Damage,
-                        damage.PiercingTier,
-                        damage.IsCritical,
-                        damage.IsPartHit,
-                        0,
-                        0,
-                        false);
-                    shots.Add(record);
-
-                    if (!hit)
-                    {
-                        continue;
-                    }
-
-                    tally.Hits++;
-                    tally.DamageDealt += damage.Damage;
-
-                    if (simultaneous)
-                    {
-                        pending.Add((shooter, target, damage.Damage, shots.Count - 1));
-                    }
-                    else
-                    {
-                        ApplyShotDamage(shooter, target, damage.Damage, shots.Count - 1, hour);
-                    }
+                        break;
                 }
             }
 
-            foreach (var (shooter, target, damage, shotIndex) in pending)
+            DisengageFromHiddenSubmarines(own, enemy, hour);
+        }
+
+        private void FireSlots(Ship shooter, BattleSide own, BattleSide enemy, int hour)
+        {
+            var stats = shooter.GetFinalStats();
+
+            foreach (var slot in SlotOrder)
             {
-                ApplyShotDamage(shooter, target, damage, shotIndex, hour);
+                var hasAttack = slot switch
+                {
+                    WeaponSlot.Heavy => stats.HeavyAttack > 0,
+                    WeaponSlot.Torpedo => stats.TorpedoAttack > 0,
+                    _ => stats.LightAttack > 0 || stats.DepthChargeAttack > 0
+                };
+
+                if (!hasAttack)
+                {
+                    continue;
+                }
+
+                if (!WeaponCadenceRules.Charge(shooter, slot, defines))
+                {
+                    CountSkip(SkipReasons.Cooldown);
+                    continue;
+                }
+
+                var target = TargetingRules.SelectTarget(shooter, slot, own, enemy, defines, random);
+
+                if (target is null)
+                {
+                    CountSkip(SkipReasons.NoTarget);
+                    continue;
+                }
+
+                FireAt(shooter, target, slot, own, hour);
+
+                if (slot == WeaponSlot.Torpedo && shooter.Role == ShipRole.Submarine)
+                {
+                    SubmarineRules.RevealAfterFiring(shooter, enemy.SubmarineDetection, own.Positioning, defines, random);
+                }
             }
         }
 
-        private void ApplyShotDamage(Ship shooter, Ship target, double damage, int shotIndex, int hour)
+        // [RE] 0x19740c0: one profile per slot and target; shoot while the slot has charge, stop when the target sinks.
+        private void FireAt(Ship shooter, Ship target, WeaponSlot slot, BattleSide own, int hour)
         {
-            if (target.IsSunk)
+            var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines);
+            var hitChance = HitChanceRules.Calculate(shooter, target, slot, own.Screening, Darkness(hour), defines);
+            var weapon = profile.IsDepthCharge ? WeaponType.DepthCharge : slot switch
+            {
+                WeaponSlot.Heavy => WeaponType.Heavy,
+                WeaponSlot.Torpedo => WeaponType.Torpedo,
+                _ => WeaponType.Light
+            };
+            var tally = tallies[shooter];
+
+            while (WeaponCadenceRules.TrySpendShot(shooter, slot, defines))
+            {
+                var hit = random.NextDouble() < hitChance.Final;
+                var damage = hit ? DamageRules.RollHit(target, profile, defines, rules, random) : default;
+                var applied = damage.Damage > 0 ? DamageRules.Apply(target, damage.StrDamage, damage.OrgDamage, defines) : default;
+
+                tally.ShotsFired++;
+                tally.FiredThisHour = true;
+                tally.LastTargetWasConvoy = target.Role == ShipRole.Convoy;
+
+                if (hit)
+                {
+                    tally.Hits++;
+                    tally.DamageDealt += damage.Damage;
+                    tally.HpDamageDealt += applied.HpDamage;
+                    tallies[target].HpDamageTaken += applied.HpDamage;
+                }
+
+                if (applied.Sunk)
+                {
+                    tallies[target].SunkHour = hour;
+                }
+
+                shots.Add(new ShotRecord(
+                    hour,
+                    own.Label,
+                    shooter.ID,
+                    weapon,
+                    target.ID,
+                    BattleLines.GetGroup(target.Role),
+                    hitChance.Final,
+                    hitChance.ProfileFactor,
+                    hitChance.Modifier,
+                    hit,
+                    damage.Damage,
+                    damage.PiercingTier,
+                    damage.IsCritical,
+                    damage.IsPartHit,
+                    applied.HpDamage,
+                    applied.OrganizationDamage,
+                    applied.Sunk));
+
+                if (target.IsSunk)
+                {
+                    break;
+                }
+            }
+        }
+
+        // [RE] A side that has nothing it can target (the enemy only has hidden submarines left) starts retreating.
+        private void DisengageFromHiddenSubmarines(BattleSide own, BattleSide enemy, int hour)
+        {
+            var enemyInBattle = enemy.Ships.Where(ship => ship.IsInBattle).ToList();
+
+            if (enemyInBattle.Count == 0 || enemyInBattle.Any(ship => ship.IsVisible))
             {
                 return;
             }
 
-            var navy = defines.NNavy;
-            var applied = DamageRules.Apply(target, damage, navy.COMBAT_DAMAGE_TO_STR_FACTOR, navy.COMBAT_DAMAGE_TO_ORG_FACTOR, defines);
-            shots[shotIndex] = shots[shotIndex] with
+            foreach (var ship in own.Ships.Where(ship => ship.IsInBattle && ship.CurrentStatus != ShipStatus.Retreating))
             {
-                HpDamage = applied.HpDamage,
-                OrganizationDamage = applied.OrganizationDamage,
-                KillingBlow = applied.Sunk
-            };
-
-            tallies[shooter].HpDamageDealt += applied.HpDamage;
-            tallies[target].HpDamageTaken += applied.HpDamage;
-
-            if (applied.Sunk)
-            {
-                tallies[target].SunkHour = hour;
+                ship.CurrentStatus = ShipStatus.Retreating;
+                ship.RetreatProgress = 0;
+                log.Add($"Hour {hour}: {own.Label} {ship.ID} disengages (only hidden submarines left)");
             }
         }
 
-        private List<Ship> BuildFiringOrder()
+        // S-XP [RE]: ships that fired gain experience; group sizes count every ship the side brought.
+        private void ApplyExperienceGain()
         {
-            var attackerShips = attacker.Ships.Where(ship => ship.IsInBattle).OrderBy(ship => ship.ID, StringComparer.Ordinal);
-            var defenderShips = defender.Ships.Where(ship => ship.IsInBattle).OrderBy(ship => ship.ID, StringComparer.Ordinal);
-            var order = attackerShips.Concat(defenderShips).ToList();
-
-            if (rules.FiringOrder == FiringOrder.AttackerFirst)
-            {
-                return order;
-            }
-
-            for (var i = order.Count - 1; i > 0; i--)
-            {
-                var j = random.Next(i + 1);
-                (order[i], order[j]) = (order[j], order[i]);
-            }
-
-            return order;
-        }
-
-        private void ResolveRetreatPhase(int hour)
-        {
-            foreach (var side in new[] { attacker, defender })
-            {
-                foreach (var ship in side.Ships.OrderBy(ship => ship.ID, StringComparer.Ordinal))
-                {
-                    if (RetreatRules.AdvanceRetreat(ship, hour, side.Screening, defines))
-                    {
-                        tallies[ship].RetreatedHour = hour;
-                        log.Add($"Hour {hour}: {side.Label} {ship.ID} escaped the battle");
-                        continue;
-                    }
-
-                    if (rules.RetreatEnabled &&
-                        RetreatRules.TryStartRetreat(ship, hour, side.Participant.RetreatPriority, defines, random))
-                    {
-                        log.Add($"Hour {hour}: {side.Label} {ship.ID} is retreating (HP {ship.CurrentHP:F1}/{ship.GetFinalStats().Hp:F1})");
-                    }
-                }
-            }
-        }
-
-        private void ApplyExperienceGain(int hour, int hourStartShots)
-        {
-            var firedShips = shots.Skip(hourStartShots).Select(shot => (shot.ShooterSide, shot.ShooterId)).ToHashSet();
-
             foreach (var side in new[] { attacker, defender })
             {
                 var enemy = ReferenceEquals(side, attacker) ? defender : attacker;
-                var gain = ExperienceRules.HourlyGain(enemy.Lines.Count, side.Lines.Count, defines);
 
-                foreach (var ship in side.Ships.Where(ship => firedShips.Contains((side.Label, ship.ID))))
+                foreach (var ship in side.Ships)
                 {
-                    ExperienceRules.AddExperience(ship, gain, defines);
+                    var tally = tallies[ship];
+
+                    if (tally.FiredThisHour)
+                    {
+                        var gain = ExperienceRules.HourlyGain(enemy.Ships.Count, side.Ships.Count, tally.LastTargetWasConvoy, defines);
+                        ExperienceRules.AddExperience(ship, gain, defines);
+                    }
                 }
             }
         }
@@ -328,25 +331,17 @@ public sealed class BattleEngine
                 return false;
             }
 
-            if (rules.ContinueAfterRetreat && TryReengage(attackerPresent, defenderPresent, hour))
-            {
-                return false;
-            }
-
-            return true;
+            return !(rules.ContinueAfterRetreat && TryReengage(attackerPresent, hour));
         }
 
-        private bool TryReengage(bool attackerPresent, bool defenderPresent, int hour)
+        private bool TryReengage(bool attackerPresent, int hour)
         {
-            var attackerAfloat = attacker.Ships.Any(ship => !ship.IsSunk);
-            var defenderAfloat = defender.Ships.Any(ship => !ship.IsSunk);
-
-            if (!attackerAfloat || !defenderAfloat)
+            if (!attacker.Ships.Any(ship => !ship.IsSunk) || !defender.Ships.Any(ship => !ship.IsSunk))
             {
                 return false;
             }
 
-            foreach (var ship in sideByShip.Keys.Where(ship => !ship.IsSunk && ship.CurrentStatus == ShipStatus.Retreated))
+            foreach (var ship in allShips.Where(ship => !ship.IsSunk && ship.CurrentStatus == ShipStatus.Retreated))
             {
                 ship.CurrentStatus = ShipStatus.Active;
                 ship.RetreatProgress = 0;
@@ -358,13 +353,20 @@ public sealed class BattleEngine
             return true;
         }
 
-        private bool IsNight(int hour)
+        // S-NIGHT [ASSUMED darkness model]: 1 during night hours, 0 otherwise.
+        private double Darkness(int hour)
         {
+            if (!rules.NightEnabled)
+            {
+                return 0;
+            }
+
             var hardcoded = defines.Hardcoded;
             var timeOfDay = (rules.StartHourOfDay + hour) % 24;
-            return hardcoded.NightStartHour > hardcoded.NightEndHour
+            var night = hardcoded.NightStartHour > hardcoded.NightEndHour
                 ? timeOfDay >= hardcoded.NightStartHour || timeOfDay < hardcoded.NightEndHour
                 : timeOfDay >= hardcoded.NightStartHour && timeOfDay < hardcoded.NightEndHour;
+            return night ? 1 : 0;
         }
 
         private void CountSkip(string reason)
@@ -377,7 +379,7 @@ public sealed class BattleEngine
             var hourShots = shots.Skip(hourStartShots).ToList();
             var timeOfDay = (rules.StartHourOfDay + hour) % 24;
             log.Add(
-                $"Hour {hour} ({timeOfDay:D2}:00{(IsNight(hour) ? ", night" : string.Empty)}): " +
+                $"Hour {hour} ({timeOfDay:D2}:00{(Darkness(hour) > 0 ? ", night" : string.Empty)}): " +
                 $"{DescribeSide(attacker)} | {DescribeSide(defender)} | " +
                 $"shots {hourShots.Count}, hits {hourShots.Count(shot => shot.Hit)}, " +
                 $"HP dmg attacker->defender {hourShots.Where(shot => shot.ShooterSide == attacker.Label).Sum(shot => shot.HpDamage):F1}, " +
@@ -408,9 +410,9 @@ public sealed class BattleEngine
                 notes.Add($"Weather '{scenario.Weather}' has no effect yet.");
             }
 
-            if (sideByShip.Keys.Any(ship => ship.Role == ShipRole.Submarine))
+            if (!string.IsNullOrWhiteSpace(scenario.Attacker.Commander) || !string.IsNullOrWhiteSpace(scenario.Defender.Commander))
             {
-                notes.Add("Submarines are always targetable by depth charges; hide/reveal is not modelled yet.");
+                notes.Add("Admirals are not simulated yet.");
             }
         }
 
@@ -501,5 +503,7 @@ public sealed class BattleEngine
         public double HpDamageTaken;
         public int? SunkHour;
         public int? RetreatedHour;
+        public bool FiredThisHour;
+        public bool LastTargetWasConvoy;
     }
 }

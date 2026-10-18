@@ -1,4 +1,3 @@
-using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine;
@@ -34,11 +33,15 @@ public class Ship
     public double RetreatProgress { get; set; }
     public bool AttemptedRetreat { get; set; }
 
-    /// <summary>Battle hour at which each weapon may fire next. Missing entry means the weapon has not been readied yet.</summary>
-    public Dictionary<WeaponType, double> NextFireHour { get; } = [];
+    /// <summary>Per weapon slot (<c>WeaponSlot</c> index) charge in cooldowns; a slot fires while charge >= cooldown.</summary>
+    public double[] SlotCharge { get; } = new double[3];
+
+    /// <summary>S-SUB: hours a submarine stays revealed; 0 = hidden. Always -1 for surface ships.</summary>
+    public int RevealTimer { get; set; }
 
     public bool IsSunk => CurrentHP <= 0;
     public bool IsInBattle => !IsSunk && CurrentStatus != ShipStatus.Retreated;
+    public bool IsVisible => RevealTimer != 0;
 
     /// <summary>Stats from hull, modules, MIO, researches and spirits. Experience and battle modifiers are applied by the combat rules.</summary>
     public ShipStats GetFinalStats()
@@ -63,9 +66,10 @@ public class Ship
         CurrentOrganization = stats.Organization;
         CurrentManpower = MaxManpower;
         Experience = InitialExperience;
-        CurrentStatus = ShipStatus.Active;
+        CurrentStatus = ShipStatus.Waiting;
         RetreatProgress = 0;
         AttemptedRetreat = false;
-        NextFireHour.Clear();
+        Array.Clear(SlotCharge);
+        RevealTimer = Role == ShipRole.Submarine ? 0 : -1;
     }
 }

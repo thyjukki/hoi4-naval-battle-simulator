@@ -8,23 +8,31 @@ namespace NavySimulator.Engine.Tests.Mechanics;
 public class HitChanceRulesTests
 {
     private readonly GameDefines defines = GameDefines.Vanilla();
+    private static readonly ScreeningSummary FullScreening = new(1, 1);
+
+    private static Ship LightCruiser1936()
+    {
+        return TestEntityFactory.CreateShip("cl", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 15, Speed = 32 });
+    }
 
     [Fact]
     public void ShipHitProfile_MatchesWikiLightCruiserExample()
     {
-        // Wiki: a 1936 light cruiser with 15 surface visibility and 32 kn has a hit profile of ca. 41.7.
-        var cruiser = TestEntityFactory.CreateShip("cl", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 15, Speed = 32 });
-
-        Assert.Equal(41.667, HitChanceRules.ShipHitProfile(cruiser, defines), 3);
+        Assert.Equal(41.667, HitChanceRules.ShipHitProfile(LightCruiser1936(), defines), 3);
     }
 
     [Fact]
-    public void Calculate_AppliesProfileRatioSquared_ForLightGuns()
+    public void ShipHitProfile_FloorsTheSpeedTerm()
     {
-        var shooter = TestEntityFactory.Screen("shooter");
-        var target = TestEntityFactory.CreateShip("cl", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 15, Speed = 32 });
+        var stopped = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 15, Speed = 0 });
 
-        var result = HitChanceRules.Calculate(shooter, target, WeaponType.Light, new ScreeningSummary(1, 1), false, defines, new BattleRules());
+        Assert.Equal(1500 / 20.1, HitChanceRules.ShipHitProfile(stopped, defines), 6);
+    }
+
+    [Fact]
+    public void Calculate_SquaresTheProfileRatio()
+    {
+        var result = HitChanceRules.Calculate(TestEntityFactory.Screen("dd"), LightCruiser1936(), WeaponSlot.Light, FullScreening, 0, defines);
 
         Assert.Equal(45, result.WeaponHitProfile);
         Assert.Equal(Math.Pow(41.6667 / 45, 2), result.ProfileFactor, 3);
@@ -32,37 +40,54 @@ public class HitChanceRulesTests
     }
 
     [Fact]
-    public void Calculate_NeverGoesBelowMinimumHitChance()
+    public void Calculate_AppliesTheMinimumLast()
     {
-        var shooter = TestEntityFactory.Screen("shooter");
-        var target = TestEntityFactory.CreateShip("tiny", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 0.5 });
+        var tiny = TestEntityFactory.CreateShip("tiny", ShipRole.Screen, TestEntityFactory.ScreenStats() with { SurfaceVisibility = 0.5 });
 
-        var result = HitChanceRules.Calculate(shooter, target, WeaponType.Heavy, new ScreeningSummary(1, 1), false, defines, new BattleRules());
+        var result = HitChanceRules.Calculate(TestEntityFactory.Capital("bb"), tiny, WeaponSlot.Heavy, FullScreening, 0, defines);
 
-        Assert.Equal(defines.NNavy.COMBAT_MIN_HIT_CHANCE, result.Final);
+        Assert.Equal(0.005, result.Final, 9);
     }
 
     [Fact]
-    public void Modifier_GivesScreeningBonusOnlyOnce_ToBattleLine()
+    public void Calculate_HasNoUpperCap()
+    {
+        var sharpshooter = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { LightHitChanceFactor = 20 });
+
+        var result = HitChanceRules.Calculate(sharpshooter, LightCruiser1936(), WeaponSlot.Light, FullScreening, 0, defines);
+
+        Assert.True(result.Final > 1);
+    }
+
+    [Fact]
+    public void ModifierSum_AddsScreeningAndNightInsteadOfMultiplying()
     {
         var capital = TestEntityFactory.Capital("bb");
-        var screen = TestEntityFactory.Screen("dd");
-        var fullScreening = new ScreeningSummary(1, 1);
 
-        Assert.Equal(1.4, HitChanceRules.Modifier(capital, WeaponType.Heavy, fullScreening, false, defines), 6);
-        Assert.Equal(1.4, HitChanceRules.Modifier(capital, WeaponType.Light, fullScreening, false, defines), 6);
-        Assert.Equal(1.0, HitChanceRules.Modifier(screen, WeaponType.Light, fullScreening, false, defines), 6);
+        Assert.Equal(1.4, HitChanceRules.ModifierSum(capital, WeaponSlot.Heavy, FullScreening, 0, defines), 9);
+        Assert.Equal(1.15, HitChanceRules.ModifierSum(capital, WeaponSlot.Heavy, FullScreening, 1, defines), 9);
+        Assert.Equal(1.0, HitChanceRules.ModifierSum(TestEntityFactory.Screen("dd"), WeaponSlot.Light, FullScreening, 0, defines), 9);
     }
 
     [Fact]
-    public void Modifier_PenalizesMissingOrganizationAndManpower()
+    public void CrewFactor_AddsOrganizationAndManpowerPenalties()
     {
         var ship = TestEntityFactory.Screen("dd");
         ship.CurrentOrganization = 0;
         ship.CurrentManpower = ship.MaxManpower / 2;
 
-        var modifier = HitChanceRules.Modifier(ship, WeaponType.Light, new ScreeningSummary(0, 0), false, defines);
+        Assert.Equal(1 - 0.5 - 0.25 * 0.5, HitChanceRules.CrewFactor(ship, defines), 9);
+    }
 
-        Assert.Equal((1 - 0.5) * (1 - 0.25 * 0.5), modifier, 6);
+    [Fact]
+    public void Calculate_DepthChargesUseTheirOwnProfileAndMultiplier()
+    {
+        var submarine = TestEntityFactory.Submarine("ss");
+
+        var result = HitChanceRules.Calculate(TestEntityFactory.Screen("dd"), submarine, WeaponSlot.Light, FullScreening, 0, defines);
+
+        Assert.Equal(100, result.WeaponHitProfile);
+        Assert.Equal(0.1 * 1.1, result.BaseChance, 9);
+        Assert.Equal(1000 / 27.5, result.ShipHitProfile, 6);
     }
 }
