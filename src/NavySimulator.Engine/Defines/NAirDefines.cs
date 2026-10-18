@@ -2,7 +2,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// Combat-relevant <c>NDefines.NAir</c> values. Property names match the game keys exactly so they can be bound
-/// from <c>common/defines/*.lua</c>. Defaults are vanilla 1.17 (see docs/mechanics/defines.md for provenance).
+/// from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.3 (see docs/mechanics/defines.md for provenance).
 /// </summary>
 public sealed class NAirDefines
 {
@@ -28,7 +28,7 @@ public sealed class NAirDefines
     public double NAVAL_STRIKE_DAMAGE_TO_ORG { get; set; } = 1.5;
 
     /// <summary>damage bonus when planes are in naval combat where their carrier is present (and can thus sortie faster and more effectively)</summary>
-    public double NAVAL_STRIKE_CARRIER_MULTIPLIER { get; set; } = 10.0;
+    public double NAVAL_STRIKE_CARRIER_MULTIPLIER { get; set; } = 12.0;
 
     /// <summary>conversion factor to bring agility in line with ship AA</summary>
     public double AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY { get; set; } = 0.02;
@@ -55,7 +55,7 @@ public sealed class NAirDefines
     public double ANTI_AIR_PLANE_DAMAGE_CHANCE { get; set; } = 0.1;
 
     /// <summary>Balancing value to convert equipment stat anti_air_attack to the damage reduction modifier apply to incoming air attacks against units with AA.</summary>
-    public double ANTI_AIR_ATTACK_TO_DAMAGE_REDUCTION_FACTOR { get; set; } = 1.0;
+    public double ANTI_AIR_ATTACK_TO_DAMAGE_REDUCTION_FACTOR { get; set; } = 2.5;
 
     /// <summary>Maximum damage reduction factor applied to incoming air attacks against units with AA.</summary>
     public double ANTI_AIR_MAXIMUM_DAMAGE_REDUCTION_FACTOR { get; set; } = 0.75;
@@ -121,7 +121,7 @@ public sealed class NAirDefines
     /// <summary>below this amount of planes on a carrier we no longer get max benefit on enemy positioning</summary>
     public double CARRIER_PLANES_AMOUNT_FOR_POSITIONING { get; set; } = 50.0;
 
-    public double CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER { get; set; } = 0.35;
+    public double CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER { get; set; } = 0.5;
 
     /// <summary>Percentage of planes able to defend a carrier from air attacks (historically 15% - 35%)</summary>
     public double CARRIER_PERCENTAGE_DEFEND { get; set; } = 0.35;

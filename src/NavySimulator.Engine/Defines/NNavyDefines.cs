@@ -2,7 +2,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// Combat-relevant <c>NDefines.NNavy</c> values. Property names match the game keys exactly so they can be bound
-/// from <c>common/defines/*.lua</c>. Defaults are vanilla 1.17 (see docs/mechanics/defines.md for provenance).
+/// from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.3 (see docs/mechanics/defines.md for provenance).
 /// </summary>
 public sealed class NNavyDefines
 {
@@ -10,7 +10,7 @@ public sealed class NNavyDefines
     public double COMBAT_BASE_HIT_CHANCE { get; set; } = 0.1;
 
     /// <summary>never less hit chance then this?</summary>
-    public double COMBAT_MIN_HIT_CHANCE { get; set; } = 0.05;
+    public double COMBAT_MIN_HIT_CHANCE { get; set; } = 0.005;
 
     /// <summary>we take ship evasion stats, and mult by this value, so it gives hit chance reduction. So if reduction is 0.025 and ship evasion = 10, then there will be 0.25 (25%) lower hit chance. (Fe. 50% base -25% from evasion +10% bcoz it's very close).</summary>
     public double COMBAT_EVASION_TO_HIT_CHANCE { get; set; } = 0.007;
@@ -54,7 +54,7 @@ public sealed class NNavyDefines
     public double COMBAT_INITIAL_DURATION { get; set; } = 6.0;
 
     /// <summary>There is also random factor in deciding if we should retreat or not. That causes a delay in taking decision, that sooner or later will be picked. It's needed so damaged fast ships won't troll the combat.</summary>
-    public double COMBAT_RETREAT_DECISION_CHANCE { get; set; } = 0.22;
+    public double COMBAT_RETREAT_DECISION_CHANCE { get; set; } = 0.2;
 
     /// <summary>Base chance for receiving a critical chance. It get's scaled down with ship reliability.</summary>
     public double COMBAT_BASE_CRITICAL_CHANCE { get; set; } = 0.05;
@@ -95,12 +95,6 @@ public sealed class NNavyDefines
     /// <summary>factor of planes that can sortie by default from a carrier</summary>
     public double BASE_CARRIER_SORTIE_EFFICIENCY { get; set; } = 0.5;
 
-    /// <summary>The most efficient is 4 carriers in combat. 5+ brings the penalty to the amount of wings in battle. Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double CARRIER_STACK_PENALTY { get; set; } = 4.0;
-
-    /// <summary>Each carrier above the optimal amount decreases the amount of airplanes being able to takeoff by such %. Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double CARRIER_STACK_PENALTY_EFFECT { get; set; } = 0.2;
-
     /// <summary>sunk ships will lose this ratio of their current manpower</summary>
     public double MANPOWER_LOSS_RATIO_ON_SUNK { get; set; } = 0.5;
 
@@ -123,34 +117,34 @@ public sealed class NNavyDefines
     public double ALL_SHIPS_ACTIVATE_TIME { get; set; } = 8.0;
 
     /// <summary>% of total Strength. When below, navy will go to home base to repair (in combat).</summary>
-    public double REPAIR_AND_RETURN_PRIO_LOW_COMBAT { get; set; } = 0.6;
+    public double REPAIR_AND_RETURN_PRIO_LOW_COMBAT { get; set; } = 0.9;
 
     /// <summary>% of total Strength. When below, navy will go to home base to repair (in combat).</summary>
-    public double REPAIR_AND_RETURN_PRIO_MEDIUM_COMBAT { get; set; } = 0.3;
+    public double REPAIR_AND_RETURN_PRIO_MEDIUM_COMBAT { get; set; } = 0.6;
 
     /// <summary>% of total Strength. When below, navy will go to home base to repair (in combat).</summary>
-    public double REPAIR_AND_RETURN_PRIO_HIGH_COMBAT { get; set; } = 0.1;
+    public double REPAIR_AND_RETURN_PRIO_HIGH_COMBAT { get; set; } = 0.4;
 
     /// <summary>Str below this point is considering a single ship "dying", and a high priority to send to repair.</summary>
     public double REPAIR_AND_RETURN_UNIT_DYING_STR { get; set; } = 0.2;
 
     /// <summary>daily base escape speed (gained as percentagE)</summary>
-    public double BASE_ESCAPE_SPEED { get; set; } = 0.045;
+    public double BASE_ESCAPE_SPEED { get; set; } = 0.05;
 
     /// <summary>ratio to converstion from ship speed to escape speed (divided by hundred)</summary>
-    public double SPEED_TO_ESCAPE_SPEED { get; set; } = 0.95;
+    public double SPEED_TO_ESCAPE_SPEED { get; set; } = 0.5;
 
     /// <summary>daily increase in escape speed during combat duration</summary>
-    public double ESCAPE_SPEED_PER_COMBAT_DAY { get; set; } = 0.01;
+    public double ESCAPE_SPEED_PER_COMBAT_DAY { get; set; } = 0.015;
 
     /// <summary>max escape speed that will be gained from combat duration</summary>
-    public double MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION { get; set; } = 0.15;
+    public double MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION { get; set; } = 0.5;
 
     /// <summary>subs get faster escape speed. gets replaced by hidden version below if hidden</summary>
-    public double ESCAPE_SPEED_SUB_BASE { get; set; } = 0.08;
+    public double ESCAPE_SPEED_SUB_BASE { get; set; } = 0.1;
 
     /// <summary>hidden subs get faster escape speed</summary>
-    public double ESCAPE_SPEED_HIDDEN_SUB { get; set; } = 0.18;
+    public double ESCAPE_SPEED_HIDDEN_SUB { get; set; } = 0.35;
 
     /// <summary>minimum cooldown for a gun</summary>
     public double MIN_GUN_COOLDOWN { get; set; } = 0.1;
@@ -204,7 +198,7 @@ public sealed class NNavyDefines
     public double AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING { get; set; } = 0.7;
 
     /// <summary>submarine reveal change on 0% positioning</summary>
-    public double SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING { get; set; } = 2.0;
+    public double SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING { get; set; } = 1.0;
 
     /// <summary>total sum of fleet's anti air will be multiplied with this ratio and added to calculations anti-air of individual ships while air damage reduction</summary>
     public double SHIP_TO_FLEET_ANTI_AIR_RATIO { get; set; } = 0.25;
@@ -236,7 +230,7 @@ public sealed class NNavyDefines
     public double CAPITAL_RATIO_FOR_FULL_SCREENING_FOR_CONVOYS { get; set; } = 0.25;
 
     /// <summary>hit profiles for guns, if target ih profile is lower the gun will have lower accuracy</summary>
-    public double[] GUN_HIT_PROFILES { get; set; } = [80.0, 100.0, 45.0];
+    public double[] GUN_HIT_PROFILES { get; set; } = [70.0, 100.0, 45.0];
 
     /// <summary>multiplies hit chance of small guns</summary>
     public double DEPTH_CHARGES_HIT_CHANCE_MULT { get; set; } = 1.1;
@@ -263,10 +257,10 @@ public sealed class NNavyDefines
     public double NAVAL_COMBAT_SUB_DETECTION_FACTOR { get; set; } = 1.0;
 
     /// <summary>Amount of in-game-hours that takes the submarine (with position unrevealed), to hide.</summary>
-    public double SUBMARINE_HIDE_TIMEOUT { get; set; } = 20.0;
+    public double SUBMARINE_HIDE_TIMEOUT { get; set; } = 8.0;
 
     /// <summary>Amount of in-game-hours that makes the submarine visible if it is on the defender side.</summary>
-    public double SUBMARINE_REVEALED_TIMEOUT { get; set; } = 16.0;
+    public double SUBMARINE_REVEALED_TIMEOUT { get; set; } = 12.0;
 
     /// <summary>Base factor for submarine detection. It's modified by the difference of a spotter's submarines detection vs submarine visibility. Use this variable for game balancing. setting this too low will cause bad spotting issues.</summary>
     public double SUBMARINE_REVEAL_BASE_CHANCE { get; set; } = 11.0;
@@ -308,18 +302,6 @@ public sealed class NNavyDefines
 
     /// <summary>A global factor that applies after all others, right before the sub detection contributed by plane is added to the global sub detection of a combatant</summary>
     public double NAVAL_COMBAT_AIR_SUB_DETECTION_FACTOR { get; set; } = 0.0;
-
-    /// <summary>scoring for target picking for planes inside naval combat, one define per ship typ Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double NAVAL_COMBAT_AIR_SUB_TARGET_SCORE { get; set; } = 10.0;
-
-    /// <summary>Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double NAVAL_COMBAT_AIR_CAPITAL_TARGET_SCORE { get; set; } = 50.0;
-
-    /// <summary>Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double NAVAL_COMBAT_AIR_CARRIER_TARGET_SCORE { get; set; } = 200.0;
-
-    /// <summary>Removed in 1.17; default is the 1.16.9 value.</summary>
-    public double NAVAL_COMBAT_AIR_CONVOY_TARGET_SCORE { get; set; } = 1.0;
 
     /// <summary>how much score factor from low health (scales between 0-&gt;this number)</summary>
     public double NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE { get; set; } = 5.0;
@@ -393,4 +375,21 @@ public sealed class NNavyDefines
 
     /// <summary>bonus from air superiority to naval detection.</summary>
     public double DETECTION_CHANCE_MULT_AIR_SUPERIORITY_BONUS { get; set; } = 0.25;
+
+    /// <summary>Multiplier on combat retreat threshold for capital ships and carriers (they can take more punishment)</summary>
+    public double CAPITAL_SHIP_COMBAT_RETREAT_MULT { get; set; } = 0.5;
+
+    /// <summary>xp gain factor for navy</summary>
+    public double XP_GAIN_FACTOR { get; set; } = 1.0;
+
+    public double SHIP_SILHOUETTE_VALUE_PLANES_SUPPORT { get; set; } = 3.0;
+
+    /// <summary>Reworked sub reveal: sub_visibility is subtracted from this for the divider.</summary>
+    public double SUBMARINE_BASE_STEALTH_VALUE { get; set; } = 100.0;
+
+    /// <summary>Reworked sub reveal: multiplies the average submarine detection.</summary>
+    public double SUBMARINE_REVEAL_DETECTION_MULTIPLIER { get; set; } = 0.065;
+
+    /// <summary>Reworked sub reveal: applied when the submarine fires torpedoes.</summary>
+    public double SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER { get; set; } = 1.1;
 }

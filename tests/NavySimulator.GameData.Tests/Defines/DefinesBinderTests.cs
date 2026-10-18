@@ -21,7 +21,7 @@ public class DefinesBinderTests
 
         Assert.Equal(0.2, defines.NNavy.COMBAT_BASE_HIT_CHANCE);
         Assert.Equal([70.0, 90.0, 40.0], defines.NNavy.GUN_HIT_PROFILES);
-        Assert.Equal(0.05, defines.NNavy.COMBAT_MIN_HIT_CHANCE);
+        Assert.Equal(GameDefines.Vanilla().NNavy.COMBAT_MIN_HIT_CHANCE, defines.NNavy.COMBAT_MIN_HIT_CHANCE);
         Assert.Equal(2, report.Applied.Count);
         Assert.Single(report.TypeMismatches);
         Assert.Equal(2, report.IgnoredKeyCount);
