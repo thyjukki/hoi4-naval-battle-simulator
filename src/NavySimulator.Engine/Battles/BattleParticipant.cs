@@ -21,6 +21,9 @@ public class BattleParticipant
     /// <summary>A-STANCE: index into CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO; null uses CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX.</summary>
     public readonly int? CarrierStanceIndex;
 
+    /// <summary>A-SORTIE: the country's carrier_night_traffic (doctrines, spirits), added to the night factor while dark.</summary>
+    public readonly double CarrierNightTraffic;
+
     public BattleParticipant(
         Fleet fleet,
         string commander,
@@ -31,7 +34,8 @@ public class BattleParticipant
         EngagementLevel engagementLevel = EngagementLevel.Medium,
         string? externalPlaneId = null,
         double externalMissionEfficiency = 1.0,
-        int? carrierStanceIndex = null)
+        int? carrierStanceIndex = null,
+        double carrierNightTraffic = 0)
     {
         Fleet = fleet;
         Commander = commander;
@@ -43,6 +47,7 @@ public class BattleParticipant
         ExternalPlaneId = externalPlaneId;
         ExternalMissionEfficiency = externalMissionEfficiency;
         CarrierStanceIndex = carrierStanceIndex;
+        CarrierNightTraffic = carrierNightTraffic;
 
         ApplyFleetModifiers();
     }

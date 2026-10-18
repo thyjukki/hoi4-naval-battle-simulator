@@ -88,12 +88,15 @@ public static class HitChanceRules
                               modifiers.Get(StaticModifiers.CapitalScreeningBonus, StaticModifiers.NavalHitChance);
         }
 
-        var weaponFactor = slot switch
+        var (weaponFactor, weaponModifier) = slot switch
         {
-            WeaponSlot.Heavy => stats.HeavyHitChanceFactor,
-            WeaponSlot.Torpedo => stats.TorpedoHitChanceFactor,
-            _ => stats.LightHitChanceFactor
+            WeaponSlot.Heavy => (stats.HeavyHitChanceFactor, StaticModifiers.NavalHeavyGunHitChanceFactor),
+            WeaponSlot.Torpedo => (stats.TorpedoHitChanceFactor, StaticModifiers.NavalTorpedoHitChanceFactor),
+            _ => (stats.LightHitChanceFactor, StaticModifiers.NavalLightGunHitChanceFactor)
         };
+
+        // The per-weapon modifier gathers province modifiers too, so a night block entry (TFB: torpedo -0.15) applies.
+        weaponFactor += darkness * modifiers.Get(StaticModifiers.Night, weaponModifier);
 
         return 1.0 + navalHitChance + weaponFactor;
     }

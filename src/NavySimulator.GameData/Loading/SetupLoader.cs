@@ -1019,7 +1019,8 @@ public class SetupLoader
             ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, "engagementLevel", []),
             participant.ExternalPlaneID,
             participant.ExternalMissionEfficiency ?? 1.0,
-            participant.CarrierStanceIndex);
+            participant.CarrierStanceIndex,
+            participant.CarrierNightTraffic ?? 0);
     }
 
     private static bool IsValidShipExperienceLevel(int level, GameDefines defines)

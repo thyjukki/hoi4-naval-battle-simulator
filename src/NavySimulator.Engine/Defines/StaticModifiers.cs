@@ -23,6 +23,9 @@ public sealed class StaticModifiers
     public const string NavalDefenseFactor = "naval_defense_factor";
     public const string FighterSortieEfficiency = "fighter_sortie_efficiency";
     public const string CarrierTraffic = "carrier_traffic";
+    public const string NavalLightGunHitChanceFactor = "naval_light_gun_hit_chance_factor";
+    public const string NavalHeavyGunHitChanceFactor = "naval_heavy_gun_hit_chance_factor";
+    public const string NavalTorpedoHitChanceFactor = "naval_torpedo_hit_chance_factor";
 
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [

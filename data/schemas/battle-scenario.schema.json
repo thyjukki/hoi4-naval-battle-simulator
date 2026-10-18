@@ -156,6 +156,10 @@
           "type": "integer",
           "minimum": 0,
           "description": "Index into CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO (default CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX)."
+        },
+        "carrierNightTraffic": {
+          "type": "number",
+          "description": "Sum of the country's carrier_night_traffic modifiers (doctrines, spirits), e.g. 0.15. Added to the night sortie factor while dark."
         }
       },
       "additionalProperties": false

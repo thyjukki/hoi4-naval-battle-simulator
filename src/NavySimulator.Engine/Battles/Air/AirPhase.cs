@@ -97,7 +97,8 @@ public sealed class AirPhase
         var bonus = side.Participant.Spirits
             .Where(spirit => spirit.AppliesTo(carrier.Role, carrier.Design.Hull.Types))
             .Sum(spirit => spirit.SortieEffiency);
-        return AirRules.SortieEfficiency(group, side.Screening, ReferenceEquals(side, Attacker), StanceIndex(side), hour, darkness, defines, bonus);
+        return AirRules.SortieEfficiency(group, side.Screening, ReferenceEquals(side, Attacker), StanceIndex(side), hour, darkness, defines, bonus,
+            side.Participant.CarrierNightTraffic);
     }
 
     private int StanceIndex(BattleSide side)

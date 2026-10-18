@@ -34,14 +34,16 @@ base    = (hour < SELECTED_SORTIE_INITIAL_TIME ? ratio : BASE_CARRIER_SORTIE_EFF
         + fighter_sortie_efficiency from carrier experience, if the first wing is a fighter
 crowd   = planes ≤ cap ? 1 : (r = (planes − cap)/cap) > 0.9 ? 0 : clamp(1 − CAPACITY_PENALTY × r, 0, 1)
           with cap = deck size × CARRIER_SIZE_STAT_INCREMENT
-night   = clamp(1 + darkness × night.carrier_traffic, 0, 1)                 (vanilla −1: no sorties at night)
+night   = clamp(1 + darkness × night.carrier_traffic + (dark ? carrierNightTraffic : 0), 0, 1)
+          (vanilla −1: no sorties at night; TFB −0.75, so 25 %, +0.15 with its carrier doctrine)
 sortie  = max(0, base × crowd × night) × org / maxOrg
 flying  = round(allPlanesOnTheCarrier × clamp(sortie, 0, 1))
 ```
 - The clamp comes only at the end, so a sortie efficiency above 1 offsets low org.
 - `planes` counts all wings on the carrier, fighters included.
 - The stance does not split planes into offence and defence (A-STANCE).
-- Not modelled: weather `carrier_traffic`, the country `carrier_night_traffic`, `carrier_capacity_penalty_reduction`, doctrine and leader modifiers.
+- `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the participant input `carrierNightTraffic`.
+- Not modelled: weather `carrier_traffic`, `carrier_capacity_penalty_reduction`, doctrine and leader modifiers.
 
 ## A-STANCE [RE]
 
@@ -172,6 +174,7 @@ The weather terms (`carrier_traffic`, `naval_strike`), the country, doctrine and
 | `carrierAirwingsByShipDesign` | force composition | wings per carrier design (plane ID, type, count, planes per wing) |
 | `externalNavalStrikePlanes`, `externalPlaneID`, `externalMissionEfficiency` | participant | land-based naval strike planes |
 | `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
+| `carrierNightTraffic` | participant | sum of the country's `carrier_night_traffic` (doctrines, spirits) |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
 
 Each strike is reported as an `AirStrikeRecord`: hour, side, source, target, planes flying, intercepted, shot down, hits, AA reduction, crit, HP and org damage, and sunk.

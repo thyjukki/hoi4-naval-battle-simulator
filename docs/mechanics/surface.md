@@ -107,7 +107,7 @@ shot hits when U < hit   (no upper cap: hit >= 1 always hits)
 
 ## S-NIGHT: night [RE effect, ASSUMED darkness]
 
-The static modifier `night` is applied to the battle province "multiplied by amount of darkness": `naval_hit_chance -0.25`, `naval_retreat_speed +0.1` (and `carrier_traffic -1.0` for air). The engine uses darkness 1 from 20:00 to 06:00 and 0 otherwise (`HardcodedValues.NightStartHour/NightEndHour`, `BattleRules.StartHourOfDay`). The game computes darkness per province from the day/night terminator; that is not decoded. `BattleRules.NightEnabled` turns night off.
+The static modifier `night` is applied to the battle province "multiplied by amount of darkness": `naval_hit_chance -0.25`, `naval_retreat_speed +0.1` (and `carrier_traffic -1.0` for air), vanilla values; the block is read from the loaded game/mod folder (TFB: `carrier_traffic -0.75`, `naval_torpedo_hit_chance_factor -0.15`). The per-weapon entries (`naval_light_gun|heavy_gun|torpedo_hit_chance_factor`) add to the slot's hit factor in S-HIT-MODS. The engine uses darkness 1 from 20:00 to 06:00 and 0 otherwise (`HardcodedValues.NightStartHour/NightEndHour`, `BattleRules.StartHourOfDay`). The game computes darkness per province from the day/night terminator; that is not decoded. `BattleRules.NightEnabled` turns night off.
 
 ## S-DMG: damage of a hit [RE]
 

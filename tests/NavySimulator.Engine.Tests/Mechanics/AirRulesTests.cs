@@ -53,6 +53,20 @@ public class AirRulesTests
         Assert.Equal(0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 0, defines), 9);
     }
 
+    [Fact]
+    public void SortieEfficiency_AtNightUsesTheLoadedNightBlockAndCountryNightTraffic()
+    {
+        // TFB: night carrier_traffic = -0.75; carrier doctrine carrier_night_traffic = +0.15.
+        var tfb = GameDefines.Vanilla();
+        tfb.StaticModifiers.Blocks[StaticModifiers.Night][StaticModifiers.CarrierTraffic] = -0.75;
+        var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), AirwingType.Bomber, 30)]);
+        var noScreening = new ScreeningSummary(0, 0);
+
+        Assert.Equal(0.5 * 0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, tfb), 9);
+        Assert.Equal(0.5 * 0.40, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, tfb, carrierNightTraffic: 0.15), 9);
+        Assert.Equal(0.5, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 0, tfb, carrierNightTraffic: 0.15), 9);
+    }
+
     [Theory]
     [InlineData(30, 1.0)]
     [InlineData(36, 0.6)]

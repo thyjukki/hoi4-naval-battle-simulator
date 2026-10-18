@@ -13,6 +13,7 @@ public class BattleParticipantDto
     public string? ExternalPlaneID { get; set; }
     public double? ExternalMissionEfficiency { get; set; }
     public int? CarrierStanceIndex { get; set; }
+    public double? CarrierNightTraffic { get; set; }
 }
 
 

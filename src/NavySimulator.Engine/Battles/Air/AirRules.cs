@@ -29,7 +29,8 @@ public static class AirRules
         int hour,
         double darkness,
         GameDefines defines,
-        double sortieEfficiencyModifier = 0)
+        double sortieEfficiencyModifier = 0,
+        double carrierNightTraffic = 0)
     {
         var carrier = group.Carrier ?? throw new ArgumentException("Only carrier groups have a sortie efficiency.", nameof(group));
         var navy = defines.NNavy;
@@ -54,7 +55,9 @@ public static class AirRules
             baseEfficiency += CarrierExperienceFighterSortie(carrier, defines);
         }
 
-        var night = Math.Clamp(1.0 + darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic), 0, 1);
+        // [RE] night = clamp(1 + darkness * night.carrier_traffic + (dark ? country carrier_night_traffic : 0), 0, 1).
+        var night = Math.Clamp(1.0 + darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic) +
+                               (darkness > 0 ? carrierNightTraffic : 0), 0, 1);
         var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, group.Planes, defines) * night);
         var stats = carrier.GetFinalStats();
         var orgRatio = stats.Organization > 0 ? carrier.CurrentOrganization / stats.Organization : 0;
