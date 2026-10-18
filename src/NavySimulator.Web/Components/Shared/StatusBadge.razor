@@ -1,0 +1,6 @@
+<span class="badge @Status">@Status</span>
+
+@code {
+    /// <summary>A <see cref="ShipRow.StatusName"/>: sunk, escaped, retreating, fighting or waiting.</summary>
+    [Parameter, EditorRequired] public string Status { get; set; } = string.Empty;
+}

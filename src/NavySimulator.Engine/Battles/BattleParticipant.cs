@@ -10,7 +10,10 @@ public class BattleParticipant
     public readonly int ExternalNavalStrikePlanes;
     public readonly List<Research> Researches;
     public readonly List<Spirit> Spirits;
-    public readonly EngagementLevel EngagementLevel;
+    public readonly Aggressiveness Aggressiveness;
+
+    /// <summary>Recorded with the task force setup; not read in combat (see <see cref="NavySimulator.Engine.Battles.RepairPriority"/>).</summary>
+    public readonly RepairPriority RepairPriority;
 
     /// <summary>Plane type of the land-based naval strike planes (<see cref="ExternalNavalStrikePlanes"/>).</summary>
     public readonly string? ExternalPlaneId;
@@ -31,7 +34,8 @@ public class BattleParticipant
         int externalNavalStrikePlanes,
         List<Research> researches,
         List<Spirit> spirits,
-        EngagementLevel engagementLevel = EngagementLevel.Medium,
+        Aggressiveness aggressiveness = Aggressiveness.EngageAtMediumRisk,
+        RepairPriority repairPriority = RepairPriority.High,
         string? externalPlaneId = null,
         double externalMissionEfficiency = 1.0,
         int? carrierStanceIndex = null,
@@ -43,7 +47,8 @@ public class BattleParticipant
         ExternalNavalStrikePlanes = externalNavalStrikePlanes;
         Researches = researches;
         Spirits = spirits;
-        EngagementLevel = engagementLevel;
+        Aggressiveness = aggressiveness;
+        RepairPriority = repairPriority;
         ExternalPlaneId = externalPlaneId;
         ExternalMissionEfficiency = externalMissionEfficiency;
         CarrierStanceIndex = carrierStanceIndex;

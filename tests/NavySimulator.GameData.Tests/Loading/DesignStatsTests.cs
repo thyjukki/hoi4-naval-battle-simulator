@@ -15,7 +15,7 @@ public sealed class DesignStatsTests : IDisposable
     public DesignStatsTests()
     {
         dataDirectory = Path.Combine(Path.GetTempPath(), "navysim-stats-" + Guid.NewGuid().ToString("N"));
-        CopyDirectory(RepositoryPaths.Data, dataDirectory);
+        DataDirectoryCopy.CopyDirectory(RepositoryPaths.Data, dataDirectory);
 
         var designs = new JsonArray
         {
@@ -123,20 +123,5 @@ public sealed class DesignStatsTests : IDisposable
         design["id"] = newId;
         design["mioID"] = Mio;
         return design;
-    }
-
-    private static void CopyDirectory(string source, string target)
-    {
-        Directory.CreateDirectory(target);
-
-        foreach (var file in Directory.GetFiles(source))
-        {
-            File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
-        }
-
-        foreach (var directory in Directory.GetDirectories(source))
-        {
-            CopyDirectory(directory, Path.Combine(target, Path.GetFileName(directory)));
-        }
     }
 }

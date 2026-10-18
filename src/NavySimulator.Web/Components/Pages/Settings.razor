@@ -1,0 +1,318 @@
+@page "/settings"
+@implements IDisposable
+@inject Workspace Workspace
+@inject BattleRunner Runner
+
+<PageTitle>Settings · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Settings</h1>
+</div>
+
+@if (message is not null)
+{
+    <div class="message @(messageIsError ? "error" : "info")" style="margin-bottom: 14px">@message</div>
+}
+
+<div class="grid-2">
+    <div class="stack">
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Simulate as</h2>
+                <span class="muted small">whose defines and static modifiers every battle uses</span>
+                <button class="small right" @onclick="Rescan" title="Search the Steam libraries and the launcher's mod folder again">Rescan</button>
+            </div>
+            <div class="panel-body">
+                <label class="ruleset @(sources.Count == 0 ? "on" : "")">
+                    <input type="radio" name="ruleset" checked="@(sources.Count == 0)" @onchange="() => Use(null)" />
+                    <span>
+                        <strong>Vanilla HOI4</strong>
+                        <span class="path">The built-in 1.19.3 defines and static modifiers.</span>
+                    </span>
+                </label>
+                @foreach (var candidate in Workspace.ModCandidates)
+                {
+                    var on = IsOnly(candidate.Path);
+                    <label class="ruleset @(on ? "on" : "")">
+                        <input type="radio" name="ruleset" checked="@on" @onchange="() => Use(candidate.Path)" />
+                        <span>
+                            <strong>@candidate.Name</strong> <span class="badge role">@candidate.KindLabel</span>
+                            <span class="path">@candidate.Path</span>
+                        </span>
+                    </label>
+                }
+                @if (sources.Count > 0 && !Workspace.ModCandidates.Any(candidate => IsOnly(candidate.Path)))
+                {
+                    <label class="ruleset on">
+                        <input type="radio" name="ruleset" checked />
+                        <span>
+                            <strong>Custom</strong>
+                            <span class="path">@string.Join(" + ", sources.Select(Workspace.SourceName)), see the list below.</span>
+                        </span>
+                    </label>
+                }
+                <p class="small muted" style="margin-top: 8px">
+                    A mod is applied over the built-in vanilla values, as the game loads it: its <code>common/defines/*.lua</code> and
+                    the static modifiers in <code>common/modifiers</code>. Ship, module and research data still come from <code>data/</code>.
+                </p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><h2>Define sources</h2><span class="muted small">advanced: several sources, applied in order</span></div>
+            <div class="panel-body stack">
+                <p class="muted small">
+                    Applied after the scenario's own define sources, like the CLI's <code>--defines</code>. Choosing above replaces this list.
+                    Kept in <code>@Workspace.SettingsPath</code>.
+                </p>
+                @if (sources.Count == 0)
+                {
+                    <p class="muted">None: battles use vanilla 1.19.3 values plus the scenario's sources.</p>
+                }
+                @for (var i = 0; i < sources.Count; i++)
+                {
+                    var index = i;
+                    <div class="row tight">
+                        <span class="faint small" style="width: 18px">@(index + 1).</span>
+                        <code class="grow" style="word-break: break-all">@sources[index]</code>
+                        @if (!Exists(sources[index]))
+                        {
+                            <span class="badge sunk">not found</span>
+                        }
+                        <button class="small icon" title="Move up" @onclick="() => Move(index, -1)" disabled="@(index == 0)">↑</button>
+                        <button class="small icon danger" title="Remove" @onclick="() => Remove(index)">✕</button>
+                    </div>
+                }
+                <div class="row tight">
+                    <input type="text" class="grow" placeholder="A .lua file, or a HOI4 / mod root folder" @bind="newSource" />
+                    <button @onclick="() => Add(newSource)" disabled="@string.IsNullOrWhiteSpace(newSource)">Add</button>
+                </div>
+                @if (Workspace.SettingsError is { } settingsError)
+                {
+                    <div class="message error">The settings file could not be written: @settingsError</div>
+                }
+                @if (Workspace.CommandLineDefineSources.Count > 0)
+                {
+                    <p class="small muted">From the command line (this session only): @string.Join(", ", Workspace.CommandLineDefineSources)</p>
+                }
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><h2>Data</h2></div>
+            <div class="panel-body stack">
+                <dl class="kv">
+                    <dt>Data directory</dt>
+                    <dd class="mono small" style="word-break: break-all">@Workspace.DataDirectory</dd>
+                    <dt>Reports</dt>
+                    <dd class="mono small" style="word-break: break-all">@Workspace.OutputDirectory</dd>
+                    <dt>Content</dt>
+                    <dd>
+                        @Workspace.Catalog.Hulls.Count hulls, @Workspace.Catalog.Modules.Count modules, @Workspace.Catalog.Mios.Count MIOs,
+                        @Workspace.Catalog.ShipDesigns.Count designs, @Workspace.Catalog.Fleets.Count fleets, @Workspace.Catalog.Researches.Count researches,
+                        @Workspace.Catalog.Spirits.Count spirits, @Workspace.Catalog.Planes.Count planes
+                    </dd>
+                </dl>
+                <div class="row">
+                    <button @onclick="Reload">Reload data from disk</button>
+                    <span class="small muted">After editing JSON files outside the GUI. Unsaved editor changes are kept only in the editors.</span>
+                </div>
+                <p class="small muted">Start the GUI with <code>--data &lt;dir&gt;</code> to work on another data directory.</p>
+            </div>
+        </div>
+
+        @if (Workspace.Catalog.ReadErrors.Count > 0 || Workspace.Catalog.Warnings.Count > 0)
+        {
+            <div class="panel">
+                <div class="panel-head"><h2>Content problems</h2></div>
+                <div class="panel-body stack">
+                    @if (Workspace.Catalog.ReadErrors.Count > 0)
+                    {
+                        <div class="message error"><ul>@foreach (var error in Workspace.Catalog.ReadErrors) { <li>@error</li> }</ul></div>
+                    }
+                    @if (Workspace.Catalog.Warnings.Count > 0)
+                    {
+                        <details>
+                            <summary class="warn" style="cursor: pointer">@Workspace.Catalog.Warnings.Count warnings about ignored content</summary>
+                            <ul class="small muted">@foreach (var warning in Workspace.Catalog.Warnings) { <li>@warning</li> }</ul>
+                        </details>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Effective defines</h2>
+            <span class="muted small">for the scenario being edited</span>
+            <button class="small right" @onclick="Check">Check again</button>
+        </div>
+        <div class="panel-body stack">
+            @if (build is null)
+            {
+                <p class="muted">Loading…</p>
+            }
+            else
+            {
+                @if (build.Errors.Count > 0)
+                {
+                    <div class="message error"><ul>@foreach (var error in build.Errors) { <li>@error</li> }</ul></div>
+                }
+                @if (build.Scenario is { } scenario)
+                {
+                    <div>
+                        <h4 style="margin-bottom: 6px">Sources, in order</h4>
+                        <ol class="small mono" style="margin: 0; padding-left: 18px">
+                            @foreach (var source in scenario.Defines.Sources)
+                            {
+                                <li style="word-break: break-all">@source</li>
+                            }
+                        </ol>
+                    </div>
+                }
+                @if (build.DefinesReport is { } report)
+                {
+                    <p class="small muted">@report.Applied.Count values applied; @report.IgnoredKeyCount keys in the sources are not used by the engine.</p>
+                    @if (report.TypeMismatches.Count > 0)
+                    {
+                        <div class="message warning"><strong>Type mismatches</strong><ul>@foreach (var item in report.TypeMismatches) { <li>@item</li> }</ul></div>
+                    }
+                    @if (report.ParseWarnings.Count > 0)
+                    {
+                        <details>
+                            <summary class="warn" style="cursor: pointer">@report.ParseWarnings.Count parse warnings</summary>
+                            <ul class="small muted">@foreach (var item in report.ParseWarnings) { <li>@item</li> }</ul>
+                        </details>
+                    }
+                    @if (report.Applied.Count > 0)
+                    {
+                        <input type="search" placeholder="Filter applied values…" @bind="appliedFilter" @bind:event="oninput" />
+                        <div class="scroll" style="max-height: 520px">
+                            <table class="data compact">
+                                <tbody>
+                                    @foreach (var item in report.Applied.Where(item => appliedFilter.Length == 0 || item.Contains(appliedFilter, StringComparison.OrdinalIgnoreCase)))
+                                    {
+                                        <tr><td class="mono small">@item</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<string> sources = [];
+    private string? newSource;
+    private string appliedFilter = string.Empty;
+    private ScenarioBuild? build;
+    private string? message;
+    private bool messageIsError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Workspace.Changed += OnWorkspaceChanged;
+        sources = Workspace.SettingsDefineSources.ToList();
+        await Task.Run(() => Workspace.ModCandidates);
+        await Check();
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Check()
+    {
+        build = null;
+        StateHasChanged();
+        build = await Task.Run(() => Workspace.BuildScenario());
+    }
+
+    private async Task Apply(string text)
+    {
+        Workspace.SetSettingsDefineSources(sources);
+        sources = Workspace.SettingsDefineSources.ToList();
+        message = text + (Runner.HasBattle ? " Restart the battle to use them." : string.Empty);
+        messageIsError = false;
+        await Check();
+    }
+
+    private async Task Add(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return;
+        }
+
+        sources.Add(source.Trim());
+        newSource = null;
+        await Apply($"Added {source.Trim()}.");
+    }
+
+    private bool IsOnly(string path)
+    {
+        return sources.Count == 1 && Hoi4Locator.Normalize(sources[0]) == Hoi4Locator.Normalize(path);
+    }
+
+    private async Task Use(string? source)
+    {
+        Workspace.UseRuleset(source);
+        sources = Workspace.SettingsDefineSources.ToList();
+        message = $"Battles now simulate {Workspace.RulesetName}." + (Runner.HasBattle ? " Restart the battle to use it." : string.Empty);
+        messageIsError = false;
+        await Check();
+    }
+
+    private async Task Rescan()
+    {
+        await Task.Run(Workspace.RescanMods);
+        message = $"Found {Workspace.ModCandidates.Count} game and mod folders.";
+        messageIsError = false;
+    }
+
+    private async Task Remove(int index)
+    {
+        var removed = sources[index];
+        sources.RemoveAt(index);
+        await Apply($"Removed {removed}.");
+    }
+
+    private async Task Move(int index, int offset)
+    {
+        (sources[index], sources[index + offset]) = (sources[index + offset], sources[index]);
+        await Apply("Reordered the sources.");
+    }
+
+    private bool Exists(string source)
+    {
+        return File.Exists(source) || Directory.Exists(source) || Directory.Exists(Path.Combine(Workspace.DataDirectory, source)) ||
+               File.Exists(Path.Combine(Workspace.DataDirectory, source));
+    }
+
+    private async Task Reload()
+    {
+        try
+        {
+            Workspace.ReloadCatalog();
+            message = "Reloaded the data directory.";
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is IOException or DirectoryNotFoundException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+
+        await Check();
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+    }
+}

@@ -1,0 +1,503 @@
+@page "/"
+@implements IDisposable
+@inject Workspace Workspace
+@inject BattleRunner Runner
+@inject BatchRunner Batch
+@inject NavigationManager Navigation
+
+<PageTitle>Battle · NavySimulator</PageTitle>
+
+<div class="toolbar">
+    <div class="row tight" title="The same seed always gives the same battle">
+        <span class="small muted">Seed</span>
+        <input type="number" @bind="seed" style="width: 110px" />
+        <button class="icon" title="Random seed" @onclick="RandomSeed">⚄</button>
+    </div>
+    <button class="primary" @onclick="StartBattle" disabled="@Runner.IsRunning">@(view is null ? "Start battle" : "New battle")</button>
+    <div class="sep"></div>
+    <div class="button-group">
+        <button @onclick="() => Step(1)" disabled="@(!CanStep)" title="Simulate one hour">+1 h</button>
+        <button @onclick="() => Step(10)" disabled="@(!CanStep)" title="Simulate ten hours">+10 h</button>
+    </div>
+    <div class="row tight">
+        <input type="number" min="1" @bind="customHours" style="width: 72px" aria-label="Hours to simulate" />
+        <button @onclick="() => Step(customHours)" disabled="@(!CanStep)">+@customHours h</button>
+    </div>
+    <button @onclick="RunToEnd" disabled="@(!CanStep)">Run to end</button>
+    @if (Runner.IsRunning)
+    {
+        <button class="danger" @onclick="Runner.Stop">Stop</button>
+    }
+    <div class="sep"></div>
+    @if (view is not null)
+    {
+        <div class="clock">
+            <span class="hour">Hour @view.HoursFought</span>
+            @if (!view.IsOver)
+            {
+                <span class="muted small">next @($"{view.HourOfDay(view.HoursFought):D2}:00")</span>
+            }
+            @if (view.IsOver)
+            {
+                <span class="outcome @OutcomeClass(view.Outcome)">@OutcomeText(view.Outcome)</span>
+            }
+            else if (Runner.IsRunning)
+            {
+                <span class="pill running">simulating…</span>
+            }
+            else
+            {
+                <span class="muted">in progress</span>
+            }
+        </div>
+        <div class="right row tight">
+            <span class="small muted">seed @view.Seed</span>
+            <button class="small" @onclick="SaveReport" title="Write the CLI report files (summary, hourly.log, shots.csv, ships.csv) to the output folder">Save report</button>
+        </div>
+    }
+</div>
+
+@if (Runner.StartErrors.Count > 0)
+{
+    <div class="message error" style="margin-bottom: 14px">
+        <strong>The scenario does not validate.</strong> Fix it on the <a href="scenario">Scenario</a> page.
+        <ul>@foreach (var error in Runner.StartErrors) { <li>@error</li> }</ul>
+    </div>
+}
+@if (Runner.RunError is { } runError)
+{
+    <div class="message error" style="margin-bottom: 14px">The simulation stopped with an error: @runError</div>
+}
+@if (Runner.IsOutdated && !Runner.IsRunning)
+{
+    <div class="message info row" style="margin-bottom: 14px">
+        <span>The scenario or the content changed since this battle started; it still uses the old setup.</span>
+        <button class="small right" @onclick="StartBattle">Restart with the changes</button>
+    </div>
+}
+
+@if (view is null)
+{
+    <div class="panel">
+        <div class="panel-body stack" style="padding: 28px">
+            <h1>@Workspace.Scenario.ID</h1>
+            <p class="muted">
+                <span class="attacker">@Workspace.Scenario.Attacker.FleetID</span> attacks
+                <span class="defender">@Workspace.Scenario.Defender.FleetID</span>.
+                Start the battle, then step it hour by hour or run it to the end. Edit the setup on the
+                <a href="scenario">Scenario</a>, <a href="fleets">Fleets</a> and <a href="designs">Designs</a> pages.
+            </p>
+            <div class="row">
+                <button class="primary" @onclick="StartBattle">Start battle</button>
+                <button @onclick="StartAndRun">Start and run to end</button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <p class="small muted" style="margin: -4px 0 10px">
+        <strong>@view.ScenarioId</strong> (@(Runner.ScenarioFileUsed ?? "unsaved scenario")) ·
+        <span title="@string.Join(" → ", Runner.DefineSourcesUsed)">rules: @string.Join(" + ", Runner.DefineSourcesUsed.Select(Workspace.SourceName))</span> ·
+        <span class="attacker">@view.Attacker.FleetId</span> vs <span class="defender">@view.Defender.FleetId</span>
+    </p>
+    @if (view.HoursFought > 0)
+    {
+        <div class="panel" style="margin-bottom: 14px">
+            <div class="panel-body timeline-bar">
+                <span class="small muted nowrap">Viewing</span>
+                <strong class="nowrap" style="min-width: 150px">
+                    @if (view.Hour < 0)
+                    {
+                        <span>before hour 0</span>
+                    }
+                    else
+                    {
+                        <span>end of hour @view.Hour (@($"{view.HourOfDay(view.Hour):D2}:00"))</span>
+                    }
+                </strong>
+                <button class="small icon" title="Previous hour" @onclick="() => ViewHour(view.Hour - 1)" disabled="@(view.Hour < 0)">‹</button>
+                <input type="range" min="-1" max="@(view.HoursFought - 1)" value="@view.Hour" @onchange="OnSlider" aria-label="Battle hour to view" />
+                <button class="small icon" title="Next hour" @onclick="() => ViewHour(view.Hour + 1)" disabled="@view.IsLive">›</button>
+                @if (view.IsLive)
+                {
+                    <span class="badge fighting">live</span>
+                }
+                else
+                {
+                    <button class="small" @onclick="GoLive">Back to live (hour @(view.HoursFought - 1))</button>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="grid-3" style="margin-bottom: 14px">
+        @SideCard(view.Attacker)
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Battle</h2>
+                <div class="button-group right">
+                    <button class="small @(chart == "hp" ? "on" : "")" @onclick="@(() => chart = "hp")">HP</button>
+                    <button class="small @(chart == "ships" ? "on" : "")" @onclick="@(() => chart = "ships")">Ships</button>
+                    <button class="small @(chart == "damage" ? "on" : "")" @onclick="@(() => chart = "damage")">Damage / h</button>
+                    <button class="small @(chart == "position" ? "on" : "")" @onclick="@(() => chart = "position")">Positioning</button>
+                </div>
+            </div>
+            <div class="panel-body">
+                @if (view.Timeline.Count == 0)
+                {
+                    <p class="empty">Step the battle to draw the charts.</p>
+                }
+                else
+                {
+                    <LineChart Series="ChartData()" Night="Night()" Marker="view.Hour" OnSelect="ViewHour" YFormat="@ChartFormat()" Height="250"
+                               YMax="@(chart is "hp" or "position" ? 1 : null)" AriaLabel="Battle chart" />
+                }
+            </div>
+        </div>
+        @SideCard(view.Defender)
+    </div>
+
+    <div class="row" style="margin-bottom: 8px">
+        <button class="small ghost" @onclick="ExpandAll">Expand all</button>
+        <button class="small ghost" @onclick="() => expanded.Clear()">Collapse all</button>
+        <span class="small muted">Click a ship type to list its ships, and a ship to open its combat log.</span>
+    </div>
+    <div class="grid-2" style="margin-bottom: 14px">
+        @foreach (var side in view.Sides)
+        {
+            <div class="panel side-card side-@side.Label">
+                <div class="panel-head">
+                    <h2 class="@side.Label">@side.Label</h2>
+                    <span class="muted">@side.FleetId</span>
+                </div>
+                <div class="panel-body flush fleet-scroll">
+                    <FleetTree Side="side" Expanded="expanded" SelectedShipId="@selectedShipId" OnSelect="SelectShip" />
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (selectedShipId is not null && view.FindShip(selectedShipId) is { } ship)
+    {
+        <div style="margin-bottom: 14px">
+            <ShipDetail View="view" Ship="ship" History="ShipHistory(ship)" OnClose="() => selectedShipId = null" OnSelectShip="SelectShip" OnSelectHour="ViewHour" />
+        </div>
+    }
+
+    <CombatLog View="view" OnSelectShip="SelectShip" OnSelectHour="ViewHour" />
+}
+
+@if (toast is not null)
+{
+    <div class="toast @(toastIsError ? "error" : "")" @onclick="() => toast = null">@toast</div>
+}
+
+@code {
+    // Each hour keeps a state per ship for rewinding, so a stalemate must not run unbounded.
+    private const int RunToEndChunk = 5000;
+
+    private BattleView? view;
+    private int? viewHour;
+    private int seed;
+    private int customHours = 50;
+    private string chart = "hp";
+
+    // Both side cards show the same split, so they can be compared.
+    private string breakdown = "weapon";
+    private string? selectedShipId;
+    private readonly HashSet<string> expanded = [];
+    private string? toast;
+    private bool toastIsError;
+    private (int Version, int Index, IReadOnlyList<ShipHourState> States) history = (-1, -1, []);
+
+    [SupplyParameterFromQuery(Name = "seed")] public int? SeedFromQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "run")] public bool? RunFromQuery { get; set; }
+    [SupplyParameterFromQuery(Name = "batch")] public bool? FromBatch { get; set; }
+
+    private bool CanStep => view is not null && !view.IsOver && !Runner.IsRunning;
+
+    protected override void OnInitialized()
+    {
+        Runner.Changed += OnRunnerChanged;
+        view = Runner.View(viewHour);
+        seed = view?.Seed ?? Workspace.Scenario.Seed ?? Random.Shared.Next(1, 1_000_000);
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (SeedFromQuery is not { } querySeed)
+        {
+            return;
+        }
+
+        // Opened from the Batch page to replay one run.
+        seed = querySeed;
+        var run = RunFromQuery == true;
+        var scenario = FromBatch == true ? Batch.Last?.ScenarioUsed : null;
+        Navigation.NavigateTo("", replace: true);
+
+        if (Start(scenario) && run)
+        {
+            await RunToEnd();
+        }
+    }
+
+    private void OnRunnerChanged()
+    {
+        _ = InvokeAsync(() =>
+        {
+            view = Runner.View(viewHour);
+            StateHasChanged();
+        });
+    }
+
+    private bool Start(BattleScenarioDto? scenario = null)
+    {
+        viewHour = null;
+        var started = Runner.Start(seed, scenario);
+        view = Runner.View(viewHour);
+
+        if (started && selectedShipId is not null && view?.FindShip(selectedShipId) is null)
+        {
+            selectedShipId = null;
+        }
+
+        return started;
+    }
+
+    private void StartBattle()
+    {
+        Start();
+    }
+
+    private async Task StartAndRun()
+    {
+        if (Start())
+        {
+            await RunToEnd();
+        }
+    }
+
+    private void RandomSeed()
+    {
+        seed = Random.Shared.Next(1, 1_000_000);
+    }
+
+    private async Task Step(int hours)
+    {
+        viewHour = null;
+        await Runner.StepAsync(hours);
+    }
+
+    private async Task RunToEnd()
+    {
+        viewHour = null;
+        var before = Runner.View()?.HoursFought ?? 0;
+        await Runner.StepAsync(RunToEndChunk);
+
+        if (Runner.View() is { IsOver: false } latest && latest.HoursFought - before >= RunToEndChunk)
+        {
+            ShowToast($"Paused after {RunToEndChunk:N0} hours without an end; press Run to end to continue.", false);
+        }
+    }
+
+    private void ViewHour(int hour)
+    {
+        if (view is null)
+        {
+            return;
+        }
+
+        viewHour = hour >= view.HoursFought - 1 ? null : Math.Max(-1, hour);
+        view = Runner.View(viewHour);
+    }
+
+    private void OnSlider(ChangeEventArgs args)
+    {
+        if (int.TryParse(args.Value?.ToString(), out var hour))
+        {
+            ViewHour(hour);
+        }
+    }
+
+    private void GoLive()
+    {
+        viewHour = null;
+        view = Runner.View(viewHour);
+    }
+
+    private void SelectShip(string id)
+    {
+        selectedShipId = selectedShipId == id ? null : id;
+
+        if (selectedShipId is not null && view?.FindShip(id) is { } ship)
+        {
+            expanded.Add($"{ship.Side}/{ship.DesignId}");
+        }
+    }
+
+    private void ExpandAll()
+    {
+        foreach (var design in view!.Sides.SelectMany(side => side.Designs))
+        {
+            expanded.Add(FleetTree.Key(design));
+        }
+    }
+
+    private IReadOnlyList<ShipHourState> ShipHistory(ShipRow ship)
+    {
+        if (history.Version != Runner.Version || history.Index != ship.Index)
+        {
+            history = (Runner.Version, ship.Index, Runner.ShipHistory(ship.Index));
+        }
+
+        return history.States;
+    }
+
+    private void SaveReport()
+    {
+        try
+        {
+            ShowToast($"Report written to {Runner.ExportReport(Workspace.OutputDirectory)}", false);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            ShowToast(exception.Message, true);
+        }
+    }
+
+    private void ShowToast(string message, bool error)
+    {
+        toast = message;
+        toastIsError = error;
+    }
+
+    private IReadOnlyList<ChartSeries> ChartData()
+    {
+        var timeline = view!.Timeline;
+        double StartHp(SideView side) => Math.Max(1, side.MaxHp);
+
+        return chart switch
+        {
+            "ships" =>
+            [
+                new("Attacker in battle", "var(--attacker)", timeline.Select(hour => (double)hour.Attacker.ShipsInBattle).ToList()),
+                new("Defender in battle", "var(--defender)", timeline.Select(hour => (double)hour.Defender.ShipsInBattle).ToList()),
+                new("Attacker sunk", "var(--attacker)", timeline.Select(hour => (double)hour.Attacker.ShipsSunk).ToList(), true),
+                new("Defender sunk", "var(--defender)", timeline.Select(hour => (double)hour.Defender.ShipsSunk).ToList(), true)
+            ],
+            "damage" =>
+            [
+                new("Attacker HP damage dealt", "var(--attacker)", timeline.Select(hour => hour.Attacker.HpDamageDealt).ToList()),
+                new("Defender HP damage dealt", "var(--defender)", timeline.Select(hour => hour.Defender.HpDamageDealt).ToList())
+            ],
+            "position" =>
+            [
+                new("Attacker positioning", "var(--attacker)", timeline.Select(hour => hour.Attacker.Positioning).ToList()),
+                new("Defender positioning", "var(--defender)", timeline.Select(hour => hour.Defender.Positioning).ToList()),
+                new("Attacker screening", "var(--attacker)", timeline.Select(hour => hour.Attacker.ScreeningEfficiency).ToList(), true),
+                new("Defender screening", "var(--defender)", timeline.Select(hour => hour.Defender.ScreeningEfficiency).ToList(), true)
+            ],
+            _ =>
+            [
+                new("Attacker HP", "var(--attacker)", timeline.Select(hour => hour.Attacker.Hp / StartHp(view.Attacker)).ToList()),
+                new("Defender HP", "var(--defender)", timeline.Select(hour => hour.Defender.Hp / StartHp(view.Defender)).ToList()),
+                new("Attacker org", "var(--attacker)", timeline.Select(hour => hour.Attacker.Organization / Math.Max(1, view.Attacker.Ships.Sum(ship => ship.Stats.Organization))).ToList(), true),
+                new("Defender org", "var(--defender)", timeline.Select(hour => hour.Defender.Organization / Math.Max(1, view.Defender.Ships.Sum(ship => ship.Stats.Organization))).ToList(), true)
+            ]
+        };
+    }
+
+    private string ChartFormat()
+    {
+        return chart is "hp" or "position" ? "P0" : "F0";
+    }
+
+    private IReadOnlyList<bool> Night()
+    {
+        return view!.Timeline.Select(hour => hour.Night).ToList();
+    }
+
+    private static string OutcomeText(BattleOutcome outcome)
+    {
+        return outcome switch
+        {
+            BattleOutcome.AttackerVictory => "Attacker victory",
+            BattleOutcome.DefenderVictory => "Defender victory",
+            BattleOutcome.BothSidesGone => "Both sides gone",
+            BattleOutcome.Timeout => "Stopped at max hours",
+            _ => "In progress"
+        };
+    }
+
+    private static string OutcomeClass(BattleOutcome outcome)
+    {
+        return outcome switch
+        {
+            BattleOutcome.AttackerVictory => "attacker",
+            BattleOutcome.DefenderVictory => "defender",
+            _ => "warn"
+        };
+    }
+
+    private RenderFragment SideCard(SideView side) => __builder =>
+    {
+        <div class="panel side-card side-@side.Label">
+            <div class="panel-head">
+                <h2 class="@side.Label">@side.Label</h2>
+                <span class="muted">@side.FleetId</span>
+                <span class="badge role right" title="Aggressiveness">@GameLabels.Of(side.Aggressiveness)</span>
+                <span class="badge role" title="Repair priority (not used in combat)">@GameLabels.Of(side.RepairPriority)</span>
+            </div>
+            <div class="panel-body stack">
+                <div class="stats-strip">
+                    <div class="stat"><div class="label">In battle</div><div class="value">@side.InBattle</div><div class="sub">of @side.Count</div></div>
+                    <div class="stat"><div class="label">Sunk</div><div class="value bad">@side.Sunk</div></div>
+                    <div class="stat"><div class="label">Escaped</div><div class="value warn">@side.Escaped</div><div class="sub">@side.Retreating retreating</div></div>
+                </div>
+                <div class="field">
+                    <span class="label">Fleet HP</span>
+                    <Bar Value="side.Hp" Max="side.MaxHp" ShowMax="true" />
+                </div>
+                <dl class="kv">
+                    <dt>Positioning</dt>
+                    <dd>@side.Positioning.ToString("P1")</dd>
+                    <dt>Screening</dt>
+                    <dd>@side.Screening.ToString("P1") <span class="faint">carriers @side.CarrierScreening.ToString("P1")</span></dd>
+                    <dt>HP damage dealt</dt>
+                    <dd>@side.HpDamageDealt.ToString("F1")</dd>
+                    <dt>Shots / hits</dt>
+                    <dd>@side.ShotsFired / @side.Hits @(side.ShotsFired > 0 ? $"({side.Hits / (double)side.ShotsFired:P1})" : "")</dd>
+                </dl>
+                <div>
+                    <div class="row" style="margin-bottom: 6px">
+                        <h4>Damage dealt by</h4>
+                        <div class="button-group right">
+                            <button class="small @(breakdown == "weapon" ? "on" : "")" @onclick="@(() => breakdown = "weapon")">weapon</button>
+                            <button class="small @(breakdown == "role" ? "on" : "")" @onclick="@(() => breakdown = "role")">ship type</button>
+                            <button class="small @(breakdown == "design" ? "on" : "")" @onclick="@(() => breakdown = "design")">design</button>
+                        </div>
+                    </div>
+                    @switch (breakdown)
+                    {
+                        case "role":
+                            <DamageTable Shares="side.DamageDealt.ByRole" Side="@side.Label" Heading="Ship type" />
+                            break;
+                        case "design":
+                            <DamageTable Shares="side.DamageDealt.ByDesign" Side="@side.Label" Heading="Design" />
+                            break;
+                        default:
+                            <DamageTable Shares="side.DamageDealt.ByWeapon" Side="@side.Label" Heading="Weapon" />
+                            break;
+                    }
+                </div>
+            </div>
+        </div>
+    };
+
+    public void Dispose()
+    {
+        Runner.Changed -= OnRunnerChanged;
+    }
+}

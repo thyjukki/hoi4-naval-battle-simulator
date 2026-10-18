@@ -6,14 +6,16 @@ The aim is a simulator that reproduces HOI4 naval combat as closely as possible,
 
 **Matches hoi4.exe 1.19.3** (decoded, engine rewritten to it): ship stats (S-STATS), hour loop and firing order, activation and cooldowns, targeting and screening, hit chance, damage, crits, retreat, submarines, positioning, experience and manpower, and air combat. Built-in defines and static modifiers are vanilla 1.19.3; a mod folder (`--defines`) overrides them.
 
+**GUI** (2026-10-18): a local web app (`src/NavySimulator.Web`, [gui.md](gui.md)) edits scenarios, fleets and designs, steps battles hour by hour with rewind and per-ship combat logs, and runs batches. The engine's hour loop is now `BattleSession`, steppable, with a per-hour timeline and structured events.
+
 **Not yet compared against a recorded battle.** "Matches the code" is not "matches the results" until calibration cases exist.
 
 **Gaps, by impact:**
 1. Combat-time modifier layer: doctrines, admiral skills/traits, spirits, `naval_*_factor` attack/armor/speed (formulas decoded in S-STATS-COMBAT). `data/spirits` is ignored with loader warnings until then.
-2. Weather (hit chance, carrier traffic, naval strike targeting).
+2. Weather (hit chance, carrier traffic, naval strike targeting). `rules.weatherEnabled = false` already matches the game with `disable_weather` (S-WEATHER).
 3. Darkness per sea region; currently [ASSUMED] full dark 20:00 to 06:00.
 4. Critical part damage and lasting penalties (S-CRIT-PART, S-STATS-PARTS).
-5. Late-joining ships, aggression (strength) retreat, task-force retreat; air: kamikaze, port strikes, the top-speed interception term, plane experience, loss split across wings.
+5. Late-joining ships, the aggressiveness check (strength retreat), task-force retreat; air: kamikaze, port strikes, the top-speed interception term, plane experience, loss split across wings.
 6. Nine unsettled cross-finding disagreements ([findings README](reverse-engineering/findings/README.md)); none changes current results.
 
 **Next steps:**
@@ -37,6 +39,12 @@ Static analysis of the executable decoded the hour loop, firing order, activatio
 ## Milestone 2: air combat overhaul (done)
 
 Implemented from the [RE] findings: [mechanics/air.md](mechanics/air.md): sortie cadence and efficiency, carrier stances, the dynamic plane cap, land-based planes joining, targeting, preemptive AA, fleet AA reduction, hits and damage, air crits, plane losses. Scenario inputs for land-based wing groups and carrier stance. Left open: weather terms, kamikaze, port strikes, the top-speed interception term, plane experience.
+
+## GUI (done)
+
+Local Blazor Server app in `src/NavySimulator.Web` ([gui.md](gui.md)): scenario editor with live validation, fleet and design editors writing back to `data/` (design stats with researches and comparisons), Battle page with +1/+10/+N hours, run to end, rewind to any hour, charts, damage dealt split by weapon, ship type and design, fleet trees by ship type, per-ship combat logs and filterable shot/event/air logs, Batch page with outcome distributions and replay by seed, Library, and Settings with a "Simulate as" switch between vanilla and any HOI4 install, local (launcher) mod or workshop mod found on the computer. Engine and loader changes behind it: `BattleSession`, `BattleEvent`/`HourSummary` results, `ContentCatalog`/`BuildScenario`, `CatalogWriter`.
+
+Possible next steps: check modules against hull slots (needs the slot data from milestone 4), edit hulls/modules/researches, A/B batches of two scenarios, a calibration view that overlays a recorded battle (milestone 5).
 
 ## Milestone 3: surface completeness
 

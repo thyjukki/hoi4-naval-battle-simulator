@@ -31,7 +31,7 @@ Each hour:
    After its ships, the side's air step runs in air hours (A-*, [air.md](air.md)). If the enemy has only hidden submarines left (nothing the side can target) and no air acted, all of the side's ships start retreating.
 3. Experience gain (S-XP), end check (S-END).
 
-**Code.** `BattleEngine.cs`. Fire-exchange groups: with `COMBAT_MAX_GROUPS` (1) each side forms one group paired with the other side's, so groups have no effect in vanilla and are not modelled.
+**Code.** `BattleSession.cs` (one hour per `StepHour`; `BattleEngine` runs a session to its end). Fire-exchange groups: with `COMBAT_MAX_GROUPS` (1) each side forms one group paired with the other side's, so groups have no effect in vanilla and are not modelled.
 
 ## S-ORDER: firing order [RE]
 
@@ -78,7 +78,7 @@ Three slots per ship, processed in this order: **heavy, torpedo, light**. Depth 
 
 Each hour, for a slot with attack: `charge = min(charge + 1, ceil(cooldown))`. If `charge >= cooldown`, **one target** is picked for the slot, then the slot fires `while charge >= cooldown: charge -= cooldown` at that target, stopping if it sinks. Guns fire every hour; torpedoes on the fourth processed hour and every fourth after; fractional cooldowns carry over; a cooldown below 1 gives several shots in one hour. Charge is per ship and slot, starts at 0 and is not reset by retreating.
 
-**Code.** `WeaponCadenceRules.Charge`, `TrySpendShot`; `BattleEngine.FireSlots`/`FireAt`.
+**Code.** `WeaponCadenceRules.Charge`, `TrySpendShot`; `BattleSession.FireSlots`/`FireAt`.
 
 ## S-TARGET: target selection [RE]
 
@@ -87,7 +87,7 @@ Lines: 1 screens, 2 capitals, 3 carriers and convoys. Submarines are not on a li
 - **S-TARGET-LIGHT**: lines up to the closest non-empty one (`screens ? 1 : capitals ? 2 : 3`). Any shooter, carriers included.
 - **S-TARGET-HEAVY**: up to line 2 when both screens and capitals are present, otherwise up to line 3.
 - **S-TARGET-TORP**: **one roll** `r`: up to line 1 if `r <= screening`, else line 2 if `r <= carrierScreening`, else line 3. Screens are always candidates when present. There is no fallback: a torpedo with nothing in reach fires at nothing.
-- **S-TARGET-SUB**: submarines have a nearest line from their task force engagement level. Do-not-engage and Low: line 3, or 2 if the carrier line is empty, or 1 if capitals are also gone. Medium: line 2, or 1 if capitals and the carrier line are empty. High and Death Incarnate: line 1. That combines with the torpedo roll, so a low-engagement submarine facing a fully screened convoy fires at nothing. Submarines also use their light slot under the same rule.
+- **S-TARGET-SUB**: submarines have a nearest line from their task force aggressiveness (S-RETREAT). Do Not Engage and Engage At Low Risk: line 3, or 2 if the carrier line is empty, or 1 if capitals are also gone. Engage At Medium Risk: line 2, or 1 if capitals and the carrier line are empty. Engage At High Risk and Always Engage: line 1. That combines with the torpedo roll, so a low-aggressiveness submarine facing a fully screened convoy fires at nothing. Submarines also use their light slot under the same rule.
 - **S-TARGET-DC**: the light slot may target revealed submarines as well as its surface lines; the submarine's weight needs a shooter stat above zero. That stat is not identified; sub detection is [ASSUMED]. A ship whose only weapon is depth charges never picks a target.
 - **S-TARGET-WEIGHT** (`HardcodedValues`):
   - Ships: base capital 2, screen 3, submarine 4, other (carrier) 1; ×15 for heavy and torpedo against capitals and carriers; ×2 for the light slot against screens. Then `× (2 - hpRatio)`.
@@ -114,7 +114,7 @@ shot hits when U < hit   (no upper cap: hit >= 1 always hits)
   - `screening_bonus` × screening (0.4 at full screening) for battle-line and carrier-line shooters;
   - `night` × darkness (−0.25 at full dark), see S-NIGHT.
 
-  Admiral skills and traits, doctrines and weather would add to the same sum; they are not modelled.
+  Admiral skills and traits, doctrines and weather (S-WEATHER) would add to the same sum; they are not modelled.
 - `COMBAT_EVASION_TO_HIT_CHANCE` has no reader in 1.19.3 (dead define).
 
 **Code.** `HitChanceRules.cs`.
@@ -122,6 +122,12 @@ shot hits when U < hit   (no upper cap: hit >= 1 always hits)
 ## S-NIGHT: night [RE effect, ASSUMED darkness]
 
 The static modifier `night` is applied to the battle province "multiplied by amount of darkness": `naval_hit_chance -0.25`, `naval_retreat_speed +0.1` (and `carrier_traffic -1.0` for air), vanilla values; the block is read from the loaded game/mod folder (TFB: `carrier_traffic -0.75`, `naval_torpedo_hit_chance_factor -0.15`). The per-weapon entries (`naval_light_gun|heavy_gun|torpedo_hit_chance_factor`) add to the slot's hit factor in S-HIT-MODS. The engine uses darkness 1 from 20:00 to 06:00 and 0 otherwise (`HardcodedValues.NightStartHour/NightEndHour`, `BattleRules.StartHourOfDay`). The game computes darkness per province from the day/night terminator; that is not decoded. `BattleRules.NightEnabled` turns night off.
+
+## S-WEATHER: weather [RE toggle; terms not modelled]
+
+Each hour the battle reads the weather of its strategic region: a weather type and the region's modifier holder ([RE finding](../reverse-engineering/findings/S-WEATHER-weather-toggle.md)). The weather static modifiers add `naval_hit_chance` to S-HIT-MODS (vanilla `weather_rain_light` −0.05, `weather_rain_heavy` −0.2, `weather_snow` −0.05, `weather_blizzard` −0.1) and change `carrier_traffic` (A-SORTIE) and `naval_strike` (A-HIT). None of these terms is modelled yet; `battleScenario.weather` only shows up in the notes.
+
+The console commands `weather` (toggle) and `disable_weather` reset the weather, rebuild every region's weather state and stop the hourly weather update, so the battle reads a region state that nothing has filled: no weather [RE, medium: the rebuilt state is not decoded]. `BattleRules.WeatherEnabled = false` (scenario `rules.weatherEnabled`) is that setting: the scenario's weather is ignored, and so will the weather terms be once they are modelled. Use it for battles recorded with weather off.
 
 ## S-DMG: damage of a hit [RE]
 
@@ -157,13 +163,15 @@ Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (
 
 **Code.** `DamageRules.Apply`, `ExperienceRules.ApplyDamageLosses`.
 
-## S-RETREAT: retreat decision [RE]
+## S-RETREAT: retreat decision [RE + CAL]
 
 Only fighting ships, from tick `COMBAT_MIN_DURATION` (8), before they fire:
-- Threshold by the task force engagement level: Do-not-engage and Low `REPAIR_AND_RETURN_PRIO_LOW_COMBAT` (0.9); Medium `..._MEDIUM_COMBAT` (0.6); High and Death Incarnate `..._HIGH_COMBAT` (0.4). Capital ships and carriers multiply it by `CAPITAL_SHIP_COMBAT_RETREAT_MULT` (0.5).
+- Threshold by the task force **aggressiveness**, the game's "Select aggressiveness" setting (its engagement rule): Do Not Engage and Engage At Low Risk `REPAIR_AND_RETURN_PRIO_LOW_COMBAT` (0.9); Engage At Medium Risk `..._MEDIUM_COMBAT` (0.6); Engage At High Risk and Always Engage `..._HIGH_COMBAT` (0.4). Capital ships and carriers multiply it by `CAPITAL_SHIP_COMBAT_RETREAT_MULT` (0.5).
 - If `hp / maxHp < threshold`: roll `U <= COMBAT_RETREAT_DECISION_CHANCE` (0.2); success → retreating, no shots this hour. Organization is not used.
+- The task force's **repair priority** (Never repair, Low, Medium, High; save key `repair_mode`) is a different setting despite the `REPAIR_AND_RETURN_PRIO_*_COMBAT` define names. It decides when a task force goes home for repairs and is not read in combat. Scenarios record it per side (`repairPriority`, default High: the 230 task forces left at their defaults in the recorded save all had `repair_mode=3`, with `navy_engagement_rule=2`, the aggressiveness default), and the engine keeps it with the side without using it.
+- [CAL] The aggressiveness, not the repair priority, sets the threshold. In a recorded TFB battle (75 vs 75 light cruisers, `data/battle-scenario-la-vs-torp-cl3.json`), both task forces were on Always Engage (`navy_engagement_rule=4`) and Never repair (`repair_mode=0`). The battle ended with all 74 surviving Romanian ships at or below 40% HP (highest 52.8 of 132). That matches 0.4; Never repair under the repair-priority reading would have been 0.9.
 
-**Not modelled** (documented in the finding): the retreat-chance modifiers (`naval_retreat_chance`, the after-initial-combat one, the enemy's); the side-wide retreat order; the **aggression check**, which makes healthy ships of an outmatched task force retreat (it needs a strength score that is not decoded); and the convoy-raiding submarine rule (`SUBMARINE_ESCAPE_RATIOS`). `REPAIR_AND_RETURN_UNIT_DYING_STR` is not read by naval combat.
+**Not modelled** (documented in the finding): the retreat-chance modifiers (`naval_retreat_chance`, the after-initial-combat one, the enemy's); the side-wide retreat order; the **aggressiveness check**, which makes healthy ships of an outmatched task force retreat (it needs a strength score that is not decoded); and the convoy-raiding submarine rule (`SUBMARINE_ESCAPE_RATIOS`). `REPAIR_AND_RETURN_UNIT_DYING_STR` is not read by naval combat.
 
 **Code.** `RetreatRules.TryStartRetreat`. `BattleRules.RetreatEnabled = false` disables retreat (tooling).
 
@@ -222,7 +230,7 @@ The battle ends when either side has no ship left in it (waiting, fighting or re
 | S-HIT | capped at 100% | no cap; minimum 0.005 applied last |
 | S-CRIT | ×(1 + 4·(1−rel)); depth charges ignored armor | ×(1 + 5·(1−rel)); depth charges use piercing tiers |
 | S-DMG | separate positioning multiplier; ×(level damage) | additive (1 − penalty + damage − defense) |
-| S-RETREAT | repair priority 0.6/0.3/0.1 | engagement level 0.9/0.6/0.4, capitals ×0.5 |
+| S-RETREAT | repair priority 0.6/0.3/0.1 | aggressiveness 0.9/0.6/0.4, capitals ×0.5 |
 | S-RETREAT-SPEED | multiplicative screening bonus; subs replace base | additive; subs add to base; hidden subs faster |
 | S-SUB | always revealed | hidden/revealed with reveal rolls |
 | S-XP | 7 legacy levels, linear damage bonus, gain ∝ enemy/own | 5 levels, static modifiers, gain ∝ (enemy+1)/(own+1), HP-based loss |

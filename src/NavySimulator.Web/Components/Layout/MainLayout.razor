@@ -1,0 +1,66 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject Workspace Workspace
+@inject BattleRunner Runner
+
+<header class="topbar">
+    <a class="brand" href="">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 19h22l-3 6H8z" /><path d="M11 19v-6h9l2 6" class="stroke" /><path d="M15 13V7h5" class="stroke" /></svg>
+        <span>NavySimulator</span>
+    </a>
+    <nav>
+        <NavLink href="" Match="NavLinkMatch.All">Battle</NavLink>
+        <NavLink href="scenario">Scenario</NavLink>
+        <NavLink href="fleets">Fleets</NavLink>
+        <NavLink href="designs">Designs</NavLink>
+        <NavLink href="batch">Batch</NavLink>
+        <NavLink href="library">Library</NavLink>
+        <NavLink href="settings">Settings</NavLink>
+    </nav>
+    <div class="topbar-status">
+        <a href="settings" class="scenario-chip" title="Whose defines and static modifiers the battles use (Settings)">
+            <span class="muted">Simulating</span>
+            <strong>@Workspace.RulesetName</strong>
+            @if (Workspace.Scenario.Defines.Count > 0)
+            {
+                <span class="muted">+ scenario defines</span>
+            }
+        </a>
+        <a href="scenario" class="scenario-chip" title="Scenario being edited">
+            <span class="muted">Scenario</span>
+            <strong>@Workspace.Scenario.ID</strong>
+            <span class="muted">@(Workspace.ScenarioFile ?? "unsaved")</span>
+            @if (Workspace.ScenarioDirty)
+            {
+                <span class="dot-dirty" title="Unsaved changes"></span>
+            }
+        </a>
+        @if (Runner.IsRunning)
+        {
+            <span class="pill running">simulating…</span>
+        }
+    </div>
+</header>
+
+<main class="page">
+    @Body
+</main>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += Refresh;
+        Runner.Changed += Refresh;
+    }
+
+    private void Refresh()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= Refresh;
+        Runner.Changed -= Refresh;
+    }
+}

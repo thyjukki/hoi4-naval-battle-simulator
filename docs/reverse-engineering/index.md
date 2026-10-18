@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH].
 
 ## 1. Functions
 
@@ -18,8 +18,11 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 
 | RVA | Name / role | Spec IDs | Finding |
 |---|---|---|---|
+| 0x36f0 | console command registration (`weather`, `enable_weather`, `disable_weather`, `reloadweather`, `set_weather`, …) | S-WEATHER | [WTH/cmd] |
 | 0x1a5630 | "Resetting game": sets gamestate+0xa39 (via 0x1edff0) | S-MANPOWER | [XP/mp] |
 | 0x1edff0 | sets gamestate+0xa39 refill flag (callers: startup, reset, savegame load) | S-MANPOWER | [XP/mp] |
+| 0x22e040 | console `weather` / `enable_weather` / `disable_weather` handler (mode 0 toggle, 1 on, else off) | S-WEATHER | [WTH/cmd] |
+| 0x2874b0 | console `set_weather` ("Weather was set to '"); not decoded | S-WEATHER | [WTH/open] |
 | 0x535c40 | resolves member+0x10 convoy reference | S-TARGET | [TGT/bb] |
 | 0x5574d0 | modifier registration call `(token, id, …)` | — | [HIT/map], [DMG/conv] |
 | 0x557aa0 | add modifier block scaled by `s` | S-XP-EFFECT | [XP/effect] |
@@ -94,7 +97,13 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xdda5d0 | "LOADING_SAVEGAME" (caller of 0x1edff0) | S-MANPOWER | [XP/mp] |
 | 0xe23bb0 | strategic region init: `region+0x140 = region+0x60 mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT)` | A-CADENCE | [AIR/cadence] |
 | 0xe24530 | air clock: is this an air hour for the region | A-CADENCE | [AIR/cadence] |
+| 0xf185a0 | weather manager reset: cells, region states, seed, +0x348 = 1, +0x34a = 0 | S-WEATHER | [WTH/cmd] |
 | 0xf19660 | province darkness | S-NIGHT | [HOUR/night] |
+| 0xf1a000 | region weather state `wm+0x40 + i × 0x160` (null out of range; leaf) | S-WEATHER | [WTH/combat] |
+| 0xf1c6e0 | CWeatherManager::HourlyUpdate; skipped while +0x349 or +0x34a | S-WEATHER | [WTH/cmd] |
+| 0xf1cb90 | rebuild weather cells (+0x10) and region states (+0x40) | S-WEATHER | [WTH/cmd], [WTH/open] |
+| 0xf1f710 | weather on: log seed, run HourlyUpdate | S-WEATHER | [WTH/cmd] |
+| 0xf218a0 | mark every weather cell dirty (+0x3a8) for the map | S-WEATHER | [WTH/cmd] |
 | 0xf60760 | plane speed with modifiers | A-INTERCEPT | [AIR/conv] |
 | 0xf60970 | raw plane stat `(wing, out, idx, missionFlags)` | A-* | [AIR/conv] |
 | 0xf60bc0 | naval strike agility per plane | A-AA-PREEMPT | [AIR/conv] |
@@ -124,7 +133,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x15c44e0 | CNavalCombat validity (vt+0x48) → 0x13e2ba0 | S-HOUR | [HOUR/chain] |
 | 0x15c52b0 | merge unpaired groups (HOUR); "per-side joins" (POS) | S-HOUR | [HOUR/hour], [POS/recompute] |
 | 0x15c55d0 | pair fire-exchange groups | FEX | [HOUR/fex] |
-| 0x15c5820 | refresh environment: weather/terrain (+0xa8, +0xb0), darkness (+0xb8) | S-HOUR, S-NIGHT | [HOUR/hour] |
+| 0x15c5820 | refresh environment: weather type (+0xa8) and region weather holder (+0xb0) from 0xf1a000, darkness (+0xb8) | S-HOUR, S-NIGHT, S-WEATHER | [HOUR/hour], [WTH/combat] |
 | 0x15c6250 | per-attacker damage record (kill/assist credit) | S-DMG-APPLY, A-DMG | [DMG/apply], [AIR/dmg] |
 | 0x15c70b0 | `Mod(id; country, location, admiral)` modifier sum | S-POS | [POS/pos], [HOUR/end] |
 | 0x15c7580 | fleet exempt from side-wide retreat | S-RETREAT, S-END | [ACT/retreat], [HOUR/end] |
@@ -205,8 +214,8 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x197d4a0 | plane-weighted equipment averages (+0xc8..+0xe8) | A-HIT | [AIR/graph] |
 | 0x197d770 | set carrier cooldown (no effect) | A-CADENCE | [AIR/cadence] |
 | 0x197d990 | AirFX save code | A-CADENCE | [AIR/cadence] |
-| 0x1989c60 | aggression strength score (not decoded) | S-RETREAT | [ACT/retreat] |
-| 0x1989fe0 | aggression ratio `min(own/max(enemy, 0.1), 10)` | S-RETREAT | [ACT/retreat] |
+| 0x1989c60 | aggressiveness-check strength score (not decoded) | S-RETREAT | [ACT/retreat] |
+| 0x1989fe0 | aggressiveness-check ratio `min(own/max(enemy, 0.1), 10)` | S-RETREAT | [ACT/retreat] |
 | 0x198a080 | update fleet distance (+0x118) | S-HOUR | [HOUR/hour] |
 | 0x1aa8f60..0x1ab5598 | tooltips/script triggers reading ship level | S-XP-EFFECT | [XP/effect] |
 | 0x1ad7f00 | convoy hit profile | S-HIT-SHIP | [HIT/ship] |
@@ -360,7 +369,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 |---|---|---|
 | +0x8 / +0x14 | members / count | [HOUR/fex], [XP/gain] |
 | +0x20 | enemy group (mutual) | [HOUR/fex] |
-| +0x30 | aggression ratio (0 for +0x10c/+0x10d combats) | [ACT/retreat] |
+| +0x30 | aggressiveness-check ratio (0 for +0x10c/+0x10d combats) | [ACT/retreat] |
 | +0x38 | side (combatant) | [HOUR/fex], [POS/dmg] |
 | +0x40 | COMBAT_CHASE_RESIGNATION_HOURS copy (unread) | [HOUR/end] |
 | +0x48 | sub detection D of the enemy | [ACT/sub] |
@@ -395,7 +404,8 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | +0x28 / +0x30 | attacker / defender combatant (CCombat) | [HOUR/chain] |
 | +0x44 | hours (first-hour value 0 or 1 ?) | [HOUR/chain], [ACT/bg], [POS/recompute] |
 | +0x98 / +0xa0 | the same two sides, typed | [HOUR/chain] |
-| +0xa8, +0xb0 | weather/terrain state; +0xb0 = weather/region modifier holder | [HOUR/hour], [AIR/conv] |
+| +0x38 | → +0xc8 strategic region of the battle (medium) | [WTH/combat] |
+| +0xa8, +0xb0 | weather type (0 none; 2/3/4/5 from region-state flags +0x108/+0x110/+0x118/+0x120); +0xb0 = region weather state +0x48, the weather modifier holder (0 without a state) | [HOUR/hour], [AIR/conv], [WTH/combat] |
 | +0xb8 | province darkness (> 0 = dark) | [HOUR/night], [AIR/conv] |
 | +0x10c / +0x10d | convoy-type / special combat flags (HOUR, ACT). **disagrees**: AIR calls +0x10c the port-strike flag | [HOUR/hour], [ACT/sub], [AIR/conv] |
 | +0x118 | fleet distance | [HOUR/hour] |
@@ -409,8 +419,8 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | +0x1b4 | > 0 = in combat | [XP/gain] |
 | +0x348 / +0x354 | ships / count | [XP/gain] |
 | +0x374 | mission: 3 convoy raiding; 4 convoy escort? | [ACT/retreat], [POS/convoy] |
-| +0x391 | flag: aggression value = 0 if set | [ACT/retreat] |
-| +0x394 | aggressiveness level 0..4 | [ACT/retreat], [TGT/sub] |
+| +0x391 | flag: aggressiveness-check value = 0 if set | [ACT/retreat] |
+| +0x394 | aggressiveness (engagement rule) 0..4, save key `navy_engagement_rule` | [ACT/retreat], [TGT/sub] |
 | +0x4ec | carrier stance index | [AIR/conv] |
 
 ### AirFX (air object)
@@ -443,6 +453,14 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | strategic region | +0x140 | air phase | [AIR/cadence] |
 | gamestate | +0x468 | date in hours | [AIR/cadence] |
 | gamestate | +0xa39 | manpower refill flag (startup/reset/load?) | [XP/mp] |
+| gamestate | +0x688 | weather manager | [WTH/cmd] |
+| weather manager | +0x10 | weather cells (0x180 bytes each; +0x28 active) | [WTH/cmd] |
+| weather manager | +0x40 / +0x4c | region weather states (0x160 bytes each) / count | [WTH/combat] |
+| weather manager | +0x308 | random seed | [WTH/cmd] |
+| weather manager | +0x348 / +0x349 / +0x34a | init passes pending / second skip flag ? / weather disabled | [WTH/cmd] |
+| region weather state | +0x48 | weather modifier holder | [WTH/combat] |
+| region weather state | +0x108 / +0x110 / +0x118 / +0x120 | weather flags → combat type 2 / 3 / 4 / 5 (which weather is which ?) | [WTH/combat], [WTH/open] |
+| strategic region | +0x58 | index into the weather manager's region states | [WTH/combat] |
 | country | +0x5b8 | modifiers | [POS/pos], [XP/gain] |
 | admiral | +0x418 | modifiers | [POS/pos] |
 | convoy | +0x20, +0x18 → +0x2e8 | current / max for the HP ratio (medium) | [TGT/weight] |
@@ -552,7 +570,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | BASE_GUN_COOLDOWNS, MIN_GUN_COOLDOWN | 0x1972a70 | cooldown | [ACT/cooldown] |
 | REPAIR_AND_RETURN_PRIO_LOW / MEDIUM / HIGH_COMBAT | 0x1971816 (jump table 0x1971bd8) | HP threshold by aggressiveness | [ACT/retreat] |
 | CAPITAL_SHIP_COMBAT_RETREAT_MULT | 0x197197a | ×0.5 for capitals and carriers | [ACT/retreat] |
-| SUBMARINE_ESCAPE_RATIOS, AGGRESSION_SETTINGS_VALUES, AGGRESION_MULTIPLIER_FOR_COMBAT | 0x19717f0 | convoy-raid sub and aggression paths | [ACT/retreat] |
+| SUBMARINE_ESCAPE_RATIOS, AGGRESSION_SETTINGS_VALUES, AGGRESION_MULTIPLIER_FOR_COMBAT | 0x19717f0 | convoy-raid sub rule and aggressiveness check | [ACT/retreat] |
 | AGGRESSION_*_EFFICIENCY_* | 0x1989c60 | strength score (not decoded) | [ACT/retreat] |
 | COMBAT_RETREAT_DECISION_CHANCE | 0x1975280 | roll P | [ACT/retreat] |
 | REPAIR_AND_RETURN_UNIT_DYING_STR | 0xb0f375, 0xd64ebc | not naval combat | [ACT/retreat] |
@@ -631,7 +649,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 
 Cross-file disagreements are flagged "**disagrees**" in the tables above; the three settled ones are in [findings/README.md][README/disagree].
 
-- Aggression strength score 0x1989c60 internals. [ACT/open], [README-RE]
+- Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
 - Darkness value computation; whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
 - `0xc31030` part instance aggregation. [DMG/open]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
@@ -657,6 +675,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - `0xf78160` (fuel?); `airfx+0xc0` source; caller and 5th argument of 0x16205c0. [AIR/open]
 - Port-strike branch (`combat+0x10c`, PORT_STRIKE_DAMAGE_FACTOR). [AIR/open]
 - `0xf80f60` per-wing losses/experience. [AIR/losses]
+- Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
 
 [README]: findings/README.md
 [README/disagree]: findings/README.md#disagreements-between-findings-and-how-they-were-settled
@@ -742,3 +761,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [AIR/crit]: findings/A-air-combat.md#a-crit-crits-from-air
 [AIR/losses]: findings/A-air-combat.md#a-losses
 [AIR/open]: findings/A-air-combat.md#open-questions--unresolved
+[WTH]: findings/S-WEATHER-weather-toggle.md
+[WTH/cmd]: findings/S-WEATHER-weather-toggle.md#console-commands
+[WTH/combat]: findings/S-WEATHER-weather-toggle.md#what-a-battle-reads
+[WTH/open]: findings/S-WEATHER-weather-toggle.md#unresolved

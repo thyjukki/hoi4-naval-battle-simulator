@@ -1,0 +1,527 @@
+@page "/designs"
+@implements IDisposable
+@inject Workspace Workspace
+
+<PageTitle>Designs · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Ship designs</h1>
+    <span class="muted">Hull + modules + optional MIO, in <code>ship-designs/</code>. Stats follow S-STATS-DESIGN.</span>
+    <button class="right" @onclick="NewDesign">New design</button>
+</div>
+
+@if (message is not null)
+{
+    <div class="message @(messageIsError ? "error" : "info")" style="margin-bottom: 14px">@message</div>
+}
+@if (pendingId is not null)
+{
+    <div class="message warning row" style="margin-bottom: 14px">
+        <span>@(editing?.ID) has unsaved changes.</span>
+        <button class="small" @onclick="() => Select(pendingId, true)">Discard and open @pendingId</button>
+        <button class="small ghost" @onclick="() => pendingId = null">Keep editing</button>
+    </div>
+}
+
+<div class="panel" style="margin-bottom: 14px">
+    <div class="panel-head">
+        <input type="search" placeholder="Filter designs, hulls, modules…" @bind="filter" @bind:event="oninput" style="width: 260px" />
+        <div class="button-group">
+            <button class="small @(roleFilter is null ? "on" : "")" @onclick="() => roleFilter = null">All</button>
+            @foreach (var role in Enum.GetValues<ShipRole>())
+            {
+                <button class="small @(roleFilter == role ? "on" : "")" @onclick="() => roleFilter = role">@role</button>
+            }
+        </div>
+        <span class="muted small right">@Rows().Count designs · click a column to sort</span>
+    </div>
+    <div class="scroll" style="max-height: 340px">
+        <table class="data compact">
+            <thead>
+                <tr>
+                    <th class="sortable" @onclick="@(() => SortBy("id"))">Design @Arrow("id")</th>
+                    <th class="sortable" @onclick="@(() => SortBy("hull"))">Hull @Arrow("hull")</th>
+                    <th>Role</th>
+                    <th class="num">Modules</th>
+                    @foreach (var stat in StatInfo.Headline)
+                    {
+                        <th class="num sortable" title="@stat.Label" @onclick="() => SortBy(stat.Key)">@stat.Short @Arrow(stat.Key)</th>
+                    }
+                    <th class="num">Fleets</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in Rows())
+                {
+                    <tr class="clickable @(row.Design.ID == selectedId ? "selected" : "")" @onclick="() => Select(row.Design.ID)">
+                        <td>@row.Design.ID</td>
+                        <td class="muted">@row.Design.HullID</td>
+                        <td>@row.Role</td>
+                        <td class="num">@row.Design.ModuleIDs.Count</td>
+                        @foreach (var stat in StatInfo.Headline)
+                        {
+                            <td class="num">@(row.Stats is null ? "" : stat.Display(row.Stats))</td>
+                        }
+                        <td class="num">@row.Fleets</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (editing is null)
+{
+    <div class="panel"><p class="empty">Pick a design above, or create a new one.</p></div>
+}
+else
+{
+    var problems = new List<string>();
+    var stats = Workspace.DesignStats(editing, problems);
+    var hull = Workspace.FindHull(editing.HullID);
+    <div class="split wide-left">
+        <div class="stack">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>@(isNew ? "New design" : originalId)</h2>
+                    @if (Dirty)
+                    {
+                        <span class="badge escaped">unsaved</span>
+                    }
+                    <div class="row tight right">
+                        <button class="primary" @onclick="Save" disabled="@(!Dirty)">Save</button>
+                        <button class="ghost" @onclick="Revert" disabled="@(!Dirty || isNew)">Revert</button>
+                        <button @onclick="Duplicate" disabled="@isNew">Duplicate</button>
+                        <button class="danger" @onclick="Delete" disabled="@isNew">Delete</button>
+                    </div>
+                </div>
+                <div class="panel-body stack">
+                    <div class="fields">
+                        <div class="field span-2">
+                            <label>ID</label>
+                            <input type="text" @bind="editing.ID" @bind:event="oninput" />
+                            @if (!isNew && editing.ID != originalId && usedBy.Count > 0)
+                            {
+                                <span class="hint warn">Renaming also renames it in @string.Join(", ", usedBy).</span>
+                            }
+                        </div>
+                        <div class="field span-2">
+                            <label>File</label>
+                            <FilePicker Folder="@CatalogWriter.ShipDesignsFolder" @bind-Value="file" />
+                        </div>
+                        <div class="field span-2">
+                            <label>Hull</label>
+                            <select @bind="editing.HullID" class="@(hull is null ? "invalid" : "")">
+                                @if (hull is null)
+                                {
+                                    <option value="@editing.HullID">@(string.IsNullOrEmpty(editing.HullID) ? "(choose a hull)" : $"{editing.HullID} (unknown)")</option>
+                                }
+                                @foreach (var group in Workspace.Catalog.Hulls.GroupBy(item => item.Role))
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var item in group)
+                                        {
+                                            <option value="@item.ID">@item.ID · @string.Join("/", item.Types)</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                        </div>
+                        <div class="field span-2">
+                            <label>MIO</label>
+                            <select @bind:get="editing.MioID ?? string.Empty" @bind:set="SetMio">
+                                <option value="">(none)</option>
+                                @foreach (var mio in Workspace.Catalog.Mios)
+                                {
+                                    <option value="@mio.ID">@mio.ID</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    @if (usedBy.Count > 0)
+                    {
+                        <p class="small muted">Used by fleets: @foreach (var fleet in usedBy) { <a href="@($"fleets?id={Uri.EscapeDataString(fleet)}")" style="margin-right: 8px">@fleet</a> }</p>
+                    }
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>Modules</h2>
+                    <span class="muted small">@editing.ModuleIDs.Count fitted · slots are not checked against the hull</span>
+                </div>
+                <div class="panel-body module-list">
+                    @for (var i = 0; i < editing.ModuleIDs.Count; i++)
+                    {
+                        var index = i;
+                        var moduleId = editing.ModuleIDs[index];
+                        <div class="module-row">
+                            <span class="index">@(index + 1)</span>
+                            <select value="@moduleId" @onchange="args => SetModule(index, args.Value?.ToString())" title="@ModuleSummary(moduleId)"
+                                    class="@(Workspace.Library.Modules.ContainsKey(moduleId) ? "" : "invalid")">
+                                @if (!Workspace.Library.Modules.ContainsKey(moduleId))
+                                {
+                                    <option value="@moduleId">@moduleId (unknown)</option>
+                                }
+                                @ModuleOptions()
+                            </select>
+                            <span class="row tight">
+                                <button class="small icon" title="Fit another of this module" @onclick="() => editing.ModuleIDs.Insert(index + 1, moduleId)">+</button>
+                                <button class="small icon danger" title="Remove" @onclick="() => editing.ModuleIDs.RemoveAt(index)">✕</button>
+                            </span>
+                        </div>
+                        <div class="small faint" style="margin: -3px 0 2px 36px">@ModuleSummary(moduleId)</div>
+                    }
+                    <div class="module-row" style="margin-top: 6px">
+                        <span class="index">+</span>
+                        <select @bind="moduleToAdd">
+                            <option value="">Add a module…</option>
+                            @ModuleOptions()
+                        </select>
+                        <button class="small" @onclick="AddModule" disabled="@string.IsNullOrEmpty(moduleToAdd)">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Stats</h2>
+                <div class="row tight right small">
+                    <span class="muted">with researches of</span>
+                    <div class="button-group">
+                        <button class="small @(researchSide == "none" ? "on" : "")" @onclick="@(() => researchSide = "none")">none</button>
+                        <button class="small @(researchSide == "attacker" ? "on" : "")" @onclick="@(() => researchSide = "attacker")">attacker</button>
+                        <button class="small @(researchSide == "defender" ? "on" : "")" @onclick="@(() => researchSide = "defender")">defender</button>
+                    </div>
+                </div>
+            </div>
+            <div class="panel-head">
+                <span class="small muted">Compare with</span>
+                <select @bind="compareWith" class="grow">
+                    <option value="@SavedOption">the saved version</option>
+                    <option value="">nothing</option>
+                    @foreach (var design in Workspace.Catalog.ShipDesigns.Where(design => design.ID != originalId))
+                    {
+                        <option value="@design.ID">@design.ID</option>
+                    }
+                </select>
+            </div>
+            @if (problems.Count > 0)
+            {
+                <div class="panel-body"><div class="message error">@string.Join("; ", problems)</div></div>
+            }
+            @if (stats is not null)
+            {
+                var shown = Shown(editing) ?? stats;
+                var other = Comparison();
+                <div class="panel-body flush">
+                    <table class="data compact">
+                        <thead>
+                            <tr>
+                                <th>Stat</th>
+                                <th class="num">@(researchSide == "none" ? "Design" : $"Ship ({researchSide})")</th>
+                                @if (other is not null)
+                                {
+                                    <th class="num">@(compareWith == SavedOption ? "Saved" : compareWith)</th>
+                                    <th class="num">Change</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var group in StatInfo.All.Where(stat => stat.Get(shown) != 0 || (other is not null && stat.Get(other) != 0)).GroupBy(stat => stat.Group))
+                            {
+                                <tr><td colspan="4" class="list-group" style="padding: 4px 8px">@group.Key</td></tr>
+                                @foreach (var stat in group)
+                                {
+                                    var value = stat.Get(shown);
+                                    var otherValue = other is null ? 0 : stat.Get(other);
+                                    var delta = value - otherValue;
+                                    <tr>
+                                        <td class="muted">@stat.Label</td>
+                                        <td class="num">@stat.Display(value)</td>
+                                        @if (other is not null)
+                                        {
+                                            <td class="num faint">@stat.Display(otherValue)</td>
+                                            <td class="num @(Math.Abs(delta) < 1e-9 ? "faint" : (delta > 0) == stat.HigherIsBetter ? "ok" : "bad")">
+                                                @(Math.Abs(delta) < 1e-9 ? "–" : (delta > 0 ? "+" : "") + stat.Display(delta))
+                                            </td>
+                                        }
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private const string SavedOption = "\u0000saved";
+
+    private string filter = string.Empty;
+    private ShipRole? roleFilter;
+    private string sortKey = "id";
+    private bool sortDescending;
+    private string? selectedId;
+    private string? originalId;
+    private string originalJson = string.Empty;
+    private string? originalFile;
+    private ShipDesignDto? editing;
+    private ShipDesignDto? saved;
+    private string file = string.Empty;
+    private bool isNew;
+    private string? pendingId;
+    private string? moduleToAdd;
+    private string researchSide = "none";
+    private string compareWith = SavedOption;
+    private IReadOnlyList<string> usedBy = [];
+    private string? message;
+    private bool messageIsError;
+    private string? confirmDelete;
+
+    [SupplyParameterFromQuery(Name = "id")] public string? IdFromQuery { get; set; }
+
+    private bool Dirty => editing is not null && (isNew || Workspace.Json(editing) != originalJson || file != originalFile);
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += OnWorkspaceChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (IdFromQuery is { } id && id != selectedId)
+        {
+            Select(id, true);
+        }
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private sealed record DesignRow(ShipDesignDto Design, ShipRole? Role, ShipStats? Stats, int Fleets);
+
+    private List<DesignRow> Rows()
+    {
+        var rows = Workspace.Catalog.ShipDesigns
+            .Select(design => new DesignRow(design, Workspace.RoleOf(design), Workspace.DesignStats(design), Workspace.FleetsUsingDesign(design.ID).Count))
+            .Where(row => roleFilter is null || row.Role == roleFilter)
+            .Where(row => filter.Length == 0 ||
+                          row.Design.ID.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                          row.Design.HullID.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                          row.Design.ModuleIDs.Any(module => module.Contains(filter, StringComparison.OrdinalIgnoreCase)));
+        var stat = StatInfo.All.FirstOrDefault(candidate => candidate.Key == sortKey);
+        var ordered = sortKey switch
+        {
+            "hull" => rows.OrderBy(row => row.Design.HullID, StringComparer.Ordinal),
+            _ when stat is not null => rows.OrderBy(row => row.Stats is null ? double.MinValue : stat.Get(row.Stats)),
+            _ => rows.OrderBy(row => row.Design.ID, StringComparer.Ordinal)
+        };
+        var list = ordered.ToList();
+
+        if (sortDescending)
+        {
+            list.Reverse();
+        }
+
+        return list;
+    }
+
+    private void SortBy(string key)
+    {
+        sortDescending = sortKey == key ? !sortDescending : key != "id" && key != "hull";
+        sortKey = key;
+    }
+
+    private string Arrow(string key)
+    {
+        return sortKey != key ? string.Empty : sortDescending ? "▾" : "▴";
+    }
+
+    private void Select(string id, bool force = false)
+    {
+        if (!force && Dirty && id != selectedId)
+        {
+            pendingId = id;
+            return;
+        }
+
+        pendingId = null;
+        message = null;
+        var design = Workspace.FindDesign(id);
+
+        if (design is null)
+        {
+            return;
+        }
+
+        selectedId = id;
+        originalId = id;
+        saved = Workspace.Clone(design);
+        editing = Workspace.Clone(design);
+        originalJson = Workspace.Json(editing);
+        originalFile = Workspace.Catalog.SourceFileOf(design) ?? $"{CatalogWriter.ShipDesignsFolder}/custom.json";
+        file = originalFile;
+        isNew = false;
+        usedBy = Workspace.FleetsUsingDesign(id);
+        confirmDelete = null;
+    }
+
+    private void NewDesign()
+    {
+        if (Dirty)
+        {
+            message = "Save or revert the current design first.";
+            messageIsError = true;
+            return;
+        }
+
+        selectedId = null;
+        originalId = null;
+        saved = null;
+        editing = new ShipDesignDto { ID = "new_design", HullID = Workspace.Catalog.Hulls.FirstOrDefault()?.ID ?? string.Empty };
+        originalJson = string.Empty;
+        originalFile = null;
+        file = Workspace.Catalog.FilesIn(CatalogWriter.ShipDesignsFolder).FirstOrDefault() ?? $"{CatalogWriter.ShipDesignsFolder}/custom.json";
+        isNew = true;
+        usedBy = [];
+        compareWith = string.Empty;
+        message = null;
+    }
+
+    private void Save()
+    {
+        try
+        {
+            Workspace.SaveDesign(editing!, file, isNew ? null : originalId);
+            var savedId = editing!.ID;
+            Select(savedId, true);
+            message = $"Saved {savedId} to {file}.";
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+    }
+
+    private void Revert()
+    {
+        Select(originalId!, true);
+    }
+
+    private void Duplicate()
+    {
+        var copy = Workspace.Clone(editing!);
+        var id = editing!.ID + "_copy";
+
+        for (var i = 2; Workspace.FindDesign(id) is not null; i++)
+        {
+            id = $"{editing.ID}_copy{i}";
+        }
+
+        copy.ID = id;
+        editing = copy;
+        selectedId = null;
+        originalId = null;
+        isNew = true;
+        usedBy = [];
+        message = "Duplicated. Save to create it.";
+        messageIsError = false;
+    }
+
+    private void Delete()
+    {
+        if (confirmDelete != originalId)
+        {
+            confirmDelete = originalId;
+            message = $"Click Delete again to remove {originalId} from {originalFile}.";
+            messageIsError = true;
+            return;
+        }
+
+        var blockers = Workspace.DeleteDesign(originalId!);
+
+        if (blockers.Count > 0)
+        {
+            message = $"{originalId} is used by {string.Join(", ", blockers)}; remove it from those fleets first.";
+            messageIsError = true;
+            confirmDelete = null;
+            return;
+        }
+
+        message = $"Deleted {originalId}.";
+        messageIsError = false;
+        editing = null;
+        selectedId = null;
+        confirmDelete = null;
+    }
+
+    private void SetMio(string? value)
+    {
+        editing!.MioID = string.IsNullOrEmpty(value) ? null : value;
+    }
+
+    private void SetModule(int index, string? value)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            editing!.ModuleIDs[index] = value;
+        }
+    }
+
+    private void AddModule()
+    {
+        editing!.ModuleIDs.Add(moduleToAdd!);
+    }
+
+    private string ModuleSummary(string moduleId)
+    {
+        var module = Workspace.Catalog.Modules.FirstOrDefault(candidate => candidate.ID == moduleId);
+        return module is null ? string.Empty : StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers);
+    }
+
+    private RenderFragment ModuleOptions() => __builder =>
+    {
+        @foreach (var group in Workspace.Catalog.Modules.GroupBy(module => Workspace.ModuleCategory(module)))
+        {
+            <optgroup label="@group.Key">
+                @foreach (var module in group)
+                {
+                    <option value="@module.ID">@module.ID</option>
+                }
+            </optgroup>
+        }
+    };
+
+    private ShipStats? Shown(ShipDesignDto design)
+    {
+        return researchSide switch
+        {
+            "attacker" => Workspace.ShipStats(design, Workspace.Scenario.Attacker),
+            "defender" => Workspace.ShipStats(design, Workspace.Scenario.Defender),
+            _ => Workspace.DesignStats(design)
+        };
+    }
+
+    private ShipStats? Comparison()
+    {
+        if (compareWith == SavedOption)
+        {
+            return saved is null ? null : Shown(saved);
+        }
+
+        return string.IsNullOrEmpty(compareWith) || Workspace.FindDesign(compareWith) is not { } design ? null : Shown(design);
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+    }
+}

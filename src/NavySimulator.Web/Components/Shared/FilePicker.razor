@@ -1,0 +1,72 @@
+@* Picks a JSON file of a data folder (e.g. "ship-designs/battleships.json"), or names a new one. *@
+@inject Workspace Workspace
+
+<div class="row tight">
+    <select class="grow" value="@(creating ? NewOption : Value)" @onchange="OnSelect">
+        @foreach (var file in Files())
+        {
+            <option value="@file">@file</option>
+        }
+        <option value="@NewOption">New file…</option>
+    </select>
+    @if (creating)
+    {
+        <span class="muted small">@Folder/</span>
+        <input type="text" placeholder="custom.json" value="@newName" @onchange="OnName" style="width: 160px" />
+    }
+</div>
+
+@code {
+    private const string NewOption = "\u0000new";
+    private bool creating;
+    private string newName = string.Empty;
+
+    [Parameter, EditorRequired] public string Folder { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    private IEnumerable<string> Files()
+    {
+        var files = Workspace.Catalog.FilesIn(Folder).ToList();
+
+        if (!creating && !string.IsNullOrEmpty(Value) && !files.Contains(Value))
+        {
+            files.Add(Value);
+        }
+
+        return files;
+    }
+
+    private async Task OnSelect(ChangeEventArgs args)
+    {
+        var value = args.Value?.ToString() ?? string.Empty;
+        creating = value == NewOption;
+
+        if (!creating)
+        {
+            await ValueChanged.InvokeAsync(value);
+        }
+        else if (newName.Length > 0)
+        {
+            await ValueChanged.InvokeAsync($"{Folder}/{newName}");
+        }
+    }
+
+    private async Task OnName(ChangeEventArgs args)
+    {
+        var name = Path.GetFileName(args.Value?.ToString()?.Trim() ?? string.Empty);
+
+        if (name.Length == 0)
+        {
+            return;
+        }
+
+        if (!name.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            name += ".json";
+        }
+
+        newName = name;
+        await ValueChanged.InvokeAsync($"{Folder}/{newName}");
+    }
+}

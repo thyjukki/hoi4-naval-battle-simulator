@@ -4,12 +4,13 @@ using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Results;
 
-namespace NavySimulator.Cli;
+namespace NavySimulator.GameData;
 
 public static class ReportWriter
 {
     private static readonly CultureInfo Invariant = CultureInfo.InvariantCulture;
 
+    /// <summary>Writes summary.txt, hourly.log, shots.csv, ships.csv and (with air strikes) air.csv for one run.</summary>
     public static void WriteRun(string directory, BattleResult result)
     {
         Directory.CreateDirectory(directory);
@@ -133,7 +134,7 @@ public static class ReportWriter
         ];
     }
 
-    private static string BuildAirCsv(BattleResult result)
+    public static string BuildAirCsv(BattleResult result)
     {
         var builder = new StringBuilder();
         builder.AppendLine("hour,side,source,target,flying,intercepted,shotDownByAa,hits,aaReduction,critical,hpDamage,orgDamage,killingBlow");
@@ -169,7 +170,7 @@ public static class ReportWriter
                 $"HP dmg dealt {group.Sum(ship => ship.HpDamageDealt):F1}, taken {group.Sum(ship => ship.HpDamageTaken):F1}");
     }
 
-    private static string BuildShotsCsv(BattleResult result)
+    public static string BuildShotsCsv(BattleResult result)
     {
         var builder = new StringBuilder();
         builder.AppendLine("hour,side,shooter,weapon,target,targetGroup,hitChance,profileFactor,hitModifier,hit,damage,piercingTier,critical,partHit,hpDamage,orgDamage,killingBlow");
@@ -199,7 +200,7 @@ public static class ReportWriter
         return builder.ToString();
     }
 
-    private static string BuildShipsCsv(BattleResult result)
+    public static string BuildShipsCsv(BattleResult result)
     {
         var builder = new StringBuilder();
         builder.AppendLine("side,ship,design,role,maxHp,finalHp,maxOrg,finalOrg,manpower,startXp,finalXp,status,sunk,sunkHour,retreatedHour,shots,hits,damageDealt,hpDamageDealt,hpDamageTaken");

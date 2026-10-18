@@ -98,10 +98,10 @@ Called only for members in state 2 when `combat.CanRetreat()` = `hour >= COMBAT_
 0. **Side-wide retreat order** (0x1971760): if the own combatant has its retreat flag (`[combatant+0x140]`) set and the
    ship is not exempt (0x15c7580) → state 8 (or 16 if arriving). Also checked in states 1 and 4, without the min-duration
    gate. NEW (player/AI "retreat" order).
-1. **HP threshold** by the task force's *aggressiveness/engagement level* `L = taskforce[+0x394]` (the same field the
+1. **HP threshold** by the task force's *aggressiveness* (its engagement rule) `L = taskforce[+0x394]` (the same field the
    submarine targeting rule uses, 0x1971dff; assert text "Aggressiveness level"): jump table 0x1971bd8
-   `L 0 (do not engage), 1 (low) → REPAIR_AND_RETURN_PRIO_LOW_COMBAT (0.9); L 2 (medium) → ..._MEDIUM_COMBAT (0.6);
-   L 3 (high), 4 (death incarnate) → ..._HIGH_COMBAT (0.4)`; L 5 asserts. Convoys (no ship) use HIGH.
+   `L 0 (Do Not Engage), 1 (Engage At Low Risk) → REPAIR_AND_RETURN_PRIO_LOW_COMBAT (0.9); L 2 (Engage At Medium Risk) → ..._MEDIUM_COMBAT (0.6);
+   L 3 (Engage At High Risk), 4 (Always Engage) → ..._HIGH_COMBAT (0.4)`; L 5 asserts. Convoys (no ship) use HIGH.
    If the ship is a capital ship or a carrier: `thr *= CAPITAL_SHIP_COMBAT_RETREAT_MULT (0.5)` (0x197197a).
 2. **Convoy-raiding submarines** (ship is sub and task-force mission `[+0x374] == 3` = CONVOY RAIDING):
    retreat **immediately, no roll**, if `ownSubsInGroup <= round(enemyActiveShipsWithDepthCharges * SUBMARINE_ESCAPE_RATIOS[L])`
@@ -109,7 +109,7 @@ Called only for members in state 2 when `combat.CanRetreat()` = `hour >= COMBAT_
 3. If `hp / maxHp < thr` (strict; ratio 0xc3ac60 = `[+0x6f8] / max([+0x308], 0.001)`): roll P (below); success → retreat.
    Organisation is not used.
 4. (Convoys only: a further check on carrier-box presence/attack capability, not decoded.)
-5. **Aggression check** (ships, reached when step 3 did not trigger, including a failed roll — so a second, independent
+5. **Aggressiveness check** (ships, reached when step 3 did not trigger, including a failed roll — so a second, independent
    roll can happen in the same tick):
    - if `L != 0` and the ship is a sub and the enemy has no active depth-charge ships → no retreat;
    - if `L == 4` → never; if `L == 0` → roll P every tick;
@@ -117,7 +117,7 @@ Called only for members in state 2 when `combat.CanRetreat()` = `hour >= COMBAT_
      `ratio = min(score(own vs enemy) / max(score(enemy vs own), 0.1), 10)` (0x1989fe0; score 0x1989c60 uses the
      AGGRESSION_*_EFFICIENCY_* defines; stored in group +0x30, 0 for special combats flagged at combat +0x10c/+0x10d);
      if `a * ratio < 1` → roll P.
-   NEW: healthy ships of an outmatched task force retreat at P per hour (low: own/enemy < 1.67, medium < 0.8, high < 0.5).
+   NEW: healthy ships of an outmatched task force retreat at P per hour (Engage At Low Risk: own/enemy < 1.67, Medium Risk < 0.8, High Risk < 0.5).
 - **Roll P** (0x1975280): `P = COMBAT_RETREAT_DECISION_CHANCE (0.2) × (1 + naval_retreat_chance[ship, idx 0x57])`
   `× (1 + naval_retreat_chance_after_initial_combat[ship, idx 0x58], only if hour > COMBAT_INITIAL_DURATION)`
   `× (1 + naval_enemy_retreat_chance[opponent combatant, idx 0x1b9])`, clamped to [0,1]; success if `roll <= P`.
@@ -126,10 +126,10 @@ Called only for members in state 2 when `combat.CanRetreat()` = `hour >= COMBAT_
   their use (the second is gated by the "initial combat" duration); medium confidence on names.
 - On success state = 8 (retreating); escape progress starts from 0.
 
-**Verdict.** DIFFERS: threshold is selected by the task force aggressiveness (engagement) level, not repair priority,
+**Verdict.** DIFFERS: threshold is selected by the task force aggressiveness (engagement rule), not repair priority,
 mapping {0,1}→0.9, 2→0.6, {3,4}→0.4 (game file values; the spec text's 0.6/0.3/0.1 and 0.22 are stale, the engine's
 defaults 0.9/0.6/0.4 and 0.2 are right); capital ships and carriers use half the threshold; P has three modifier factors;
-the deciding ship does not fire that tick; NEW aggression-based and convoy-raid-sub retreat paths and side-wide order.
+the deciding ship does not fire that tick; NEW aggressiveness-check and convoy-raid-sub retreat paths and side-wide order.
 Gate MATCHES (`hour >= 8`, game counter; engine 0-based hour ≥ 7) but only active (state-2) ships are checked.
 `COMBAT_INITIAL_DURATION` only gates the "after initial combat" modifier. `REPAIR_AND_RETURN_UNIT_DYING_STR` is not read
 by naval combat code (readers 0xb0f375, 0xd64ebc are elsewhere). **Confidence: high** for structure/thresholds/gates,
@@ -198,10 +198,10 @@ hour-0 sub-only rule; low for flag +0xd8 meaning.
 2. Replace `NextFireHour` with a per-ship, per-slot accumulator: each processed hour `p = min(p + 1, ceil(cd))`;
    `while p >= cd: p -= cd; shoot` (one target per slot per hour). Slot 2 = light + depth charges. Add
    `naval_torpedo_cooldown_factor` to the torpedo cooldown, clamp at MIN_GUN_COOLDOWN. Drop `FirstShotWaitsForCooldown`.
-3. `RetreatRules`: key the threshold on task-force aggressiveness (DoNotEngage/Low → LOW_COMBAT, Medium → MEDIUM,
-   High/DeathIncarnate → HIGH), multiply by CAPITAL_SHIP_COMBAT_RETREAT_MULT for capitals and carriers; only active
+3. `RetreatRules`: key the threshold on task-force aggressiveness (DoNotEngage/EngageAtLowRisk → LOW_COMBAT, EngageAtMediumRisk → MEDIUM,
+   EngageAtHighRisk/AlwaysEngage → HIGH), multiply by CAPITAL_SHIP_COMBAT_RETREAT_MULT for capitals and carriers; only active
    ships, gate `tick >= COMBAT_MIN_DURATION`; deciding ship skips its shots that hour; P with the three modifiers.
-   Add the aggression path (needs the strength score from 0x1989c60, or a BattleRules variant until decoded),
+   Add the aggressiveness check (needs the strength score from 0x1989c60, or a BattleRules variant until decoded),
    the convoy-raid sub rule with SUBMARINE_ESCAPE_RATIOS (add the define + AGGRESSION_SETTINGS_VALUES), and a
    side-wide retreat order. Convoys enter "retreating" when they activate.
 4. `EscapeSpeedPerDay`: additive formula above (hours/24 duration term, sub/hidden-sub bonuses on top of BASE,
@@ -215,5 +215,5 @@ hour-0 sub-only rule; low for flag +0xd8 meaning.
 ## Unresolved
 - Identity of ship-type flag bit 39 (counted with carriers, box 3) — probably `support_ship`.
 - Exact meaning of combatant +0xd8 and combat +0x10c/+0x10d flags; convoy-only branch in the retreat check.
-- Strength score 0x1989c60 internals (aggression ratio) not decoded here.
+- Strength score 0x1989c60 internals (aggressiveness ratio) not decoded here.
 - Whether slot 2 with both light guns and depth charges fires both in one call (inside 0x19740c0, damage area).

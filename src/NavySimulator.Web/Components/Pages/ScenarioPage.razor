@@ -1,0 +1,405 @@
+@page "/scenario"
+@implements IDisposable
+@inject Workspace Workspace
+@inject NavigationManager Navigation
+
+<PageTitle>Scenario · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Scenario</h1>
+    <select @bind="fileToOpen" aria-label="Scenario file">
+        @foreach (var file in files)
+        {
+            <option value="@file">@file</option>
+        }
+    </select>
+    <button @onclick="Open" disabled="@(string.IsNullOrEmpty(fileToOpen))">Open</button>
+    <button @onclick="New">New</button>
+    <div class="sep"></div>
+    <button class="primary" @onclick="Save" disabled="@(Workspace.ScenarioFile is null || !Workspace.ScenarioDirty)">Save</button>
+    <input type="text" placeholder="new-file.json" @bind="saveAsName" style="width: 170px" aria-label="Save as file name" />
+    <button @onclick="SaveAs" disabled="@string.IsNullOrWhiteSpace(saveAsName)">Save as</button>
+    <button class="ghost" @onclick="Revert" disabled="@(!Workspace.ScenarioDirty)">Revert</button>
+    <span class="small muted">
+        @(Workspace.ScenarioFile ?? "not saved yet")
+        @if (Workspace.ScenarioDirty)
+        {
+            <span class="warn"> · unsaved changes</span>
+        }
+    </span>
+    <button class="right primary" @onclick="GoToBattle" disabled="@(build is null || build.Errors.Count > 0)">Start battle ▸</button>
+</div>
+
+@if (message is not null)
+{
+    <div class="message @(messageIsError ? "error" : "info")" style="margin-bottom: 14px">@message</div>
+}
+@if (Workspace.ScenarioLoadError is { } loadError)
+{
+    <div class="message error" style="margin-bottom: 14px">@loadError</div>
+}
+
+<div class="message @(build is null ? "" : build.Errors.Count > 0 ? "error" : "info")" style="margin-bottom: 14px">
+    @if (build is null || validating)
+    {
+        <span class="muted">Validating…</span>
+    }
+    else if (build.Errors.Count > 0)
+    {
+        <strong>@build.Errors.Count problem@(build.Errors.Count == 1 ? "" : "s") stop this scenario from running</strong>
+        <ul>@foreach (var error in build.Errors) { <li>@error</li> }</ul>
+    }
+    else
+    {
+        <span class="ok">✓ Valid.</span>
+        <span class="muted">
+            @build.Scenario!.Attacker.Fleet.Ships.Count vs @build.Scenario.Defender.Fleet.Ships.Count ships ·
+            defines: @string.Join(" → ", build.Scenario.Defines.Sources)
+            @if (build.DefinesReport is { } report && report.Applied.Count > 0)
+            {
+                <span> (@report.Applied.Count values applied)</span>
+            }
+        </span>
+    }
+    @if (build is not null && build.Warnings.Count > 0)
+    {
+        <details style="margin-top: 6px">
+            <summary class="small warn" style="cursor: pointer">@build.Warnings.Count warnings about ignored content</summary>
+            <ul class="small muted">@foreach (var warning in build.Warnings) { <li>@warning</li> }</ul>
+        </details>
+    }
+</div>
+
+<div class="grid-3" style="margin-bottom: 14px">
+    <div class="panel">
+        <div class="panel-head"><h2>General</h2></div>
+        <div class="panel-body fields">
+            <div class="field span-2">
+                <label>ID</label>
+                <input type="text" @bind="Scenario.ID" @bind:after="Edited" />
+            </div>
+            <div class="field">
+                <label>Terrain</label>
+                <input type="text" @bind="Scenario.Terrain" @bind:after="Edited" />
+                <span class="hint">Not simulated yet.</span>
+            </div>
+            <div class="field">
+                <label>Weather</label>
+                <input type="text" @bind="Scenario.Weather" @bind:after="Edited" />
+                <span class="hint">Only "clear" is modelled.</span>
+            </div>
+            <div class="field">
+                <label>Max hours</label>
+                <input type="number" min="1" @bind="Scenario.MaxHours" @bind:after="Edited" />
+                <span class="hint">Safety stop; 0 uses @(new BattleRules().MaxHours).</span>
+            </div>
+            <div class="field">
+                <label>Iterations</label>
+                <input type="number" min="1" @bind="Scenario.Iterations" @bind:after="Edited" />
+                <span class="hint">Runs per batch.</span>
+            </div>
+            <div class="field">
+                <label>Seed</label>
+                <input type="number" placeholder="random" @bind="Scenario.Seed" @bind:after="Edited" />
+                <span class="hint">Empty: random each time.</span>
+            </div>
+            <div class="field span-2">
+                <label class="check"><input type="checkbox" @bind:get="!(Scenario.DontRetreat ?? false)" @bind:set="SetRetreat" /> Ships may retreat</label>
+                <label class="check"><input type="checkbox" @bind:get="Scenario.ContinueAfterRetreat ?? false" @bind:set="SetContinue" /> Re-engage after a side fully escaped</label>
+                <span class="hint">Both are tooling options, not game mechanics.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><h2>Rules</h2><span class="muted small">mechanics not settled by reverse-engineering</span></div>
+        <div class="panel-body fields">
+            <div class="field">
+                <label>Damage randomness</label>
+                <select @bind:get="Rules?.DamageRandomness ?? string.Empty" @bind:set="SetRandomness">
+                    <option value="">Game (default)</option>
+                    @foreach (var model in Enum.GetNames<DamageRandomnessModel>())
+                    {
+                        <option value="@model">@model</option>
+                    }
+                </select>
+            </div>
+            <div class="field">
+                <label>Start hour of day</label>
+                <input type="number" min="0" max="23" placeholder="@DefaultRules.StartHourOfDay" @bind:get="Rules?.StartHourOfDay" @bind:set="SetStartHour" />
+                <span class="hint">Battle hour 0. Night is 20:00 to 06:00 [ASSUMED].</span>
+            </div>
+            <div class="field">
+                <label>Air region phase</label>
+                <input type="number" placeholder="@DefaultRules.AirRegionPhase" @bind:get="Rules?.AirRegionPhase" @bind:set="SetAirPhase" />
+                <span class="hint">Strategic region id (mod 8): air strikes when hour of day mod 8 equals it.</span>
+            </div>
+            <div class="field">
+                <label class="check"><input type="checkbox" @bind:get="Rules?.NightEnabled ?? DefaultRules.NightEnabled" @bind:set="SetNight" /> Night modifiers</label>
+            </div>
+            <div class="field">
+                <label class="check"><input type="checkbox" @bind:get="Rules?.WeatherEnabled ?? DefaultRules.WeatherEnabled" @bind:set="SetWeather" /> Weather</label>
+                <span class="hint">Off is the game with the console command disable_weather.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><h2>Defines</h2><span class="muted small">applied over vanilla 1.19.3, in order</span></div>
+        <div class="panel-body stack">
+            @for (var i = 0; i < Scenario.Defines.Count; i++)
+            {
+                var index = i;
+                <div class="row tight">
+                    <input type="text" class="grow" value="@Scenario.Defines[index]" @onchange="args => SetDefine(index, args.Value?.ToString())" />
+                    <button class="small icon danger" title="Remove" @onclick="() => RemoveDefine(index)">✕</button>
+                </div>
+            }
+            <div class="row tight">
+                <input type="text" class="grow" placeholder="defines/tfb-legacy.lua or a HOI4/mod folder" @bind="newDefine" />
+                <button class="small" @onclick="AddDefine" disabled="@string.IsNullOrWhiteSpace(newDefine)">Add</button>
+            </div>
+            <p class="hint small muted">
+                Relative paths are inside the data directory. Saved with the scenario.
+                @if (Workspace.ExtraDefineSources.Count > 0)
+                {
+                    <span>Then the GUI's own sources apply: @string.Join(", ", Workspace.ExtraDefineSources) (<a href="settings">settings</a>).</span>
+                }
+                else
+                {
+                    <span>To always apply your mod's defines, add its folder in <a href="settings">Settings</a>.</span>
+                }
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="margin-bottom: 10px">
+    <button class="small" @onclick="Swap" title="Exchange the two sides (the attacker fires first each hour)">⇄ Swap sides</button>
+    <button class="small" @onclick="Mirror" title="Give the defender the attacker's whole setup">Mirror attacker → defender</button>
+</div>
+<div class="grid-2">
+    <SideEditor Label="attacker" Side="Scenario.Attacker" Other="Scenario.Defender" OnChanged="Edited" />
+    <SideEditor Label="defender" Side="Scenario.Defender" Other="Scenario.Attacker" OnChanged="Edited" />
+</div>
+
+@code {
+    private static readonly BattleRules DefaultRules = new();
+
+    private IReadOnlyList<string> files = [];
+    private string? fileToOpen;
+    private string? saveAsName;
+    private string? newDefine;
+    private string? message;
+    private bool messageIsError;
+    private ScenarioBuild? build;
+    private bool validating;
+    private CancellationTokenSource? pendingValidation;
+
+    private BattleScenarioDto Scenario => Workspace.Scenario;
+    private BattleRulesDto? Rules => Scenario.Rules;
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += OnWorkspaceChanged;
+        RefreshFiles();
+        _ = Validate(0);
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void RefreshFiles()
+    {
+        files = Workspace.ListScenarioFiles();
+        fileToOpen = Workspace.ScenarioFile ?? files.FirstOrDefault();
+    }
+
+    private async Task Edited()
+    {
+        Workspace.ScenarioEdited();
+        await Validate(400);
+    }
+
+    private async Task Validate(int delayMs)
+    {
+        pendingValidation?.Cancel();
+        var cancellation = new CancellationTokenSource();
+        pendingValidation = cancellation;
+        validating = true;
+
+        try
+        {
+            await Task.Delay(delayMs, cancellation.Token);
+            var snapshot = Workspace.Clone(Scenario);
+            var result = await Task.Run(() => Workspace.BuildScenario(snapshot), cancellation.Token);
+
+            if (!cancellation.IsCancellationRequested)
+            {
+                build = result;
+                validating = false;
+                StateHasChanged();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // A newer edit restarted validation.
+        }
+    }
+
+    private void Do(Action action, string? success = null)
+    {
+        try
+        {
+            action();
+            message = success;
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or SetupValidationException or ArgumentException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+    }
+
+    private async Task Open()
+    {
+        if (Workspace.ScenarioDirty && fileToOpen != Workspace.ScenarioFile)
+        {
+            message = "Discarded the unsaved changes of the previous scenario.";
+        }
+
+        Do(() => Workspace.OpenScenario(fileToOpen!));
+        await Validate(0);
+    }
+
+    private async Task New()
+    {
+        Do(Workspace.NewScenario, "New scenario. Save it under a file name to keep it.");
+        await Validate(0);
+    }
+
+    private void Save()
+    {
+        Do(() => Workspace.SaveScenario(), $"Saved {Workspace.ScenarioFile}.");
+        RefreshFiles();
+    }
+
+    private void SaveAs()
+    {
+        Do(() => Workspace.SaveScenario(saveAsName), "Saved.");
+
+        if (!messageIsError)
+        {
+            message = $"Saved as {Workspace.ScenarioFile}.";
+        }
+
+        saveAsName = null;
+        RefreshFiles();
+    }
+
+    private async Task Revert()
+    {
+        Do(Workspace.RevertScenario, "Reverted to the saved file.");
+        await Validate(0);
+    }
+
+    private void GoToBattle()
+    {
+        Navigation.NavigateTo($"?seed={Scenario.Seed ?? Random.Shared.Next(1, 1_000_000)}");
+    }
+
+    private async Task Swap()
+    {
+        (Scenario.Attacker, Scenario.Defender) = (Scenario.Defender, Scenario.Attacker);
+        await Edited();
+    }
+
+    private async Task Mirror()
+    {
+        Scenario.Defender = Workspace.Clone(Scenario.Attacker);
+        await Edited();
+    }
+
+    private BattleRulesDto EnsureRules()
+    {
+        return Scenario.Rules ??= new BattleRulesDto();
+    }
+
+    private async Task SetRandomness(string value)
+    {
+        EnsureRules().DamageRandomness = string.IsNullOrEmpty(value) ? null : value;
+        await Edited();
+    }
+
+    private async Task SetStartHour(int? value)
+    {
+        EnsureRules().StartHourOfDay = value;
+        await Edited();
+    }
+
+    private async Task SetAirPhase(int? value)
+    {
+        EnsureRules().AirRegionPhase = value;
+        await Edited();
+    }
+
+    private async Task SetNight(bool value)
+    {
+        EnsureRules().NightEnabled = value == DefaultRules.NightEnabled ? null : value;
+        await Edited();
+    }
+
+    private async Task SetWeather(bool value)
+    {
+        EnsureRules().WeatherEnabled = value == DefaultRules.WeatherEnabled ? null : value;
+        await Edited();
+    }
+
+    private async Task SetRetreat(bool value)
+    {
+        Scenario.DontRetreat = !value;
+        await Edited();
+    }
+
+    private async Task SetContinue(bool value)
+    {
+        Scenario.ContinueAfterRetreat = value;
+        await Edited();
+    }
+
+    private async Task SetDefine(int index, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            Scenario.Defines.RemoveAt(index);
+        }
+        else
+        {
+            Scenario.Defines[index] = value.Trim();
+        }
+
+        await Edited();
+    }
+
+    private async Task RemoveDefine(int index)
+    {
+        Scenario.Defines.RemoveAt(index);
+        await Edited();
+    }
+
+    private async Task AddDefine()
+    {
+        Scenario.Defines.Add(newDefine!.Trim());
+        newDefine = null;
+        await Edited();
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+        pendingValidation?.Cancel();
+    }
+}

@@ -138,7 +138,7 @@ maxBox = r <= s ? 1 : (r <= c ? 2 : 3)
 **Confidence:** high (the modifier name is medium).
 
 ### S-TARGET-SUB (submarine shooters), SubMinBox 0x1971db4..0x1971e94
-The aggressiveness is `ship+0x728` (task force) `+0x394`. The same field is "Aggressiveness level" in 0x1971816 (repair priority 0/1 -> LOW, 2 -> MEDIUM, 3/4 -> HIGH). It is presumably the 5 UI engagement levels (Do Not Engage, Low, Medium, High, Always) stored as 0..4.
+The aggressiveness is `ship+0x728` (task force) `+0x394`. The same field is "Aggressiveness level" in 0x1971816 (retreat threshold 0/1 -> LOW, 2 -> MEDIUM, 3/4 -> HIGH; the REPAIR_AND_RETURN_PRIO_* define names notwithstanding, this is not the repair priority). It is the 5 UI aggressiveness settings (Do Not Engage, Engage At Low Risk, Engage At Medium Risk, Engage At High Risk, Always Engage) stored as 0..4, `navy_engagement_rule` in saves.
 
 `carrierLine = visible enemy carriers + convoys + bit-39 types`; `capOrCarrier = carrierLine + capitals`:
 - level <= 1: `minBox = carrierLine > 0 ? 3 : (capOrCarrier > 0 ? 2 : 1)`
@@ -152,7 +152,7 @@ The filter is `minBox <= box <= maxBox` for boxes 1..3. Torpedo maxBox (the scre
 2. The screening roll is one roll (as above).
 3. The minBox also applies to the sub's gun 2.
 4. Subs can only shoot subs with heavy or torpedo guns if the target is retreating (state 8); weight then also needs arg4 > 0, so this is practically never.
-**Confidence:** high for the logic; medium for the 0..4 level mapping (from the retreat switch and the loc keys `SHIP_ENGAGEMENT_BUTTON_AGGRESSIVENESS_1..5`).
+**Confidence:** high for the logic; high for the 0..4 level mapping (from the retreat switch and the loc keys `SHIP_ENGAGEMENT_BUTTON_AGGRESSIVENESS_1..5`; confirmed for Always Engage = 4 by a recorded battle, see S-RETREAT [CAL] in surface.md).
 
 ### S-TARGET-DC
 Depth charges are not a separate gun: gun 2 fires if light **or** depth-charge attack > 0. With gun 2, **revealed** subs (box 5) are always candidates alongside the closest surface line (subs are not range-filtered). Their weight is 4 only if the shooter's arg4 stat (`Ship+0x228`, modifier 0x29; convoys `+0x208`) is > 0, else 0. Hidden subs are never candidates.
@@ -200,7 +200,7 @@ Then `w = trunc(base * dmg)` and the target state multiplier: state 2 (fighting)
 3. **TargetingRules.ReachableGroups:** replace with `maxBox` (light: screens ? 1 : capitals ? 2 : 3; heavy: capitals && screens ? 2 : 3; torpedo: single roll `r` vs penetration-adjusted `s` and `c`) and take every surface line <= maxBox.
    - Remove the "closest group" fallback for torpedoes, and the carrier/convoy light-gun exclusion.
    - Use visible-count emptiness, ideally snapshotted per hour.
-4. **Submarine shooters:** the minimum line comes from aggressiveness: level <= 1 -> 3, falling back to 2 or 1 if the higher lines are empty; level 2 -> 2, falling back to 1; level >= 3 -> 1. Intersect with the torpedo maxBox. If the range is empty, no shot. Map the engine's Low / Medium / High risk to 1 / 2 / 3.
+4. **Submarine shooters:** the minimum line comes from aggressiveness: level <= 1 -> 3, falling back to 2 or 1 if the higher lines are empty; level 2 -> 2, falling back to 1; level >= 3 -> 1. Intersect with the torpedo maxBox. If the range is empty, no shot. Map the engine's EngageAtLowRisk / EngageAtMediumRisk / EngageAtHighRisk to 1 / 2 / 3.
 5. **Depth charges:** merge into the light slot. With the light gun, revealed subs are always candidates (weight 4, needs the shooter's arg4 stat > 0); hidden subs never are. The surface-line range filter does not apply to subs.
 6. **TargetWeight:**
    - Use the state multiplier: fighting x1.5, retreating x0.5, waiting x1 (exclusive). Convoys count as retreating once active.

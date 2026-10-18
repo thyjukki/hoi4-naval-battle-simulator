@@ -1,0 +1,89 @@
+@* One side's ships grouped by design ("ship type"); a design row expands into its ships. *@
+<table class="fleet-tree">
+    <thead>
+        <tr>
+            <th>Ship type</th>
+            <th>State</th>
+            <th style="width: 26%">HP</th>
+            <th style="width: 12%">Org</th>
+            <th class="num" title="Shots fired / hits">Shots</th>
+            <th class="num" title="HP damage dealt">Dealt</th>
+            <th class="num" title="HP damage taken">Taken</th>
+            <th class="num" title="Ships sunk">Kills</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var design in Side.Designs)
+        {
+            var open = Expanded.Contains(Key(design));
+            <tr class="design-row" @onclick="() => Toggle(design)">
+                <td>
+                    <span class="caret @(open ? "open" : "")">▸</span>
+                    <span title="@design.Role">@design.DesignId</span>
+                    <span class="muted">×@design.Count</span>
+                </td>
+                <td class="nowrap small">
+                    <span title="In battle">@design.InBattle</span>
+                    @if (design.Sunk > 0)
+                    {
+                        <span class="bad" title="Sunk"> · @design.Sunk sunk</span>
+                    }
+                    @if (design.Escaped > 0)
+                    {
+                        <span class="warn" title="Escaped"> · @design.Escaped escaped</span>
+                    }
+                    @if (design.Retreating > 0)
+                    {
+                        <span class="warn" title="Retreating"> · @design.Retreating retr.</span>
+                    }
+                </td>
+                <td><Bar Value="design.Hp" Max="design.MaxHp" Title="@($"{design.Hp:F0} / {design.MaxHp:F0} HP")" /></td>
+                <td><Bar Kind="org" Value="design.Organization" Max="design.MaxOrganization" ShowLabel="false" Title="@($"{design.Organization:F0} / {design.MaxOrganization:F0} organization (ships afloat)")" /></td>
+                <td class="num">@design.ShotsFired<span class="faint">/@design.Hits</span></td>
+                <td class="num">@design.HpDamageDealt.ToString("F0")</td>
+                <td class="num">@design.HpDamageTaken.ToString("F0")</td>
+                <td class="num">@design.Kills</td>
+            </tr>
+            @if (open)
+            {
+                @foreach (var ship in design.Ships)
+                {
+                    <tr class="ship-row @(ship.Id == SelectedShipId ? "selected" : "") @(ship.InBattle ? "" : "gone")"
+                        @onclick="() => OnSelect.InvokeAsync(ship.Id)" style="cursor: pointer">
+                        <td>@ship.Number</td>
+                        <td><StatusBadge Status="@ship.StatusName" /></td>
+                        <td><Bar Value="Math.Max(0, ship.Hp)" Max="ship.Stats.Hp" ShowMax="true" Title="@($"{Math.Max(0, ship.Hp):F1} / {ship.Stats.Hp:F1} HP")" /></td>
+                        <td><Bar Kind="org" Value="Math.Max(0, ship.Organization)" Max="ship.Stats.Organization" ShowLabel="false" Title="@($"{Math.Max(0, ship.Organization):F1} / {ship.Stats.Organization:F1} organization")" /></td>
+                        <td class="num">@ship.ShotsFired<span class="faint">/@ship.Hits</span></td>
+                        <td class="num">@ship.HpDamageDealt.ToString("F1")</td>
+                        <td class="num">@ship.HpDamageTaken.ToString("F1")</td>
+                        <td class="num">@ship.Kills</td>
+                    </tr>
+                }
+            }
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter, EditorRequired] public SideView Side { get; set; } = null!;
+
+    /// <summary>Keys "side/design" of the expanded design rows; owned by the page so it survives re-renders.</summary>
+    [Parameter, EditorRequired] public HashSet<string> Expanded { get; set; } = null!;
+
+    [Parameter] public string? SelectedShipId { get; set; }
+    [Parameter] public EventCallback<string> OnSelect { get; set; }
+
+    public static string Key(DesignGroup design)
+    {
+        return $"{design.Side}/{design.DesignId}";
+    }
+
+    private void Toggle(DesignGroup design)
+    {
+        if (!Expanded.Remove(Key(design)))
+        {
+            Expanded.Add(Key(design));
+        }
+    }
+}

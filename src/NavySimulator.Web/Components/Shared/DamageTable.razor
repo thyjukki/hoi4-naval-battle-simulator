@@ -1,0 +1,64 @@
+@* One split of a side's damage dealt: a row per weapon, ship role or design, with its share of the side's HP damage. *@
+@if (Shares.Count == 0)
+{
+    <p class="muted small">No fire yet.</p>
+}
+else
+{
+    <table class="data compact damage-table">
+        <thead>
+            <tr>
+                <th>@Heading</th>
+                <th class="num">HP</th>
+                <th style="width: 30%">Share</th>
+                <th class="num">Org</th>
+                <th class="num" title="Hits / shots fired (hit rate); air strikes are counted apart">Hits</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var share in Shares)
+            {
+                var ratio = total <= 0 ? 0 : share.HpDamage / total;
+                <tr>
+                    <td class="nowrap" title="@share.Label">@share.Label</td>
+                    <td class="num">@share.HpDamage.ToString("F0")</td>
+                    <td>
+                        <div class="share">
+                            <div class="bar thin"><span style="width: @Width(ratio); background: var(--@Side)"></span></div>
+                            <span class="num small">@ratio.ToString("P0")</span>
+                        </div>
+                    </td>
+                    <td class="num faint">@share.OrganizationDamage.ToString("F0")</td>
+                    <td class="num small">
+                        @if (share.ShotsFired > 0)
+                        {
+                            <span title="@($"{share.Hits} hits of {share.ShotsFired} shots")">@share.Hits<span class="faint">/@share.ShotsFired</span> <span class="faint">(@share.HitRate.ToString("P0"))</span></span>
+                        }
+                        @if (share.AirStrikes > 0)
+                        {
+                            <span class="faint">@(share.ShotsFired > 0 ? " + " : "")@share.AirStrikes strikes</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private double total;
+
+    [Parameter, EditorRequired] public IReadOnlyList<DamageShare> Shares { get; set; } = [];
+    [Parameter, EditorRequired] public string Side { get; set; } = string.Empty;
+    [Parameter] public string Heading { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        total = Shares.Sum(share => share.HpDamage);
+    }
+
+    private static string Width(double ratio)
+    {
+        return (Math.Clamp(ratio, 0, 1) * 100).ToString("F1", CultureInfo.InvariantCulture) + "%";
+    }
+}

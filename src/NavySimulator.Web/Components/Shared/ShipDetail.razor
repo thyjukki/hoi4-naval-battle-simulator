@@ -1,0 +1,220 @@
+@* One ship: its state at the shown hour, its stats, an HP/org chart and its own combat log. *@
+<div class="panel ship-detail">
+    <div class="panel-head">
+        <h2>@Ship.DesignId @Ship.Number</h2>
+        <SideBadge Side="@Ship.Side" />
+        <StatusBadge Status="@Ship.StatusName" />
+        <span class="badge role">@Ship.Role</span>
+        <span class="muted small mono">@Ship.Id</span>
+        <button class="ghost small right" @onclick="OnClose">Close ✕</button>
+    </div>
+    <div class="panel-body">
+        <div class="grid-3">
+            <div class="stack">
+                <div class="field">
+                    <span class="label">HP</span>
+                    <Bar Value="Math.Max(0, Ship.Hp)" Max="Ship.Stats.Hp" Format="F1" ShowMax="true" />
+                </div>
+                <div class="field">
+                    <span class="label">Organization</span>
+                    <Bar Kind="org" Value="Math.Max(0, Ship.Organization)" Max="Ship.Stats.Organization" Format="F1" ShowMax="true" />
+                </div>
+                <dl class="kv">
+                    <dt>Experience</dt>
+                    <dd>@Ship.Experience.ToString("F1")</dd>
+                    <dt>Shots / hits</dt>
+                    <dd>@Ship.ShotsFired / @Ship.Hits @(Ship.ShotsFired > 0 ? $"({Ship.Hits / (double)Ship.ShotsFired:P1})" : "")</dd>
+                    <dt>HP damage dealt</dt>
+                    <dd>@Ship.HpDamageDealt.ToString("F1") <span class="faint">(org @Ship.OrganizationDamageDealt.ToString("F1"))</span></dd>
+                    <dt>HP damage taken</dt>
+                    <dd>@Ship.HpDamageTaken.ToString("F1")</dd>
+                    <dt>Kills</dt>
+                    <dd>@Ship.Kills</dd>
+                    @if (Ship.SunkHour is { } sunk)
+                    {
+                        <dt>Sunk</dt>
+                        <dd class="bad">hour @sunk</dd>
+                    }
+                    @if (Ship.RetreatedHour is { } escaped)
+                    {
+                        <dt>Escaped</dt>
+                        <dd class="warn">hour @escaped</dd>
+                    }
+                </dl>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 6px">Ship stats</h4>
+                <table class="data compact">
+                    <tbody>
+                        @foreach (var stat in StatInfo.All.Where(stat => stat.Get(Ship.Stats) != 0 && stat.Key != "productionCost"))
+                        {
+                            <tr><td class="muted">@stat.Label</td><td class="num">@stat.Display(Ship.Stats)</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div>
+                <h4 style="margin-bottom: 6px">HP and organization by hour (% of max)</h4>
+                @if (History.Count > 0)
+                {
+                    <LineChart Series="ChartSeries" Height="200" Marker="View.Hour" OnSelect="OnSelectHour" AriaLabel="Ship HP and organization by hour"
+                               YMax="1" YFormat="P0" />
+                }
+                else
+                {
+                    <p class="muted small">No hours fought yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="filters">
+        <strong>Combat log</strong>
+        <div class="button-group">
+            @foreach (var (key, label) in Filters)
+            {
+                <button class="small @(filter == key ? "on" : "")" @onclick="() => filter = key">@label</button>
+            }
+        </div>
+        <label class="check small"><input type="checkbox" @bind="hitsOnly" /> hits and events only</label>
+        <span class="muted small right">@Entries.Count entries @(View.IsLive ? "" : $"up to hour {View.Hour}")</span>
+    </div>
+    <div class="scroll" style="max-height: 420px">
+        <table class="data compact">
+            <thead>
+                <tr>
+                    <th class="num">Hour</th>
+                    <th></th>
+                    <th>Weapon</th>
+                    <th>Other ship</th>
+                    <th class="num">Hit chance</th>
+                    <th>Result</th>
+                    <th class="num">Damage</th>
+                    <th class="num">HP</th>
+                    <th class="num">Org</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <Virtualize Items="Entries" Context="entry" ItemSize="27" OverscanCount="20" SpacerElement="tr">
+                    <tr>
+                        <td class="num">@entry.Hour</td>
+                        <td class="@(entry.Outgoing ? "dir-out" : entry.Incoming ? "dir-in" : "muted")" title="@Direction(entry)">@Arrow(entry)</td>
+                        <td>@entry.Weapon</td>
+                        <td>
+                            @if (entry.OtherId is { } other)
+                            {
+                                <a href="javascript:void(0)" class="@View.SideOf(other)" @onclick="() => OnSelectShip.InvokeAsync(other)">@View.NameOf(other)</a>
+                            }
+                        </td>
+                        <td class="num">@(entry.HitChance?.ToString("P1"))</td>
+                        <td>
+                            @if (entry.Kind == ShipLogKind.Event)
+                            {
+                                <span class="@(entry.EventKind == BattleEventKind.Sunk ? "bad" : "warn")">@entry.EventKind</span>
+                            }
+                            else if (entry.Hit)
+                            {
+                                <span>hit</span>
+                                @if (entry.Critical)
+                                {
+                                    <span class="badge sunk" style="margin-left: 4px">crit</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="faint">miss</span>
+                            }
+                        </td>
+                        <td class="num">@(entry.Hit && entry.Kind != ShipLogKind.Event ? entry.Damage.ToString("F2") : "")</td>
+                        <td class="num">@(entry.Hit && entry.Kind != ShipLogKind.Event ? entry.HpDamage.ToString("F2") : "")</td>
+                        <td class="num">@(entry.Hit && entry.Kind != ShipLogKind.Event ? entry.OrganizationDamage.ToString("F2") : "")</td>
+                        <td class="small">
+                            @if (entry.PiercingTier is { } tier)
+                            {
+                                <span class="faint" title="Piercing tier (0 and 1 = full damage)">tier @tier</span>
+                            }
+                            @if (entry.KillingBlow && entry.Kind != ShipLogKind.Event)
+                            {
+                                <span class="bad"> killing blow</span>
+                            }
+                            @if (!string.IsNullOrEmpty(entry.Text))
+                            {
+                                <span class="muted"> @entry.Text</span>
+                            }
+                        </td>
+                    </tr>
+                </Virtualize>
+            </tbody>
+        </table>
+        @if (Entries.Count == 0)
+        {
+            <p class="empty">Nothing yet.</p>
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly (string Key, string Label)[] Filters = [("all", "All"), ("out", "Fired"), ("in", "Received"), ("events", "Events")];
+
+    private string filter = "all";
+    private bool hitsOnly;
+    private IReadOnlyList<ShipLogEntry> all = [];
+    private (BattleView? View, string? Id) builtFor;
+
+    [Parameter, EditorRequired] public BattleView View { get; set; } = null!;
+    [Parameter, EditorRequired] public ShipRow Ship { get; set; } = null!;
+    [Parameter] public IReadOnlyList<ShipHourState> History { get; set; } = [];
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<string> OnSelectShip { get; set; }
+    [Parameter] public EventCallback<int> OnSelectHour { get; set; }
+
+    private List<ShipLogEntry> Entries => all
+        .Where(entry => filter switch
+        {
+            "out" => entry.Outgoing,
+            "in" => entry.Incoming,
+            "events" => entry.Kind == ShipLogKind.Event,
+            _ => true
+        })
+        .Where(entry => !hitsOnly || entry.Hit || entry.Kind == ShipLogKind.Event)
+        .ToList();
+
+    private IReadOnlyList<ChartSeries> ChartSeries =>
+    [
+        new("HP", "var(--hp)", History.Select(state => Math.Max(0, state.Hp) / Math.Max(1e-9, Ship.Stats.Hp)).ToList()),
+        new("Organization", "var(--org)", History.Select(state => Math.Max(0, state.Organization) / Math.Max(1e-9, Ship.Stats.Organization)).ToList())
+    ];
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(builtFor.View, View) || builtFor.Id != Ship.Id)
+        {
+            all = ShipLog.Build(View, Ship.Id);
+            builtFor = (View, Ship.Id);
+        }
+    }
+
+    private static string Arrow(ShipLogEntry entry)
+    {
+        return entry.Kind switch
+        {
+            ShipLogKind.Fired => "→",
+            ShipLogKind.AirStrike => "✈→",
+            ShipLogKind.Received => "←",
+            ShipLogKind.AirAttacked => "←✈",
+            _ => "•"
+        };
+    }
+
+    private static string Direction(ShipLogEntry entry)
+    {
+        return entry.Kind switch
+        {
+            ShipLogKind.Fired => "Fired at",
+            ShipLogKind.AirStrike => "Air strike on",
+            ShipLogKind.Received => "Fired on by",
+            ShipLogKind.AirAttacked => "Air strike from",
+            _ => "Event"
+        };
+    }
+}

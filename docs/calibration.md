@@ -8,9 +8,9 @@ Aim for controlled, repeatable fights rather than battles from a real campaign.
 
 **Fix the setup and write it down:**
 - Game version and every active mod, in load order. Unless the mods are part of the test, use none.
-- Both fleets: ship designs (hull and every module), counts, experience level, and the task force's repair priority and submarine engagement risk.
+- Both fleets: ship designs (hull and every module), counts, experience level, and the task force's aggressiveness (engagement rule) and repair priority. Plain-text saves record them in the task force as `navy_engagement_rule` inside `mission` (0 Do Not Engage to 4 Always Engage) and `repair_mode` (presumably 0 Never repair to 3 High, the order of the game's repair priority tooltips). Set them in the scenario as `aggressiveness` and `repairPriority`.
 - Researches, doctrines, national spirits and MIOs on both sides. No admirals, or record their skills and traits.
-- Sea region, weather, and the in-game time when the battle starts. Night and weather matter (S-HIT-MODS, A-CADENCE).
+- Sea region, weather, and the in-game time when the battle starts. Night and weather matter (S-HIT-MODS, A-CADENCE). Weather is not modelled yet, so prefer battles fought with weather off: run the console command `disable_weather` (or `weather`, which toggles it) before the battle, check that the sea region shows no weather, and set `"rules": { "weatherEnabled": false }` in the scenario (S-WEATHER).
 - Who attacked whom.
 
 **Record the result** from the battle screen and the ship list:
@@ -30,7 +30,7 @@ One JSON file per setup under `data/calibration/` (milestone 5 adds the runner t
   "id": "cl-vs-cl-1936-no-mods",
   "gameVersion": "1.18.3",
   "mods": [],
-  "notes": "Two task forces of 10 identical 1936 light cruisers, Medium repair priority, North Sea, clear weather.",
+  "notes": "Two task forces of 10 identical 1936 light cruisers, Engage At Medium Risk, repair priority Medium, North Sea, clear weather.",
   "scenario": "battle-scenario-cl-vs-cl.json",
   "conditions": { "startHourOfDay": 14, "weather": "clear", "terrain": "ocean" },
   "observations": [

@@ -10,16 +10,16 @@ public class RetreatAndSubmarineTests
     private readonly GameDefines defines = GameDefines.Vanilla();
 
     [Fact]
-    public void HpThreshold_FollowsEngagementLevelAndHalvesForCapitalsAndCarriers()
+    public void HpThreshold_FollowsAggressivenessAndHalvesForCapitalsAndCarriers()
     {
         var screen = TestEntityFactory.Screen("dd");
         var capital = TestEntityFactory.Capital("bb");
 
-        Assert.Equal(0.9, RetreatRules.HpThreshold(screen, EngagementLevel.DoNotEngage, defines), 9);
-        Assert.Equal(0.9, RetreatRules.HpThreshold(screen, EngagementLevel.Low, defines), 9);
-        Assert.Equal(0.6, RetreatRules.HpThreshold(screen, EngagementLevel.Medium, defines), 9);
-        Assert.Equal(0.4, RetreatRules.HpThreshold(screen, EngagementLevel.DeathIncarnate, defines), 9);
-        Assert.Equal(0.3, RetreatRules.HpThreshold(capital, EngagementLevel.Medium, defines), 9);
+        Assert.Equal(0.9, RetreatRules.HpThreshold(screen, Aggressiveness.DoNotEngage, defines), 9);
+        Assert.Equal(0.9, RetreatRules.HpThreshold(screen, Aggressiveness.EngageAtLowRisk, defines), 9);
+        Assert.Equal(0.6, RetreatRules.HpThreshold(screen, Aggressiveness.EngageAtMediumRisk, defines), 9);
+        Assert.Equal(0.4, RetreatRules.HpThreshold(screen, Aggressiveness.AlwaysEngage, defines), 9);
+        Assert.Equal(0.3, RetreatRules.HpThreshold(capital, Aggressiveness.EngageAtMediumRisk, defines), 9);
     }
 
     [Fact]
@@ -29,9 +29,9 @@ public class RetreatAndSubmarineTests
         ship.CurrentStatus = ShipStatus.Active;
         ship.CurrentHP = 50;
 
-        Assert.False(RetreatRules.TryStartRetreat(ship, 7, EngagementLevel.Medium, defines, new ScriptedRandomSource(0.0)));
-        Assert.False(RetreatRules.TryStartRetreat(ship, 8, EngagementLevel.Medium, defines, new ScriptedRandomSource(0.5)));
-        Assert.True(RetreatRules.TryStartRetreat(ship, 8, EngagementLevel.Medium, defines, new ScriptedRandomSource(0.2)));
+        Assert.False(RetreatRules.TryStartRetreat(ship, 7, Aggressiveness.EngageAtMediumRisk, defines, new ScriptedRandomSource(0.0)));
+        Assert.False(RetreatRules.TryStartRetreat(ship, 8, Aggressiveness.EngageAtMediumRisk, defines, new ScriptedRandomSource(0.5)));
+        Assert.True(RetreatRules.TryStartRetreat(ship, 8, Aggressiveness.EngageAtMediumRisk, defines, new ScriptedRandomSource(0.2)));
         Assert.Equal(ShipStatus.Retreating, ship.CurrentStatus);
     }
 

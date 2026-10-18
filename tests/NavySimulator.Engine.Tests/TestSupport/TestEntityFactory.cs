@@ -69,9 +69,9 @@ internal static class TestEntityFactory
         return CreateShip(id, ShipRole.Submarine, SubmarineStats());
     }
 
-    public static BattleParticipant Participant(string fleetId, IEnumerable<Ship> ships, EngagementLevel level = EngagementLevel.Medium)
+    public static BattleParticipant Participant(string fleetId, IEnumerable<Ship> ships, Aggressiveness aggressiveness = Aggressiveness.EngageAtMediumRisk)
     {
-        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), string.Empty, string.Empty, 0, [], [], level);
+        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), string.Empty, string.Empty, 0, [], [], aggressiveness);
     }
 
     public static BattleScenario Scenario(
@@ -79,7 +79,7 @@ internal static class TestEntityFactory
         IEnumerable<Ship> defenderShips,
         BattleRules? rules = null,
         GameDefines? defines = null,
-        EngagementLevel attackerLevel = EngagementLevel.Medium)
+        Aggressiveness attackerAggressiveness = Aggressiveness.EngageAtMediumRisk)
     {
         return new BattleScenario(
             "test",
@@ -87,7 +87,7 @@ internal static class TestEntityFactory
             "clear",
             1,
             null,
-            Participant("attacker_fleet", attackerShips, attackerLevel),
+            Participant("attacker_fleet", attackerShips, attackerAggressiveness),
             Participant("defender_fleet", defenderShips),
             new Dictionary<string, PlaneEquipment>(),
             defines ?? GameDefines.Vanilla(),
@@ -98,9 +98,9 @@ internal static class TestEntityFactory
     public static (BattleSide Own, BattleSide Enemy) Sides(
         IEnumerable<Ship> ownShips,
         IEnumerable<Ship> enemyShips,
-        EngagementLevel ownLevel = EngagementLevel.Medium)
+        Aggressiveness ownAggressiveness = Aggressiveness.EngageAtMediumRisk)
     {
-        var own = new BattleSide("own", Participant("own", ownShips, ownLevel));
+        var own = new BattleSide("own", Participant("own", ownShips, ownAggressiveness));
         var enemy = new BattleSide("enemy", Participant("enemy", enemyShips));
         own.EnemyCounts = EnemyLineCounts.Of(enemy.Ships);
         enemy.EnemyCounts = EnemyLineCounts.Of(own.Ships);

@@ -12,6 +12,12 @@ public sealed record BattleRules
     /// <summary>S-NIGHT: apply the <c>night</c> static modifier while it is dark. The darkness model is [ASSUMED].</summary>
     public bool NightEnabled { get; init; } = true;
 
+    /// <summary>
+    /// S-WEATHER: apply the battle region's weather. False is the game with the console command <c>disable_weather</c>
+    /// [RE]. Weather terms are not modelled yet, so this only changes the notes for now.
+    /// </summary>
+    public bool WeatherEnabled { get; init; } = true;
+
     /// <summary>Hour of day (0-23) at which the battle starts (battle hour 0).</summary>
     public int StartHourOfDay { get; init; } = 12;
 

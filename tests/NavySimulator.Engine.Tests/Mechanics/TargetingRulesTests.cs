@@ -47,12 +47,12 @@ public class TargetingRulesTests
     {
         var submarine = TestEntityFactory.Submarine("ss");
 
-        Assert.Equal(3, TargetingRules.MinLine(submarine, EngagementLevel.Low, new EnemyLineCounts(1, 1, 0, 2, 0)));
-        Assert.Equal(2, TargetingRules.MinLine(submarine, EngagementLevel.Low, new EnemyLineCounts(1, 1, 0, 0, 0)));
-        Assert.Equal(2, TargetingRules.MinLine(submarine, EngagementLevel.Medium, new EnemyLineCounts(1, 1, 0, 0, 0)));
-        Assert.Equal(1, TargetingRules.MinLine(submarine, EngagementLevel.Medium, new EnemyLineCounts(1, 0, 0, 0, 0)));
-        Assert.Equal(1, TargetingRules.MinLine(submarine, EngagementLevel.High, new EnemyLineCounts(1, 1, 1, 0, 0)));
-        Assert.Equal(1, TargetingRules.MinLine(TestEntityFactory.Screen("dd"), EngagementLevel.Low, new EnemyLineCounts(1, 1, 1, 0, 0)));
+        Assert.Equal(3, TargetingRules.MinLine(submarine, Aggressiveness.EngageAtLowRisk, new EnemyLineCounts(1, 1, 0, 2, 0)));
+        Assert.Equal(2, TargetingRules.MinLine(submarine, Aggressiveness.EngageAtLowRisk, new EnemyLineCounts(1, 1, 0, 0, 0)));
+        Assert.Equal(2, TargetingRules.MinLine(submarine, Aggressiveness.EngageAtMediumRisk, new EnemyLineCounts(1, 1, 0, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(submarine, Aggressiveness.EngageAtMediumRisk, new EnemyLineCounts(1, 0, 0, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(submarine, Aggressiveness.EngageAtHighRisk, new EnemyLineCounts(1, 1, 1, 0, 0)));
+        Assert.Equal(1, TargetingRules.MinLine(TestEntityFactory.Screen("dd"), Aggressiveness.EngageAtLowRisk, new EnemyLineCounts(1, 1, 1, 0, 0)));
     }
 
     [Fact]

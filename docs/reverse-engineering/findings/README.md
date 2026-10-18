@@ -23,6 +23,7 @@ Lookup index of every function, struct field, modifier id and define read site i
 | [S-XP-experience.md](S-XP-experience.md) | S-XP, S-MANPOWER |
 | [S-STATS-design-stats.md](S-STATS-design-stats.md) | S-STATS-* (design, MIO, equipment bonuses, technologies, combat getters) |
 | [A-air-combat.md](A-air-combat.md) | A-* (implemented in `Engine/Battles/Air/`) |
+| [S-WEATHER-weather-toggle.md](S-WEATHER-weather-toggle.md) | S-WEATHER (weather console toggle, the weather a battle reads) |
 
 ## Shared facts
 

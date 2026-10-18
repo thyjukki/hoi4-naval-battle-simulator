@@ -70,6 +70,10 @@
             "nightEnabled": {
               "type": "boolean"
             },
+            "weatherEnabled": {
+              "type": "boolean",
+              "description": "False turns weather off, as the console command disable_weather does in game (default true)."
+            },
             "startHourOfDay": {
               "type": "integer",
               "minimum": 0,
@@ -133,15 +137,24 @@
           },
           "uniqueItems": true
         },
-        "engagementLevel": {
+        "aggressiveness": {
           "enum": [
             "DoNotEngage",
+            "EngageAtLowRisk",
+            "EngageAtMediumRisk",
+            "EngageAtHighRisk",
+            "AlwaysEngage"
+          ],
+          "description": "Task force aggressiveness (the game's engagement rule, default EngageAtMediumRisk): in-combat retreat threshold and which lines submarines attack."
+        },
+        "repairPriority": {
+          "enum": [
+            "NeverRepair",
             "Low",
             "Medium",
-            "High",
-            "DeathIncarnate"
+            "High"
           ],
-          "description": "Task force engagement level: in-combat retreat threshold and which lines submarines attack."
+          "description": "Task force repair priority (default High): when it goes home for repairs. Recorded with the setup; not used in combat."
         },
         "externalPlaneID": {
           "type": "string",

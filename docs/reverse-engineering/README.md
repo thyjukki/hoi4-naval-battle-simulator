@@ -19,7 +19,7 @@ Script files only tell us constant values. The *formulas*, the order of operatio
 
 The first pass over hoi4.exe 1.19.3 decoded every surface and air spec item; see [findings/README.md](findings/README.md). Check [index.md](index.md) (functions, fields, modifier ids, define read sites) before decoding anything. The tooling is in `tools/re/`. Open questions that remain, ordered by impact:
 
-1. **Aggression retreat** (S-RETREAT): the strength score `0x1989c60` that makes outmatched task forces retreat.
+1. **Aggressiveness check** (S-RETREAT): the strength score `0x1989c60` that makes outmatched task forces retreat.
 2. **Darkness** (S-NIGHT): how the province darkness value is computed from the time of day.
 3. **Critical parts** (S-CRIT-PART): how `0xc31030` aggregates part instance caps; needs part data loaded from `common/units/critical_parts`.
 4. **Light-slot submarine weight** (S-TARGET-DC): which shooter stat (ship+0x228) gates targeting submarines.

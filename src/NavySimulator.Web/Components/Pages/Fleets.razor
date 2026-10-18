@@ -1,0 +1,477 @@
+@page "/fleets"
+@implements IDisposable
+@inject Workspace Workspace
+@inject NavigationManager Navigation
+
+<PageTitle>Fleets · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Fleets</h1>
+    <span class="muted">Force compositions in <code>force-compositions/</code>: ship designs and counts, experience and carrier air wings.</span>
+    <button class="right" @onclick="NewFleet">New fleet</button>
+</div>
+
+@if (message is not null)
+{
+    <div class="message @(messageIsError ? "error" : "info")" style="margin-bottom: 14px">@message</div>
+}
+@if (pendingId is not null)
+{
+    <div class="message warning row" style="margin-bottom: 14px">
+        <span>@(editing?.ID) has unsaved changes.</span>
+        <button class="small" @onclick="() => Select(pendingId, true)">Discard and open @pendingId</button>
+        <button class="small ghost" @onclick="() => pendingId = null">Keep editing</button>
+    </div>
+}
+
+<div class="split">
+    <div class="panel">
+        <div class="panel-head"><input type="search" class="grow" placeholder="Filter fleets…" @bind="filter" @bind:event="oninput" /></div>
+        <div class="list list-scroll">
+            @foreach (var group in Workspace.Catalog.Fleets.Where(Matches).GroupBy(item => Workspace.Catalog.SourceFileOf(item) ?? "(new)"))
+            {
+                <div class="list-group">@group.Key</div>
+                @foreach (var item in group)
+                {
+                    <a class="list-item @(item.ID == selectedId ? "selected" : "")" @onclick="() => Select(item.ID)" @onclick:preventDefault href="">
+                        <span class="title">@item.ID</span>
+                        <span class="muted small right nowrap">@item.ShipDesigns.Values.Sum() ships</span>
+                        @if (item.ID == Workspace.Scenario.Attacker.FleetID)
+                        {
+                            <span class="badge attacker">A</span>
+                        }
+                        @if (item.ID == Workspace.Scenario.Defender.FleetID)
+                        {
+                            <span class="badge defender">D</span>
+                        }
+                    </a>
+                }
+            }
+        </div>
+    </div>
+
+    @if (editing is null)
+    {
+        <div class="panel"><p class="empty">Pick a fleet on the left, or create a new one.</p></div>
+    }
+    else
+    {
+        <div class="stack">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>@(isNew ? "New fleet" : originalId)</h2>
+                    @if (Dirty)
+                    {
+                        <span class="badge escaped">unsaved</span>
+                    }
+                    <div class="row tight right">
+                        <button class="primary" @onclick="Save" disabled="@(!Dirty)">Save</button>
+                        <button class="ghost" @onclick="Revert" disabled="@(!Dirty || isNew)">Revert</button>
+                        <button @onclick="Duplicate" disabled="@isNew">Duplicate</button>
+                        <button class="danger" @onclick="Delete" disabled="@isNew">Delete</button>
+                    </div>
+                </div>
+                <div class="panel-body stack">
+                    <div class="fields">
+                        <div class="field span-2">
+                            <label>ID</label>
+                            <input type="text" @bind="editing.ID" @bind:event="oninput" />
+                            @if (!isNew && editing.ID != originalId)
+                            {
+                                <span class="hint warn">Renaming also updates the scenario being edited if it uses this fleet.</span>
+                            }
+                        </div>
+                        <div class="field span-2">
+                            <label>File</label>
+                            <FilePicker Folder="@CatalogWriter.FleetsFolder" @bind-Value="file" />
+                        </div>
+                    </div>
+                    <div class="row tight">
+                        <span class="small muted">Use in the scenario as</span>
+                        <button class="small" @onclick="@(() => UseAs("attacker"))" disabled="@(isNew || Dirty)">attacker</button>
+                        <button class="small" @onclick="@(() => UseAs("defender"))" disabled="@(isNew || Dirty)">defender</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><h2>Ships</h2><span class="muted small">@editing.ShipDesigns.Values.Sum() ships</span></div>
+                <div class="panel-body flush scroll">
+                    <table class="data">
+                        <thead>
+                            <tr>
+                                <th>Design</th>
+                                <th>Role</th>
+                                <th class="num">Count</th>
+                                <th title="Overridden by the scenario's side-wide level when that is set">Experience</th>
+                                @foreach (var stat in StatInfo.Headline.Where(stat => stat.Key != "organization"))
+                                {
+                                    <th class="num" title="@stat.Label">@stat.Short</th>
+                                }
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (designId, count) in editing.ShipDesigns.ToList())
+                            {
+                                var design = Workspace.FindDesign(designId);
+                                var stats = design is null ? null : Workspace.DesignStats(design);
+                                <tr>
+                                    <td>
+                                        @if (design is null)
+                                        {
+                                            <span class="bad">@designId (unknown)</span>
+                                        }
+                                        else
+                                        {
+                                            <a href="@($"designs?id={Uri.EscapeDataString(designId)}")">@designId</a>
+                                        }
+                                    </td>
+                                    <td>@(design is null ? "" : Workspace.RoleOf(design))</td>
+                                    <td class="num"><input type="number" min="1" value="@count" @onchange="args => SetCount(designId, args.Value?.ToString())" style="width: 76px" /></td>
+                                    <td>
+                                        <select value="@(editing.ShipExperienceLevels.TryGetValue(designId, out var level) ? level.ToString() : "")" @onchange="args => SetLevel(designId, args.Value?.ToString())">
+                                            <option value="">2 (default)</option>
+                                            @for (var option = 0; option <= MaxExperienceLevel; option++)
+                                            {
+                                                <option value="@option">@option</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    @foreach (var stat in StatInfo.Headline.Where(stat => stat.Key != "organization"))
+                                    {
+                                        <td class="num">@(stats is null ? "" : stat.Display(stats))</td>
+                                    }
+                                    <td><button class="small icon danger" title="Remove" @onclick="() => RemoveDesign(designId)">✕</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                        @if (editing.ShipDesigns.Count > 0)
+                        {
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="muted">Fleet total</td>
+                                    @foreach (var stat in StatInfo.Headline.Where(stat => stat.Key != "organization"))
+                                    {
+                                        <td class="num muted">@(stat.Key is "speed" or "surfaceVisibility" ? "" : FleetTotal(stat).ToString("F0"))</td>
+                                    }
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        }
+                    </table>
+                </div>
+                <div class="panel-body row tight">
+                    <select @bind="designToAdd" class="grow" style="max-width: 420px">
+                        <option value="">Add a design…</option>
+                        @foreach (var group in Workspace.Catalog.ShipDesigns.Where(design => !editing.ShipDesigns.ContainsKey(design.ID)).GroupBy(design => Workspace.RoleOf(design)?.ToString() ?? "?"))
+                        {
+                            <optgroup label="@group.Key">
+                                @foreach (var design in group)
+                                {
+                                    <option value="@design.ID">@design.ID</option>
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                    <input type="number" min="1" @bind="countToAdd" style="width: 76px" aria-label="Count" />
+                    <button @onclick="AddDesign" disabled="@string.IsNullOrEmpty(designToAdd)">Add</button>
+                </div>
+            </div>
+
+            @if (CarrierDesigns().Any())
+            {
+                <div class="panel">
+                    <div class="panel-head"><h2>Carrier air wings</h2><span class="muted small">per carrier of the design</span></div>
+                    <div class="panel-body stack">
+                        @foreach (var carrierId in CarrierDesigns())
+                        {
+                            var wings = editing.CarrierAirwings.GetValueOrDefault(carrierId) ?? [];
+                            var deck = Workspace.FindDesign(carrierId) is { } carrierDesign ? Workspace.DesignStats(carrierDesign)?.CarrierSize ?? 0 : 0;
+                            <div>
+                                <div class="row" style="margin-bottom: 6px">
+                                    <strong>@carrierId</strong>
+                                    <span class="muted small">deck size @deck.ToString("F0") · @wings.Sum(wing => wing.Airwings) wings, @wings.Sum(wing => wing.Airwings * (wing.PlaneCount == 0 ? 10 : wing.PlaneCount)) planes</span>
+                                    <button class="small right" @onclick="() => AddWing(carrierId)">Add wing</button>
+                                </div>
+                                @if (wings.Count == 0)
+                                {
+                                    <p class="muted small">No air wings: this carrier flies no strikes.</p>
+                                }
+                                else
+                                {
+                                    <table class="data compact">
+                                        <thead><tr><th>Plane</th><th>Type</th><th class="num">Wings</th><th class="num" title="Planes per wing; 0 means 10">Planes / wing</th><th></th></tr></thead>
+                                        <tbody>
+                                            @foreach (var wing in wings)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <select @bind="wing.PlaneID" @bind:after="StateHasChanged">
+                                                            @if (Workspace.Catalog.Planes.All(plane => plane.ID != wing.PlaneID))
+                                                            {
+                                                                <option value="@wing.PlaneID">@wing.PlaneID (unknown)</option>
+                                                            }
+                                                            @foreach (var plane in Workspace.Catalog.Planes)
+                                                            {
+                                                                <option value="@plane.ID">@plane.ID</option>
+                                                            }
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select @bind="wing.Type">
+                                                            <option value="fighter">fighter</option>
+                                                            <option value="bomber">bomber</option>
+                                                        </select>
+                                                    </td>
+                                                    <td class="num"><input type="number" min="1" @bind="wing.Airwings" style="width: 70px" /></td>
+                                                    <td class="num"><input type="number" min="0" @bind="wing.PlaneCount" style="width: 70px" /></td>
+                                                    <td><button class="small icon danger" title="Remove" @onclick="() => RemoveWing(carrierId, wing)">✕</button></td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly int MaxExperienceLevel = Engine.Battles.Mechanics.ExperienceRules.MaxLevel(Engine.Defines.GameDefines.Vanilla());
+
+    private string filter = string.Empty;
+    private string? selectedId;
+    private string? originalId;
+    private string originalJson = string.Empty;
+    private string? originalFile;
+    private FleetDto? editing;
+    private string file = string.Empty;
+    private bool isNew;
+    private string? pendingId;
+    private string? designToAdd;
+    private int countToAdd = 1;
+    private string? message;
+    private bool messageIsError;
+
+    [SupplyParameterFromQuery(Name = "id")] public string? IdFromQuery { get; set; }
+
+    private bool Dirty => editing is not null && (isNew || Workspace.Json(editing) != originalJson || file != originalFile);
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += OnWorkspaceChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (IdFromQuery is { } id && id != selectedId)
+        {
+            Select(id, true);
+        }
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private bool Matches(FleetDto fleet)
+    {
+        return filter.Length == 0 || fleet.ID.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+               fleet.ShipDesigns.Keys.Any(key => key.Contains(filter, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void Select(string id, bool force = false)
+    {
+        if (!force && Dirty && id != selectedId)
+        {
+            pendingId = id;
+            return;
+        }
+
+        pendingId = null;
+        message = null;
+        var fleet = Workspace.FindFleet(id);
+
+        if (fleet is null)
+        {
+            return;
+        }
+
+        selectedId = id;
+        originalId = id;
+        editing = Workspace.Clone(fleet);
+        originalJson = Workspace.Json(editing);
+        originalFile = Workspace.Catalog.SourceFileOf(fleet) ?? $"{CatalogWriter.FleetsFolder}/custom.json";
+        file = originalFile;
+        isNew = false;
+    }
+
+    private void NewFleet()
+    {
+        if (Dirty)
+        {
+            message = "Save or revert the current fleet first.";
+            messageIsError = true;
+            return;
+        }
+
+        selectedId = null;
+        originalId = null;
+        editing = new FleetDto { ID = "new_fleet" };
+        originalJson = string.Empty;
+        originalFile = null;
+        file = Workspace.Catalog.FilesIn(CatalogWriter.FleetsFolder).FirstOrDefault() ?? $"{CatalogWriter.FleetsFolder}/custom.json";
+        isNew = true;
+        message = null;
+    }
+
+    private void Save()
+    {
+        try
+        {
+            Workspace.SaveFleet(editing!, file, isNew ? null : originalId);
+            message = $"Saved {editing!.ID} to {file}.";
+            messageIsError = false;
+            Select(editing.ID, true);
+            message = $"Saved {editing.ID} to {file}.";
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException or InvalidDataException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+    }
+
+    private void Revert()
+    {
+        Select(originalId!, true);
+    }
+
+    private void Duplicate()
+    {
+        var copy = Workspace.Clone(editing!);
+        copy.ID = UniqueId(editing!.ID + "_copy");
+        editing = copy;
+        selectedId = null;
+        originalId = null;
+        isNew = true;
+        message = "Duplicated. Save to create it.";
+        messageIsError = false;
+    }
+
+    private void Delete()
+    {
+        if (confirmDelete != editing!.ID)
+        {
+            confirmDelete = editing.ID;
+            message = $"Click Delete again to remove {editing.ID} from {originalFile}.";
+            messageIsError = true;
+            return;
+        }
+
+        Workspace.DeleteFleet(originalId!);
+        message = $"Deleted {originalId}.";
+        messageIsError = false;
+        editing = null;
+        selectedId = null;
+        confirmDelete = null;
+    }
+
+    private string? confirmDelete;
+
+    private void UseAs(string side)
+    {
+        (side == "attacker" ? Workspace.Scenario.Attacker : Workspace.Scenario.Defender).FleetID = editing!.ID;
+        Workspace.ScenarioEdited();
+        message = $"The scenario's {side} now uses {editing.ID} (unsaved scenario change).";
+        messageIsError = false;
+    }
+
+    private string UniqueId(string id)
+    {
+        var candidate = id;
+
+        for (var i = 2; Workspace.FindFleet(candidate) is not null; i++)
+        {
+            candidate = $"{id}{i}";
+        }
+
+        return candidate;
+    }
+
+    private void SetCount(string designId, string? value)
+    {
+        if (int.TryParse(value, out var count) && count > 0)
+        {
+            editing!.ShipDesigns[designId] = count;
+        }
+    }
+
+    private void SetLevel(string designId, string? value)
+    {
+        if (int.TryParse(value, out var level))
+        {
+            editing!.ShipExperienceLevels[designId] = level;
+        }
+        else
+        {
+            editing!.ShipExperienceLevels.Remove(designId);
+        }
+    }
+
+    private void RemoveDesign(string designId)
+    {
+        editing!.ShipDesigns.Remove(designId);
+        editing.ShipExperienceLevels.Remove(designId);
+        editing.CarrierAirwings.Remove(designId);
+    }
+
+    private void AddDesign()
+    {
+        editing!.ShipDesigns[designToAdd!] = Math.Max(1, countToAdd);
+        designToAdd = null;
+    }
+
+    private IEnumerable<string> CarrierDesigns()
+    {
+        return editing!.ShipDesigns.Keys.Where(id => Workspace.FindDesign(id) is { } design && Workspace.RoleOf(design) == ShipRole.Carrier);
+    }
+
+    private void AddWing(string carrierId)
+    {
+        if (!editing!.CarrierAirwings.TryGetValue(carrierId, out var wings))
+        {
+            wings = [];
+            editing.CarrierAirwings[carrierId] = wings;
+        }
+
+        wings.Add(new CarrierAirwingAssignmentDto { PlaneID = Workspace.Catalog.Planes.FirstOrDefault()?.ID ?? string.Empty, Type = "bomber", Airwings = 1, PlaneCount = 10 });
+    }
+
+    private void RemoveWing(string carrierId, CarrierAirwingAssignmentDto wing)
+    {
+        var wings = editing!.CarrierAirwings[carrierId];
+        wings.Remove(wing);
+
+        if (wings.Count == 0)
+        {
+            editing.CarrierAirwings.Remove(carrierId);
+        }
+    }
+
+    private double FleetTotal(StatInfo stat)
+    {
+        return editing!.ShipDesigns.Sum(entry => Workspace.FindDesign(entry.Key) is { } design && Workspace.DesignStats(design) is { } stats ? stat.Get(stats) * entry.Value : 0);
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= OnWorkspaceChanged;
+    }
+}

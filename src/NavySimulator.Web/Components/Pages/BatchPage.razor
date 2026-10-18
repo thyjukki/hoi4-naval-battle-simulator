@@ -1,0 +1,315 @@
+@page "/batch"
+@implements IDisposable
+@inject Workspace Workspace
+@inject BatchRunner Batch
+
+<PageTitle>Batch · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Batch</h1>
+    <span class="muted">Run the scenario many times (on all cores) and compare outcomes. Run <em>i</em> uses seed base + <em>i</em>.</span>
+</div>
+
+<div class="toolbar" style="top: 60px">
+    <div class="row tight">
+        <span class="small muted">Runs</span>
+        <input type="number" min="1" max="100000" @bind="iterations" />
+    </div>
+    <div class="row tight">
+        <span class="small muted">Base seed</span>
+        <input type="number" @bind="baseSeed" style="width: 110px" />
+        <button class="icon" title="Random seed" @onclick="() => baseSeed = Random.Shared.Next(1, 1_000_000)">⚄</button>
+    </div>
+    <button class="primary" @onclick="Run" disabled="@Batch.IsRunning">Run @iterations battles</button>
+    @if (Batch.IsRunning)
+    {
+        <button class="danger" @onclick="Batch.Stop">Stop</button>
+        <div class="grow" style="max-width: 360px">
+            <div class="progress"><span style="width: @Percent(Batch.Completed, Batch.Total)"></span></div>
+        </div>
+        <span class="small muted">@Batch.Completed / @Batch.Total</span>
+    }
+    @if (last is not null && !Batch.IsRunning)
+    {
+        <div class="right row tight">
+            <a class="button small" href="export/batch/runs.csv" download>runs.csv</a>
+            <button class="small" @onclick="Export" title="Write summary.txt (the CLI's aggregate summary) and runs.csv to the output folder">Save summary</button>
+        </div>
+    }
+</div>
+
+@if (Batch.Errors.Count > 0)
+{
+    <div class="message error" style="margin-bottom: 14px">
+        <strong>The batch could not run.</strong>
+        <ul>@foreach (var error in Batch.Errors) { <li>@error</li> }</ul>
+    </div>
+}
+@if (message is not null)
+{
+    <div class="message info" style="margin-bottom: 14px">@message</div>
+}
+
+@if (last is null || last.Runs.Count == 0)
+{
+    <div class="panel"><p class="empty">@(Batch.IsRunning ? "Running…" : "No batch yet. Set the number of runs and press Run.")</p></div>
+}
+else
+{
+    var runs = last.Runs;
+    <p class="muted small" style="margin-bottom: 10px">
+        <strong>@last.Scenario.ID</strong> (@(last.ScenarioFile ?? "unsaved")) · @runs.Count of @last.Requested runs@(last.Cancelled ? " (stopped)" : "") ·
+        seeds @runs[0].Seed–@runs[^1].Seed · @last.Elapsed.TotalSeconds.ToString("F1") s ·
+        defines @string.Join(" → ", last.Scenario.Defines.Sources)
+        @if (Workspace.Json(last.ScenarioUsed) != Workspace.Json(Workspace.Scenario))
+        {
+            <span class="warn"> · the scenario has changed since</span>
+        }
+    </p>
+
+    <div class="grid-2" style="margin-bottom: 14px">
+        <div class="panel">
+            <div class="panel-head"><h2>Outcomes</h2></div>
+            <div class="panel-body stack">
+                <div class="stacked">
+                    @foreach (var (outcome, count) in Outcomes(runs))
+                    {
+                        <span style="width: @Percent(count, runs.Count); background: @OutcomeColor(outcome)" title="@outcome: @count">@(count * 100 / runs.Count >= 8 ? (count / (double)runs.Count).ToString("P0") : "")</span>
+                    }
+                </div>
+                <div class="legend">
+                    @foreach (var (outcome, count) in Outcomes(runs))
+                    {
+                        <span style="color: @OutcomeColor(outcome)">@outcome @count (@((count / (double)runs.Count).ToString("P1")))</span>
+                    }
+                </div>
+                <table class="data compact">
+                    <thead><tr><th></th><th class="num">Mean</th><th class="num">Median</th><th class="num">Min</th><th class="num">P10</th><th class="num">P90</th><th class="num">Max</th></tr></thead>
+                    <tbody>
+                        @DistributionRow("Hours", runs.Select(run => (double)run.HoursFought), "F1")
+                        @DistributionRow("Attacker sunk", runs.Select(run => (double)run.Attacker.ShipsSunk), "F2", "attacker")
+                        @DistributionRow("Attacker escaped", runs.Select(run => (double)run.Attacker.ShipsRetreated), "F2", "attacker")
+                        @DistributionRow("Attacker HP lost %", runs.Select(run => Ratio(run.Attacker.HpLost, run.Attacker.HpAtStart) * 100), "F1", "attacker")
+                        @DistributionRow("Defender sunk", runs.Select(run => (double)run.Defender.ShipsSunk), "F2", "defender")
+                        @DistributionRow("Defender escaped", runs.Select(run => (double)run.Defender.ShipsRetreated), "F2", "defender")
+                        @DistributionRow("Defender HP lost %", runs.Select(run => Ratio(run.Defender.HpLost, run.Defender.HpAtStart) * 100), "F1", "defender")
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-head"><h2>Fleet HP over time</h2><span class="muted small">mean of all runs; dashed: 10th and 90th percentile</span></div>
+            <div class="panel-body">
+                <LineChart Series="HpSeries(runs)" YMax="1" YFormat="P0" AriaLabel="Mean fleet HP by hour" />
+            </div>
+        </div>
+    </div>
+
+    <div class="panel" style="margin-bottom: 14px">
+        <div class="panel-head"><h2>Per design</h2><span class="muted small">averages per run</span></div>
+        <div class="panel-body flush scroll">
+            <table class="data compact">
+                <thead>
+                    <tr>
+                        <th>Side</th><th>Design</th><th>Role</th><th class="num">Ships</th><th class="num">Sunk</th><th class="num">Sunk %</th><th class="num">Escaped</th>
+                        <th class="num">HP dealt / ship</th><th class="num">HP taken / ship</th><th class="num">Hit rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var group in runs.SelectMany(run => run.Ships).GroupBy(ship => (ship.Side, ship.DesignId)).OrderBy(group => group.Key.Side).ThenBy(group => group.Key.DesignId))
+                    {
+                        var ships = group.ToList();
+                        <tr>
+                            <td><SideBadge Side="@group.Key.Side" /></td>
+                            <td><a href="@($"designs?id={Uri.EscapeDataString(group.Key.DesignId)}")">@group.Key.DesignId</a></td>
+                            <td>@ships[0].Role</td>
+                            <td class="num">@((ships.Count / (double)runs.Count).ToString("F1"))</td>
+                            <td class="num">@((ships.Count(ship => ship.Sunk) / (double)runs.Count).ToString("F2"))</td>
+                            <td class="num">@((ships.Count(ship => ship.Sunk) / (double)ships.Count).ToString("P1"))</td>
+                            <td class="num">@((ships.Count(ship => !ship.Sunk && ship.FinalStatus == ShipStatus.Retreated) / (double)runs.Count).ToString("F2"))</td>
+                            <td class="num">@ships.Average(ship => ship.HpDamageDealt).ToString("F1")</td>
+                            <td class="num">@ships.Average(ship => ship.HpDamageTaken).ToString("F1")</td>
+                            <td class="num">@Ratio(ships.Sum(ship => ship.Hits), ships.Sum(ship => ship.ShotsFired)).ToString("P1")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2>Runs</h2>
+            <span class="muted small">Inspect replays the seed on the Battle page with every shot and ship log.</span>
+            <div class="button-group right">
+                <button class="small @(runSort == "seed" ? "on" : "")" @onclick="@(() => runSort = "seed")">by seed</button>
+                <button class="small @(runSort == "hours" ? "on" : "")" @onclick="@(() => runSort = "hours")">longest</button>
+                <button class="small @(runSort == "attacker" ? "on" : "")" @onclick="@(() => runSort = "attacker")">attacker losses</button>
+                <button class="small @(runSort == "defender" ? "on" : "")" @onclick="@(() => runSort = "defender")">defender losses</button>
+            </div>
+        </div>
+        <div class="scroll" style="max-height: 420px">
+            <table class="data compact">
+                <thead>
+                    <tr>
+                        <th class="num">Seed</th><th>Outcome</th><th class="num">Hours</th>
+                        <th class="num attacker">A sunk</th><th class="num attacker">A escaped</th><th class="num attacker">A HP lost</th>
+                        <th class="num defender">D sunk</th><th class="num defender">D escaped</th><th class="num defender">D HP lost</th><th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <Virtualize Items="SortedRuns(runs)" Context="run" ItemSize="27" SpacerElement="tr">
+                        <tr>
+                            <td class="num">@run.Seed</td>
+                            <td style="color: @OutcomeColor(run.Outcome)">@run.Outcome</td>
+                            <td class="num">@run.HoursFought</td>
+                            <td class="num">@run.Attacker.ShipsSunk</td>
+                            <td class="num">@run.Attacker.ShipsRetreated</td>
+                            <td class="num">@Ratio(run.Attacker.HpLost, run.Attacker.HpAtStart).ToString("P1")</td>
+                            <td class="num">@run.Defender.ShipsSunk</td>
+                            <td class="num">@run.Defender.ShipsRetreated</td>
+                            <td class="num">@Ratio(run.Defender.HpLost, run.Defender.HpAtStart).ToString("P1")</td>
+                            <td><a href="@($"?seed={run.Seed}&run=true&batch=true")">Inspect ▸</a></td>
+                        </tr>
+                    </Virtualize>
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private int iterations;
+    private int baseSeed;
+    private string runSort = "seed";
+    private string? message;
+    private BatchResult? last;
+
+    protected override void OnInitialized()
+    {
+        Batch.Changed += OnBatchChanged;
+        last = Batch.Last;
+        iterations = last?.Requested ?? Math.Max(1, Workspace.Scenario.Iterations ?? 10);
+        baseSeed = last?.BaseSeed ?? Workspace.Scenario.Seed ?? Random.Shared.Next(1, 1_000_000);
+    }
+
+    private void OnBatchChanged()
+    {
+        _ = InvokeAsync(() =>
+        {
+            last = Batch.Last;
+            StateHasChanged();
+        });
+    }
+
+    private async Task Run()
+    {
+        message = null;
+        await Batch.RunAsync(Math.Max(1, iterations), baseSeed);
+    }
+
+    private void Export()
+    {
+        try
+        {
+            message = $"Summary written to {Batch.Export(Workspace.OutputDirectory)}";
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            message = exception.Message;
+        }
+    }
+
+    private static IEnumerable<(BattleOutcome Outcome, int Count)> Outcomes(IReadOnlyList<BattleResult> runs)
+    {
+        return runs.GroupBy(run => run.Outcome).OrderBy(group => group.Key).Select(group => (group.Key, group.Count()));
+    }
+
+    private List<BattleResult> SortedRuns(IReadOnlyList<BattleResult> runs)
+    {
+        return runSort switch
+        {
+            "hours" => runs.OrderByDescending(run => run.HoursFought).ToList(),
+            "attacker" => runs.OrderByDescending(run => run.Attacker.HpLost).ToList(),
+            "defender" => runs.OrderByDescending(run => run.Defender.HpLost).ToList(),
+            _ => runs.ToList()
+        };
+    }
+
+    // Each run's side HP as a share of its start, carried forward after the run ended.
+    private static IReadOnlyList<ChartSeries> HpSeries(IReadOnlyList<BattleResult> runs)
+    {
+        var hours = runs.Max(run => run.Timeline.Count);
+        var series = new List<ChartSeries>();
+
+        foreach (var (label, color) in new[] { ("Attacker", "var(--attacker)"), ("Defender", "var(--defender)") })
+        {
+            var mean = new List<double>();
+            var low = new List<double>();
+            var high = new List<double>();
+
+            for (var hour = 0; hour < hours; hour++)
+            {
+                var values = runs
+                    .Where(run => run.Timeline.Count > 0)
+                    .Select(run =>
+                    {
+                        var state = run.Timeline[Math.Min(hour, run.Timeline.Count - 1)];
+                        var side = label == "Attacker" ? run.Attacker : run.Defender;
+                        return Ratio(label == "Attacker" ? state.Attacker.Hp : state.Defender.Hp, side.HpAtStart);
+                    })
+                    .OrderBy(value => value)
+                    .ToList();
+                mean.Add(values.Average());
+                low.Add(Distribution.Percentile(values, 0.1));
+                high.Add(Distribution.Percentile(values, 0.9));
+            }
+
+            series.Add(new ChartSeries($"{label} mean", color, mean));
+            series.Add(new ChartSeries($"{label} P10", color, low, true));
+            series.Add(new ChartSeries($"{label} P90", color, high, true));
+        }
+
+        return series;
+    }
+
+    private RenderFragment DistributionRow(string label, IEnumerable<double> values, string format, string? side = null) => __builder =>
+    {
+        var distribution = Distribution.Of(values);
+        <tr>
+            <td class="@side">@label</td>
+            <td class="num">@distribution.Mean.ToString(format)</td>
+            <td class="num">@distribution.Median.ToString(format)</td>
+            <td class="num faint">@distribution.Min.ToString(format)</td>
+            <td class="num faint">@distribution.P10.ToString(format)</td>
+            <td class="num faint">@distribution.P90.ToString(format)</td>
+            <td class="num faint">@distribution.Max.ToString(format)</td>
+        </tr>
+    };
+
+    private static string OutcomeColor(BattleOutcome outcome)
+    {
+        return outcome switch
+        {
+            BattleOutcome.AttackerVictory => "var(--attacker)",
+            BattleOutcome.DefenderVictory => "var(--defender)",
+            BattleOutcome.Timeout => "var(--warn)",
+            _ => "var(--faint)"
+        };
+    }
+
+    private static double Ratio(double part, double whole)
+    {
+        return whole <= 0 ? 0 : part / whole;
+    }
+
+    private static string Percent(double part, double whole)
+    {
+        return (Ratio(part, whole) * 100).ToString("F1", CultureInfo.InvariantCulture) + "%";
+    }
+
+    public void Dispose()
+    {
+        Batch.Changed -= OnBatchChanged;
+    }
+}

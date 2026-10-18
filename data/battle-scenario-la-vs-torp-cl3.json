@@ -1,0 +1,39 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "la_vs_torp_cl3",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 2000,
+    "iterations": 200,
+    "seed": 1,
+    "continueAfterRetreat": false,
+    "dontRetreat": false,
+    "rules": {
+      "weatherEnabled": false,
+      "startHourOfDay": 12
+    },
+    "attacker": {
+      "fleetID": "75_39lc_la",
+      "commander": "",
+      "doctrine": "",
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "externalNavalStrikePlanes": 0,
+      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1"],
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
+    },
+    "defender": {
+      "fleetID": "75_39lc_torp",
+      "commander": "",
+      "doctrine": "",
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "externalNavalStrikePlanes": 0,
+      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1"],
+      "spiritIDs": [],
+      "shipExperienceLevel": 0
+    }
+  }
+}

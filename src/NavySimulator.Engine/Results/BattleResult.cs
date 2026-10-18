@@ -20,4 +20,10 @@ public sealed class BattleResult
 
     /// <summary>Warnings about inputs the engine ignored, e.g. planes while air combat is not implemented.</summary>
     public required IReadOnlyList<string> Notes { get; init; }
+
+    /// <summary>Ship state changes (activation, retreat, escape, sinking) in the order they happened.</summary>
+    public IReadOnlyList<BattleEvent> Events { get; init; } = [];
+
+    /// <summary>One entry per battle hour with both sides' lines, positioning, losses and fire totals.</summary>
+    public IReadOnlyList<HourSummary> Timeline { get; init; } = [];
 }

@@ -45,10 +45,10 @@ public static class TargetingRules
     }
 
     /// <summary>
-    /// [RE] Nearest line a submarine may attack, from its task force engagement level. Higher lines fall back to lower
+    /// [RE] Nearest line a submarine may attack, from its task force aggressiveness. Higher lines fall back to lower
     /// ones only when they are empty. Surface ships use line 1.
     /// </summary>
-    public static int MinLine(Ship shooter, EngagementLevel level, EnemyLineCounts enemy)
+    public static int MinLine(Ship shooter, Aggressiveness aggressiveness, EnemyLineCounts enemy)
     {
         if (shooter.Role != ShipRole.Submarine)
         {
@@ -56,10 +56,10 @@ public static class TargetingRules
         }
 
         var capitalsOrCarrierLine = enemy.Capitals + enemy.CarrierLine;
-        return level switch
+        return aggressiveness switch
         {
-            <= EngagementLevel.Low => enemy.CarrierLine > 0 ? 3 : capitalsOrCarrierLine > 0 ? 2 : 1,
-            EngagementLevel.Medium => capitalsOrCarrierLine > 0 ? 2 : 1,
+            <= Aggressiveness.EngageAtLowRisk => enemy.CarrierLine > 0 ? 3 : capitalsOrCarrierLine > 0 ? 2 : 1,
+            Aggressiveness.EngageAtMediumRisk => capitalsOrCarrierLine > 0 ? 2 : 1,
             _ => 1
         };
     }
@@ -82,7 +82,7 @@ public static class TargetingRules
         }
 
         var maxLine = MaxLine(slot, own.EnemyCounts, enemy.Screening, random);
-        var minLine = MinLine(shooter, own.Participant.EngagementLevel, own.EnemyCounts);
+        var minLine = MinLine(shooter, own.Participant.Aggressiveness, own.EnemyCounts);
         var candidates = new List<(Ship Target, double Weight)>();
 
         foreach (var target in enemy.Ships)

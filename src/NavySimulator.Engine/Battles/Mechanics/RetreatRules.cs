@@ -5,19 +5,19 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
 /// S-RETREAT and S-RETREAT-SPEED [RE] (0x19717f0, 0x1975280, 0x196fe80). Spec: docs/mechanics/surface.md.
-/// Not modelled: the side-wide retreat order, the aggression check that makes outmatched task forces retreat (its
+/// Not modelled: the side-wide retreat order, the aggressiveness check that makes outmatched task forces retreat (its
 /// strength score 0x1989c60 is not decoded), the convoy-raiding submarine rule, and retreat-chance modifiers.
 /// </summary>
 public static class RetreatRules
 {
-    // [RE] In-combat threshold by engagement level; capital ships and carriers use CAPITAL_SHIP_COMBAT_RETREAT_MULT of it.
-    public static double HpThreshold(Ship ship, EngagementLevel level, GameDefines defines)
+    // [RE] In-combat threshold by task force aggressiveness; capital ships and carriers use CAPITAL_SHIP_COMBAT_RETREAT_MULT of it.
+    public static double HpThreshold(Ship ship, Aggressiveness aggressiveness, GameDefines defines)
     {
         var navy = defines.NNavy;
-        var threshold = level switch
+        var threshold = aggressiveness switch
         {
-            EngagementLevel.DoNotEngage or EngagementLevel.Low => navy.REPAIR_AND_RETURN_PRIO_LOW_COMBAT,
-            EngagementLevel.Medium => navy.REPAIR_AND_RETURN_PRIO_MEDIUM_COMBAT,
+            Aggressiveness.DoNotEngage or Aggressiveness.EngageAtLowRisk => navy.REPAIR_AND_RETURN_PRIO_LOW_COMBAT,
+            Aggressiveness.EngageAtMediumRisk => navy.REPAIR_AND_RETURN_PRIO_MEDIUM_COMBAT,
             _ => navy.REPAIR_AND_RETURN_PRIO_HIGH_COMBAT
         };
 
@@ -28,7 +28,7 @@ public static class RetreatRules
     /// [RE] Called for an active ship before it fires, from tick COMBAT_MIN_DURATION on. Below the HP threshold it rolls
     /// COMBAT_RETREAT_DECISION_CHANCE; on success it starts retreating and does not fire this hour.
     /// </summary>
-    public static bool TryStartRetreat(Ship ship, int tick, EngagementLevel level, GameDefines defines, IRandomSource random)
+    public static bool TryStartRetreat(Ship ship, int tick, Aggressiveness aggressiveness, GameDefines defines, IRandomSource random)
     {
         var navy = defines.NNavy;
 
@@ -37,7 +37,7 @@ public static class RetreatRules
             return false;
         }
 
-        if (TargetingRules.HpRatio(ship) >= HpThreshold(ship, level, defines))
+        if (TargetingRules.HpRatio(ship) >= HpThreshold(ship, aggressiveness, defines))
         {
             return false;
         }

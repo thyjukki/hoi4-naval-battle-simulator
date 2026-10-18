@@ -8,6 +8,7 @@ Simulates Hearts of Iron IV naval battles, aiming to reproduce the game's combat
 
 - **Surface combat**: checked against the HOI4 1.19.3 executable by static analysis. Every rule in [docs/mechanics/surface.md](docs/mechanics/surface.md) is tagged with its source; the evidence is in [docs/reverse-engineering/findings/](docs/reverse-engineering/findings/README.md).
 - **Air combat**: decoded from the executable and simulated ([docs/mechanics/air.md](docs/mechanics/air.md)): sortie cadence and efficiency, stances, stacking, land-based planes, interception, AA, hits, damage and crits. Weather, kamikaze and port strikes are not modelled.
+- **GUI**: a local web app to edit scenarios, fleets and designs, step battles hour by hour with per-ship combat logs, and run batches ([docs/gui.md](docs/gui.md)).
 - Plan: [docs/ROADMAP.md](docs/ROADMAP.md). All docs: [docs/README.md](docs/README.md).
 
 ## Build, run, test
@@ -17,6 +18,16 @@ dotnet build NavySimulator.sln
 dotnet run --project src/NavySimulator.Cli -- --iterations 20 --seed 1
 dotnet test NavySimulator.sln -p:UseAppHost=false
 ```
+
+## GUI
+
+```powershell
+dotnet run --project src/NavySimulator.Web
+```
+
+Opens `http://localhost:5180`: set up the scenario (sides, fleets, researches, rules, defines), edit fleets and ship designs with live stats, step a battle +1 h / +10 h / +N h or run it to the end, rewind to any hour, expand ship types into ships and read each ship's combat log, and run batches with outcome statistics. It edits the JSON in `data/`. Details: [docs/gui.md](docs/gui.md).
+
+## CLI
 
 CLI options (`--help`):
 
@@ -57,16 +68,18 @@ Everything lives in `data/`:
 
 Scenario additions:
 - `"defines": ["defines/tfb-legacy.lua"]` applies define overrides.
-- `"rules": { "nightEnabled": false, "startHourOfDay": 6 }` sets the remaining options ([docs/mechanics/README.md](docs/mechanics/README.md)).
-- Per side, `"engagementLevel": "DoNotEngage" | "Low" | "Medium" | "High" | "DeathIncarnate"`: the task force setting that decides retreat thresholds and which lines submarines attack.
+- `"rules": { "nightEnabled": false, "weatherEnabled": false, "startHourOfDay": 6 }` sets the remaining options (`weatherEnabled: false` is the game with the console command `disable_weather`) ([docs/mechanics/README.md](docs/mechanics/README.md)).
+- Per side, `"aggressiveness": "DoNotEngage" | "EngageAtLowRisk" | "EngageAtMediumRisk" | "EngageAtHighRisk" | "AlwaysEngage"` (default `EngageAtMediumRisk`): the task force's aggressiveness (engagement rule) in the game, which decides retreat thresholds and which lines submarines attack.
+- Per side, `"repairPriority": "NeverRepair" | "Low" | "Medium" | "High"` (default `High`): the task force's repair priority, recorded with the setup. Combat does not use it.
 
 ## Layout
 
 ```
 src/NavySimulator.Engine     simulation: defines, ships, battle rules, results (no I/O)
-src/NavySimulator.GameData   JSON loading, Paradox script parser, defines .lua parser
-src/NavySimulator.Cli        command line entrypoint and report writing
-tests/                       xUnit tests for Engine and GameData
+src/NavySimulator.GameData   JSON loading and saving, report files, Paradox script parser, defines .lua parser
+src/NavySimulator.Cli        command line entrypoint
+src/NavySimulator.Web        GUI: local Blazor web app (docs/gui.md)
+tests/                       xUnit tests for Engine, GameData and the GUI services
 data/                        scenario and content JSON, defines profiles
 docs/                        mechanics spec, roadmap, reverse-engineering and calibration guides
 tools/                       Python helpers: module import, data splitting, re/ (hoi4.exe static analysis)

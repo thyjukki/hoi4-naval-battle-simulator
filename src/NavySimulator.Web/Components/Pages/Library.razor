@@ -1,0 +1,186 @@
+@page "/library"
+@inject Workspace Workspace
+
+<PageTitle>Library · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Library</h1>
+    <span class="muted">The content designs and scenarios are built from (read-only). Values are as written in the JSON: +flat, ~averaged, % multiplied.</span>
+</div>
+
+<div class="panel">
+    <div class="tabs">
+        @foreach (var (key, label, count) in Tabs())
+        {
+            <button class="@(tab == key ? "on" : "")" @onclick="() => tab = key">@label <span class="count">@count</span></button>
+        }
+        <span class="right" style="padding: 4px 0"><input type="search" placeholder="Filter…" @bind="filter" @bind:event="oninput" /></span>
+    </div>
+    <div class="scroll" style="max-height: calc(100vh - 220px)">
+        @switch (tab)
+        {
+            case "hulls":
+                <table class="data compact">
+                    <thead>
+                        <tr>
+                            <th>Hull</th><th>Role</th><th>Types</th><th class="num">Manpower</th>
+                            @foreach (var stat in HullStats)
+                            {
+                                <th class="num">@stat.Label</th>
+                            }
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var hull in Workspace.Catalog.Hulls.Where(hull => Matches(hull.ID, hull.Role, string.Join(" ", hull.Types))))
+                        {
+                            var stats = hull.BaseStats.ToDomain();
+                            <tr>
+                                <td>@hull.ID</td>
+                                <td>@hull.Role</td>
+                                <td class="muted">@string.Join(", ", hull.Types)</td>
+                                <td class="num">@hull.Manpower</td>
+                                @foreach (var stat in HullStats)
+                                {
+                                    <td class="num">@(stat.Get(stats) == 0 ? "" : stat.Display(stats))</td>
+                                }
+                                <td class="faint small">@Workspace.Catalog.SourceFileOf(hull)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "modules":
+                <table class="data compact">
+                    <thead><tr><th>Category</th><th>Module</th><th>Effect</th><th class="num">Used in</th></tr></thead>
+                    <tbody>
+                        @foreach (var module in Workspace.Catalog.Modules.Where(module => Matches(module.ID, Workspace.ModuleCategory(module))))
+                        {
+                            <tr>
+                                <td class="muted">@Workspace.ModuleCategory(module)</td>
+                                <td>@module.ID</td>
+                                <td class="small">@StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers)</td>
+                                <td class="num">@Workspace.Catalog.ShipDesigns.Count(design => design.ModuleIDs.Contains(module.ID))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "mios":
+                <table class="data compact">
+                    <thead><tr><th>MIO</th><th>Applies to</th><th>Effect (one equipment bonus per stat)</th></tr></thead>
+                    <tbody>
+                        @foreach (var mio in Workspace.Catalog.Mios.Where(mio => Matches(mio.ID)))
+                        {
+                            @foreach (var modifier in mio.Modifiers)
+                            {
+                                <tr>
+                                    <td>@mio.ID</td>
+                                    <td class="muted">@Scope(modifier.AppliesToRoles, modifier.AppliesToTypes)</td>
+                                    <td class="small">@StatInfo.Summarize(modifier.StatModifiers, modifier.StatAverages, modifier.StatMultipliers)</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "researches":
+                <table class="data compact">
+                    <thead><tr><th>File</th><th>Research</th><th>Applies to</th><th>Effect</th><th>Kind</th></tr></thead>
+                    <tbody>
+                        @foreach (var research in Workspace.Catalog.Researches.Where(research => Matches(research.ID, Workspace.Catalog.SourceFileOf(research))))
+                        {
+                            <tr>
+                                <td class="muted">@Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research))</td>
+                                <td>@research.ID</td>
+                                <td class="muted">@Scope(research.AppliesToRoles, research.AppliesToTypes)</td>
+                                <td class="small">@StatInfo.Summarize(research.StatModifiers, research.StatAverages, research.StatMultipliers)</td>
+                                <td class="small" title="Equipment bonuses go into the design multiplier (S-STATS-BONUS); technologies scale the ship (S-STATS-SHIP)">@(research.EquipmentBonus ? "equipment bonus" : "technology")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "spirits":
+                <table class="data compact">
+                    <thead><tr><th>Spirit</th><th>Applies to</th><th>Effect</th><th class="num">Sortie efficiency</th></tr></thead>
+                    <tbody>
+                        @foreach (var spirit in Workspace.Catalog.Spirits.Where(spirit => Matches(spirit.ID)))
+                        {
+                            var summary = StatInfo.Summarize(spirit.StatModifiers, spirit.StatAverages, spirit.StatMultipliers);
+                            <tr>
+                                <td>@spirit.ID</td>
+                                <td class="muted">@Scope(spirit.AppliesToRoles, spirit.AppliesToTypes)</td>
+                                <td class="small">@(summary.Length > 0 ? summary : "no effect the engine models yet (see Settings → content warnings)")</td>
+                                <td class="num">@(spirit.SortieEffiency == 0 ? "" : spirit.SortieEffiency.ToString("P0"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            default:
+                <table class="data compact">
+                    <thead>
+                        <tr>
+                            <th>Plane</th><th class="num">Air attack</th><th class="num">Air defense</th><th class="num">Naval attack</th><th class="num">Naval targeting</th>
+                            <th class="num">Agility</th><th class="num">Speed</th><th class="num">Air superiority</th><th class="num">Reliability</th><th class="num">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var plane in Workspace.Catalog.Planes.Where(plane => Matches(plane.ID)))
+                        {
+                            <tr>
+                                <td>@plane.ID</td>
+                                <td class="num">@plane.Stats.AirAttack</td>
+                                <td class="num">@plane.Stats.AirDefense</td>
+                                <td class="num">@plane.Stats.NavalAttack</td>
+                                <td class="num">@plane.Stats.NavalTargeting</td>
+                                <td class="num">@plane.Stats.Agility</td>
+                                <td class="num">@plane.Stats.Speed</td>
+                                <td class="num">@plane.Stats.AirSuperiority</td>
+                                <td class="num">@plane.Stats.Reliability.ToString("P0")</td>
+                                <td class="num">@plane.Stats.ProductionCost</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly IReadOnlyList<StatInfo> HullStats =
+        StatInfo.All.Where(stat => stat.Key is "hp" or "organization" or "armor" or "speed" or "reliability" or "surfaceVisibility" or "subVisibility"
+            or "surfaceDetection" or "subDetection" or "productionCost").ToList();
+
+    private string tab = "hulls";
+    private string filter = string.Empty;
+
+    private IEnumerable<(string Key, string Label, int Count)> Tabs()
+    {
+        var catalog = Workspace.Catalog;
+        yield return ("hulls", "Hulls", catalog.Hulls.Count);
+        yield return ("modules", "Modules", catalog.Modules.Count);
+        yield return ("mios", "MIOs", catalog.Mios.Count);
+        yield return ("researches", "Researches", catalog.Researches.Count);
+        yield return ("spirits", "Spirits", catalog.Spirits.Count);
+        yield return ("planes", "Planes", catalog.Planes.Count);
+    }
+
+    private bool Matches(params string?[] values)
+    {
+        return filter.Length == 0 || values.Any(value => value?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    private static string Scope(List<string> roles, List<string>? types)
+    {
+        var scopes = roles.Concat(types ?? []).ToList();
+        return scopes.Count == 0 ? "all ships" : string.Join(", ", scopes);
+    }
+}

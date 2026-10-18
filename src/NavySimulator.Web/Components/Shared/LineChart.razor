@@ -1,0 +1,193 @@
+@* Hour-indexed line chart. Night hours are shaded; clicking a column selects that hour. *@
+<svg class="chart" viewBox="0 0 @Width @Height" role="img" aria-label="@AriaLabel">
+    <g class="grid">
+        @for (var i = 0; i <= 4; i++)
+        {
+            var y = Y(maxY * i / 4);
+            <line x1="@F(Left)" x2="@F(Width - Right)" y1="@F(y)" y2="@F(y)" />
+        }
+    </g>
+    @if (Night is not null)
+    {
+        @foreach (var (start, end) in NightRanges())
+        {
+            <rect class="night" x="@F(X(start - 0.5))" y="@F(Top)" width="@F(X(end + 0.5) - X(start - 0.5))" height="@F(PlotHeight)" />
+        }
+    }
+    <g class="axis">
+        @Label(Left - 6, Y(maxY) + 4, "end", maxY.ToString(YFormat))
+        @Label(Left - 6, Y(maxY / 2) + 4, "end", (maxY / 2).ToString(YFormat))
+        @Label(Left - 6, Y(0) + 4, "end", 0.0.ToString(YFormat))
+        @foreach (var tick in XTicks())
+        {
+            @Label(X(tick), Height - 4, "middle", $"h{tick}")
+        }
+    </g>
+    @foreach (var series in Series)
+    {
+        <polyline class="series" points="@Points(series.Values)" style="stroke: @series.Color" stroke-dasharray="@(series.Dashed ? "5 4" : "none")" />
+    }
+    @if (Marker is { } marker && marker >= 0 && marker < count)
+    {
+        <line class="marker" x1="@F(X(marker))" x2="@F(X(marker))" y1="@F(Top)" y2="@F(Top + PlotHeight)" />
+    }
+    @if (OnSelect.HasDelegate)
+    {
+        @foreach (var (first, last) in Columns())
+        {
+            var hour = last;
+            <rect x="@F(X(first - 0.5))" y="@F(Top)" width="@F(Math.Max(1, X(last + 0.5) - X(first - 0.5)))" height="@F(PlotHeight)"
+                  fill="transparent" style="cursor: pointer" @onclick="() => OnSelect.InvokeAsync(hour)">
+                <title>@Tooltip(hour)</title>
+            </rect>
+        }
+    }
+</svg>
+@if (ShowLegend)
+{
+    <div class="legend">
+        @foreach (var series in Series)
+        {
+            <span style="color: @series.Color">@series.Name</span>
+        }
+    </div>
+}
+
+@code {
+    private const double Left = 44;
+    private const double Right = 18;
+    private const double Top = 8;
+    private const double Bottom = 18;
+    private const int MaxColumns = 300;
+
+    private double maxY = 1;
+    private int count;
+
+    [Parameter, EditorRequired] public IReadOnlyList<ChartSeries> Series { get; set; } = [];
+    [Parameter] public double? YMax { get; set; }
+    [Parameter] public string YFormat { get; set; } = "F0";
+    [Parameter] public IReadOnlyList<bool>? Night { get; set; }
+    [Parameter] public int? Marker { get; set; }
+    [Parameter] public EventCallback<int> OnSelect { get; set; }
+    [Parameter] public int Width { get; set; } = 640;
+    [Parameter] public int Height { get; set; } = 170;
+    [Parameter] public bool ShowLegend { get; set; } = true;
+    [Parameter] public string AriaLabel { get; set; } = "Chart";
+
+    private double PlotWidth => Width - Left - Right;
+    private double PlotHeight => Height - Top - Bottom;
+
+    protected override void OnParametersSet()
+    {
+        count = Series.Count == 0 ? 0 : Series.Max(series => series.Values.Count);
+        var dataMax = Series.SelectMany(series => series.Values).DefaultIfEmpty(0).Max();
+        maxY = YMax ?? NiceCeiling(dataMax);
+    }
+
+    private double X(double hour)
+    {
+        var span = Math.Max(1, count - 1);
+        return Left + Math.Clamp(hour, -0.5, span + 0.5) / span * PlotWidth;
+    }
+
+    private double Y(double value)
+    {
+        return Top + PlotHeight - Math.Clamp(value / maxY, 0, 1.05) * PlotHeight;
+    }
+
+    private string Points(IReadOnlyList<double> values)
+    {
+        var step = Math.Max(1, values.Count / 1200);
+        var points = new System.Text.StringBuilder();
+
+        for (var i = 0; i < values.Count; i += step)
+        {
+            points.Append(F(X(i))).Append(',').Append(F(Y(values[i]))).Append(' ');
+        }
+
+        if (values.Count > 0 && (values.Count - 1) % step != 0)
+        {
+            points.Append(F(X(values.Count - 1))).Append(',').Append(F(Y(values[^1])));
+        }
+
+        return points.ToString();
+    }
+
+    private IEnumerable<(int Start, int End)> NightRanges()
+    {
+        var start = -1;
+
+        for (var i = 0; i < Night!.Count; i++)
+        {
+            if (Night[i] && start < 0)
+            {
+                start = i;
+            }
+            else if (!Night[i] && start >= 0)
+            {
+                yield return (start, i - 1);
+                start = -1;
+            }
+        }
+
+        if (start >= 0)
+        {
+            yield return (start, Night.Count - 1);
+        }
+    }
+
+    private IEnumerable<int> XTicks()
+    {
+        if (count <= 1)
+        {
+            yield break;
+        }
+
+        var step = NiceCeiling((count - 1) / 6.0);
+
+        for (var tick = 0.0; tick <= count - 1; tick += Math.Max(1, step))
+        {
+            yield return (int)tick;
+        }
+    }
+
+    private IEnumerable<(int First, int Last)> Columns()
+    {
+        var size = Math.Max(1, (int)Math.Ceiling(count / (double)MaxColumns));
+
+        for (var first = 0; first < count; first += size)
+        {
+            yield return (first, Math.Min(count - 1, first + size - 1));
+        }
+    }
+
+    private string Tooltip(int hour)
+    {
+        var values = Series.Where(series => hour < series.Values.Count).Select(series => $"{series.Name}: {series.Values[hour].ToString(YFormat)}");
+        return $"Hour {hour}\n{string.Join("\n", values)}\nClick to view this hour";
+    }
+
+    private static double NiceCeiling(double value)
+    {
+        if (value <= 0)
+        {
+            return 1;
+        }
+
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(value)));
+        var normalized = value / magnitude;
+        var nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+        return nice * magnitude;
+    }
+
+    // Razor reserves <text>, so SVG text elements are written as markup.
+    private static MarkupString Label(double x, double y, string anchor, string content)
+    {
+        return new MarkupString($"<text x=\"{F(x)}\" y=\"{F(y)}\" text-anchor=\"{anchor}\">{System.Net.WebUtility.HtmlEncode(content)}</text>");
+    }
+
+    private static string F(double value)
+    {
+        return value.ToString("0.##", CultureInfo.InvariantCulture);
+    }
+}

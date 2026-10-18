@@ -17,6 +17,18 @@ public class SetupLoaderTests
     }
 
     [Fact]
+    public void CatalogFiles_ListEveryFileTheCatalogIsReadFrom()
+    {
+        var catalog = new SetupLoader().ReadCatalog(RepositoryPaths.Data);
+        IEnumerable<object> items = [.. catalog.Hulls, .. catalog.Modules, .. catalog.Mios, .. catalog.ShipDesigns, .. catalog.Researches, .. catalog.Spirits, .. catalog.Planes, .. catalog.Fleets];
+
+        var files = SetupLoader.CatalogFiles(RepositoryPaths.Data);
+
+        Assert.All(items, item => Assert.Contains(catalog.SourceFileOf(item), files));
+        Assert.DoesNotContain("battle-scenario.json", files);
+    }
+
+    [Fact]
     public void LoadScenarioFromDirectory_AppliesExtraDefineSources()
     {
         var loader = new SetupLoader();

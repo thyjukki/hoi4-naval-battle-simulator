@@ -1,0 +1,83 @@
+@* A filterable list of checkboxes over IDs, grouped; edits the Selected list in place. *@
+<div class="stack" style="gap: 6px">
+    <div class="row tight">
+        <input type="search" placeholder="Filter…" @bind="filter" @bind:event="oninput" class="grow" />
+        <span class="small muted nowrap">@Selected.Count selected</span>
+        @if (Selected.Count > 0)
+        {
+            <button class="small ghost" @onclick="Clear">Clear</button>
+        }
+    </div>
+    @if (Selected.Count > 0)
+    {
+        <div class="chips">
+            @foreach (var id in Selected.ToList())
+            {
+                <span class="chip @(Items.Any(item => item.Id == id) ? "" : "bad")">@id<button title="Remove" @onclick="() => Toggle(id)">✕</button></span>
+            }
+        </div>
+    }
+    <div class="checklist" style="max-height: @(MaxHeight)px">
+        @foreach (var group in Visible().GroupBy(item => item.Group))
+        {
+            @if (!string.IsNullOrEmpty(group.Key))
+            {
+                <div class="list-group">@group.Key</div>
+            }
+            @foreach (var item in group)
+            {
+                <label>
+                    <input type="checkbox" checked="@Selected.Contains(item.Id)" @onchange="() => Toggle(item.Id)" />
+                    <span>
+                        <span>@item.Id</span>
+                        @if (!string.IsNullOrEmpty(item.Description))
+                        {
+                            <span class="desc"><br />@item.Description</span>
+                        }
+                    </span>
+                </label>
+            }
+        }
+        @foreach (var unknown in Selected.Where(id => Items.All(item => item.Id != id)).ToList())
+        {
+            <label class="bad">
+                <input type="checkbox" checked @onchange="() => Toggle(unknown)" />
+                <span>@unknown <span class="desc">(unknown ID)</span></span>
+            </label>
+        }
+    </div>
+</div>
+
+@code {
+    private string filter = string.Empty;
+
+    [Parameter, EditorRequired] public IReadOnlyList<CheckItem> Items { get; set; } = [];
+    [Parameter, EditorRequired] public List<string> Selected { get; set; } = [];
+    [Parameter] public EventCallback OnChanged { get; set; }
+    [Parameter] public int MaxHeight { get; set; } = 260;
+
+    private IEnumerable<CheckItem> Visible()
+    {
+        return filter.Length == 0
+            ? Items
+            : Items.Where(item => item.Id.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                  item.Description.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                  item.Group.Contains(filter, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task Toggle(string id)
+    {
+        if (!Selected.Remove(id))
+        {
+            Selected.Add(id);
+        }
+
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Clear()
+    {
+        Selected.Clear();
+        await OnChanged.InvokeAsync();
+    }
+}

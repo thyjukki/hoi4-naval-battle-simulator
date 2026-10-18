@@ -19,44 +19,137 @@ public class SetupLoader
         .Select(property => property.Name)
         .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+    // The collections ReadCatalog reads: folder, and the root file read instead when the folder is missing.
+    private static readonly (string Folder, string LegacyFile)[] CatalogSources =
+    [
+        ("hulls", "hulls.json"),
+        ("modules", "modules.json"),
+        ("mios", "mios.json"),
+        ("ship-designs", "ship-designs.json"),
+        ("researches", "researches.json"),
+        ("spirits", "spirits.json"),
+        ("planes", "planes.json"),
+        ("force-compositions", "force-compositions.json")
+    ];
+
     private readonly List<string> warnings = [];
 
     public IReadOnlyList<string> Warnings => warnings;
 
     public DefinesBindingReport? DefinesReport { get; private set; }
 
+    /// <summary>Reads the data directory's content and the scenario file, then builds the battle (as the CLI does).</summary>
     public BattleScenario LoadScenarioFromDirectory(
         string dataDirectoryPath,
         string scenarioFileName = "battle-scenario.json",
         IReadOnlyList<string>? extraDefineSources = null)
     {
-        warnings.Clear();
-        var errors = new List<string>();
+        var catalog = ReadCatalog(dataDirectoryPath);
+        var scenarioErrors = new List<string>();
+        var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, scenarioFileName, scenarioErrors) ?? new BattleScenarioFileDto();
+        return BuildScenario(catalog, battleScenarioFile.BattleScenario, extraDefineSources, scenarioErrors);
+    }
 
+    /// <summary>Reads every content collection of a data directory, keeping read errors and warnings in the catalog.</summary>
+    public ContentCatalog ReadCatalog(string dataDirectoryPath)
+    {
         if (!Directory.Exists(dataDirectoryPath))
         {
             throw new DirectoryNotFoundException($"Data directory not found: {dataDirectoryPath}");
         }
 
-        ValidateModuleStatWarnings(dataDirectoryPath, warnings);
+        var catalog = new ContentCatalog(dataDirectoryPath);
+        ValidateModuleStatWarnings(dataDirectoryPath, catalog.Warnings);
 
         foreach (var folder in new[] { "hulls", "researches", "spirits", "mios" })
         {
-            ValidateStatBlockWarnings(dataDirectoryPath, folder, warnings);
+            ValidateStatBlockWarnings(dataDirectoryPath, folder, catalog.Warnings);
         }
 
-        var hulls = ReadCollectionFromFolderOrFile<HullDto>(dataDirectoryPath, "hulls", "hulls.json", "hulls", errors);
-        var modules = ReadCollectionFromFolderOrFile<ModuleDto>(dataDirectoryPath, "modules", "modules.json", "modules", errors);
-        var mios = ReadCollectionFromFolderOrFile<MioBonusDto>(dataDirectoryPath, "mios", "mios.json", "mios", errors);
-        var designs = ReadCollectionFromFolderOrFile<ShipDesignDto>(dataDirectoryPath, "ship-designs", "ship-designs.json", "shipDesigns", errors);
-        var researches = ReadCollectionFromFolderOrFile<ResearchDto>(dataDirectoryPath, "researches", "researches.json", "researches", errors);
-        var spirits = ReadCollectionFromFolderOrFile<SpiritDto>(dataDirectoryPath, "spirits", "spirits.json", "spirits", errors);
-        var planes = ReadCollectionFromFolderOrFile<PlaneDto>(dataDirectoryPath, "planes", "planes.json", "planes", errors);
-        var fleets = ReadCollectionFromFolderOrFile<FleetDto>(dataDirectoryPath, "force-compositions", "force-compositions.json", "fleets", errors);
-        var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = fleets };
-        var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, scenarioFileName, errors) ?? new BattleScenarioFileDto();
-        var defines = LoadDefines(dataDirectoryPath, battleScenarioFile.BattleScenario.Defines, extraDefineSources ?? [], errors);
-        var rules = BuildRules(battleScenarioFile.BattleScenario, errors);
+        catalog.Hulls.AddRange(ReadCollectionFromFolderOrFile<HullDto>(catalog, "hulls", "hulls.json", "hulls"));
+        catalog.Modules.AddRange(ReadCollectionFromFolderOrFile<ModuleDto>(catalog, "modules", "modules.json", "modules"));
+        catalog.Mios.AddRange(ReadCollectionFromFolderOrFile<MioBonusDto>(catalog, "mios", "mios.json", "mios"));
+        catalog.ShipDesigns.AddRange(ReadCollectionFromFolderOrFile<ShipDesignDto>(catalog, "ship-designs", "ship-designs.json", "shipDesigns"));
+        catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
+        catalog.Spirits.AddRange(ReadCollectionFromFolderOrFile<SpiritDto>(catalog, "spirits", "spirits.json", "spirits"));
+        catalog.Planes.AddRange(ReadCollectionFromFolderOrFile<PlaneDto>(catalog, "planes", "planes.json", "planes"));
+        catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
+        return catalog;
+    }
+
+    /// <summary>
+    /// The files <see cref="ReadCatalog"/> reads, data-directory relative with forward slashes: each collection
+    /// folder's JSON files, or its legacy root file (listed even when missing) when the folder does not exist.
+    /// </summary>
+    public static IReadOnlyList<string> CatalogFiles(string dataDirectoryPath)
+    {
+        var files = new List<string>();
+
+        foreach (var (folder, legacyFile) in CatalogSources)
+        {
+            var folderPath = Path.Combine(dataDirectoryPath, folder);
+
+            if (Directory.Exists(folderPath))
+            {
+                files.AddRange(Directory
+                    .GetFiles(folderPath, "*.json", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                    .Select(path => $"{folder}/{Path.GetFileName(path)}"));
+            }
+            else
+            {
+                files.Add(legacyFile);
+            }
+        }
+
+        return files;
+    }
+
+    /// <summary>Reads a scenario file of the data directory. Throws <see cref="SetupValidationException"/> when it is missing or invalid.</summary>
+    public static BattleScenarioDto ReadScenario(string dataDirectoryPath, string scenarioFileName)
+    {
+        var errors = new List<string>();
+        var file = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, scenarioFileName, errors);
+
+        if (file is null || errors.Count > 0)
+        {
+            throw new SetupValidationException(errors.Count > 0 ? errors : [$"File '{scenarioFileName}' could not be read."]);
+        }
+
+        return file.BattleScenario;
+    }
+
+    /// <summary>
+    /// Validates the catalog and the scenario together and builds the battle. Every call builds new fleets and ships, so
+    /// two scenarios built from the same catalog can run at the same time. Throws <see cref="SetupValidationException"/>.
+    /// </summary>
+    public BattleScenario BuildScenario(ContentCatalog catalog, BattleScenarioDto scenarioDto, IReadOnlyList<string>? extraDefineSources = null)
+    {
+        return BuildScenario(catalog, scenarioDto, extraDefineSources, []);
+    }
+
+    private BattleScenario BuildScenario(
+        ContentCatalog catalog,
+        BattleScenarioDto scenarioDto,
+        IReadOnlyList<string>? extraDefineSources,
+        List<string> scenarioErrors)
+    {
+        warnings.Clear();
+        warnings.AddRange(catalog.Warnings);
+        var errors = new List<string>(catalog.ReadErrors);
+        errors.AddRange(scenarioErrors);
+
+        var dataDirectoryPath = catalog.DataDirectory;
+        var hulls = catalog.Hulls;
+        var modules = catalog.Modules;
+        var mios = catalog.Mios;
+        var designs = catalog.ShipDesigns;
+        var researches = catalog.Researches;
+        var spirits = catalog.Spirits;
+        var planes = catalog.Planes;
+        var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = catalog.Fleets };
+        var defines = LoadDefines(dataDirectoryPath, scenarioDto.Defines, extraDefineSources ?? [], errors);
+        var rules = BuildRules(scenarioDto, errors);
 
         ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);
         ValidateRequiredValues(hulls.Select(h => h.Role), "hulls.role", errors);
@@ -89,10 +182,6 @@ public class SetupLoader
                 errors.Add($"plane '{plane.ID}' has negative reliability {plane.Stats.Reliability}.");
             }
         }
-
-        var planeById = planes.ToDictionary(
-            plane => plane.ID,
-            plane => new PlaneEquipment(plane.ID, plane.Stats.ToDomain()));
 
         var hullIds = hulls.Select(h => h.ID).ToHashSet();
         foreach (var hull in hulls)
@@ -128,7 +217,7 @@ public class SetupLoader
         var designIds = designs.Select(d => d.ID).ToHashSet();
         var researchIds = researches.Select(r => r.ID).ToHashSet();
         var spiritIds = spirits.Select(s => s.ID).ToHashSet();
-        var planeIds = planeById.Keys.ToHashSet();
+        var planeIds = planes.Select(p => p.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
         var hullRoleByHullId = hulls.ToDictionary(h => h.ID, h => h.Role, StringComparer.OrdinalIgnoreCase);
         var designHullByDesignId = designs.ToDictionary(d => d.ID, d => d.HullID, StringComparer.OrdinalIgnoreCase);
@@ -260,66 +349,24 @@ public class SetupLoader
             }
         }
 
-        ValidateScenario(battleScenarioFile.BattleScenario, fleetIds, researchIds, spiritIds, defines, errors);
+        ValidateScenario(scenarioDto, fleetIds, researchIds, spiritIds, defines, errors);
 
         if (errors.Count > 0)
         {
             throw new SetupValidationException(errors);
         }
 
-        var hullById = hulls.ToDictionary(
-            h => h.ID,
-            h => new Hull(h.ID, Enum.Parse<ShipRole>(h.Role, true), ParseTypes(h.Types ?? []), h.Manpower, h.BaseStats.ToDomain()));
-        var moduleById = modules.ToDictionary(
-            m => m.ID,
-            m => new StatModule(
-                m.ID,
-                m.StatModifiers.ToDomain(),
-                m.StatMultipliers.ToDomain(),
-                m.StatAverages.ToDomain()));
-        var mioById = mios.ToDictionary(
-            mio => mio.ID,
-            mio => new MioBonus(mio.ID, mio.Modifiers
-                .Select(modifier => new MioModifier(
-                    modifier.StatModifiers.ToDomain(),
-                    modifier.StatAverages.ToDomain(),
-                    modifier.StatMultipliers.ToDomain(),
-                    ParseRoles(modifier.AppliesToRoles),
-                    ParseTypes(modifier.AppliesToTypes ?? [])))
-                .ToList()));
-        var researchById = researches.ToDictionary(
-            research => research.ID,
-            research => new Research(
-                research.ID,
-                research.StatModifiers.ToDomain(),
-                research.StatAverages.ToDomain(),
-                research.StatMultipliers.ToDomain(),
-                ParseRoles(research.AppliesToRoles),
-                ParseTypes(research.AppliesToTypes ?? []),
-                research.EquipmentBonus));
-        var spiritById = spirits.ToDictionary(
-            spirit => spirit.ID,
-            spirit => new Spirit(
-                spirit.ID,
-                spirit.StatModifiers.ToDomain(),
-                spirit.StatAverages.ToDomain(),
-                spirit.StatMultipliers.ToDomain(),
-                spirit.SortieEffiency,
-                ParseRoles(spirit.AppliesToRoles),
-                ParseTypes(spirit.AppliesToTypes ?? [])));
-
+        var library = ContentLibrary.From(catalog);
+        var researchById = library.Researches;
+        var spiritById = library.Spirits;
         var designById = new Dictionary<string, ShipDesign>();
 
         foreach (var design in designs)
         {
-            var hull = hullById[design.HullID];
-            var designModules = design.ModuleIDs.Select(moduleId => moduleById[moduleId]).ToList();
-            var mio = string.IsNullOrWhiteSpace(design.MioID) ? null : mioById[design.MioID];
-            designById[design.ID] = new ShipDesign(design.ID, hull, designModules, mio);
+            designById[design.ID] = library.TryCreateDesign(design)!;
         }
 
         var fleetDtoById = forceCompositionsFile.Fleets.ToDictionary(fleet => fleet.ID, StringComparer.Ordinal);
-        var scenarioDto = battleScenarioFile.BattleScenario;
         var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, defines);
         var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, defines);
 
@@ -331,7 +378,7 @@ public class SetupLoader
             scenarioDto.Seed,
             attacker,
             defender,
-            planeById,
+            library.Planes,
             defines,
             rules);
     }
@@ -383,6 +430,7 @@ public class SetupLoader
         {
             DamageRandomness = ParseEnum(dto.DamageRandomness, rules.DamageRandomness, "battleScenario.rules.damageRandomness", errors),
             NightEnabled = dto.NightEnabled ?? rules.NightEnabled,
+            WeatherEnabled = dto.WeatherEnabled ?? rules.WeatherEnabled,
             StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
             AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase
         };
@@ -431,13 +479,13 @@ public class SetupLoader
     }
 
     private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(
-        string dataDirectoryPath,
+        ContentCatalog catalog,
         string folderName,
         string legacyFileName,
-        string rootPropertyName,
-        List<string> errors)
+        string rootPropertyName)
+        where TItem : class
     {
-        var folderPath = Path.Combine(dataDirectoryPath, folderName);
+        var folderPath = Path.Combine(catalog.DataDirectory, folderName);
 
         if (Directory.Exists(folderPath))
         {
@@ -448,7 +496,7 @@ public class SetupLoader
 
             if (jsonFiles.Count == 0)
             {
-                errors.Add($"Directory '{folderName}' does not contain any JSON files.");
+                catalog.ReadErrors.Add($"Directory '{folderName}' does not contain any JSON files.");
                 return [];
             }
 
@@ -456,18 +504,21 @@ public class SetupLoader
 
             foreach (var filePath in jsonFiles)
             {
-                items.AddRange(ReadCollectionFile<TItem>(filePath, rootPropertyName, errors));
+                items.AddRange(ReadCollectionFile<TItem>(catalog, filePath, $"{folderName}/{Path.GetFileName(filePath)}", rootPropertyName));
             }
 
             return items;
         }
 
-        var legacyPath = Path.Combine(dataDirectoryPath, legacyFileName);
-        return ReadCollectionFile<TItem>(legacyPath, rootPropertyName, errors);
+        var legacyPath = Path.Combine(catalog.DataDirectory, legacyFileName);
+        return ReadCollectionFile<TItem>(catalog, legacyPath, legacyFileName, rootPropertyName);
     }
 
-    private static List<TItem> ReadCollectionFile<TItem>(string filePath, string rootPropertyName, List<string> errors)
+    private static List<TItem> ReadCollectionFile<TItem>(ContentCatalog catalog, string filePath, string relativePath, string rootPropertyName)
+        where TItem : class
     {
+        var errors = catalog.ReadErrors;
+
         if (!File.Exists(filePath))
         {
             errors.Add($"Missing required setup source: {Path.GetFileName(filePath)}");
@@ -507,6 +558,7 @@ public class SetupLoader
                     continue;
                 }
 
+                catalog.SetSourceFile(item, relativePath);
                 items.Add(item);
             }
 
@@ -994,7 +1046,8 @@ public class SetupLoader
             errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 to {ExperienceRules.MaxLevel(defines)}.");
         }
 
-        ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, $"battleScenario.{role}.engagementLevel", errors);
+        ParseEnum(participant.Aggressiveness, Aggressiveness.EngageAtMediumRisk, $"battleScenario.{role}.aggressiveness", errors);
+        ParseEnum(participant.RepairPriority, RepairPriority.High, $"battleScenario.{role}.repairPriority", errors);
     }
 
     private static BattleParticipant BuildParticipant(
@@ -1017,7 +1070,8 @@ public class SetupLoader
             participant.ExternalNavalStrikePlanes,
             participantResearches,
             participantSpirits,
-            ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, "engagementLevel", []),
+            ParseEnum(participant.Aggressiveness, Aggressiveness.EngageAtMediumRisk, "aggressiveness", []),
+            ParseEnum(participant.RepairPriority, RepairPriority.High, "repairPriority", []),
             participant.ExternalPlaneID,
             participant.ExternalMissionEfficiency ?? 1.0,
             participant.CarrierStanceIndex,
@@ -1061,29 +1115,6 @@ public class SetupLoader
                 }
             }
         }
-    }
-
-    private static List<ShipRole> ParseRoles(List<string> roleNames)
-    {
-        var roles = new List<ShipRole>();
-
-        foreach (var roleName in roleNames)
-        {
-            if (Enum.TryParse<ShipRole>(roleName, true, out var role))
-            {
-                roles.Add(role);
-            }
-        }
-
-        return roles;
-    }
-
-    private static List<string> ParseTypes(List<string> typeNames)
-    {
-        return typeNames
-            .Where(typeName => !string.IsNullOrWhiteSpace(typeName))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
     }
 
     private static Dictionary<string, List<CarrierAirwingAssignment>> ParseCarrierAirwings(

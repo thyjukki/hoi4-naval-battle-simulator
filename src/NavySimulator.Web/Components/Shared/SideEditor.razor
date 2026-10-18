@@ -1,0 +1,226 @@
+@* Editor for one battle side (attacker or defender) of the scenario. Edits the DTO in place. *@
+@inject Workspace Workspace
+
+<div class="panel side-card side-@Label">
+    <div class="panel-head">
+        <h2 class="@Label">@Label</h2>
+        @if (fleet is not null)
+        {
+            <span class="muted small">@fleet.ShipDesigns.Values.Sum() ships</span>
+        }
+    </div>
+    <div class="panel-body stack">
+        <div class="fields">
+            <div class="field span-2">
+                <label>Fleet</label>
+                <div class="row tight" style="flex-wrap: nowrap">
+                    <select class="grow @(fleet is null ? "invalid" : "")" @bind="Side.FleetID" @bind:after="Changed">
+                        @if (fleet is null)
+                        {
+                            <option value="@Side.FleetID">@(string.IsNullOrEmpty(Side.FleetID) ? "(choose a fleet)" : $"{Side.FleetID} (unknown)")</option>
+                        }
+                        @foreach (var group in Workspace.Catalog.Fleets.GroupBy(item => Workspace.Catalog.SourceFileOf(item) ?? ""))
+                        {
+                            <optgroup label="@group.Key">
+                                @foreach (var item in group)
+                                {
+                                    <option value="@item.ID">@item.ID</option>
+                                }
+                            </optgroup>
+                        }
+                    </select>
+                    @if (fleet is not null)
+                    {
+                        <a class="button small" href="@($"fleets?id={Uri.EscapeDataString(fleet.ID)}")">Edit fleet</a>
+                    }
+                </div>
+                @if (fleet is not null)
+                {
+                    <span class="hint">
+                        @string.Join(", ", fleet.ShipDesigns.Select(entry => $"{entry.Value}× {entry.Key}"))
+                        @if (fleet.CarrierAirwings.Count > 0)
+                        {
+                            <span> · air wings on @string.Join(", ", fleet.CarrierAirwings.Keys)</span>
+                        }
+                    </span>
+                }
+            </div>
+            <div class="field">
+                <label>Aggressiveness</label>
+                <select @bind:get="Side.Aggressiveness ?? string.Empty" @bind:set="SetAggressiveness">
+                    <option value="">@GameLabels.Of(Aggressiveness.EngageAtMediumRisk) (default)</option>
+                    @foreach (var aggressiveness in Enum.GetValues<Aggressiveness>())
+                    {
+                        <option value="@aggressiveness">@GameLabels.Of(aggressiveness)</option>
+                    }
+                </select>
+                <span class="hint">The task force's engagement rule: retreat threshold, and which lines submarines attack.</span>
+            </div>
+            <div class="field">
+                <label>Repair priority</label>
+                <select @bind:get="Side.RepairPriority ?? string.Empty" @bind:set="SetRepairPriority">
+                    <option value="">@GameLabels.Of(RepairPriority.High) (default)</option>
+                    @foreach (var repairPriority in Enum.GetValues<RepairPriority>())
+                    {
+                        <option value="@repairPriority">@GameLabels.Of(repairPriority)</option>
+                    }
+                </select>
+                <span class="hint">When the task force goes home for repairs. Recorded with the setup; combat does not use it.</span>
+            </div>
+            <div class="field">
+                <label>Ship experience level</label>
+                <select @bind="Side.ShipExperienceLevel" @bind:after="Changed">
+                    <option value="">Fleet's levels (default 2)</option>
+                    @for (var level = 0; level <= MaxExperienceLevel; level++)
+                    {
+                        <option value="@level">@level</option>
+                    }
+                </select>
+                <span class="hint">Overrides every ship's level.</span>
+            </div>
+            <div class="field">
+                <label>Commander</label>
+                <input type="text" @bind="Side.Commander" @bind:after="Changed" />
+                <span class="hint">Not simulated yet.</span>
+            </div>
+            <div class="field">
+                <label>Doctrine</label>
+                <input type="text" @bind="Side.Doctrine" @bind:after="Changed" />
+                <span class="hint">Not simulated yet.</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <div class="row">
+                <span class="label">Researches</span>
+                <button class="small ghost right" @onclick="CopyResearches" title="Use the other side's researches">Copy from @OtherLabel</button>
+            </div>
+            <CheckList Items="ResearchItems()" Selected="Side.ResearchIDs" OnChanged="Changed" />
+        </div>
+
+        <div class="field">
+            <span class="label">Spirits</span>
+            <CheckList Items="SpiritItems()" Selected="Side.SpiritIDs" OnChanged="Changed" MaxHeight="160" />
+        </div>
+
+        <details>
+            <summary class="small muted" style="cursor: pointer">Air: land-based planes and carrier settings</summary>
+            <div class="fields" style="margin-top: 10px">
+                <div class="field">
+                    <label>Land-based naval strike planes</label>
+                    <input type="number" min="0" @bind="Side.ExternalNavalStrikePlanes" @bind:after="Changed" />
+                </div>
+                <div class="field">
+                    <label>Their plane type</label>
+                    <select @bind:get="Side.ExternalPlaneID ?? string.Empty" @bind:set="SetExternalPlane">
+                        <option value="">(none)</option>
+                        @foreach (var plane in Workspace.Catalog.Planes)
+                        {
+                            <option value="@plane.ID">@plane.ID</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Their mission efficiency</label>
+                    <input type="number" step="0.05" min="0" placeholder="1" @bind="Side.ExternalMissionEfficiency" @bind:after="Changed" />
+                </div>
+                <div class="field">
+                    <label>Carrier stance</label>
+                    <select @bind="Side.CarrierStanceIndex" @bind:after="Changed">
+                        <option value="">Default (index @DefaultStance)</option>
+                        @for (var index = 0; index < StanceRatios.Length; index++)
+                        {
+                            <option value="@index">@index: @StanceRatios[index].ToString("P0") sorties</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Carrier night traffic</label>
+                    <input type="number" step="0.05" placeholder="0" @bind="Side.CarrierNightTraffic" @bind:after="Changed" />
+                    <span class="hint">Country modifier added to the night sortie factor.</span>
+                </div>
+            </div>
+        </details>
+    </div>
+</div>
+
+@code {
+    private static readonly Engine.Defines.GameDefines Vanilla = Engine.Defines.GameDefines.Vanilla();
+    private static readonly int MaxExperienceLevel = Engine.Battles.Mechanics.ExperienceRules.MaxLevel(Vanilla);
+    private static readonly double[] StanceRatios = Vanilla.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
+    private static readonly int DefaultStance = (int)Vanilla.NNavy.CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX;
+
+    private FleetDto? fleet;
+
+    [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public BattleParticipantDto Side { get; set; } = null!;
+    [Parameter, EditorRequired] public BattleParticipantDto Other { get; set; } = null!;
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private string OtherLabel => Label == "attacker" ? "defender" : "attacker";
+
+    protected override void OnParametersSet()
+    {
+        fleet = Workspace.FindFleet(Side.FleetID);
+    }
+
+    private async Task Changed()
+    {
+        fleet = Workspace.FindFleet(Side.FleetID);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetRepairPriority(string value)
+    {
+        Side.RepairPriority = string.IsNullOrEmpty(value) ? null : value;
+        await Changed();
+    }
+
+    private async Task SetAggressiveness(string value)
+    {
+        Side.Aggressiveness = string.IsNullOrEmpty(value) ? null : value;
+        await Changed();
+    }
+
+    private async Task SetExternalPlane(string value)
+    {
+        Side.ExternalPlaneID = string.IsNullOrEmpty(value) ? null : value;
+        await Changed();
+    }
+
+    private async Task CopyResearches()
+    {
+        Side.ResearchIDs.Clear();
+        Side.ResearchIDs.AddRange(Other.ResearchIDs);
+        await Changed();
+    }
+
+    private IReadOnlyList<CheckItem> ResearchItems()
+    {
+        return Workspace.Catalog.Researches
+            .Select(research => new CheckItem(
+                research.ID,
+                StatInfo.Summarize(research.StatModifiers, research.StatAverages, research.StatMultipliers) + AppliesTo(research.AppliesToRoles, research.AppliesToTypes) +
+                (research.EquipmentBonus ? " · equipment bonus" : string.Empty),
+                Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research) ?? string.Empty)))
+            .ToList();
+    }
+
+    private IReadOnlyList<CheckItem> SpiritItems()
+    {
+        return Workspace.Catalog.Spirits
+            .Select(spirit => new CheckItem(
+                spirit.ID,
+                StatInfo.Summarize(spirit.StatModifiers, spirit.StatAverages, spirit.StatMultipliers) is { Length: > 0 } summary
+                    ? summary + AppliesTo(spirit.AppliesToRoles, spirit.AppliesToTypes)
+                    : "no stat effect the engine models yet",
+                Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(spirit) ?? string.Empty)))
+            .ToList();
+    }
+
+    private static string AppliesTo(List<string> roles, List<string>? types)
+    {
+        var scopes = roles.Concat(types ?? []).ToList();
+        return scopes.Count == 0 ? string.Empty : $" · {string.Join(", ", scopes)}";
+    }
+}

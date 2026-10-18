@@ -72,6 +72,42 @@
         "light_battery_3",
         "light_battery_3"
       ]
+    },
+    {
+      "id": "39lc_la",
+      "hullID": "light_cruiser_hull_3",
+      "moduleIDs": [
+        "medium_light_battery_3",
+        "fire_control_2",
+        "radar_2",
+        "engine_cruiser_3",
+        "armor_cruiser_3",
+        "anti_air_3",
+        "dp_ship_secondaries_2",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3",
+        "light_battery_3"
+      ]
+    },
+    {
+      "id": "39lc_torp",
+      "hullID": "light_cruiser_hull_3",
+      "moduleIDs": [
+        "medium_light_battery_3",
+        "fire_control_2",
+        "radar_2",
+        "engine_cruiser_3",
+        "armor_cruiser_3",
+        "anti_air_3",
+        "dp_ship_secondaries_2",
+        "torpedo_3",
+        "torpedo_3",
+        "torpedo_3",
+        "anti_air_3",
+        "anti_air_3"
+      ]
     }
   ]
 }

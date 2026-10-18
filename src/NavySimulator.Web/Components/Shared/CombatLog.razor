@@ -1,0 +1,327 @@
+@* The battle's logs up to the shown hour: hour summaries, events, every shot, air strikes, the raw hourly log. *@
+<div class="panel">
+    <div class="tabs">
+        @foreach (var (key, label, count) in Tabs())
+        {
+            <button class="@(tab == key ? "on" : "")" @onclick="() => tab = key">@label <span class="count">@count</span></button>
+        }
+        <span class="right row tight small" style="padding: 6px 0">
+            <a class="button small" href="export/battle/shots.csv" download>shots.csv</a>
+            <a class="button small" href="export/battle/ships.csv" download>ships.csv</a>
+            <a class="button small" href="export/battle/hourly.log" download>hourly.log</a>
+        </span>
+    </div>
+
+    @switch (tab)
+    {
+        case "hours":
+            <div class="scroll log-table">
+                <table class="data compact">
+                    <thead>
+                        <tr>
+                            <th class="num">Hour</th>
+                            <th>Time</th>
+                            <th class="attacker">Attacker lines</th>
+                            <th class="num attacker" title="Positioning">Pos</th>
+                            <th class="num attacker" title="Screening efficiency (carrier screening)">Screen</th>
+                            <th class="defender">Defender lines</th>
+                            <th class="num defender" title="Positioning">Pos</th>
+                            <th class="num defender" title="Screening efficiency (carrier screening)">Screen</th>
+                            <th class="num" title="Attacker shots / hits">A shots</th>
+                            <th class="num" title="Defender shots / hits">D shots</th>
+                            <th class="num" title="HP damage attacker → defender (air included)">A→D HP</th>
+                            <th class="num" title="HP damage defender → attacker (air included)">D→A HP</th>
+                            <th class="num" title="Ships in battle at the end of the hour">In battle</th>
+                            <th class="num">Events</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <Virtualize Items="HourRows" Context="hour" ItemSize="27" SpacerElement="tr">
+                            <tr class="clickable @(hour.Hour == View.Hour ? "selected" : "")" @onclick="() => OnSelectHour.InvokeAsync(hour.Hour)" title="Click to view the battle at the end of this hour">
+                                <td class="num">@hour.Hour</td>
+                                <td class="nowrap">@($"{hour.HourOfDay:D2}:00") @if (hour.Night) { <span class="badge night">night</span> }</td>
+                                <td class="mono small">@Lines(hour.Attacker)</td>
+                                <td class="num">@hour.Attacker.Positioning.ToString("P0")</td>
+                                <td class="num">@hour.Attacker.ScreeningEfficiency.ToString("P0") <span class="faint">(@hour.Attacker.CarrierScreeningEfficiency.ToString("P0"))</span></td>
+                                <td class="mono small">@Lines(hour.Defender)</td>
+                                <td class="num">@hour.Defender.Positioning.ToString("P0")</td>
+                                <td class="num">@hour.Defender.ScreeningEfficiency.ToString("P0") <span class="faint">(@hour.Defender.CarrierScreeningEfficiency.ToString("P0"))</span></td>
+                                <td class="num">@hour.Attacker.ShotsFired <span class="faint">/ @hour.Attacker.Hits</span></td>
+                                <td class="num">@hour.Defender.ShotsFired <span class="faint">/ @hour.Defender.Hits</span></td>
+                                <td class="num attacker">@hour.Attacker.HpDamageDealt.ToString("F1")</td>
+                                <td class="num defender">@hour.Defender.HpDamageDealt.ToString("F1")</td>
+                                <td class="num"><span class="attacker">@hour.Attacker.ShipsInBattle</span> <span class="faint">vs</span> <span class="defender">@hour.Defender.ShipsInBattle</span></td>
+                                <td class="num">@(eventsByHour.GetValueOrDefault(hour.Hour) is var count and > 0 ? count : "")</td>
+                            </tr>
+                        </Virtualize>
+                    </tbody>
+                </table>
+            </div>
+            break;
+
+        case "events":
+            <div class="filters">
+                <div class="button-group">
+                    @foreach (var kind in Enum.GetValues<BattleEventKind>())
+                    {
+                        <button class="small @(eventKinds.Contains(kind) ? "on" : "")" @onclick="() => ToggleKind(kind)">@kind</button>
+                    }
+                </div>
+                <input type="search" placeholder="Ship…" @bind="eventSearch" @bind:event="oninput" />
+            </div>
+            <div class="scroll log-table">
+                <table class="data compact">
+                    <thead><tr><th class="num">Hour</th><th>Side</th><th>Ship</th><th>Event</th><th>Details</th></tr></thead>
+                    <tbody>
+                        <Virtualize Items="EventRows" Context="battleEvent" ItemSize="27" SpacerElement="tr">
+                            <tr>
+                                <td class="num">@battleEvent.Hour</td>
+                                <td><SideBadge Side="@battleEvent.Side" /></td>
+                                <td>
+                                    @if (battleEvent.ShipId is { } shipId)
+                                    {
+                                        <a href="javascript:void(0)" class="@View.SideOf(shipId)" @onclick="() => OnSelectShip.InvokeAsync(shipId)">@View.NameOf(shipId)</a>
+                                    }
+                                </td>
+                                <td class="@(battleEvent.Kind == BattleEventKind.Sunk ? "bad" : battleEvent.Kind == BattleEventKind.Activated ? "muted" : "warn")">@battleEvent.Kind</td>
+                                <td class="muted">
+                                    @if (battleEvent.OtherShipId is { } other && View.FindShip(other) is not null)
+                                    {
+                                        <span>by </span><a href="javascript:void(0)" class="@View.SideOf(other)" @onclick="() => OnSelectShip.InvokeAsync(other)">@View.NameOf(other)</a>
+                                        <span> — </span>
+                                    }
+                                    @battleEvent.Message
+                                </td>
+                            </tr>
+                        </Virtualize>
+                    </tbody>
+                </table>
+                @if (EventRows.Count == 0)
+                {
+                    <p class="empty">No events match.</p>
+                }
+            </div>
+            break;
+
+        case "shots":
+            shots = filter.Apply(View);
+            <div class="filters">
+                <span class="small muted">Hours</span>
+                <input type="number" min="0" placeholder="from" @bind="filter.FromHour" />
+                <input type="number" min="0" placeholder="to" @bind="filter.ToHour" />
+                <select @bind="filter.Side">
+                    <option value="all">Both sides</option>
+                    <option value="attacker">Attacker fires</option>
+                    <option value="defender">Defender fires</option>
+                </select>
+                <select @bind="filter.Weapon">
+                    <option value="all">All weapons</option>
+                    @foreach (var weapon in Enum.GetNames<WeaponType>())
+                    {
+                        <option value="@weapon">@weapon</option>
+                    }
+                </select>
+                <input type="search" placeholder="Shooter or target…" @bind="filter.Search" @bind:event="oninput" />
+                <label class="check small"><input type="checkbox" @bind="filter.HitsOnly" /> hits</label>
+                <label class="check small"><input type="checkbox" @bind="filter.CriticalsOnly" /> crits</label>
+                <label class="check small"><input type="checkbox" @bind="filter.KillsOnly" /> killing blows</label>
+                <button class="small ghost" @onclick="filter.Clear">Clear</button>
+                <span class="small muted right">
+                    @shots.Count shots · @shots.Count(shot => shot.Hit) hits
+                    (@(shots.Count > 0 ? (shots.Count(shot => shot.Hit) / (double)shots.Count).ToString("P1") : "–"))
+                    · @shots.Sum(shot => shot.HpDamage).ToString("F1") HP · @shots.Sum(shot => shot.OrganizationDamage).ToString("F1") org
+                </span>
+            </div>
+            <div class="scroll log-table">
+                <table class="data compact">
+                    <thead>
+                        <tr>
+                            <th class="num">Hour</th>
+                            <th>Shooter</th>
+                            <th>Weapon</th>
+                            <th>Target</th>
+                            <th class="num" title="Final hit chance">Hit chance</th>
+                            <th class="num" title="Profile factor (visibility vs. detection)">Profile</th>
+                            <th class="num" title="Hit chance modifier">Modifier</th>
+                            <th>Result</th>
+                            <th class="num">Damage</th>
+                            <th class="num" title="Piercing tier (0 and 1 = full damage)">Tier</th>
+                            <th class="num">HP</th>
+                            <th class="num">Org</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <Virtualize Items="shots" Context="shot" ItemSize="27" OverscanCount="30" SpacerElement="tr">
+                            <tr>
+                                <td class="num">@shot.Hour</td>
+                                <td class="@shot.ShooterSide"><a href="javascript:void(0)" class="@shot.ShooterSide" @onclick="() => OnSelectShip.InvokeAsync(shot.ShooterId)">@View.NameOf(shot.ShooterId)</a></td>
+                                <td>@shot.Weapon</td>
+                                <td><a href="javascript:void(0)" class="@(shot.ShooterSide == "attacker" ? "defender" : "attacker")" @onclick="() => OnSelectShip.InvokeAsync(shot.TargetId)">@View.NameOf(shot.TargetId)</a> <span class="faint small">@shot.TargetGroup</span></td>
+                                <td class="num">@shot.HitChance.ToString("P1")</td>
+                                <td class="num faint">@shot.ProfileFactor.ToString("F3")</td>
+                                <td class="num faint">@shot.HitModifier.ToString("F3")</td>
+                                <td>
+                                    @if (shot.Hit)
+                                    {
+                                        <span>hit</span>
+                                        @if (shot.Critical) { <span class="badge sunk" style="margin-left: 4px">crit</span> }
+                                        @if (shot.KillingBlow) { <span class="bad" style="margin-left: 4px">sunk</span> }
+                                    }
+                                    else
+                                    {
+                                        <span class="faint">miss</span>
+                                    }
+                                </td>
+                                <td class="num">@(shot.Hit ? shot.Damage.ToString("F2") : "")</td>
+                                <td class="num faint">@(shot.Hit ? shot.PiercingTier : "")</td>
+                                <td class="num">@(shot.Hit ? shot.HpDamage.ToString("F2") : "")</td>
+                                <td class="num">@(shot.Hit ? shot.OrganizationDamage.ToString("F2") : "")</td>
+                            </tr>
+                        </Virtualize>
+                    </tbody>
+                </table>
+                @if (shots.Count == 0)
+                {
+                    <p class="empty">No shots match.</p>
+                }
+            </div>
+            break;
+
+        case "air":
+            <div class="scroll log-table">
+                <table class="data compact">
+                    <thead>
+                        <tr>
+                            <th class="num">Hour</th><th>Side</th><th>Source</th><th>Target</th><th class="num">Flying</th><th class="num">Intercepted</th>
+                            <th class="num">Shot down by AA</th><th class="num">Hits</th><th class="num" title="Fleet AA damage reduction">AA reduction</th>
+                            <th>Crit</th><th class="num">HP</th><th class="num">Org</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var strike in AirRows)
+                        {
+                            <tr>
+                                <td class="num">@strike.Hour</td>
+                                <td><SideBadge Side="@strike.Side" /></td>
+                                <td class="@strike.Side">@View.NameOf(strike.Source)</td>
+                                <td><a href="javascript:void(0)" class="@View.SideOf(strike.TargetId)" @onclick="() => OnSelectShip.InvokeAsync(strike.TargetId)">@View.NameOf(strike.TargetId)</a></td>
+                                <td class="num">@strike.Flying</td>
+                                <td class="num">@strike.Intercepted</td>
+                                <td class="num">@strike.ShotDownByAntiAir</td>
+                                <td class="num">@strike.Hits</td>
+                                <td class="num">@strike.AntiAirReduction.ToString("P1")</td>
+                                <td>@(strike.Critical ? "crit" : "")</td>
+                                <td class="num">@strike.HpDamage.ToString("F2") @if (strike.KillingBlow) { <span class="bad">sunk</span> }</td>
+                                <td class="num">@strike.OrganizationDamage.ToString("F2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (AirRows.Count == 0)
+                {
+                    <p class="empty">No air strikes yet. Carriers with air wings strike in air hours (hour of day mod 8 = region phase mod 8).</p>
+                }
+            </div>
+            break;
+
+        case "raw":
+            <pre class="log-raw">@string.Join("\n", RawLines)</pre>
+            break;
+
+        default:
+            <div class="panel-body stack">
+                @if (View.Notes.Count > 0)
+                {
+                    <div class="message warning">
+                        <strong>Inputs the engine ignores</strong>
+                        <ul>@foreach (var note in View.Notes) { <li>@note</li> }</ul>
+                    </div>
+                }
+                <div>
+                    <h4 style="margin-bottom: 6px">Skipped weapon actions</h4>
+                    @if (View.SkipCounts.Count == 0)
+                    {
+                        <p class="muted">None.</p>
+                    }
+                    else
+                    {
+                        <table class="data compact" style="max-width: 420px">
+                            <tbody>
+                                @foreach (var (reason, count) in View.SkipCounts.OrderBy(entry => entry.Key))
+                                {
+                                    <tr><td>@reason</td><td class="num">@count</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+            break;
+    }
+</div>
+
+@code {
+    private string tab = "hours";
+    private readonly ShotFilter filter = new();
+    private readonly HashSet<BattleEventKind> eventKinds = [BattleEventKind.RetreatStarted, BattleEventKind.Escaped, BattleEventKind.Disengaged, BattleEventKind.Sunk, BattleEventKind.Reengaged];
+    private string eventSearch = string.Empty;
+    private List<ShotRecord> shots = [];
+    private Dictionary<int, int> eventsByHour = [];
+
+    [Parameter, EditorRequired] public BattleView View { get; set; } = null!;
+    [Parameter] public EventCallback<string> OnSelectShip { get; set; }
+    [Parameter] public EventCallback<int> OnSelectHour { get; set; }
+
+    private List<HourSummary> HourRows => View.Timeline.Take(View.Hour + 1).Reverse().ToList();
+
+    private List<BattleEvent> EventRows => View.Events
+        .Where(battleEvent => battleEvent.Hour <= View.Hour && eventKinds.Contains(battleEvent.Kind))
+        .Where(battleEvent => eventSearch.Length == 0 ||
+                              (battleEvent.ShipId is { } id && (id.Contains(eventSearch, StringComparison.OrdinalIgnoreCase) ||
+                                                                View.NameOf(id).Contains(eventSearch, StringComparison.OrdinalIgnoreCase))))
+        .ToList();
+
+    private List<AirStrikeRecord> AirRows => View.AirStrikes.Where(strike => strike.Hour <= View.Hour).ToList();
+
+    private IEnumerable<string> RawLines => View.HourlyLog.Where(line => HourOf(line) <= View.Hour);
+
+    protected override void OnParametersSet()
+    {
+        eventsByHour = View.Events
+            .Where(battleEvent => battleEvent.Kind != BattleEventKind.Activated)
+            .GroupBy(battleEvent => battleEvent.Hour)
+            .ToDictionary(group => group.Key, group => group.Count());
+    }
+
+    private IEnumerable<(string Key, string Label, string Count)> Tabs()
+    {
+        yield return ("hours", "Hours", (View.Hour + 1).ToString());
+        yield return ("events", "Events", View.Events.Count(battleEvent => battleEvent.Hour <= View.Hour && battleEvent.Kind != BattleEventKind.Activated).ToString());
+        yield return ("shots", "Shots", View.Shots.Count(shot => shot.Hour <= View.Hour).ToString());
+        yield return ("air", "Air", AirRows.Count.ToString());
+        yield return ("raw", "Raw log", string.Empty);
+        yield return ("notes", "Notes", (View.Notes.Count + View.SkipCounts.Count).ToString());
+    }
+
+    private void ToggleKind(BattleEventKind kind)
+    {
+        if (!eventKinds.Remove(kind))
+        {
+            eventKinds.Add(kind);
+        }
+    }
+
+    private static string Lines(SideHourState side)
+    {
+        var text = $"S{side.Screens} C{side.Capitals} CV{side.Carriers} SS{side.Submarines}";
+        return side.Convoys > 0 ? text + $" CO{side.Convoys}" : text;
+    }
+
+    // Hourly log lines start with "Hour <n>".
+    private static int HourOf(string line)
+    {
+        var span = line.AsSpan(5);
+        var end = span.IndexOfAny(' ', ':');
+        return line.StartsWith("Hour ", StringComparison.Ordinal) && end > 0 && int.TryParse(span[..end], out var hour) ? hour : int.MaxValue;
+    }
+}

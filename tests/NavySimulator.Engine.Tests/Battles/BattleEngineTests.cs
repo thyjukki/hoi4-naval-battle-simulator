@@ -146,7 +146,7 @@ public class BattleEngineTests
         var screen = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats(lightAttack: 0) with { SubDetection = 0 });
         var convoy = TestEntityFactory.CreateShip("co", ShipRole.Convoy, TestEntityFactory.ScreenStats(lightAttack: 0) with { Hp = 5000 });
         var scenario = TestEntityFactory.Scenario([submarine], [screen, convoy], new BattleRules { MaxHours = 60 },
-            attackerLevel: EngagementLevel.Low);
+            attackerAggressiveness: Aggressiveness.EngageAtLowRisk);
 
         var result = new BattleEngine().Simulate(scenario, 5);
         var submarineShots = result.Shots.Where(shot => shot.ShooterId == "ss").ToList();
@@ -238,5 +238,19 @@ public class BattleEngineTests
             new Dictionary<string, PlaneEquipment>(), Defines.GameDefines.Vanilla(), new BattleRules());
 
         Assert.Throws<ArgumentException>(() => new BattleEngine().Simulate(scenario, 1));
+    }
+
+    [Theory]
+    [InlineData(true, "Weather 'rain_heavy' has no effect yet.")]
+    [InlineData(false, "Weather 'rain_heavy' is ignored: weather is off.")]
+    public void Simulate_NotesTheWeatherBySwitch(bool weatherEnabled, string expectedNote)
+    {
+        var scenario = new BattleScenario("t", "ocean", "rain_heavy", 1, null,
+            TestEntityFactory.Participant("attacker_fleet", Screens("a", 2)), TestEntityFactory.Participant("defender_fleet", Screens("d", 2)),
+            new Dictionary<string, PlaneEquipment>(), Defines.GameDefines.Vanilla(), new BattleRules { MaxHours = 5, WeatherEnabled = weatherEnabled });
+
+        var result = new BattleEngine().Simulate(scenario, 1);
+
+        Assert.Contains(expectedNote, result.Notes);
     }
 }

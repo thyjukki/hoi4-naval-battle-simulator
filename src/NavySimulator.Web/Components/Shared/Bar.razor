@@ -1,0 +1,23 @@
+@* A horizontal fill bar for HP or organization, optionally with a "value / max" label. *@
+<div class="bar-label" title="@Title">
+    <div class="bar @Kind @Level @(Thin ? "thin" : "")"><span style="width: @Width"></span></div>
+    @if (ShowLabel)
+    {
+        <span class="num">@Value.ToString(Format)@(ShowMax ? $" / {Max.ToString(Format)}" : string.Empty)</span>
+    }
+</div>
+
+@code {
+    [Parameter] public double Value { get; set; }
+    [Parameter] public double Max { get; set; }
+    [Parameter] public string Kind { get; set; } = "hp";
+    [Parameter] public bool ShowLabel { get; set; } = true;
+    [Parameter] public bool ShowMax { get; set; }
+    [Parameter] public bool Thin { get; set; }
+    [Parameter] public string Format { get; set; } = "F0";
+    [Parameter] public string? Title { get; set; }
+
+    private double Ratio => Max <= 0 ? 0 : Math.Clamp(Value / Max, 0, 1);
+    private string Width => (Ratio * 100).ToString("F1", CultureInfo.InvariantCulture) + "%";
+    private string Level => Kind != "hp" ? string.Empty : Ratio < 0.25 ? "critical" : Ratio < 0.5 ? "low" : string.Empty;
+}

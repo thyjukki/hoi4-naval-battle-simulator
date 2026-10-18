@@ -176,5 +176,6 @@ The weather terms (`carrier_traffic`, `naval_strike`), the country, doctrine and
 | `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
 | `carrierNightTraffic` | participant | sum of the country's `carrier_night_traffic` (doctrines, spirits) |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
+| `rules.weatherEnabled` | scenario | weather off as with `disable_weather` (weather terms not modelled; S-WEATHER) |
 
 Each strike is reported as an `AirStrikeRecord`: hour, side, source, target, planes flying, intercepted, shot down, hits, AA reduction, crit, HP and org damage, and sunk.
