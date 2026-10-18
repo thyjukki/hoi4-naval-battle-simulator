@@ -10,6 +10,8 @@ All findings in this folder come from static analysis of one build:
 
 Addresses are RVAs (image base 0x140000000). They are evidence for this build only; other patches move them.
 
+Lookup index of every function, struct field, modifier id and define read site in these findings: [../index.md](../index.md).
+
 | Finding | Spec items |
 |---|---|
 | [S-HOUR-order-and-end.md](S-HOUR-order-and-end.md) | S-HOUR, S-ORDER, S-END, fire-exchange groups, night |
@@ -33,3 +35,18 @@ Addresses are RVAs (image base 0x140000000). They are evidence for this build on
 - **Weapon slot order.** One finding listed slots as light/heavy/torpedo. The cooldown, hit and damage findings independently show {0 heavy, 1 torpedo, 2 light}, with depth charges in the light slot. That matches `BASE_GUN_COOLDOWNS` and the torpedo-only cooldown modifier on slot 1.
 - **`COMBAT_MIN_DURATION`.** One finding called it unused. It is read by `0x15c28e0` (`hours >= COMBAT_MIN_DURATION`), which gates the retreat decision.
 - **Night.** The hour-loop finding saw no direct darkness read in surface fire; the hit-chance finding traced `naval_hit_chance` through the generic modifier gather, which includes the battle province. The `night` static modifier is applied to provinces "multiplied by amount of darkness", which reconciles both: night affects hit chance (−0.25) and retreat speed (+0.1) through province modifiers. The darkness value itself is not decoded.
+
+## Unsettled disagreements (to resolve on the next decoding pass)
+
+Listed in [index.md](../index.md) as "**disagrees**". The engine follows the reading noted in brackets where it matters.
+1. Member state bits 0x10 / 0x20: escaped / sunk (HOUR, ACT, TGT; set at 0x1975bea) vs sunk / left (POS). [escaped / sunk]
+2. ECombatBox 4 / 5: hidden / revealed (ACT, TGT) vs revealed / hidden (HIT).
+3. Hour counter order: Update then `hours++` in 0x15c3690 (HOUR) vs increment first (ACT); ties to the POS question whether hours is 0 or 1 in the first hour.
+4. Side vt+0x70 (0x161f790): leader XP (HOUR) vs fire phase (POS, medium).
+5. Positioning modifier 0x5a gate: `side+0xd8 == 0` (POS) vs side not all retreating (HOUR).
+6. Visibility modifier in the sub reveal: 0x19f naval_visibility_factor (ACT) vs 0x1ba/0x1bc (POS).
+7. combatant+0x130: commanding admiral (POS) vs battle location / context (HIT, AIR).
+8. combat+0x10c / +0x10d: convoy or special combat (HOUR, ACT) vs port-strike flag (AIR) vs combatant flags (TGT).
+9. 0x161ece0: combined `1-(1-s)(1-c)` (TGT) vs `side+0x150` (AIR, presumed). [combined]
+10. Modifier 0x29: NAVAL_SPEED_FACTOR (HIT) vs the stat that gates submarine targets (TGT).
+11. naval_night_attack: no read (HOUR) vs NAVAL_NIGHT_ATTACK × night factor in 0xc34a50 (DMG). Not modelled.

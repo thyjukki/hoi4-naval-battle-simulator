@@ -53,6 +53,7 @@
 - Define values: never hand-copy numbers into code. Add a property to the defines class with the exact game key and vanilla default; see `docs/mechanics/defines.md`.
 - Add regression tests in `tests/NavySimulator.Engine.Tests/Mechanics/` (rule-level, use `ScriptedRandomSource` for exact rolls) or `Battles/` (engine-level).
 - `tools/import_hoi4_ship_modules.py` refreshes `data/modules/00_imported_ship_modules.json` from HOI4 module scripts (to be replaced by `PdxParser`-based import in milestone 4).
+- Reverse-engineering: check `docs/reverse-engineering/index.md` before decoding anything in hoi4.exe; add every newly decoded function and field to it, with pseudocode in a findings file.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 
 ## Known Integration Boundaries

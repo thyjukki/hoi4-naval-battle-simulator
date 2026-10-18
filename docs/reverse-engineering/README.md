@@ -17,7 +17,7 @@ Script files only tell us constant values. The *formulas*, the order of operatio
 
 ## Status
 
-The first pass over hoi4.exe 1.19.3 decoded every surface and air spec item; see [findings/README.md](findings/README.md). The tooling is in `tools/re/`. Open questions that remain, ordered by impact:
+The first pass over hoi4.exe 1.19.3 decoded every surface and air spec item; see [findings/README.md](findings/README.md). Check [index.md](index.md) (functions, fields, modifier ids, define read sites) before decoding anything. The tooling is in `tools/re/`. Open questions that remain, ordered by impact:
 
 1. **Aggression retreat** (S-RETREAT): the strength score `0x1989c60` that makes outmatched task forces retreat.
 2. **Darkness** (S-NIGHT): how the province darkness value is computed from the time of day.

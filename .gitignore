@@ -7,3 +7,4 @@ output/
 *.DotSettings.user
 
 tools/re/*.json
+__pycache__/
