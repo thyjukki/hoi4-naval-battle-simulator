@@ -336,7 +336,7 @@ public class SetupLoader
         IEnumerable<string> extraSources,
         List<string> errors)
     {
-        var sources = scenarioSources
+        var sources = (scenarioSources ?? [])
             .Select(source => Path.IsPathRooted(source) ? source : Path.Combine(dataDirectoryPath, source))
             .Concat(extraSources)
             .ToList();
@@ -346,9 +346,11 @@ public class SetupLoader
             var (defines, report) = DefinesLoader.Load(sources);
             DefinesReport = report;
             warnings.AddRange(report.TypeMismatches.Select(mismatch => $"defines: {mismatch}"));
+            warnings.AddRange(report.ParseWarnings.Select(warning => $"defines: {warning}"));
+            errors.AddRange(defines.Validate().Select(problem => $"defines: {problem}"));
             return defines;
         }
-        catch (Exception exception) when (exception is IOException or FormatException)
+        catch (Exception exception) when (exception is IOException or FormatException or UnauthorizedAccessException or ArgumentException)
         {
             errors.Add($"defines: {exception.Message}");
             return GameDefines.Vanilla();

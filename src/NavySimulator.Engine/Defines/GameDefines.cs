@@ -24,4 +24,37 @@ public sealed class GameDefines
     {
         return new GameDefines();
     }
+
+    /// <summary>
+    /// Checks the array shapes the combat rules index into. Mods may change array lengths (the game accepts
+    /// any number of piercing tiers), but the related arrays must stay consistent.
+    /// </summary>
+    public List<string> Validate()
+    {
+        var problems = new List<string>();
+        var navy = NNavy;
+
+        if (navy.BASE_GUN_COOLDOWNS.Length < 3)
+        {
+            problems.Add($"NNavy.BASE_GUN_COOLDOWNS needs 3 values {{ heavy, torpedo, light }}, got {navy.BASE_GUN_COOLDOWNS.Length}.");
+        }
+
+        if (navy.GUN_HIT_PROFILES.Length < 3)
+        {
+            problems.Add($"NNavy.GUN_HIT_PROFILES needs 3 values {{ heavy, torpedo, light }}, got {navy.GUN_HIT_PROFILES.Length}.");
+        }
+
+        var tiers = navy.NAVY_PIERCING_THRESHOLDS.Length;
+
+        if (tiers < 1 ||
+            navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES.Length != tiers ||
+            navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES.Length != tiers)
+        {
+            problems.Add(
+                $"NNavy.NAVY_PIERCING_THRESHOLDS ({tiers}), NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES ({navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES.Length}) " +
+                $"and NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES ({navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES.Length}) must have the same, non-zero length.");
+        }
+
+        return problems;
+    }
 }

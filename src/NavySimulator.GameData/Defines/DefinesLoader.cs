@@ -25,6 +25,7 @@ public static class DefinesLoader
         }
 
         var report = DefinesBinder.Apply(table, defines);
+        report.ParseWarnings.AddRange(table.Warnings);
         return (defines, report);
     }
 
@@ -44,8 +45,15 @@ public static class DefinesLoader
             throw new FileNotFoundException($"Defines source '{source}' was not found (expected a .lua file or a game/mod directory).");
         }
 
-        return Directory.GetFiles(definesDirectory, "*.lua")
+        var files = Directory.GetFiles(definesDirectory, "*.lua")
             .OrderBy(path => Path.GetFileName(path), StringComparer.Ordinal)
             .ToList();
+
+        if (files.Count == 0)
+        {
+            throw new FileNotFoundException($"Defines source '{source}' contains no .lua files (expected a .lua file, a defines folder, or a game/mod root with common/defines).");
+        }
+
+        return files;
     }
 }

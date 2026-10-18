@@ -152,7 +152,8 @@ public sealed class BattleEngine
                         _ => (stats.DepthChargeAttack, 0.0)
                     };
 
-                    if (attack <= 0)
+                    // S-TARGET-SUB: submarines only use torpedoes.
+                    if (attack <= 0 || (shooter.Role == ShipRole.Submarine && weapon != WeaponType.Torpedo))
                     {
                         continue;
                     }
@@ -345,10 +346,11 @@ public sealed class BattleEngine
                 return false;
             }
 
-            foreach (var ship in sideByShip.Keys.Where(ship => !ship.IsSunk && ship.CurrentStatus != ShipStatus.Active))
+            foreach (var ship in sideByShip.Keys.Where(ship => !ship.IsSunk && ship.CurrentStatus == ShipStatus.Retreated))
             {
                 ship.CurrentStatus = ShipStatus.Active;
                 ship.RetreatProgress = 0;
+                tallies[ship].RetreatedHour = null;
             }
 
             reengagements++;

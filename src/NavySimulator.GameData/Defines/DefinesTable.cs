@@ -10,6 +10,9 @@ public sealed class DefinesTable
 
     public IEnumerable<string> Categories => categories.Keys;
 
+    /// <summary>Statements or values that could not be evaluated and were skipped (e.g. references to other defines).</summary>
+    public List<string> Warnings { get; } = [];
+
     public void Set(string category, string key, DefineValue value)
     {
         if (!categories.TryGetValue(category, out var entries))
@@ -35,6 +38,8 @@ public sealed class DefinesTable
 
     public void Merge(DefinesTable overrides)
     {
+        Warnings.AddRange(overrides.Warnings);
+
         foreach (var category in overrides.categories)
         {
             foreach (var entry in category.Value)

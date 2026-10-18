@@ -31,6 +31,11 @@ try
     var defineSources = options.DefineSources.Select(source => ResolveDefinesSource(source, dataDirectory)).ToList();
     scenario = loader.LoadScenarioFromDirectory(dataDirectory, options.ScenarioFile, defineSources);
 }
+catch (DirectoryNotFoundException exception)
+{
+    Console.Error.WriteLine(exception.Message);
+    return 1;
+}
 catch (SetupValidationException exception)
 {
     Console.Error.WriteLine("Setup validation failed:");

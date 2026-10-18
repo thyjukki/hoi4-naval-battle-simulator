@@ -54,6 +54,12 @@ public sealed class CliOptions
                     break;
                 case "--iterations":
                     options.Iterations = int.Parse(NextValue());
+
+                    if (options.Iterations <= 0)
+                    {
+                        throw new ArgumentException("--iterations must be at least 1.");
+                    }
+
                     break;
                 case "--seed":
                     options.Seed = int.Parse(NextValue());

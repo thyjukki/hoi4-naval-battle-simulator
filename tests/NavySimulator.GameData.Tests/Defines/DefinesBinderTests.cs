@@ -52,6 +52,21 @@ public class DefinesBinderTests
     }
 
     [Fact]
+    public void Load_RejectsDirectoryWithoutLuaFiles()
+    {
+        var root = Directory.CreateTempSubdirectory("hoi4-defines-empty-");
+
+        try
+        {
+            Assert.Throws<FileNotFoundException>(() => DefinesLoader.Load([root.FullName]));
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    [Fact]
     public void TfbLegacyProfile_BindsWithoutMismatches()
     {
         var (defines, report) = DefinesLoader.Load([Path.Combine(RepositoryPaths.Data, "defines", "tfb-legacy.lua")]);

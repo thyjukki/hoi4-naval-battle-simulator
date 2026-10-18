@@ -45,6 +45,18 @@ public class ExperienceAndStatsTests
     }
 
     [Fact]
+    public void Defines_ValidateRejectsInconsistentPiercingTables()
+    {
+        var defines = GameDefines.Vanilla();
+        Assert.Empty(defines.Validate());
+
+        defines.NNavy.NAVY_PIERCING_THRESHOLDS = [2, 1.5, 1, 0.75, 0.5, 0.25, 0.1, 0.05, 0];
+        defines.NNavy.BASE_GUN_COOLDOWNS = [1, 4];
+
+        Assert.Equal(2, defines.Validate().Count);
+    }
+
+    [Fact]
     public void Defines_AreIndependentPerInstance()
     {
         var modified = GameDefines.Vanilla();

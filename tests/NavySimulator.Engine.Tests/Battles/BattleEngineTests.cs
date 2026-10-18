@@ -148,6 +148,19 @@ public class BattleEngineTests
     }
 
     [Fact]
+    public void Simulate_SubmarinesOnlyFireTorpedoes()
+    {
+        var stats = TestEntityFactory.ScreenStats(lightAttack: 3, torpedoAttack: 20) with { SubVisibility = 5 };
+        var submarine = TestEntityFactory.CreateShip("ss", ShipRole.Submarine, stats);
+        var scenario = TestEntityFactory.Scenario([submarine], Screens("d", 1, 0), new BattleRules { MaxHours = 30 });
+
+        var result = new BattleEngine().Simulate(scenario, 5);
+
+        // Medium engagement risk: screens are not valid submarine targets, so nothing fires at all.
+        Assert.DoesNotContain(result.Shots, shot => shot.ShooterId == "ss");
+    }
+
+    [Fact]
     public void Simulate_RejectsSharedFleetInstance()
     {
         var fleet = new Fleet("shared", Screens("s", 2));

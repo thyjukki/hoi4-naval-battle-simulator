@@ -68,10 +68,35 @@ public class LuaDefinesParserTests
     }
 
     [Fact]
-    public void Parse_ReportsLineOfSyntaxErrors()
+    public void Parse_SkipsStatementsItCannotEvaluate_WithWarnings()
     {
-        var exception = Assert.Throws<FormatException>(() => LuaDefinesParser.Parse("NDefines.NNavy.X = 1\nNDefines.NNavy.Y 2", "bad.lua"));
+        // Shapes found in real files: 00_graphics.lua ends with a for loop over NDefines_Graphics.
+        var table = LuaDefinesParser.Parse("""
+            NDefines_Graphics = { NGraphics = { X = 1 } }
+            NDefines.NNavy.X = 1
+            NDefines.NNavy.Y 2
+            local factor = 3
+            NDefines.NNavy.Z = NDefines.NNavy.X * 2
+            for k,v in pairs( NDefines_Graphics ) do NDefines[k] = v end
+            NDefines.NNavy.W = 4
+            """, "bad.lua");
 
-        Assert.Contains("bad.lua:2", exception.Message);
+        Assert.Equal(1, table.Get("NNavy", "X")!.Number);
+        Assert.Equal(4, table.Get("NNavy", "W")!.Number);
+        Assert.Null(table.Get("NNavy", "Z")!.Number);
+        Assert.Null(table.Get("NGraphics", "X"));
+        Assert.Contains(table.Warnings, warning => warning.Contains("bad.lua:3"));
+        Assert.Contains(table.Warnings, warning => warning.Contains("NDefines.NNavy.X * 2"));
+    }
+
+    [Fact]
+    public void Parse_AppliesIndexedAssignmentsToEarlierArrays()
+    {
+        var table = LuaDefinesParser.Parse("""
+            NDefines.NNavy.BASE_GUN_COOLDOWNS = { 1, 4, 1 }
+            NDefines.NNavy.BASE_GUN_COOLDOWNS[2] = 3
+            """);
+
+        Assert.Equal([1.0, 3.0, 1.0], table.Get("NNavy", "BASE_GUN_COOLDOWNS")!.ToNumberArray()!);
     }
 }

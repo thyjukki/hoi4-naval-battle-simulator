@@ -6,7 +6,8 @@ namespace NavySimulator.GameData.Defines;
 /// <summary>
 /// Minimal Lua reader for HOI4 define files. Supports the vanilla layout
 /// (<c>NDefines = { NNavy = { KEY = value, ... } }</c>) and mod override statements
-/// (<c>NDefines.NNavy.KEY = value</c>). Only the subset of Lua used by define files is handled.
+/// (<c>NDefines.NNavy.KEY = value</c>, also <c>NDefines.NNavy.ARRAY[2] = value</c>). Only the subset of Lua used by
+/// define files is evaluated; other statements (loops, locals, references to other defines) are skipped with a warning.
 /// </summary>
 public static class LuaDefinesParser
 {
@@ -28,20 +29,63 @@ public static class LuaDefinesParser
 
             if (reader.AtEnd)
             {
+                table.Warnings.AddRange(reader.Warnings);
                 return table;
             }
 
-            var path = reader.ReadDottedName();
-            reader.Expect('=');
-            var value = reader.ReadValue();
+            var statementStart = reader.Position;
+            var statementLine = reader.Line;
 
-            if (path.Count == 0 || !path[0].StartsWith(RootPrefix, StringComparison.Ordinal))
+            try
             {
-                continue;
-            }
+                var path = reader.ReadDottedName();
+                var arrayIndex = reader.TryReadIndex();
+                reader.Expect('=');
+                var value = reader.ReadValue();
 
-            ApplyStatement(table, path, value);
+                if (path.Count == 0 || path[0] != RootPrefix)
+                {
+                    continue;
+                }
+
+                if (arrayIndex is not null)
+                {
+                    ApplyIndexedStatement(table, path, arrayIndex.Value, value, sourceName, statementLine);
+                }
+                else
+                {
+                    ApplyStatement(table, path, value);
+                }
+            }
+            catch (FormatException exception)
+            {
+                reader.SkipStatementFrom(statementStart, statementLine);
+                table.Warnings.Add($"{sourceName ?? "<defines>"}:{statementLine}: skipped statement ({exception.Message})");
+            }
         }
+    }
+
+    private static void ApplyIndexedStatement(DefinesTable table, List<string> path, int index, DefineValue value, string? sourceName, int line)
+    {
+        if (path.Count < 3 || value.Number is null)
+        {
+            table.Warnings.Add($"{sourceName ?? "<defines>"}:{line}: skipped indexed assignment to {string.Join('.', path)}");
+            return;
+        }
+
+        var category = path[1];
+        var key = string.Join('.', path.Skip(2));
+        var existing = table.Get(category, key)?.Items;
+
+        if (existing is null || index < 1 || index > existing.Count)
+        {
+            table.Warnings.Add($"{sourceName ?? "<defines>"}:{line}: {category}.{key}[{index}] needs the full array to be defined earlier in the same file");
+            return;
+        }
+
+        var items = existing.ToList();
+        items[index - 1] = value;
+        table.Set(category, key, new DefineValue(Items: items));
     }
 
     private static void ApplyStatement(DefinesTable table, List<string> path, DefineValue value)
@@ -83,6 +127,37 @@ public static class LuaDefinesParser
         private int line = 1;
 
         public bool AtEnd => index >= source.Length;
+        public int Position => index;
+        public int Line => line;
+
+        public List<string> Warnings { get; } = [];
+
+        // Rewinds to the start of a failed statement and skips to the end of that line.
+        public void SkipStatementFrom(int start, int startLine)
+        {
+            index = start;
+            line = startLine;
+
+            while (index < source.Length && source[index] != '\n')
+            {
+                index++;
+            }
+        }
+
+        public int? TryReadIndex()
+        {
+            SkipTrivia();
+
+            if (Peek(0) != '[')
+            {
+                return null;
+            }
+
+            index++;
+            var value = ReadExpression();
+            Expect(']');
+            return (int)value;
+        }
 
         public void SkipTrivia()
         {
@@ -160,7 +235,19 @@ public static class LuaDefinesParser
                 return new DefineValue(Number: ReadExpression());
             }
 
+            var expressionStart = index;
+            var expressionLine = line;
             var word = ReadIdentifier();
+            SkipTrivia();
+
+            // A reference to another define or a function call, e.g. "NDefines.NNavy.X * 2": not evaluated.
+            if (Peek(0) is '.' or '(' or '*' or '/' or '+' || (Peek(0) == '-' && Peek(1) != '-'))
+            {
+                SkipExpression();
+                Warnings.Add($"{sourceName ?? "<defines>"}:{expressionLine}: could not evaluate '{source[expressionStart..index].Trim()}'");
+                return new DefineValue();
+            }
+
             return word switch
             {
                 "true" => new DefineValue(Boolean: true),
@@ -168,6 +255,37 @@ public static class LuaDefinesParser
                 "nil" => new DefineValue(),
                 _ => new DefineValue(Text: word)
             };
+        }
+
+        // Skips to the end of the current expression: a top-level ',', ';', '}' or line end.
+        private void SkipExpression()
+        {
+            var depth = 0;
+
+            while (index < source.Length)
+            {
+                var character = source[index];
+
+                if (depth == 0 && (character is ',' or ';' or '}' or '\n'))
+                {
+                    return;
+                }
+
+                if (character == '\n')
+                {
+                    line++;
+                }
+                else if (character is '(' or '{' or '[')
+                {
+                    depth++;
+                }
+                else if (character is ')' or '}' or ']')
+                {
+                    depth--;
+                }
+
+                index++;
+            }
         }
 
         private DefineValue ReadTable()
