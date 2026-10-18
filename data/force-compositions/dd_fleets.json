@@ -1,0 +1,12 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "dd3_la_same_ic_lc",
+      "shipDesigns": {
+        "dd_3_la_torp_cheap": 263
+      }
+    }
+  ]
+}
+

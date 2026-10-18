@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "12_bc_balanced_78_dd_3_la_torp",
+      "shipDesigns": {
+        "39_battlecruiser_balanced": 12,
+        "dd_3_la_torp": 78
+      }
+    },
+    {
+      "id": "12_bc_balanced_39_cl3_armor4_full_la",
+      "shipDesigns": {
+        "39_battlecruiser_pure_la": 12,
+        "cl3_armor4_full_la": 39
+      }
+    }
+  ]
+}
+

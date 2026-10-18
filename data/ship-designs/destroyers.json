@@ -37,6 +37,18 @@
         "torpedo_3",
         "torpedo_3"
       ]
+    },
+    {
+      "id": "dd_3_la_torp_cheap",
+      "hullID": "destroyer_hull_3",
+      "moduleIDs": [
+        "engine_dd_3",
+        "light_battery_3",
+        "light_battery_3",
+        "torpedo_3",
+        "torpedo_3",
+        "torpedo_3"
+      ]
     }
   ]
 }
