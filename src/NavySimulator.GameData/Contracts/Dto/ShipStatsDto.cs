@@ -27,6 +27,7 @@ public class ShipStatsDto
     public double TorpedoDamageReductionFactor { get; set; }
     public double TorpedoEnemyCriticalChanceFactor { get; set; }
     public double TorpedoHitChanceFactor { get; set; }
+    public double DepthChargeHitChanceFactor { get; set; }
     public double NavalWeatherPenaltyFactor { get; set; }
     public double LightHitChanceFactor { get; set; }
     public double HeavyHitChanceFactor { get; set; }
@@ -59,10 +60,9 @@ public class ShipStatsDto
             NavalWeatherPenaltyFactor: NavalWeatherPenaltyFactor,
             LightHitChanceFactor: LightHitChanceFactor,
             HeavyHitChanceFactor: HeavyHitChanceFactor,
-            ProductionCost: ProductionCost)
-        {
-            TorpedoHitChanceFactor = TorpedoHitChanceFactor
-        };
+            TorpedoHitChanceFactor: TorpedoHitChanceFactor,
+            DepthChargeHitChanceFactor: DepthChargeHitChanceFactor,
+            ProductionCost: ProductionCost);
     }
 }
 

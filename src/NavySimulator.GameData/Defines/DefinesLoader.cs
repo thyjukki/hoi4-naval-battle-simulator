@@ -41,7 +41,7 @@ public static class DefinesLoader
 
         if (!Directory.Exists(definesDirectory))
         {
-            throw new FileNotFoundException($"Defines source '{source}' is neither a .lua file nor a directory.");
+            throw new FileNotFoundException($"Defines source '{source}' was not found (expected a .lua file or a game/mod directory).");
         }
 
         return Directory.GetFiles(definesDirectory, "*.lua")

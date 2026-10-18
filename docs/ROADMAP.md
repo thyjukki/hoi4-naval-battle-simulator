@@ -1,0 +1,34 @@
+# Roadmap
+
+The aim is a simulator that reproduces HOI4 naval combat as closely as possible, verified against the game's own files, its executable, and recorded battles ([mechanics/README.md](mechanics/README.md)).
+
+## Milestone 1: foundation and surface combat (done)
+
+- Projects split into `Engine` (pure simulation), `GameData` (loading and parsing), `Cli`.
+- Clausewitz script parser and `00_defines.lua` parser; defines bound by exact key name, with vanilla 1.17 defaults, loadable from any install or mod.
+- Surface combat rewritten as small rule classes tagged with spec IDs; uncertain mechanics are `BattleRules` variants.
+- Legacy bugs fixed (see the table at the end of [mechanics/surface.md](mechanics/surface.md)); the TFB-tuned values are kept as an optional defines profile.
+- Spec: [surface](mechanics/surface.md), [air (design)](mechanics/air.md), [defines](mechanics/defines.md); [reverse-engineering](reverse-engineering/README.md) and [calibration](calibration.md) workflows.
+
+## Milestone 2: air combat overhaul
+
+Implement [mechanics/air.md](mechanics/air.md): sortie cadence and efficiency, carrier stances, the dynamic plane cap, land-based planes joining, targeting, preemptive AA, fleet AA reduction, hits and damage, air crits, plane losses. Scenario inputs for land-based wing groups and carrier stance. Interception is modelled only as far as [RE] allows, otherwise as an explicit [ASSUMED] variant.
+
+## Milestone 3: surface completeness
+
+- Submarines: hide/reveal, escape, air sub detection (S-SUB).
+- Critical part damage with lasting effects (S-CRIT-PART); needs module categories on designs.
+- Weather, sea region and night as data-driven modifiers; admiral skills and traits; doctrines as battle modifiers.
+- Late-joining ships, carrier-ratio positioning, task-force-level retreat.
+
+## Milestone 4: import everything from game files
+
+Replace the hand-written JSON with data parsed from the game and mods using `PdxParser`: hulls and modules (`common/units/equipment/`), ship types (`common/units/`), technologies, MIOs, doctrines, experience levels. Ship designs stay as user input but reference game IDs. This supersedes `tools/import_hoi4_ship_modules.py`.
+
+## Milestone 5: calibration harness
+
+A runner that reads `data/calibration/*.json`, sweeps `BattleRules` variants and defines profiles, and ranks them against the recorded battles ([calibration.md](calibration.md)). Results feed back into the spec as [CAL] tags.
+
+## Ongoing: reverse-engineering
+
+Findings land in `docs/reverse-engineering/findings/` and turn [WIKI]/[ASSUMED] spec items into [RE] ones, in the priority order in [reverse-engineering/README.md](reverse-engineering/README.md).

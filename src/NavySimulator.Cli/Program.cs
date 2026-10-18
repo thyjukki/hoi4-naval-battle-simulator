@@ -28,7 +28,8 @@ BattleScenario scenario;
 
 try
 {
-    scenario = loader.LoadScenarioFromDirectory(dataDirectory, options.ScenarioFile, options.DefineSources);
+    var defineSources = options.DefineSources.Select(source => ResolveDefinesSource(source, dataDirectory)).ToList();
+    scenario = loader.LoadScenarioFromDirectory(dataDirectory, options.ScenarioFile, defineSources);
 }
 catch (SetupValidationException exception)
 {
@@ -82,6 +83,18 @@ static string ResolveDefaultDataDirectory()
 {
     var nextToExecutable = Path.Combine(AppContext.BaseDirectory, "Data");
     return Directory.Exists(nextToExecutable) ? nextToExecutable : Path.Combine(Directory.GetCurrentDirectory(), "data");
+}
+
+// Relative --defines paths resolve against the working directory first, then the data directory.
+static string ResolveDefinesSource(string source, string dataDirectory)
+{
+    if (Path.IsPathRooted(source) || File.Exists(source) || Directory.Exists(source))
+    {
+        return source;
+    }
+
+    var inData = Path.Combine(dataDirectory, source);
+    return File.Exists(inData) || Directory.Exists(inData) ? inData : source;
 }
 
 static void PrintSide(string label, BattleParticipant participant)

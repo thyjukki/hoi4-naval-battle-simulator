@@ -31,10 +31,10 @@ STAT_MAP = {
     "reliability": "reliability",
     "naval_torpedo_damage_reduction_factor": "torpedoDamageReductionFactor",
     "naval_torpedo_enemy_critical_chance_factor": "torpedoEnemyCriticalChanceFactor",
-    "naval_torpedo_hit_chance_factor": "torpedoHitChangeFactor",
+    "naval_torpedo_hit_chance_factor": "torpedoHitChanceFactor",
     "naval_weather_penalty_factor": "navalWeatherPenaltyFactor",
-    "naval_light_gun_hit_chance_factor": "lightHitChangeFactor",
-    "naval_heavy_gun_hit_chance_factor": "heavyHitChangeFactor",
+    "naval_light_gun_hit_chance_factor": "lightHitChanceFactor",
+    "naval_heavy_gun_hit_chance_factor": "heavyHitChanceFactor",
 }
 
 RENAME_PREFIX = [

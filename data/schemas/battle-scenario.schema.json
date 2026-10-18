@@ -10,16 +10,35 @@
     },
     "battleScenario": {
       "type": "object",
-      "required": ["id", "terrain", "weather", "maxHours", "attacker", "defender"],
+      "required": ["id", "terrain", "weather", "attacker", "defender"],
       "properties": {
         "id": { "$ref": "common.schema.json#/$defs/id" },
         "terrain": { "type": "string", "minLength": 1 },
         "weather": { "type": "string", "minLength": 1 },
-        "maxHours": { "type": "integer", "minimum": 1 },
+        "maxHours": { "type": "integer", "minimum": 1, "description": "Hard stop in hours (default 720)." },
         "iterations": { "type": "integer", "minimum": 1 },
         "seed": { "type": "integer" },
         "continueAfterRetreat": { "type": "boolean" },
         "dontRetreat": { "type": "boolean" },
+        "defines": {
+          "type": "array",
+          "description": "Define sources applied over the built-in vanilla defines, in order: .lua files or game/mod root directories. Relative to the data directory.",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rules": {
+          "type": "object",
+          "description": "Variants for unconfirmed mechanics; see docs/mechanics/surface.md.",
+          "properties": {
+            "firingOrder": { "enum": ["Interleaved", "AttackerFirst", "Simultaneous"] },
+            "damageRandomness": { "enum": ["WikiDecoded", "DefineComment", "None"] },
+            "activationDependsOnComposition": { "type": "boolean" },
+            "firstShotWaitsForCooldown": { "type": "boolean" },
+            "nightEnabled": { "type": "boolean" },
+            "startHourOfDay": { "type": "integer", "minimum": 0, "maximum": 23 },
+            "dailyManpowerRecoveryInBattle": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
         "attacker": { "$ref": "#/$defs/participant" },
         "defender": { "$ref": "#/$defs/participant" }
       },
@@ -40,6 +59,8 @@
           "maximum": 7
         },
         "externalNavalStrikePlanes": { "type": "integer", "minimum": 0 },
+        "retreatPriority": { "enum": ["Low", "Medium", "High"] },
+        "submarineEngagementRisk": { "enum": ["Low", "Medium", "High"] },
         "researchIDs": {
           "type": "array",
           "items": { "$ref": "common.schema.json#/$defs/researchId" },

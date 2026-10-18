@@ -15,6 +15,9 @@ public sealed class NAirDefines
     /// <summary>Each Point of carrier_size state adds capacity for this many planes</summary>
     public double CARRIER_SIZE_STAT_INCREMENT { get; set; } = 10.0;
 
+    /// <summary>scales penalty of having overcrowded bases.</summary>
+    public double CAPACITY_PENALTY { get; set; } = 2.0;
+
     /// <summary>Balancing value to convert the naval_strike_targetting equipment stats to chances of how many airplanes managed to do successfull strike.</summary>
     public double NAVAL_STRIKE_TARGETTING_TO_AMOUNT { get; set; } = 0.3;
 

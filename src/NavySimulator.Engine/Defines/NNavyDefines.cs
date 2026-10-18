@@ -387,4 +387,10 @@ public sealed class NNavyDefines
 
     /// <summary>As Above</summary>
     public double SHIP_SILHOUETTE_VALUE_PLANES_SUBMARINE { get; set; } = 7.0;
+
+    /// <summary>Reduces screen silhouette weight in the naval combat plane cap.</summary>
+    public double SCREEN_CAP_REDUCTION_FACTOR { get; set; } = 0.02;
+
+    /// <summary>bonus from air superiority to naval detection.</summary>
+    public double DETECTION_CHANCE_MULT_AIR_SUPERIORITY_BONUS { get; set; } = 0.25;
 }

@@ -1,111 +1,60 @@
 # AGENTS Guide for NavySimulator
 
 ## Project Goal
-- Tool to simulate naval battles in Hearts of Iron 4 (HOI4) by modeling ship designs and compositions.
-- Fleets consist of ships
-- Ships have Ship Design
-- Ship Design consist of Hull and Modules and MIO (Military Industry Organization)
-- Hull defines the ship's base stats and module slots
-- Modules provide stats
-- MIO Gives bonuses to stats (percentage increase to stats)
-- Stats from hull and modules are combined to determine ship performance in battle
-- Ships have Organization and HP, and take damage in battle
-- Ships can suffer from critical hits that reduce their stats
-- Battles are between 2 fleets
-- Battles have a terrain (sea region) that provides bonuses or penalties to certain stats
-- Battle participants have a commander that provides bonuses to certain stats
-- Battle participants have a doctrine that provides bonuses to certain stats
-- Battle participants have researches that provide bonuses to certain stats
-- Battle participants have spirits that provide bonuses to certain stats
-- Battle has a weather condition that provides bonuses or penalties to certain stats
-- The app loads fleet compositions, ship designs, modules, mios, researches, spirits, and planes from JSON files
-- The app simulates battles between fleets and writes hourly/summary reports to output files.
+- Simulate Hearts of Iron 4 (HOI4) naval battles as close to the real game as possible, down to decoded formulas.
+- Sources of truth, in order: reverse-engineering findings (`docs/reverse-engineering/findings/`), calibration against recorded in-game battles (`docs/calibration.md`), the game's own files (defines, unit/equipment scripts). The wiki and community testing are secondary.
+- The spec lives in `docs/mechanics/`. Every rule has an ID (`S-*` surface, `A-*` air) and provenance tags ([DEFINE], [RE], [CAL], [WIKI], [PDX], [COMMUNITY], [LEGACY], [ASSUMED]). Code cites the ID where it implements the rule.
+- Fleets consist of ships; ships have a design = hull + modules + optional MIO; researches and spirits add stat modifiers.
+- Battles are between 2 sides, each with a fleet, researches, spirits, repair (retreat) priority and submarine engagement risk.
 
 ## Possible stats
-- Speed
-- Organization
-- HP
-- Reliability
-- Light Attack
-- Light Piercing
-- Heavy Attack
-- Heavy Piercing
-- Torpedo Attack
-- Depth Charges
-- Armor
-- Anti-Air
-- Surface Visibility
-- Sub Visibility
-- Suraface Detection
-- Sub Detection
+- Speed, Organization, HP, Reliability
+- Light Attack / Piercing, Heavy Attack / Piercing, Torpedo Attack, Depth Charges
+- Armor, Anti-Air
+- Surface / Sub Visibility, Surface / Sub Detection
+- Hit chance factors (light, heavy, torpedo, depth charge), torpedo damage reduction, torpedo enemy crit chance
 
-## Battle Simulation Scope
-- Ships are split in 4 groups
-  - Screening group
-  - Battle line
-  - Carrier group
-  - Submarine group
-- Battle is simulated in rounds of hours
-- Surface combat resolves per ship and applies damage immediately, so later shots cannot target ships sunk earlier in the same hour
-- Weapons use universal cooldown cadence by weapon type (all ships fire same weapon type on the same eligible hours)
-- Carriers planes have a cooldown for flying
-- Round is repeated until one fleet is destroyed, or set number of hours have passed
-- Screening efficiency is determined by the ratio of screening group to battle line
-- Carrier screening efficiency is determined by the ratio of carrier group to battle line
-- Scenario supports `continueAfterRetreat` and `dontRetreat` toggles
-
-## Battle mechanics
-- Battle mechanics are explained in hoi4 wiki https://hoi4.paradoxwikis.com/Naval_battle
-- 
 ## Project Snapshot
-- Solution: `NavySimulator.sln` with executable `NavySimulator/NavySimulator.csproj` and tests `NavySimulator.Tests/NavySimulator.Tests.csproj`.
-- Target runtime: `.NET 10` (`<TargetFramework>net10.0</TargetFramework>`).
-- Language features enabled: implicit usings and nullable reference types.
-- Current app entrypoint is top-level statements in `NavySimulator/Program.cs`.
-- `Program.cs` loads scenario data from `NavySimulator/Data/`, runs `BattleSimulator`, prints short summaries, and writes logs/reports to `output/<scenario>_<runtime>/`.
+- Solution `NavySimulator.sln`:
+  - `src/NavySimulator.Engine`: simulation only, no I/O. Namespace `NavySimulator.Engine`.
+  - `src/NavySimulator.GameData`: JSON setup loading, Paradox script parser (`Paradox/`), defines `.lua` parser and binder (`Defines/`). Namespace `NavySimulator.GameData`.
+  - `src/NavySimulator.Cli`: entrypoint (`Program.cs`), options, report writing. Executable name `NavySimulator`.
+  - `tests/NavySimulator.Engine.Tests`, `tests/NavySimulator.GameData.Tests`: xUnit.
+- Target runtime `.NET 10`, implicit usings, nullable enabled, no NuGet packages outside tests.
 
-## Architecture (Current State)
-- Domain code is organized under `NavySimulator/Domain/` (`Battles`, `Fleets`, `Ships`, `Stats`) in the `NavySimulator.Domain` namespace.
-- Setup/loading code is organized under `NavySimulator/Setup/` (`Contracts/Dto`, `Loading`, `Validation`) in the `NavySimulator.Setup` namespace.
-- `Ship` (`NavySimulator/Domain/Ships/Ship.cs`) owns a `ShipDesign` instance.
-- `ShipDesign` (`NavySimulator/Domain/Ships/ShipDesign.cs`) owns a `Hull`, `List<IModule>`, and optional `MioBonus`.
-- `IModule` (`NavySimulator/Domain/Ships/IModule.cs`) defines the module contract via `string ID { get; }` and `ShipStats StatModifiers { get; }`.
-- Setup data flow is constructor-injected object graph built by `SetupLoader`: `Hull/StatModule/MioBonus` + `Research/Spirit/Plane` -> `ShipDesign` -> `Ship` -> `Fleet` -> `BattleParticipant` -> `BattleScenario`.
-- `BattleSimulator` orchestrates hourly simulation with explicit air and surface phase helpers.
-- `NavalAirCombatSimulator` handles air sortie snapshots, strike targeting, preemptive AA, and strike damage.
-- `NavalSurfaceCombatSimulator` handles weapon actions, activation delays, cooldown cadence, targeting, hit chance, and immediate damage application.
-- No networking, database, DI container, or plugin loader are present.
+## Architecture
+- `GameDefines` (`Engine/Defines/`) holds `NNavy`, `NAir`, `NMilitary` define classes whose property names are the exact game keys, defaulting to vanilla 1.17, plus `HardcodedValues` for constants that are not defines. It is an instance per scenario: never add static mutable state.
+- `DefinesLoader` (GameData) applies `.lua` files or game/mod folders over the vanilla defaults; `DefinesBinder` binds by property name.
+- `BattleRules` (`Engine/Battles/BattleRules.cs`) holds variants for unconfirmed mechanics (firing order, damage randomness, activation, cooldown, night). Add a variant here instead of guessing silently, and document it in the spec.
+- `BattleEngine` runs the hour loop: lines, positioning and screening, surface phase, retreat phase, experience, end check.
+- Rules live in `Engine/Battles/Mechanics/` as static classes, one concern each: `PositioningRules`, `ScreeningRules`, `WeaponCadenceRules`, `HitChanceRules`, `TargetingRules`, `DamageRules`, `RetreatRules`, `ExperienceRules`.
+- All randomness goes through `IRandomSource` (seeded `SeededRandomSource`; scripted in tests).
+- Results: `BattleResult` with per-shot `ShotRecord`s, `ShipResult`s, `SideResult`s, hourly log and notes about ignored inputs.
+- Air combat is not implemented (milestone 2, `docs/mechanics/air.md`).
 
 ## Code Patterns to Follow Here
-- Use var for types when it can be used
-- Keep domain types in `NavySimulator.Domain`, setup types in `NavySimulator.Setup`, and one top-level type per file.
-- Match existing style of simple POCO/domain types with constructor assignment.
-- Prefer extending the `IModule` contract with concrete module classes rather than adding ad-hoc dictionaries.
-- Keep composition explicit in constructors (as in `Ship` and `ShipDesign`) instead of hidden factories.
-- Preserve nullable-aware signatures when adding new fields/properties.
+- Use `var` wherever possible.
+- One top-level type per file. Engine types in `NavySimulator.Engine.*`, loading code in `NavySimulator.GameData.*`.
+- Every formula reads its constants from `GameDefines`; no literals in rule code except where the spec says so (then put them in `HardcodedValues` with a provenance tag).
+- Comment each rule with its spec ID and provenance tag, e.g. `// S-HIT-SHIP [DEFINE + WIKI]`.
+- Match the existing style of simple POCO/domain types with constructor assignment; keep composition explicit in constructors.
+- Preserve nullable-aware signatures.
 
 ## Build, Run, and Validate
-- Build from repo root:
-  - `dotnet build NavySimulator.sln`
-- Run app:
-  - `dotnet run --project NavySimulator/NavySimulator.csproj`
-- Run tests:
-  - `dotnet test NavySimulator.sln -p:UseAppHost=false`
-- Verified behavior as of 2026-03-31: app prints setup + run summaries to console and writes detailed logs/reports under `output/`.
+- `dotnet build NavySimulator.sln`
+- `dotnet run --project src/NavySimulator.Cli -- --help`
+- `dotnet test NavySimulator.sln -p:UseAppHost=false`
+- The CLI writes reports to `output/<scenario>_<timestamp>/` (summary, hourly log, shots.csv, ships.csv per run).
 
 ## Agent Workflow Tips for This Repo
-- For setup/data issues, start in `NavySimulator/Setup/Loading/SetupLoader.cs` and matching DTOs in `NavySimulator/Setup/Contracts/Dto/`.
-- For combat behavior issues, start in `NavySimulator/Domain/Battles/BattleSimulator.cs` and related domain models.
-- Use `scritps/import_hoi4_ship_modules.py` to refresh `NavySimulator/Data/modules/00_imported_ship_modules.json` from HOI4 source modules (`.../common/units/equipment/modules/00_ship_modules.txt`); the script prints source modifiers it intentionally skips.
-- Use `scritps/split_data_files.py` when migrating legacy monolithic `hulls.json`/`modules.json`/`mios.json`/`ship-designs.json` files into folder-based `Data/<type>/` files.
-- Data loading prefers folder-based inputs; keep new content in `Data/<type>/*.json`.
-- When introducing new behavior, demonstrate wiring in `Program.cs` so it is runnable immediately.
+- Combat behavior: read the spec item in `docs/mechanics/` first, then the matching class in `Engine/Battles/Mechanics/`. Update both together.
+- Setup/data issues: `src/NavySimulator.GameData/Loading/SetupLoader.cs` and DTOs in `Contracts/Dto/`.
+- Define values: never hand-copy numbers into code. Add a property to the defines class with the exact game key and vanilla default; see `docs/mechanics/defines.md`.
+- Add regression tests in `tests/NavySimulator.Engine.Tests/Mechanics/` (rule-level, use `ScriptedRandomSource` for exact rolls) or `Battles/` (engine-level).
+- `tools/import_hoi4_ship_modules.py` refreshes `data/modules/00_imported_ship_modules.json` from HOI4 module scripts (to be replaced by `PdxParser`-based import in milestone 4).
 - Keep changes small and compile-check with `dotnet build` after structural edits.
-- Add regression tests in `NavySimulator.Tests/Domain/Battles/` for battle logic changes.
 
 ## Known Integration Boundaries
-- External dependencies: none beyond the .NET SDK; no NuGet package references currently.
-- Runtime setup depends on JSON files under `NavySimulator/Data/` (`hulls/*.json`, `modules/*.json`, `mios/*.json`, `ship-designs/*.json`, `researches/*.json`, `spirits/*.json`, `planes/*.json`, `force-compositions/*.json`, `battle-scenario.json`).
-- Cross-component communication is in-memory object references only after setup is loaded.
-- Output artifacts include console executable (`NavySimulator/bin/<Configuration>/net10.0/`) and run reports under `output/`.
-
+- No external dependencies beyond the .NET SDK (xUnit in tests).
+- Runtime input: `data/` JSON (`hulls/`, `modules/`, `mios/`, `ship-designs/`, `researches/`, `spirits/`, `planes/`, `force-compositions/`, `battle-scenario.json`) and optional defines (`data/defines/*.lua`, or a HOI4/mod folder).
+- Battle mechanics reference: https://hoi4.paradoxwikis.com/Naval_battle (snapshot in `docs/reference/`), treated as a secondary source.

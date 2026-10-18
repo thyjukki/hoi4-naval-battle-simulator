@@ -74,6 +74,7 @@
         "torpedoDamageReductionFactor": { "type": "number" },
         "torpedoEnemyCriticalChanceFactor": { "type": "number" },
         "torpedoHitChanceFactor": { "type": "number" },
+        "depthChargeHitChanceFactor": { "type": "number" },
         "lightHitChangeFactor": { "type": "number" },
         "lightHitChanceFactor": { "type": "number" },
         "navalWeatherPenaltyFactor": { "type": "number" },
