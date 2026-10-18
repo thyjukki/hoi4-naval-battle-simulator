@@ -1,4 +1,4 @@
-namespace NavySimulator.Engine;
+namespace NavySimulator.Engine.Battles;
 
 public enum WeaponType
 {

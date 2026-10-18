@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\data\**\*.json" LinkBase="Data" CopyToOutputDirectory="PreserveNewest" />
+        <None Include="..\..\data\**\*.json;..\..\data\**\*.lua" LinkBase="Data" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

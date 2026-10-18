@@ -1,0 +1,23 @@
+namespace NavySimulator.Engine.Results;
+
+public sealed record ShipResult(
+    string Side,
+    string ShipId,
+    string DesignId,
+    ShipRole Role,
+    double MaxHp,
+    double FinalHp,
+    double MaxOrganization,
+    double FinalOrganization,
+    int FinalManpower,
+    double StartExperience,
+    double FinalExperience,
+    ShipStatus FinalStatus,
+    bool Sunk,
+    int? SunkHour,
+    int? RetreatedHour,
+    int ShotsFired,
+    int Hits,
+    double DamageDealt,
+    double HpDamageDealt,
+    double HpDamageTaken);

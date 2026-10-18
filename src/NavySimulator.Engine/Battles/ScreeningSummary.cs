@@ -1,3 +1,3 @@
 namespace NavySimulator.Engine.Battles;
 
-internal sealed record ScreeningSummary(double ScreeningEfficiency, double CarrierScreeningEfficiency);
+public readonly record struct ScreeningSummary(double ScreeningEfficiency, double CarrierScreeningEfficiency);

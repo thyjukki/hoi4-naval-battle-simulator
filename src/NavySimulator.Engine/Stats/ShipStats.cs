@@ -25,6 +25,8 @@ public record ShipStats(
     double NavalWeatherPenaltyFactor = 0,
     double LightHitChanceFactor = 0,
     double HeavyHitChanceFactor = 0,
+    double TorpedoHitChanceFactor = 0,
+    double DepthChargeHitChanceFactor = 0,
     double ProductionCost = 0)
 {
 
@@ -55,6 +57,8 @@ public record ShipStats(
             NavalWeatherPenaltyFactor + other.NavalWeatherPenaltyFactor,
             LightHitChanceFactor + other.LightHitChanceFactor,
             HeavyHitChanceFactor + other.HeavyHitChanceFactor,
+            TorpedoHitChanceFactor + other.TorpedoHitChanceFactor,
+            DepthChargeHitChanceFactor + other.DepthChargeHitChanceFactor,
             ProductionCost + other.ProductionCost);
     }
 
@@ -85,6 +89,8 @@ public record ShipStats(
             NavalWeatherPenaltyFactor * (1 + percentBonus.NavalWeatherPenaltyFactor),
             LightHitChanceFactor * (1 + percentBonus.LightHitChanceFactor),
             HeavyHitChanceFactor * (1 + percentBonus.HeavyHitChanceFactor),
+            TorpedoHitChanceFactor * (1 + percentBonus.TorpedoHitChanceFactor),
+            DepthChargeHitChanceFactor * (1 + percentBonus.DepthChargeHitChanceFactor),
             ProductionCost * (1 + percentBonus.ProductionCost));
     }
 
@@ -117,11 +123,9 @@ public record ShipStats(
             NavalWeatherPenaltyFactor: AverageNonZero(statList.Select(s => s.NavalWeatherPenaltyFactor)),
             LightHitChanceFactor: AverageNonZero(statList.Select(s => s.LightHitChanceFactor)),
             HeavyHitChanceFactor: AverageNonZero(statList.Select(s => s.HeavyHitChanceFactor)),
-            ProductionCost: AverageNonZero(statList.Select(s => s.ProductionCost)))
-        {
-            TorpedoHitChanceFactor = AverageNonZero(statList.Select(s => s.TorpedoHitChanceFactor)),
-            DepthChargeHitChanceFactor = AverageNonZero(statList.Select(s => s.DepthChargeHitChanceFactor))
-        };
+            TorpedoHitChanceFactor: AverageNonZero(statList.Select(s => s.TorpedoHitChanceFactor)),
+            DepthChargeHitChanceFactor: AverageNonZero(statList.Select(s => s.DepthChargeHitChanceFactor)),
+            ProductionCost: AverageNonZero(statList.Select(s => s.ProductionCost)));
 
         return averages;
     }
@@ -131,9 +135,6 @@ public record ShipStats(
         var nonZero = values.Where(value => value != 0).ToList();
         return nonZero.Count == 0 ? 0 : nonZero.Average();
     }
-
-    public double TorpedoHitChanceFactor { get; set; }
-    public double DepthChargeHitChanceFactor { get; set; }
 }
 
 

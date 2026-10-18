@@ -1,5 +1,9 @@
 using System.Text.Json;
 using NavySimulator.Engine;
+using NavySimulator.Engine.Battles;
+using NavySimulator.Engine.Battles.Mechanics;
+using NavySimulator.Engine.Defines;
+using NavySimulator.GameData.Defines;
 using NavySimulator.GameData.Contracts;
 
 namespace NavySimulator.GameData;
@@ -19,7 +23,12 @@ public class SetupLoader
 
     public IReadOnlyList<string> Warnings => warnings;
 
-    public BattleScenario LoadScenarioFromDirectory(string dataDirectoryPath)
+    public DefinesBindingReport? DefinesReport { get; private set; }
+
+    public BattleScenario LoadScenarioFromDirectory(
+        string dataDirectoryPath,
+        string scenarioFileName = "battle-scenario.json",
+        IReadOnlyList<string>? extraDefineSources = null)
     {
         warnings.Clear();
         var errors = new List<string>();
@@ -40,7 +49,9 @@ public class SetupLoader
         var planes = ReadCollectionFromFolderOrFile<PlaneDto>(dataDirectoryPath, "planes", "planes.json", "planes", errors);
         var fleets = ReadCollectionFromFolderOrFile<FleetDto>(dataDirectoryPath, "force-compositions", "force-compositions.json", "fleets", errors);
         var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = fleets };
-        var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, "battle-scenario.json", errors) ?? new BattleScenarioFileDto();
+        var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, scenarioFileName, errors) ?? new BattleScenarioFileDto();
+        var defines = LoadDefines(dataDirectoryPath, battleScenarioFile.BattleScenario.Defines, extraDefineSources ?? [], errors);
+        var rules = BuildRules(battleScenarioFile.BattleScenario, errors);
 
         ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);
         ValidateRequiredValues(hulls.Select(h => h.Role), "hulls.role", errors);
@@ -184,9 +195,9 @@ public class SetupLoader
                     errors.Add($"fleet '{fleet.ID}' has shipExperienceLevels for shipDesignID '{shipExperienceByDesign.Key}' that is not present in shipDesigns.");
                 }
 
-                if (!IsValidShipExperienceLevel(shipExperienceByDesign.Value))
+                if (!IsValidShipExperienceLevel(shipExperienceByDesign.Value, defines))
                 {
-                    errors.Add($"fleet '{fleet.ID}' has unsupported ship experience level {shipExperienceByDesign.Value} for shipDesignID '{shipExperienceByDesign.Key}'. Supported levels are 0 to {Hoi4Defines.UNIT_EXP_LEVELS.Length}.");
+                    errors.Add($"fleet '{fleet.ID}' has unsupported ship experience level {shipExperienceByDesign.Value} for shipDesignID '{shipExperienceByDesign.Key}'. Supported levels are 0 to {ExperienceRules.MaxLevel(defines)}.");
                 }
             }
 
@@ -244,7 +255,7 @@ public class SetupLoader
             }
         }
 
-        ValidateScenario(battleScenarioFile.BattleScenario, fleetIds, researchIds, spiritIds, errors);
+        ValidateScenario(battleScenarioFile.BattleScenario, fleetIds, researchIds, spiritIds, defines, errors);
 
         if (errors.Count > 0)
         {
@@ -301,45 +312,117 @@ public class SetupLoader
             designById[design.ID] = new ShipDesign(design.ID, hull, designModules, mio);
         }
 
-        var fleetById = new Dictionary<string, Fleet>();
-
-        foreach (var fleet in forceCompositionsFile.Fleets)
-        {
-            var ships = new List<Ship>();
-            var carrierAirwingsByDesign = ParseCarrierAirwings(fleet.CarrierAirwings ?? []);
-
-            foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
-            {
-                var design = designById[shipDesign.Key];
-                var shipExperienceLevel = fleet.ShipExperienceLevels.TryGetValue(shipDesign.Key, out var configuredExperienceLevel)
-                    ? configuredExperienceLevel
-                    : 2;
-
-                for (var i = 1; i <= shipDesign.Value; i++)
-                {
-                    var shipId = $"{fleet.ID}_{shipDesign.Key}_{i:D3}";
-                    ships.Add(new Ship(shipId, design, shipExperienceLevel));
-                }
-            }
-
-            fleetById[fleet.ID] = new Fleet(fleet.ID, ships, carrierAirwingsByDesign);
-        }
-
-        var attacker = BuildParticipant(battleScenarioFile.BattleScenario.Attacker, fleetById, researchById, spiritById);
-        var defender = BuildParticipant(battleScenarioFile.BattleScenario.Defender, fleetById, researchById, spiritById);
+        var fleetDtoById = forceCompositionsFile.Fleets.ToDictionary(fleet => fleet.ID, StringComparer.Ordinal);
+        var scenarioDto = battleScenarioFile.BattleScenario;
+        var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, defines);
+        var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, defines);
 
         return new BattleScenario(
-            battleScenarioFile.BattleScenario.ID,
-            battleScenarioFile.BattleScenario.Terrain,
-            battleScenarioFile.BattleScenario.Weather,
-            battleScenarioFile.BattleScenario.MaxHours,
-            battleScenarioFile.BattleScenario.Iterations ?? 1,
-            battleScenarioFile.BattleScenario.Seed,
+            scenarioDto.ID,
+            scenarioDto.Terrain,
+            scenarioDto.Weather,
+            scenarioDto.Iterations ?? 1,
+            scenarioDto.Seed,
             attacker,
             defender,
             planeById,
-            battleScenarioFile.BattleScenario.ContinueAfterRetreat ?? false,
-            battleScenarioFile.BattleScenario.DontRetreat ?? false);
+            defines,
+            rules);
+    }
+
+    private GameDefines LoadDefines(
+        string dataDirectoryPath,
+        IEnumerable<string> scenarioSources,
+        IEnumerable<string> extraSources,
+        List<string> errors)
+    {
+        var sources = scenarioSources
+            .Select(source => Path.IsPathRooted(source) ? source : Path.Combine(dataDirectoryPath, source))
+            .Concat(extraSources)
+            .ToList();
+
+        try
+        {
+            var (defines, report) = DefinesLoader.Load(sources);
+            DefinesReport = report;
+            warnings.AddRange(report.TypeMismatches.Select(mismatch => $"defines: {mismatch}"));
+            return defines;
+        }
+        catch (Exception exception) when (exception is IOException or FormatException)
+        {
+            errors.Add($"defines: {exception.Message}");
+            return GameDefines.Vanilla();
+        }
+    }
+
+    private static BattleRules BuildRules(BattleScenarioDto scenario, List<string> errors)
+    {
+        var rules = new BattleRules
+        {
+            MaxHours = scenario.MaxHours > 0 ? scenario.MaxHours : new BattleRules().MaxHours,
+            ContinueAfterRetreat = scenario.ContinueAfterRetreat ?? false,
+            RetreatEnabled = !(scenario.DontRetreat ?? false)
+        };
+
+        var dto = scenario.Rules;
+
+        if (dto is null)
+        {
+            return rules;
+        }
+
+        return rules with
+        {
+            FiringOrder = ParseEnum(dto.FiringOrder, rules.FiringOrder, "battleScenario.rules.firingOrder", errors),
+            DamageRandomness = ParseEnum(dto.DamageRandomness, rules.DamageRandomness, "battleScenario.rules.damageRandomness", errors),
+            ActivationDependsOnComposition = dto.ActivationDependsOnComposition ?? rules.ActivationDependsOnComposition,
+            FirstShotWaitsForCooldown = dto.FirstShotWaitsForCooldown ?? rules.FirstShotWaitsForCooldown,
+            NightEnabled = dto.NightEnabled ?? rules.NightEnabled,
+            StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
+            DailyManpowerRecoveryInBattle = dto.DailyManpowerRecoveryInBattle ?? rules.DailyManpowerRecoveryInBattle
+        };
+    }
+
+    private static TEnum ParseEnum<TEnum>(string? value, TEnum fallback, string fieldName, List<string> errors)
+        where TEnum : struct, Enum
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        if (Enum.TryParse<TEnum>(value, true, out var parsed))
+        {
+            return parsed;
+        }
+
+        errors.Add($"{fieldName} has unknown value '{value}'. Expected one of: {string.Join(", ", Enum.GetNames<TEnum>())}.");
+        return fallback;
+    }
+
+    private static Fleet BuildFleet(
+        FleetDto fleet,
+        IReadOnlyDictionary<string, ShipDesign> designById,
+        int? experienceLevelOverride,
+        GameDefines defines)
+    {
+        var ships = new List<Ship>();
+        var carrierAirwingsByDesign = ParseCarrierAirwings(fleet.CarrierAirwings ?? []);
+
+        foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
+        {
+            var design = designById[shipDesign.Key];
+            var experienceLevel = experienceLevelOverride ??
+                                  (fleet.ShipExperienceLevels.TryGetValue(shipDesign.Key, out var configuredLevel) ? configuredLevel : 2);
+            var experience = ExperienceRules.ExperienceForLevel(experienceLevel, defines);
+
+            for (var i = 1; i <= shipDesign.Value; i++)
+            {
+                ships.Add(new Ship($"{fleet.ID}_{shipDesign.Key}_{i:D3}", design, experience));
+            }
+        }
+
+        return new Fleet(fleet.ID, ships, carrierAirwingsByDesign);
     }
 
     private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(
@@ -766,6 +849,7 @@ public class SetupLoader
         HashSet<string> fleetIds,
         HashSet<string> researchIds,
         HashSet<string> spiritIds,
+        GameDefines defines,
         List<string> errors)
     {
         if (string.IsNullOrWhiteSpace(scenario.ID))
@@ -783,18 +867,14 @@ public class SetupLoader
             errors.Add("battleScenario.weather must not be empty.");
         }
 
-        if (scenario.MaxHours <= 0)
-        {
-            errors.Add("battleScenario.maxHours must be greater than 0.");
-        }
 
         if (scenario.Iterations.HasValue && scenario.Iterations.Value <= 0)
         {
             errors.Add("battleScenario.iterations must be greater than 0 when provided.");
         }
 
-        ValidateParticipant("attacker", scenario.Attacker, fleetIds, researchIds, spiritIds, errors);
-        ValidateParticipant("defender", scenario.Defender, fleetIds, researchIds, spiritIds, errors);
+        ValidateParticipant("attacker", scenario.Attacker, fleetIds, researchIds, spiritIds, defines, errors);
+        ValidateParticipant("defender", scenario.Defender, fleetIds, researchIds, spiritIds, defines, errors);
     }
 
     private static void ValidateParticipant(
@@ -803,6 +883,7 @@ public class SetupLoader
         HashSet<string> fleetIds,
         HashSet<string> researchIds,
         HashSet<string> spiritIds,
+        GameDefines defines,
         List<string> errors)
     {
         if (string.IsNullOrWhiteSpace(participant.FleetID))
@@ -836,19 +917,25 @@ public class SetupLoader
         }
 
         if (participant.ShipExperienceLevel.HasValue &&
-            !IsValidShipExperienceLevel(participant.ShipExperienceLevel.Value))
+            !IsValidShipExperienceLevel(participant.ShipExperienceLevel.Value, defines))
         {
-            errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 to {Hoi4Defines.UNIT_EXP_LEVELS.Length}.");
+            errors.Add($"battleScenario.{role}.shipExperienceLevel has unsupported level {participant.ShipExperienceLevel.Value}. Supported levels are 0 to {ExperienceRules.MaxLevel(defines)}.");
         }
+
+        ParseEnum(participant.RetreatPriority, RetreatPriority.Medium, $"battleScenario.{role}.retreatPriority", errors);
+        ParseEnum(participant.SubmarineEngagementRisk, SubmarineEngagementRisk.Medium, $"battleScenario.{role}.submarineEngagementRisk", errors);
     }
 
     private static BattleParticipant BuildParticipant(
         BattleParticipantDto participant,
-        IReadOnlyDictionary<string, Fleet> fleetById,
+        IReadOnlyDictionary<string, FleetDto> fleetDtoById,
+        IReadOnlyDictionary<string, ShipDesign> designById,
         IReadOnlyDictionary<string, Research> researchById,
-        IReadOnlyDictionary<string, Spirit> spiritById)
+        IReadOnlyDictionary<string, Spirit> spiritById,
+        GameDefines defines)
     {
-        var fleet = fleetById[participant.FleetID];
+        // Each side gets its own Fleet and Ship instances, even when both sides use the same fleet definition.
+        var fleet = BuildFleet(fleetDtoById[participant.FleetID], designById, participant.ShipExperienceLevel, defines);
         var participantResearches = participant.ResearchIDs.Select(researchId => researchById[researchId]).ToList();
         var participantSpirits = participant.SpiritIDs.Select(spiritId => spiritById[spiritId]).ToList();
 
@@ -856,15 +943,16 @@ public class SetupLoader
             fleet,
             participant.Commander,
             participant.Doctrine,
-            participant.ShipExperienceLevel,
             participant.ExternalNavalStrikePlanes,
             participantResearches,
-            participantSpirits);
+            participantSpirits,
+            ParseEnum(participant.RetreatPriority, RetreatPriority.Medium, "retreatPriority", []),
+            ParseEnum(participant.SubmarineEngagementRisk, SubmarineEngagementRisk.Medium, "submarineEngagementRisk", []));
     }
 
-    private static bool IsValidShipExperienceLevel(int level)
+    private static bool IsValidShipExperienceLevel(int level, GameDefines defines)
     {
-        return level >= 0 && level <= Hoi4Defines.UNIT_EXP_LEVELS.Length;
+        return level >= 0 && level <= ExperienceRules.MaxLevel(defines);
     }
 
     private static void ValidateScopedRoleFilters(
