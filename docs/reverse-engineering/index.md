@@ -141,7 +141,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x161e9a0 | air stacking factor F | A-STACK | [AIR/stack] |
 | 0x161ebd0 | present-ship count (`state & 0x34 == 0`) | S-POS-SIZE | [POS/size] |
 | 0x161ec40 | own side has no screens | S-SCREEN | [TGT/screen] |
-| 0x161ece0 | combined `1-(1-s)(1-c)` (TGT). **disagrees**: AIR "presumably side+0x150" | S-SCREEN, A-SORTIE | [TGT/bonus], [AIR/sortie] |
+| 0x161ece0 | combined `1-(1-[side+0x148])(1-[side+0x150])` (settled by recheck) | S-SCREEN, A-SORTIE | [TGT/bonus], [AIR/sortie] |
 | 0x161ed30 | positioning damage penalty `D × (1 − pos)` | S-POS-DMG | [POS/dmg], [DMG/dmg] |
 | 0x161ed70 | sub reveal positioning term `SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING × (1 − pos)` | S-SUB | [POS/sub], [ACT/sub] |
 | 0x161eeb0 | carrier-ratio helper `(side, &A, &B)` | S-POS | [POS/carrier] |
@@ -286,7 +286,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | Offset | Meaning | Finding |
 |---|---|---|
 | +0x10 | convoy reference (no ship) | [TGT/bb], [DMG/apply] |
-| +0xe0 | state: 1 waiting, 2 fighting, 4 joining, 8 retreating, 0x10 escaped, 0x20 sunk; mask 0xb = in battle. **disagrees**: POS has 0x10 sunk, 0x20 left battle, 1 "active" | [HOUR/hour], [ACT/bg], [TGT/bb], [POS/top] |
+| +0xe0 | state: 1 waiting, 2 fighting, 4 joining, 8 retreating, 0x10 escaped (0x19739bd), 0x20 sunk (0x1975bea); mask 0xb = in battle, 0x34 = not present (settled by recheck) | [HOUR/hour], [ACT/bg], [TGT/bb], [POS/top] |
 | +0xe4 | joining countdown (hours) | [HOUR/hour], [POS/top] |
 | +0xe8 | → group | [POS/dmg] |
 | +0xf0 + 8×slot | weapon charge per slot (0 heavy, 1 torpedo, 2 light/DC) | [ACT/cooldown], [DMG/pipe] |

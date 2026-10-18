@@ -39,7 +39,7 @@ Lookup index of every function, struct field, modifier id and define read site i
 ## Unsettled disagreements (to resolve on the next decoding pass)
 
 Listed in [index.md](../index.md) as "**disagrees**". The engine follows the reading noted in brackets where it matters.
-1. Member state bits 0x10 / 0x20: escaped / sunk (HOUR, ACT, TGT; set at 0x1975bea) vs sunk / left (POS). [escaped / sunk]
+1. ~~Member state bits 0x10 / 0x20~~ **Settled: 0x10 = escaped, 0x20 = sunk.** 0x10 is written at 0x19739bd right after the escape progress `member+0x130` reaches 1.0 (0x1973926). 0x20 is written at 0x1975bea in 0x1975480, which the shot function 0x19740c0 and the air strike 0x197ac80 call only after the HP test 0x1ad8680 (`hp <= 0`). POS is corrected.
 2. ECombatBox 4 / 5: hidden / revealed (ACT, TGT) vs revealed / hidden (HIT).
 3. Hour counter order: Update then `hours++` in 0x15c3690 (HOUR) vs increment first (ACT); ties to the POS question whether hours is 0 or 1 in the first hour.
 4. Side vt+0x70 (0x161f790): leader XP (HOUR) vs fire phase (POS, medium).
@@ -47,6 +47,6 @@ Listed in [index.md](../index.md) as "**disagrees**". The engine follows the rea
 6. Visibility modifier in the sub reveal: 0x19f naval_visibility_factor (ACT) vs 0x1ba/0x1bc (POS).
 7. combatant+0x130: commanding admiral (POS) vs battle location / context (HIT, AIR).
 8. combat+0x10c / +0x10d: convoy or special combat (HOUR, ACT) vs port-strike flag (AIR) vs combatant flags (TGT).
-9. 0x161ece0: combined `1-(1-s)(1-c)` (TGT) vs `side+0x150` (AIR, presumed). [combined]
+9. ~~0x161ece0~~ **Settled: combined.** It returns `1 − (1 − [side+0x148]) × (1 − [side+0x150])` in fixed point. 0x161e400 passes `side+0x148` and `side+0x150` as the two outputs of 0x161ccb0, which writes screening to the first and carrier screening to the second. AIR is corrected. The engine (`ScreeningRules.CombinedCarrierScreening`) already matched.
 10. Modifier 0x29: NAVAL_SPEED_FACTOR (HIT) vs the stat that gates submarine targets (TGT).
 11. naval_night_attack: no read (HOUR) vs NAVAL_NIGHT_ATTACK × night factor in 0xc34a50 (DMG). Not modelled.

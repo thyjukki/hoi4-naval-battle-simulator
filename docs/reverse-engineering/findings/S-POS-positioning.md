@@ -18,8 +18,8 @@ Side object = `naval_combatant` (vtable 0x29e3e98). Fields used here:
 | `+0xe8` / `+0xf4` | combat groups |
 
 Member (ship) state `member+0xe0`: 1 = active, 4 = still arriving (hours to join in `+0xe4`, set at 0x161aef3/0x161af02,
-switched to 1 at 0x1973a49), 8 = retreating (set after the retreat decision, 0x1971bc4), 0x10 = sunk
-(0x19739bd, after the kill call), 0x20 = left the battle (0x1975bea). The mask `0x34` (arriving, sunk, left) means "not present".
+switched to 1 at 0x1973a49), 8 = retreating (set after the retreat decision, 0x1971bc4), 0x10 = escaped
+(0x19739bd, when the escape progress `member+0x130` reaches 1.0 at 0x1973926), 0x20 = sunk (0x1975bea, in 0x1975480, which the shot 0x19740c0 and the air strike 0x197ac80 call only when the target's HP is ≤ 0, test 0x1ad8680). The mask `0x34` (joining, escaped, sunk) means "not present". (Corrected on recheck; an earlier draft had 0x10/0x20 swapped.)
 
 Tooling caveat: `uses.json`/`who.py` miss many reads (the verifier disassembles from p-12 and loses alignment).
 For example it reports 0 uses of MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION and none of
