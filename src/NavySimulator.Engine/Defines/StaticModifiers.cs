@@ -22,6 +22,7 @@ public sealed class StaticModifiers
     public const string NavalDamageFactor = "naval_damage_factor";
     public const string NavalDefenseFactor = "naval_defense_factor";
     public const string FighterSortieEfficiency = "fighter_sortie_efficiency";
+    public const string CarrierTraffic = "carrier_traffic";
 
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [
@@ -37,7 +38,7 @@ public sealed class StaticModifiers
         [ShipExperienceMalusMin] = new(StringComparer.Ordinal) { [NavalDamageFactor] = -0.1, [NavalDefenseFactor] = -0.1 },
         [CarrierExperienceBonusMax] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = 0.2 },
         [CarrierExperienceMalusMin] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = -0.1 },
-        [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1 }
+        [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1, [CarrierTraffic] = -1.0 }
     };
 
     public double Get(string block, string modifier)

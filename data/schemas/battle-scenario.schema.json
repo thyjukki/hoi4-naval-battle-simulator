@@ -74,6 +74,10 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 23
+            },
+            "airRegionPhase": {
+              "type": "integer",
+              "description": "Strategic region id (or its value mod 8). Air strikes happen when hour of day mod 8 equals this mod 8."
             }
           },
           "additionalProperties": false
@@ -138,6 +142,20 @@
             "DeathIncarnate"
           ],
           "description": "Task force engagement level: in-combat retreat threshold and which lines submarines attack."
+        },
+        "externalPlaneID": {
+          "type": "string",
+          "description": "Plane type of the land-based naval strike planes."
+        },
+        "externalMissionEfficiency": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Air mission efficiency of the land-based planes (multiplies their attack)."
+        },
+        "carrierStanceIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index into CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO (default CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX)."
         }
       },
       "additionalProperties": false

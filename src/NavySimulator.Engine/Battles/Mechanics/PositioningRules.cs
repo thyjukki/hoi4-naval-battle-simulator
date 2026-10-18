@@ -9,12 +9,33 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 /// </summary>
 public static class PositioningRules
 {
-    public static double Calculate(BattleLines own, BattleLines enemy, GameDefines defines)
+    public static double Calculate(
+        BattleLines own,
+        BattleLines enemy,
+        GameDefines defines,
+        double ownCarrierAir = 0,
+        (double A, double B) enemyCarrierAir = default)
     {
         var positioning = defines.NNavy.BASE_POSITIONING;
         positioning -= FleetSizePenalty(own.Count, enemy.Count, defines);
+        positioning -= CarrierRatioPenalty(ownCarrierAir, enemyCarrierAir.A, enemyCarrierAir.B, defines);
         positioning += DetectionBonus(own, enemy, defines);
         return Math.Clamp(positioning, 0, 1);
+    }
+
+    // S-POS-CARRIER [RE] 0x161c217: the side with weaker carrier air (sortie efficiency x planes) loses up to
+    // MAX_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR, scaled by the enemy's average deck fill.
+    public static double CarrierRatioPenalty(double ownCarrierAir, double enemyCarrierAir, double enemyDeckFill, GameDefines defines)
+    {
+        var navy = defines.NNavy;
+
+        if (enemyCarrierAir <= 0)
+        {
+            return 0;
+        }
+
+        var penalty = (1.0 - ownCarrierAir / enemyCarrierAir) * navy.HIGHER_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR * enemyDeckFill;
+        return Math.Clamp(penalty, 0, navy.MAX_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR);
     }
 
     // S-POS-SIZE [RE]: every ship in the battle counts 1 (all lines, retreating included).

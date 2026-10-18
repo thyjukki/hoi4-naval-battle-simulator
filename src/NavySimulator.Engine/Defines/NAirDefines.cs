@@ -80,6 +80,9 @@ public sealed class NAirDefines
     /// <summary>biggest factor difference in agility for doing damage (caps to this)</summary>
     public double BIGGEST_AGILITY_FACTOR_DIFF { get; set; } = 4.0;
 
+    /// <summary>biggest factor difference in speed for doing damage (caps to this)</summary>
+    public double BIGGEST_SPEED_FACTOR_DIFF { get; set; } = 3.5;
+
     /// <summary>A factor for scaling the top speed of a plane into damage buff. If an attacking wing has a speed advantage of any form their speed value will be converted into a percentage bonus with this modifier</summary>
     public double TOP_SPEED_DAMAGE_BONUS_FACTOR { get; set; } = 0.025;
 

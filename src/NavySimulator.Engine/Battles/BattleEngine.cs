@@ -1,3 +1,4 @@
+using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Random;
@@ -46,6 +47,8 @@ public sealed class BattleEngine
         private readonly List<string> log = [];
         private readonly List<string> notes = [];
         private readonly Dictionary<Ship, double> startHp = [];
+        private readonly List<AirStrikeRecord> airStrikes = [];
+        private readonly AirPhase airPhase;
         private int reengagements;
 
         public Run(BattleScenario scenario, IRandomSource random)
@@ -75,6 +78,7 @@ public sealed class BattleEngine
                 }
             }
 
+            airPhase = new AirPhase(scenario, attacker, defender);
             AddInputNotes();
         }
 
@@ -86,10 +90,10 @@ public sealed class BattleEngine
             {
                 var tick = hour + 1;
                 var hourStartShots = shots.Count;
-                BeginHour();
+                BeginHour(hour);
                 SideTurn(attacker, defender, hour, tick);
                 SideTurn(defender, attacker, hour, tick);
-                ApplyExperienceGain();
+                ApplyExperienceGain(hour);
                 LogHour(hour, hourStartShots);
 
                 if (IsBattleOver(hour))
@@ -103,12 +107,16 @@ public sealed class BattleEngine
         }
 
         // [RE] Positioning, screening and detection for both sides from the same pre-fire state.
-        private void BeginHour()
+        private void BeginHour(int hour)
         {
             attacker.Lines = new BattleLines(attacker.Ships);
             defender.Lines = new BattleLines(defender.Ships);
-            attacker.Positioning = PositioningRules.Calculate(attacker.Lines, defender.Lines, defines);
-            defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines);
+
+            // Carrier air strength uses the previous hour's screening, as the game computes positioning first.
+            var attackerAir = airPhase.CarrierAirStrength(attacker, hour, Darkness(hour));
+            var defenderAir = airPhase.CarrierAirStrength(defender, hour, Darkness(hour));
+            attacker.Positioning = PositioningRules.Calculate(attacker.Lines, defender.Lines, defines, attackerAir.A, defenderAir);
+            defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines, defenderAir.A, attackerAir);
             attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines);
             defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines);
             attacker.SubmarineDetection = SubmarineRules.Detection(attacker.Ships, defines);
@@ -177,7 +185,50 @@ public sealed class BattleEngine
                 }
             }
 
-            DisengageFromHiddenSubmarines(own, enemy, hour);
+            var airActed = ResolveAirStep(own, enemy, hour, darkness);
+
+            if (!airActed)
+            {
+                DisengageFromHiddenSubmarines(own, enemy, hour);
+            }
+        }
+
+        // A-* [RE]: the side's air groups strike after its surface fire, in air hours only.
+        private bool ResolveAirStep(BattleSide own, BattleSide enemy, int hour, double darkness)
+        {
+            var hourOfDay = (rules.StartHourOfDay + hour) % 24;
+
+            if (airPhase.GroupsOf(own).Count == 0 || !AirRules.IsAirHour(hourOfDay, rules.AirRegionPhase, defines))
+            {
+                return false;
+            }
+
+            var strikes = airPhase.Strike(own, enemy, hour, darkness, random);
+
+            foreach (var (record, target, applied) in strikes)
+            {
+                airStrikes.Add(record);
+                tallies[target].HpDamageTaken += applied.HpDamage;
+
+                var carrier = own.Ships.FirstOrDefault(ship => ship.ID == record.Source);
+
+                if (carrier is not null)
+                {
+                    tallies[carrier].HpDamageDealt += applied.HpDamage;
+                    tallies[carrier].DamageDealt += applied.HpDamage;
+                }
+
+                if (applied.Sunk)
+                {
+                    tallies[target].SunkHour = hour;
+                }
+
+                log.Add($"Hour {hour}: {own.Label} air strike from {record.Source}: {record.Flying} flying, {record.Intercepted} intercepted, " +
+                        $"{record.ShotDownByAntiAir} shot down, {record.Hits} hits on {record.TargetId} for {record.HpDamage:F1} HP" +
+                        (record.KillingBlow ? " (sunk)" : string.Empty));
+            }
+
+            return strikes.Count > 0;
         }
 
         private void FireSlots(Ship shooter, BattleSide own, BattleSide enemy, int hour)
@@ -302,7 +353,7 @@ public sealed class BattleEngine
         }
 
         // S-XP [RE]: ships that fired gain experience; group sizes count every ship the side brought.
-        private void ApplyExperienceGain()
+        private void ApplyExperienceGain(int hour)
         {
             foreach (var side in new[] { attacker, defender })
             {
@@ -316,6 +367,14 @@ public sealed class BattleEngine
                     {
                         var gain = ExperienceRules.HourlyGain(enemy.Ships.Count, side.Ships.Count, tally.LastTargetWasConvoy, defines);
                         ExperienceRules.AddExperience(ship, gain, defines);
+                    }
+                    else if (ship.IsInBattle && airPhase.GroupsOf(side).FirstOrDefault(group => group.Carrier == ship) is { } group)
+                    {
+                        // [RE] A carrier that did not fire gains from its sortie efficiency instead.
+                        var efficiency = Math.Clamp(airPhase.SortieEfficiency(group, side, hour, Darkness(hour)), 0, 1);
+                        var navy = defines.NNavy;
+                        ExperienceRules.AddExperience(ship,
+                            navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN, defines);
                     }
                 }
             }
@@ -396,14 +455,7 @@ public sealed class BattleEngine
 
         private void AddInputNotes()
         {
-            var hasCarrierPlanes = new[] { scenario.Attacker, scenario.Defender }
-                .Any(participant => participant.Fleet.CarrierAirwingsByShipDesign.Count > 0);
-            var hasExternalPlanes = scenario.Attacker.ExternalNavalStrikePlanes > 0 || scenario.Defender.ExternalNavalStrikePlanes > 0;
-
-            if (hasCarrierPlanes || hasExternalPlanes)
-            {
-                notes.Add("Air combat is not simulated yet (milestone 2): carrier air wings and land-based naval strike planes were ignored.");
-            }
+            notes.AddRange(airPhase.Notes);
 
             if (!string.IsNullOrWhiteSpace(scenario.Weather) && !scenario.Weather.Equals("clear", StringComparison.OrdinalIgnoreCase))
             {
@@ -445,6 +497,7 @@ public sealed class BattleEngine
                 Defender = BuildSideResult(defender),
                 Ships = shipResults,
                 Shots = shots,
+                AirStrikes = airStrikes,
                 SkipCounts = skipCounts,
                 HourlyLog = log,
                 Notes = notes

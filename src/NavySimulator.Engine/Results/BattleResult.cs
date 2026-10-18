@@ -14,6 +14,7 @@ public sealed class BattleResult
     public required SideResult Defender { get; init; }
     public required IReadOnlyList<ShipResult> Ships { get; init; }
     public required IReadOnlyList<ShotRecord> Shots { get; init; }
+    public required IReadOnlyList<AirStrikeRecord> AirStrikes { get; init; }
     public required IReadOnlyDictionary<string, int> SkipCounts { get; init; }
     public required IReadOnlyList<string> HourlyLog { get; init; }
 

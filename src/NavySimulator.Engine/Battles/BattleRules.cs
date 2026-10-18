@@ -15,6 +15,12 @@ public sealed record BattleRules
     /// <summary>Hour of day (0-23) at which the battle starts (battle hour 0).</summary>
     public int StartHourOfDay { get; init; } = 12;
 
+    /// <summary>
+    /// A-CADENCE [RE]: the battle's strategic region id (or any value with the same remainder mod 8). Air strikes happen
+    /// at the hours of day where hour mod 8 equals this mod 8. The default 4 gives the wiki's 04:00 / 12:00 / 20:00.
+    /// </summary>
+    public int AirRegionPhase { get; init; } = 4;
+
     /// <summary>S-RETREAT: when false, ships never decide to retreat (tooling).</summary>
     public bool RetreatEnabled { get; init; } = true;
 

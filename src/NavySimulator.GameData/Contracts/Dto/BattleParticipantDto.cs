@@ -10,6 +10,9 @@ public class BattleParticipantDto
     public List<string> ResearchIDs { get; set; } = [];
     public List<string> SpiritIDs { get; set; } = [];
     public string? EngagementLevel { get; set; }
+    public string? ExternalPlaneID { get; set; }
+    public double? ExternalMissionEfficiency { get; set; }
+    public int? CarrierStanceIndex { get; set; }
 }
 
 

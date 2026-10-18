@@ -40,6 +40,11 @@ public class SetupLoader
 
         ValidateModuleStatWarnings(dataDirectoryPath, warnings);
 
+        foreach (var folder in new[] { "hulls", "researches", "spirits", "mios" })
+        {
+            ValidateStatBlockWarnings(dataDirectoryPath, folder, warnings);
+        }
+
         var hulls = ReadCollectionFromFolderOrFile<HullDto>(dataDirectoryPath, "hulls", "hulls.json", "hulls", errors);
         var modules = ReadCollectionFromFolderOrFile<ModuleDto>(dataDirectoryPath, "modules", "modules.json", "modules", errors);
         var mios = ReadCollectionFromFolderOrFile<MioBonusDto>(dataDirectoryPath, "mios", "mios.json", "mios", errors);
@@ -377,7 +382,8 @@ public class SetupLoader
         {
             DamageRandomness = ParseEnum(dto.DamageRandomness, rules.DamageRandomness, "battleScenario.rules.damageRandomness", errors),
             NightEnabled = dto.NightEnabled ?? rules.NightEnabled,
-            StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay
+            StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
+            AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase
         };
     }
 
@@ -576,6 +582,73 @@ public class SetupLoader
         catch (JsonException)
         {
             // Invalid JSON is already captured as a setup error by ReadJsonFile.
+        }
+    }
+
+    private static readonly HashSet<string> StatBlockNames = new(["baseStats", "statModifiers", "statAverages", "statMultipliers"], StringComparer.Ordinal);
+
+    // Unknown keys in a stat block are dropped by the JSON reader without notice, so report them for every collection.
+    private static void ValidateStatBlockWarnings(string dataDirectoryPath, string folder, List<string> warnings)
+    {
+        var directory = Path.Combine(dataDirectoryPath, folder);
+
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        foreach (var path in Directory.GetFiles(directory, "*.json").OrderBy(file => file, StringComparer.OrdinalIgnoreCase))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(path));
+                ValidateStatBlocksIn(document.RootElement, $"{folder}/{Path.GetFileName(path)}", warnings);
+            }
+            catch (JsonException)
+            {
+                // Invalid JSON is already captured as a setup error by the collection reader.
+            }
+        }
+    }
+
+    private static void ValidateStatBlocksIn(JsonElement element, string context, List<string> warnings)
+    {
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                ValidateStatBlocksIn(item, context, warnings);
+            }
+
+            return;
+        }
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return;
+        }
+
+        var id = element.TryGetProperty("id", out var idElement) && idElement.ValueKind == JsonValueKind.String
+            ? $"{context} '{idElement.GetString()}'"
+            : context;
+
+        foreach (var property in element.EnumerateObject())
+        {
+            if (property.Name == "statMultiplier")
+            {
+                warnings.Add($"{id}: block 'statMultiplier' is ignored (did you mean 'statMultipliers'?).");
+            }
+            else if (StatBlockNames.Contains(property.Name) && property.Value.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var stat in property.Value.EnumerateObject().Where(stat => !KnownShipStatsKeys.Contains(stat.Name)))
+                {
+                    warnings.Add($"{id}: unknown stat '{stat.Name}' in '{property.Name}' is ignored.");
+                }
+            }
+            else
+            {
+                ValidateStatBlocksIn(property.Value, context, warnings);
+            }
         }
     }
 
@@ -943,7 +1016,10 @@ public class SetupLoader
             participant.ExternalNavalStrikePlanes,
             participantResearches,
             participantSpirits,
-            ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, "engagementLevel", []));
+            ParseEnum(participant.EngagementLevel, EngagementLevel.Medium, "engagementLevel", []),
+            participant.ExternalPlaneID,
+            participant.ExternalMissionEfficiency ?? 1.0,
+            participant.CarrierStanceIndex);
     }
 
     private static bool IsValidShipExperienceLevel(int level, GameDefines defines)
