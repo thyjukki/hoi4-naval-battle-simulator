@@ -153,6 +153,7 @@ public sealed class BattleSession
         SideTurn(attacker, defender, hour, tick);
         SideTurn(defender, attacker, hour, tick);
         ApplyExperienceGain(hour);
+        ApplyOrganizationRegain();
         LogHour(hour, hourStartShots);
         ApplyDailyManpowerGain(hour);
         RecordHour(hour, hourStartShots, hourStartStrikes);
@@ -226,9 +227,15 @@ public sealed class BattleSession
         return BuildSideResult(side);
     }
 
-    // [RE] Positioning, screening and detection for both sides from the same pre-fire state.
+    // [RE] Positioning, screening and detection for both sides from the same pre-fire state; [CAL] the experience
+    // level the combat modifiers use is taken here too (S-XP).
     private void BeginHour(int hour)
     {
+        foreach (var ship in allShips)
+        {
+            ship.LevelExperience = ship.Experience;
+        }
+
         attacker.Lines = new BattleLines(attacker.Ships);
         defender.Lines = new BattleLines(defender.Ships);
 
@@ -348,6 +355,7 @@ public sealed class BattleSession
                 tallies[target].SunkHour = hour;
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
                     $"sunk by an air strike from {record.Source}", record.Source));
+                ReinforceAfterSinking(enemy, hour);
             }
 
             log.Add($"Hour {hour}: {own.Label} air strike from {record.Source}: {record.Flying} flying, {record.Intercepted} intercepted, " +
@@ -402,7 +410,8 @@ public sealed class BattleSession
     // [RE] 0x19740c0: one profile per slot and target; shoot while the slot has charge, stop when the target sinks.
     private void FireAt(Ship shooter, Ship target, WeaponSlot slot, BattleSide own, BattleSide enemy, int hour)
     {
-        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines);
+        var criticalChanceFactor = DamageRules.CriticalChanceFactor(shooter, target, own.Screening, enemy.Screening, Darkness(hour), defines);
+        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines, criticalChanceFactor);
         var hitChance = HitChanceRules.Calculate(shooter, target, slot, own.Screening, Darkness(hour), defines);
         var weapon = profile.IsDepthCharge ? WeaponType.DepthCharge : slot switch
         {
@@ -414,7 +423,7 @@ public sealed class BattleSession
 
         while (WeaponCadenceRules.TrySpendShot(shooter, slot, defines))
         {
-            var hit = random.NextDouble() < hitChance.Final;
+            var hit = random.NextDouble(RollKind.Hit) < hitChance.Final;
             var damage = hit ? DamageRules.RollHit(target, profile, defines, rules, random) : default;
             var applied = damage.Damage > 0 ? DamageRules.Apply(target, damage.StrDamage, damage.OrgDamage, defines) : default;
 
@@ -435,6 +444,7 @@ public sealed class BattleSession
                 tallies[target].SunkHour = hour;
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
                     $"sunk by {shooter.ID} ({weapon})", shooter.ID));
+                ReinforceAfterSinking(enemy, hour);
             }
 
             shots.Add(new ShotRecord(
@@ -507,6 +517,27 @@ public sealed class BattleSession
                         navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN, defines);
                 }
             }
+        }
+    }
+
+    // S-MANPOWER [CAL]: a sinking refills the rest of the sunk ship's task force at once, as the daily update does
+    // (a logged TFB battle: every refill outside 00:00 came with a sinking, and later shots that hour saw the new crews).
+    private void ReinforceAfterSinking(BattleSide side, int hour)
+    {
+        var gained = side.Ships.Where(ship => !ship.IsSunk).Sum(ship => ExperienceRules.DailyManpowerGain(ship, defines));
+
+        if (gained > 0)
+        {
+            log.Add($"Hour {hour}: {side.Label} ship sunk, the task force regains {gained} manpower");
+        }
+    }
+
+    // S-ORG-REGAIN [CAL]: after the hour, retreating and escaped ships regain organization.
+    private void ApplyOrganizationRegain()
+    {
+        foreach (var ship in allShips)
+        {
+            ExperienceRules.HourlyOrganizationRegain(ship, defines);
         }
     }
 

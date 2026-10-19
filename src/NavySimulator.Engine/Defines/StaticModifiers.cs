@@ -28,6 +28,8 @@ public sealed class StaticModifiers
     public const string NavalLightGunHitChanceFactor = "naval_light_gun_hit_chance_factor";
     public const string NavalHeavyGunHitChanceFactor = "naval_heavy_gun_hit_chance_factor";
     public const string NavalTorpedoHitChanceFactor = "naval_torpedo_hit_chance_factor";
+    public const string NavalCriticalScoreChanceFactor = "naval_critical_score_chance_factor";
+    public const string CriticalReceiveChance = "critical_receive_chance";
 
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [

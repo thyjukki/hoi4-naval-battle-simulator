@@ -41,7 +41,11 @@ Each hour:
    4. **Retreating**: fires, then advances its escape (S-RETREAT-SPEED).
    
    After its ships, the side's air step runs in air hours (A-*, [air.md](air.md)). If the enemy has only hidden submarines left (nothing the side can target) and no air acted, all of the side's ships start retreating.
-3. Experience gain (S-XP), end check (S-END).
+3. Experience gain (S-XP), organization regain (S-ORG-REGAIN), end check (S-END).
+
+The experience level the combat modifiers use is taken at the start of the hour (S-XP). A battle the game creates during play (two hostile task forces meeting) runs one update with hour counter 0 that rolls and fires nothing, so its battle hour 0 is the game hour after it; a scenario that reproduces such a battle sets `rules.startHourOfDay` to that hour (the save's hour + 1) [CAL: the daily manpower refill of a replayed battle, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)].
+
+- **S-ORG-REGAIN** [CAL]: after the hour, retreating and escaped ships regain `NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE` (0.2) organization, up to their maximum; fighting and waiting ships regain none. The side with naval dominance in the region gets 10 % more (0.22; `NAVAL_DOMINANCE_ORG_RECOVERY`, not modelled: dominance is a region-wide value). Retreating ships still fire, and organization enters their hit chance through the crew factor (S-HIT).
 
 **Code.** `BattleSession.cs` (one hour per `StepHour`; `BattleEngine` runs a session to its end). Fire-exchange groups: with `COMBAT_MAX_GROUPS` (1) each side forms one group paired with the other side's, so groups have no effect in vanilla and are not modelled.
 
@@ -168,7 +172,7 @@ Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (
 - Guns and depth charges: chance `COMBAT_BASE_CRITICAL_CHANCE (0.05) × (1 - reliability) × CRITICAL_VALUES[tier]`; multiplier `1 + COMBAT_CRITICAL_DAMAGE_MULT (5) × (1 - reliability)`. At reliability 0.8 that is ×2.0, not the ×1.8 the old spec had.
 - Torpedoes: chance `COMBAT_TORPEDO_CRITICAL_CHANCE (0.1) × max(0, 1 + target torpedo-crit modifier)`; multiplier `COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT` (2), no reliability.
 - Reliability is the target's, clamped to 1. A crit is rolled only when chance and damage are positive, with `U <= chance`, and it multiplies **both** HP and organization damage.
-- All crit chances are also multiplied by `1 + naval_critical_score_chance_factor + naval_critical_receive_chance_factor` (not modelled).
+- All crit chances are also multiplied by `1 + naval_critical_score_chance_factor` of the shooter `+ critical_receive_chance` of the target (modifier 0x18c, `MODIFIER_NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR`), both read through the member modifier getter, in the shot loop (the logged shot profile does not include it) [RE + CAL]. TFB's `damage_control_1` and `_2` give −0.1 each: in a replayed battle torpedo crits landed for rolls up to 0.785 of the profile's chance and failed from 0.83, i.e. at 0.8 × the chance, and the part roll followed only those ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)). `naval_critical_score_chance_factor_against` a country is not modelled.
 - **S-CRIT-PART**: on a crit, a part is damaged with chance `CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT (0.1) × critical_part_damage_chance_mult / reliability` (always if that is ≥ 1 or reliability is 0). The part is a weighted pick from the hull's and modules' `critical_parts`; its damage multipliers **replace** the crit multiplier, and its stat penalties stay on the ship (scaled by `naval_critical_effect_factor`). Part data is not loaded yet, so the engine follows the game's "no part candidates" path: the roll is made and recorded, and the regular crit multiplier applies.
 
 **Code.** `DamageRules.Profile`, `RollHit`, `RollPartDamage`.
@@ -226,7 +230,7 @@ The modifier ids are mapped to names with medium confidence, except `naval_retre
 
 ## S-XP: experience [RE]
 
-- **Levels**: `level = count(NMilitary.UNIT_EXP_LEVELS {0.1, 0.3, 0.75, 0.9} <= xp / NAVY_MAX_XP)`, i.e. 0–4.
+- **Levels**: `level = count(NMilitary.UNIT_EXP_LEVELS {0.1, 0.3, 0.75, 0.9} <= xp / NAVY_MAX_XP)`, i.e. 0–4. The level modifiers use the ship's experience at the start of the combat hour, so experience lost to hits during the hour changes them only from the next hour [CAL: in a logged TFB battle the attack in all 8,572 shot profiles matched the shooter's start-of-hour level, while the end-of-hour level differed 185 times, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)].
 - **Effects**: level `ARMY_EXP_BASE_LEVEL` (1) has none. Below it, the static modifier `ship_experience_malus_min` (`naval_damage_factor -0.1`, `naval_defense_factor -0.1`) × `(base - level) / base`. Above it, `ship_experience_bonus_max` (`+0.3`, `+0.2`) × `(level - base) / (4 - base)`. Damage and defense factors enter the additive damage multiplier (S-DMG). Experience has no other combat effect; carriers get `carrier_experience_*` sortie modifiers instead (air).
 - **Gain**: each hour, a ship that fired gains `UNIT_EXPERIENCE_PER_COMBAT_HOUR (10) × UNIT_EXPERIENCE_SCALE (1) × (enemyGroupSize + 1) / (ownGroupSize + 1) × EXPERIENCE_FACTOR_NON_CARRIER_GAIN (0.04)`, × `EXPERIENCE_FACTOR_CONVOY_ATTACK` (0.04) if its last target was a convoy. Damage dealt does not matter. Group size counts every ship the side brought (sunk ships stay in the group's list; medium confidence). Carriers that did not fire gain from sortie efficiency × `EXPERIENCE_FACTOR_CARRIER_GAIN` (air). `XP_GAIN_FACTOR` is not used here.
 - **Loss** on each hit, before HP drops: `xp × clamp(hp - EXPERIENCE_LOSS_FACTOR (1) × strDamage, 0, maxHp) / hp`. Manpower loss: `round(maxManpower × strDamage / maxHp × MANPOWER_LOSS_RATIO_ON_STR_LOSS (0.5))`, never below `round(maxManpower × MIN_MANPOWER_RATIO_TO_DROP (0.1))`, and nothing once at that floor. Rounding is half away from zero.
@@ -239,11 +243,16 @@ Ships regain manpower **once a day, in combat too**, despite the define's commen
 - `gain = min(maxManpower - manpower, ceil(maxManpower × DAILY_MANPOWER_GAIN_RATIO (0.05)))`, the ceiling taken in fx5; 60 a day for a 1200-crew ship.
 - It runs after the combat hour of the tick that starts a new day (00:00), so after battle hour `h` with `(startHourOfDay + h) % 24 == 0`.
 - Every ship afloat refills, including escaped ones (still in their task force).
-- The manpower is drawn from the country's pool. [ASSUMED] The pool is never short.
+- **A sinking refills the task force too** [RE + CAL]: the combat's sink handler `0x1975480` (which sets the member's state to sunk) calls the task force's remove-ship function `0xd77ff0` (at 0x1975879), and that ends with the same refill `0xd7a7e0(taskForce, force = false)` (at 0xd78b71), which refills every ship once the game has started. So every sinking gives the rest of the sunk ship's task force the daily gain at once, in the middle of the hour; in a replayed battle every manpower rise outside 00:00 came with a sinking, and later shots that hour saw the new crews ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
+- The manpower is drawn from the country's pool. [ASSUMED] The pool is never short. Before the refill, `0xd77ff0` returns `round(manpower × (1 − clamp(MANPOWER_LOSS_RATIO_ON_SUNK (0.5) × (1 + navy_casualty_on_sink), 0, 1)))` of the sunk ship's crew to the pool; the strategic-region static modifier `water_modifier_shark_infested` (`navy_casualty_on_sink = 0.6`, Pacific regions in vanilla and TFB) makes that 20 % instead of 50 %. It only matters to the pool, so the engine does not model it.
 
 Calibration: in the CL3 battle (`battle-scenario-la-vs-torp-cl3.json`) the save from the battle's last hour had 74 of 75 BUL and 71 of 74 ROM ships at full manpower after losing 25% and 72% of their HP. Without the refill the simulator left almost every ship short; with it, 74.5 and 70.1 on average (200 seeds).
 
-**Code.** `ExperienceRules.DailyManpowerGain`, `BattleSession.ApplyDailyManpowerGain`. Manpower matters in combat through the crew factor in hit chance (S-HIT-MODS).
+**Code.** `ExperienceRules.DailyManpowerGain`, `BattleSession.ApplyDailyManpowerGain`, `BattleSession.ReinforceAfterSinking`. Manpower matters in combat through the crew factor in hit chance (S-HIT-MODS).
+
+## S-REPLAY: replaying a logged game battle [tooling]
+
+`tools/ingame/battle_logger.js` records, for every combat hour, each member's state at the start (after the daily update) and the end of the hour, every `random_fixed` call of the combat update on its thread in call order with its source line, and every shot. `NavySimulator replay --log <run>` (`GameData/Replay/GameBattleLog`, `Engine/Battles/Replay/BattleReplay`) builds the scenario with the game's attacker, orders each fleet like the game's members, and fights each hour from the game's start state with the game's rolls (`ReplayRandomSource`): every engine draw names its `RollKind`, which must be the kind of the game's next roll. Line tags (hoi4.exe 1.19.3): 0x37b target pick, 0x3d9 torpedo line, 0x587 hit, 0x593 damage randomness, 0x59f crit, 0x2f4 part damage, 0x78f part pick (skipped: no part data), 0xa83 retreat decision, 0x40e the 6–9 rolls of a sinking (skipped). Shots are compared one by one (shooter, weapon, target, hit, HP and organization lost) and end-of-hour states against the next hour's start. Setting the state every hour keeps fixed-point rounding from accumulating.
 
 ## S-END: end of battle [RE]
 

@@ -234,7 +234,7 @@ public sealed class AirPhase
     {
         var chance = AirRules.CriticalChance(target, defines);
 
-        if (chance <= 0 || random.NextDouble() >= chance)
+        if (chance <= 0 || random.NextDouble(RollKind.Air) >= chance)
         {
             return false;
         }
@@ -248,7 +248,7 @@ public sealed class AirPhase
 
             if (partChance < 1 && reliability > 0 && target.Role != ShipRole.Convoy)
             {
-                random.NextDouble();
+                random.NextDouble(RollKind.Air);
             }
 
             strDamage *= multiplier;

@@ -27,6 +27,12 @@ public class Ship
     public int MaxManpower { get; }
     public int CurrentManpower { get; set; }
     public double Experience { get; set; }
+
+    /// <summary>
+    /// S-XP [CAL]: the experience the level modifiers read. The game takes it at the start of each combat hour, so
+    /// experience lost to hits during the hour changes the level only from the next hour.
+    /// </summary>
+    public double LevelExperience { get; set; }
     public double CurrentOrganization { get; set; }
     public double CurrentHP { get; set; }
     public ShipStatus CurrentStatus { get; set; }
@@ -84,6 +90,7 @@ public class Ship
         CurrentOrganization = stats.Organization;
         CurrentManpower = MaxManpower;
         Experience = InitialExperience;
+        LevelExperience = InitialExperience;
         CurrentStatus = ShipStatus.Waiting;
         RetreatProgress = 0;
         AttemptedRetreat = false;

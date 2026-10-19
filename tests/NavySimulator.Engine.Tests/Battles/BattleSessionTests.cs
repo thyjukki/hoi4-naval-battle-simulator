@@ -190,4 +190,23 @@ public class BattleSessionTests
             Assert.True(activated[shot.ShooterId] < shot.Hour, $"{shot.ShooterId} fired at hour {shot.Hour} before activating");
         }
     }
+
+    [Fact]
+    public void ASinking_RefillsTheRestOfTheTaskForce()
+    {
+        var weak = TestEntityFactory.CreateShip("d_weak", ShipRole.Screen, TestEntityFactory.ScreenStats() with { Hp = 1 });
+        var other = TestEntityFactory.Screen("d_other");
+        var scenario = TestEntityFactory.Scenario([TestEntityFactory.Capital("a_bb")], [weak, other], new BattleRules { MaxHours = 200 });
+        var session = new BattleSession(scenario, 5);
+
+        session.Step(1);
+        other.CurrentManpower = other.MaxManpower / 2;
+
+        while (!weak.IsSunk && session.StepHour())
+        {
+        }
+
+        Assert.True(weak.IsSunk);
+        Assert.Contains(session.HourlyLog, line => line.Contains("defender ship sunk, the task force regains 20 manpower"));
+    }
 }

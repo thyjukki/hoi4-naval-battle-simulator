@@ -12,7 +12,12 @@ public static class ExperienceRules
     // [RE] level = number of NMilitary.UNIT_EXP_LEVELS thresholds reached by xp / NAVY_MAX_XP (0..4 in vanilla).
     public static int Level(Ship ship, GameDefines defines)
     {
-        var ratio = Math.Clamp(ship.Experience / defines.NNavy.NAVY_MAX_XP, 0, 1);
+        return Level(ship.Experience, defines);
+    }
+
+    public static int Level(double experience, GameDefines defines)
+    {
+        var ratio = Math.Clamp(experience / defines.NNavy.NAVY_MAX_XP, 0, 1);
         return defines.NMilitary.UNIT_EXP_LEVELS.Count(threshold => ratio >= threshold);
     }
 
@@ -30,11 +35,13 @@ public static class ExperienceRules
 
     /// <summary>
     /// [RE] 0xc3ce50: share of the static modifier <c>ship_experience_bonus_max</c> (above ARMY_EXP_BASE_LEVEL) or
-    /// <c>ship_experience_malus_min</c> (below it) applied to the ship, as (block, scale).
+    /// <c>ship_experience_malus_min</c> (below it) applied to the ship, as (block, scale). [CAL] The level is the one
+    /// at the start of the combat hour (<see cref="Ship.LevelExperience"/>): in a logged TFB battle the attack in all
+    /// 8,572 shot profiles matched the shooter's start-of-hour level, while its end-of-hour level differed 185 times.
     /// </summary>
     public static (string Block, double Scale) LevelModifier(Ship ship, GameDefines defines)
     {
-        var level = Level(ship, defines);
+        var level = Level(ship.LevelExperience, defines);
         var baseLevel = (int)defines.NMilitary.ARMY_EXP_BASE_LEVEL;
         var maxLevel = MaxLevel(defines);
 
@@ -128,6 +135,10 @@ public static class ExperienceRules
     /// DAILY_MANPOWER_GAIN_RATIO)), in combat too. The ceiling is taken in fx5 as the game does. The national manpower
     /// pool is [ASSUMED] never short.
     /// </summary>
+    /// <summary>
+    /// S-MANPOWER [RE + CAL]: the task force refill, <c>ceil(maxManpower × DAILY_MANPOWER_GAIN_RATIO)</c> up to the
+    /// maximum. It runs in the daily update and, in battle, every time a ship of the task force sinks.
+    /// </summary>
     public static int DailyManpowerGain(Ship ship, GameDefines defines)
     {
         var deficit = ship.MaxManpower - ship.CurrentManpower;
@@ -147,5 +158,23 @@ public static class ExperienceRules
     private static int RoundHalfAway(double value)
     {
         return (int)Math.Round(value, MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// S-ORG-REGAIN [CAL]: retreating and escaped ships regain <c>SHIP_MORALE_TO_ORG_REGAIN_BASE</c> organization an hour,
+    /// up to the maximum; fighting and waiting ships regain none. Not modelled: the +10 % of the side with naval
+    /// dominance in the region (NAVAL_DOMINANCE_ORG_RECOVERY; 0.22 an hour in the logged battle).
+    /// </summary>
+    public static double HourlyOrganizationRegain(Ship ship, GameDefines defines)
+    {
+        if (ship.IsSunk || ship.CurrentStatus is not (ShipStatus.Retreating or ShipStatus.Retreated))
+        {
+            return 0;
+        }
+
+        var maximum = ship.GetFinalStats().Organization;
+        var gain = Math.Max(0, Math.Min(defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE, maximum - ship.CurrentOrganization));
+        ship.CurrentOrganization += gain;
+        return gain;
     }
 }

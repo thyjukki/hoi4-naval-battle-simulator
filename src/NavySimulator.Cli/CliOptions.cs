@@ -24,6 +24,7 @@ public sealed class CliOptions
 
         Import hulls, modules and ship types from the game: NavySimulator import-ship-data --help
         List a scenario's ships as JSON (for tools/ingame/make_save.py): NavySimulator list-ships --help
+        Replay a battle logged in the game with its own rolls: NavySimulator replay --help
         """;
 
     public static CliOptions Parse(string[] args)

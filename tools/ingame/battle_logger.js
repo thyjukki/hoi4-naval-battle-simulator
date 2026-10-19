@@ -77,7 +77,7 @@ function sideState(side) {
 }
 
 let ticks = 0;
-let current = null; // the combat being updated: { key, hour, shots, damage }
+let current = null; // the combat being updated: { key, hour, thread, start, rolls, shots, damage }
 let shooting = null; // the shot loop in progress
 
 function guard(fn) {
@@ -93,10 +93,15 @@ Interceptor.attach(base.add(RVA.tick), {
   }),
 });
 
+// The start-of-hour state (after the daily update) lets a replay set up each hour exactly as the game had it.
 Interceptor.attach(base.add(RVA.combatUpdate), {
   onEnter: guard(function updateEnter(args) {
     const combat = args[0];
-    current = { key: combat.toString(), hourAtUpdate: combat.add(0x44).readS32(), shots: [], damage: [] };
+    current = {
+      key: combat.toString(), hourAtUpdate: combat.add(0x44).readS32(), thread: this.threadId,
+      start: [sideState(combat.add(0x28).readPointer()), sideState(combat.add(0x30).readPointer())],
+      rolls: [], shots: [], damage: [],
+    };
   }),
 });
 
@@ -116,6 +121,8 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       sides: [sideState(combat.add(0x28).readPointer()), sideState(combat.add(0x30).readPointer())],
       shots: current && current.key === combat.toString() ? current.shots : [],
       damage: current && current.key === combat.toString() ? current.damage : [],
+      start: current && current.key === combat.toString() ? current.start : null,
+      rolls: current && current.key === combat.toString() ? current.rolls : [],
     };
   }),
   onLeave: guard(function endHourLeave(retval) {
@@ -164,17 +171,20 @@ Interceptor.attach(base.add(RVA.shotProfile), {
   }),
 });
 
-// Every roll inside a shot loop, by source line (the file argument does not point at a terminated file name).
-// A hit roll (naval_fire_exchange_member.cpp line 0x587) starts a new shot.
+// Every roll of the combat update on its own thread, in call order, by source line (the file argument does not
+// point at a terminated file name), with the index of the shot loop it fell in (-1 outside one). Inside a shot loop
+// a hit roll (naval_fire_exchange_member.cpp line 0x587) starts a new shot.
 Interceptor.attach(base.add(RVA.randomFixed), {
   onEnter(args) {
-    if (shooting === null) return;
+    if (current === null || this.threadId !== current.thread) return;
     this.out = args[0];
     this.line = args[2].toInt32();
   },
   onLeave: guard(function randomLeave() {
-    if (!this.out || shooting === null) return;
+    if (!this.out || current === null) return;
     const roll = { line: this.line, value: s64(this.out) };
+    current.rolls.push({ line: roll.line, value: roll.value, loop: shooting === null ? -1 : current.shots.length });
+    if (shooting === null) return;
     if (roll.line === 0x587 || shooting.shots.length === 0) shooting.shots.push({ rolls: [], hits: [] });
     shooting.shots[shooting.shots.length - 1].rolls.push(roll);
   }),

@@ -42,7 +42,7 @@ public static class RetreatRules
             return false;
         }
 
-        if (random.NextDouble() > Math.Clamp(navy.COMBAT_RETREAT_DECISION_CHANCE, 0, 1))
+        if (random.NextDouble(RollKind.RetreatDecision) > Math.Clamp(navy.COMBAT_RETREAT_DECISION_CHANCE, 0, 1))
         {
             return false;
         }

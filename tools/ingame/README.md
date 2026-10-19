@@ -35,7 +35,8 @@ defines), then per side rewrites one of the country's design variants on each de
 the side's researches (`GAME_TECHS`: the simulator's research IDs are not the game's yet) and removes the running naval
 combat, so the game starts the battle afresh in the first hour. The game picks the attacker itself (in the CL3 template
 ROM). Spirits, commanders, doctrines and MIOs are not written. It reads the result back and checks ships, variants and
-experience.
+experience. The game starts the battle an hour after the save's time (a counter-0 update that fires nothing), so the
+scenario's `rules.startHourOfDay` should be the save's hour + 1.
 
 ## Running
 
@@ -68,6 +69,10 @@ One folder per run under `output/ingame/<save>_<timestamp>/<seed>/` (or `--out`)
 - `shots.csv`: one row per shot: shooter, target, weapon, the shot profile (damage, hit chance ×100, crit chance, crit
   multiplier, piercing, armor, damage reduction, cooldown), the hit / damage / crit rolls, and the HP and org damage
   with the target's HP, org and manpower before and after.
-- `raw.jsonl`: everything the logger sent.
+- `rolls.csv`: every `random_fixed` call of the combat update in call order: hour, sequence, source line, value, and the
+  index of the shot loop it fell in (-1 outside one).
+- `raw.jsonl`: everything the logger sent, including every member's state at the start of each hour. With the rolls
+  it lets `NavySimulator replay --log <run folder>` fight each hour with the game's own dice (S-REPLAY in
+  [surface.md](../../docs/mechanics/surface.md)).
 
 `hour` is the game's combat hour counter, which is 1 in the first hour (the engine's `tick`).

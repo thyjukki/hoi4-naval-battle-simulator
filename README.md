@@ -63,6 +63,12 @@ It replaces those three folders and keeps designs; the loader and the GUI's Desi
 dotnet run --project src/NavySimulator.Cli -- list-ships --scenario jukki_usa_vs_bc_japan.json --defines "<mod folder>"
 ```
 
+`replay` fights a logged game battle hour by hour with the game's own rolls, each hour from the game's state, and reports every shot and ship value that differs (S-REPLAY):
+
+```powershell
+dotnet run --project src/NavySimulator.Cli -- replay --log output/ingame/<save>_<timestamp>/s1 --scenario jukki_usa_vs_bc_japan.json --defines "<mod folder>"
+```
+
 ## Output
 
 `output/<scenario>_<timestamp>/`:

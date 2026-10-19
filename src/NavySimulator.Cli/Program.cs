@@ -13,6 +13,11 @@ if (args.Length > 0 && args[0] == ListShipsCommand.Name)
     return ListShipsCommand.Run(args[1..]);
 }
 
+if (args.Length > 0 && args[0] == ReplayCommand.Name)
+{
+    return ReplayCommand.Run(args[1..]);
+}
+
 CliOptions options;
 
 try

@@ -99,7 +99,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xd6eeb0 | unit ship list | S-POS | [POS/joined] |
 | 0xd6fa50 | task-force modifiers | S-DMG | [DMG/dmg] |
 | 0xd705f0 | CTaskForce update (vtable slot 18): per-ship XP | S-XP-GAIN | [XP/gain], [HOUR/hour] |
-| 0xd77ff0 | task force: manpower returned on sinking | S-XP | [DMG/xp] |
+| 0xd77ff0 | task force: remove a sunk ship; returns manpower to the pool, then refills the task force `0xd7a7e0(tf, false)` (0xd78b71) | S-XP, S-MANPOWER | [DMG/xp], [LOG] |
 | 0xd7a7e0 | refill task-force manpower `(tf, force)`: every ship if HasGameStarted() or force | S-MANPOWER | [XP/mp] |
 | 0xdd70ae | CInGameIdler::InitData | S-MANPOWER | [XP/mp] |
 | 0xdd3a50 | "LOADING_MAIN_MENU" / "EXITING_TO_FRONTEND": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
@@ -251,6 +251,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x2072200 | define reader storing fx15 (27 defines) | S-XP-GAIN | [XP/top] |
 | 0x221f310 | resolve a `{type, id}` handle to its object (null if deleted) | — | [LOG] |
 | 0x2233db0 | `random_fixed(int64* out, file, line)` | all | see §4, [LOG] |
+| 0x1975480 | combat sink handler: sets the member's state to sunk (0x1975bea), calls `0xd77ff0` for the ship's task force (0x1975879) | S-MANPOWER | [LOG] |
 | 0x2233fa0 | random int31 | FEX, A-* | [HOUR/fex], [AIR/conv] |
 | 0x24ed3f0 | fx5 → fx15 | — | [XP/top] |
 | 0x24ed580 | fx15 → fx5 | — | [XP/top] |
@@ -523,10 +524,10 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x5d | convoy_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
 | 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg] |
 | 0x10c | CARRIER_CAPACITY_PENALTY_REDUCTION | 0xc579f0 chain | [AIR/sortie] |
-| 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit] |
+| 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR (script `critical_receive_chance`; confirmed in-game: TFB damage_control × 0.8) | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit], [LOG] |
 | 0x19f | NAVAL_VISIBILITY_FACTOR | 0xc37006; sub reveal (ACT). **disagrees**: POS names 0x1ba/0x1bc for the reveal | [HIT/ship], [ACT/sub], [POS/sub] |
 | 0x1a0 | NAVAL_CASUALTY_ON_HIT_FACTOR (DMG; XP: unresolved) | 0xc3e0e0 | [DMG/xp], [XP/loss] |
-| 0x1a1 | NAVAL_CASUALTY_ON_SINK_FACTOR | 0xd77ff0 | [DMG/xp] |
+| 0x1a1 | NAVAL_CASUALTY_ON_SINK_FACTOR (script `navy_casualty_on_sink`; static modifier `water_modifier_shark_infested` +0.6) | 0xd77ff0 | [DMG/xp] |
 | 0x1b1 | screening_efficiency? (medium) | 0x161ccb0 | [TGT/screen], [POS/screen] |
 | 0x1b2 | positioning? (medium) | 0x161b960 (0x161bb4c) | [POS/pos] |
 | 0x1b3 | screening_without_screens? (medium) | 0x161ccb0 | [TGT/screen] |
@@ -662,6 +663,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | fixed → int | 0x24ed730 | round half away from zero | [DMG/conv], [AIR/conv] |
 | negate | 0x24ef6f0 | stores `-x`; −1.0 is the "no value" sentinel | [DMG/conv] |
 | RNG | 0x2233db0 | `random_fixed(out, file, line)`: hash of seed + counter, 31 bits, `% 100000` → U ∈ {0, …, 0.99999}; (file, line) tag per call. A save replays the identical battle; editing its `multiplayer_random_seed` gives a different one | [DMG/conv], [HIT/map], [LOG] |
+| RNG lines | naval combat update | 0x37b target pick, 0x3d9 torpedo line, 0x587 hit, 0x593 damage randomness, 0x59f crit, 0x2f4 part damage, 0x78f part pick, 0xa83 retreat decision, 0x40e sinking (6–9 per sinking, no combat effect); identified from call order in the logs | [LOG] |
 | RNG int | 0x2233fa0 | random int31 | [AIR/conv] |
 | weighted draw | 0x24f08a0 | air target pick | [AIR/target] |
 | chance checks | — | ACT: `roll <= chance`; hit: `100·U < hc`; crit: `U <= p`; part: `U < p` | [ACT], [HIT/crit], [DMG/rng] |

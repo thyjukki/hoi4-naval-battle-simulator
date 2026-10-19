@@ -36,7 +36,7 @@ public static class TargetingRules
             default:
             {
                 // naval_torpedo_screen_penetration_factor is not modelled (it would scale 1 - screening).
-                var roll = random.NextDouble();
+                var roll = random.NextDouble(RollKind.TorpedoLine);
                 return roll <= enemyScreening.ScreeningEfficiency ? 1
                     : roll <= enemyScreening.CarrierScreeningEfficiency ? 2
                     : 3;
@@ -200,7 +200,7 @@ public static class TargetingRules
             }
         }
 
-        var threshold = random.NextDouble() * total;
+        var threshold = random.NextDouble(RollKind.TargetPick) * total;
         var cumulative = candidates[heaviest].Weight;
 
         if (cumulative >= threshold)

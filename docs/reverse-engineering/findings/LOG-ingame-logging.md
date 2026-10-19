@@ -205,3 +205,41 @@ Rules this case confirmed against the logs (12 runs, TFB):
 - S-RETREAT-SPEED, S-XP: exact escape progress every hour; experience losses and their level steps as simulated.
 - The logged `strDamage` includes overkill (a 59-damage hit on a 50 HP ship logs 59); compare HP lost
   (`hpBefore − hpAfter`), as `tools/ingame/compare.py` does.
+
+## Replay: the game's own rolls (2026-10-19)
+
+The logger now records every `random_fixed` call of the combat update (on its own thread, in call order, with the
+source line and the shot loop it fell in) and every member's state at the start of the hour. `NavySimulator replay`
+fights each logged hour from the game's start state with the game's rolls (S-REPLAY). The roll lines, from their
+place in the call order: 0x37b target pick (before every shot loop), 0x3d9 torpedo line, 0x587 hit, 0x593 damage
+randomness, 0x59f crit, 0x2f4 part damage, 0x78f part pick, **0xa83 retreat decision** (between one ship's last shot
+and the next ship's target pick, from hour 8; 252 in the run), **0x40e** (6–9 calls in exactly the 32 shot loops
+that sank their target and no others: the bookkeeping of a sinking). A battle the game creates during play starts with
+an update at hour counter 0 that rolls and fires nothing.
+
+The first replay of `jukki_usa_vs_bc_japan` seed 1 (174 hours, 10,257 shots) found four rule differences, each fixed:
+- **Critical receive chance** (S-CRIT): torpedo crits landed for rolls up to 0.785 × the profile's chance and failed
+  from 0.83: TFB's damage_control_1 and _2 (`critical_receive_chance` −0.1 each) make it 0.8 ×. The part-damage roll
+  follows only real crits, which removed every roll divergence.
+- **Experience level at the start of the hour** (S-XP): the attack in all 8,572 shot profiles matched the shooter's
+  start-of-hour level; the engine re-read the level after every hit.
+- **Refill on sinking** (S-MANPOWER): every manpower rise outside 00:00 came with a sinking on that side, 5 % per ship,
+  already seen by later shots in the same hour. The code: the sink handler `0x1975480` calls `0xd77ff0`, which ends with
+  the task-force refill `0xd7a7e0(tf, false)`.
+- **Organization regain** (S-ORG-REGAIN): retreating and escaped ships regain 0.2 an hour (0.22 for the side with
+  naval dominance: BUL until about hour 125, then ROM); fighting ships none.
+- The battle's first engine hour is the game hour after the save's (daily refill after engine hour 11 with the save at
+  12:00), so the scenario's `startHourOfDay` is 13.
+
+After the fixes the engine makes exactly the game's rolls in all 174 hours, and 10,249 of 10,257 shots match (shooter,
+weapon, target, hit, HP and organization lost). The 8 others are damaged critical parts: crits whose part multiplier
+replaced the crit multiplier (3.77 against 5.66, a torpedo crit 17.6 against 74.9) and later shots of ships with
+damaged heavy guns (× 0.5) or secondaries (light × 0.75) (S-CRIT-PART, not modelled). Per side, the engine's shots
+took off 0.5 % (ROM) and 2.3 % (BUL) more HP than the game's, all from those shots. End-of-hour differences left: the
+0.02 organization a hour of naval dominance, 17 manpower values off by one (rounding), and the parts.
+
+Free-running, 200 simulator seeds against 18 game runs: 190.5 h against 185.4, BUL 25.7 ships sunk against 25.5
+(per design within 0.5), ROM dealt 11,724 HP against 11,726; BUL dealt 3,768 against 3,384. About 170 HP of that is
+BUL's dice in the game runs (5.1 hits a run short of their logged odds) and about 85 HP the part effects; the rest,
+about 125 HP, is 1.4 standard errors.
+

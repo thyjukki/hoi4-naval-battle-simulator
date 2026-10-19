@@ -16,4 +16,7 @@ public sealed class NMilitaryDefines
 
     /// <summary>Experience needed to progress to the next level</summary>
     public double[] UNIT_EXP_LEVELS { get; set; } = [0.1, 0.3, 0.75, 0.9];
+
+    /// <summary>Base org regain per hour</summary>
+    public double SHIP_MORALE_TO_ORG_REGAIN_BASE { get; set; } = 0.2;
 }

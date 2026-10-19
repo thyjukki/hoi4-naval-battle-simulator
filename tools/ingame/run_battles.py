@@ -321,6 +321,13 @@ def write_outputs(out_dir, hours, index, meta):
                                    hit["after"]["org"] / FX, hit["before"]["mp"], hit["after"]["mp"]) if hit else [None] * 8),
                                 loop.get("sank")])
 
+    with (out_dir / "rolls.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["combat", "tick", "hour", "seq", "line", "value", "loop"])
+        for h in hours:
+            for seq, r in enumerate(h.get("rolls") or []):
+                w.writerow([h["combat"], h["tick"], h["hourAtUpdate"], seq, f"{r['line']:#x}", r["value"] / FX, r["loop"]])
+
     meta["hours"] = len({(h["combat"], h["hourAtEndHour"]) for h in hours})
     meta["combats"] = sorted({h["combat"] for h in hours})
     meta["ships"] = {str(k): v for k, v in index.items()}

@@ -12,7 +12,12 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 /// </summary>
 public static class DamageRules
 {
-    public static ShotProfile Profile(Ship shooter, Ship target, WeaponSlot slot, double shooterPositioning, GameDefines defines)
+    /// <summary>
+    /// The shot profile of a slot against a target. <paramref name="criticalChanceFactor"/> multiplies the critical
+    /// chance (<see cref="CriticalChanceFactor"/>); the game applies it in the shot loop, after the logged profile.
+    /// </summary>
+    public static ShotProfile Profile(Ship shooter, Ship target, WeaponSlot slot, double shooterPositioning, GameDefines defines,
+        double criticalChanceFactor = 1.0)
     {
         var navy = defines.NNavy;
         var shooterStats = shooter.GetFinalStats();
@@ -51,11 +56,24 @@ public static class DamageRules
             // COMBAT_ARMOR_PIERCING_DAMAGE_REDUCTION (0 in vanilla, "deprecated") is not modelled.
         }
 
-        // naval_critical_score_chance_factor / naval_critical_receive_chance_factor modifiers are not modelled.
+        criticalChance *= criticalChanceFactor;
         var baseDamage = Math.Max(0, attack * AttackFactor(shooter, defines) * piercingFactor *
                                      DamageMultiplier(shooter, target, shooterPositioning, defines));
         return new ShotProfile(baseDamage, tier, piercingFactor, criticalChance, criticalMultiplier, torpedoFactor,
             slot == WeaponSlot.Light && againstSubmarine);
+    }
+
+    /// <summary>
+    /// S-CRIT [RE + CAL] 0x19740c0: every critical chance is multiplied by <c>1 + naval_critical_score_chance_factor</c>
+    /// of the shooter <c>+ critical_receive_chance</c> of the target (modifier 0x18c), both read through the member
+    /// modifier getter. [CAL] TFB's damage_control_1 and _2 (−0.1 each) gave a logged battle 0.8 × the profile's chance.
+    /// naval_critical_score_chance_factor_against (a country) is not modelled.
+    /// </summary>
+    public static double CriticalChanceFactor(Ship shooter, Ship target, ScreeningSummary shooterScreening, ScreeningSummary targetScreening,
+        double darkness, GameDefines defines)
+    {
+        return 1.0 + MemberModifierRules.Get(shooter, StaticModifiers.NavalCriticalScoreChanceFactor, shooterScreening, darkness, defines) +
+               MemberModifierRules.Get(target, StaticModifiers.CriticalReceiveChance, targetScreening, darkness, defines);
     }
 
     /// <summary>
@@ -101,7 +119,7 @@ public static class DamageRules
             return new ShotDamage(0, 0, 0, profile.PiercingTier, profile.PiercingDamageFactor, false, 1, false, randomFactor);
         }
 
-        var critical = profile.CriticalChance > 0 && random.NextDouble() <= profile.CriticalChance;
+        var critical = profile.CriticalChance > 0 && random.NextDouble(RollKind.Critical) <= profile.CriticalChance;
 
         if (profile.TorpedoFactor is { } torpedoFactor)
         {
@@ -155,7 +173,7 @@ public static class DamageRules
     // S-DMG-RANDOM [RE]: 1 + R * (U - 0.05).
     public static double RandomFactor(DamageRandomnessModel model, double randomness, IRandomSource random)
     {
-        return model == DamageRandomnessModel.Game ? 1.0 + randomness * (random.NextDouble() - 0.05) : 1.0;
+        return model == DamageRandomnessModel.Game ? 1.0 + randomness * (random.NextDouble(RollKind.DamageRandomness) - 0.05) : 1.0;
     }
 
     // S-CRIT-PART [RE]: chance CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT / reliability (critical_part_damage_chance_mult = 1);
@@ -176,7 +194,7 @@ public static class DamageRules
         }
 
         chance /= reliability;
-        return chance >= 1 || random.NextDouble() < chance;
+        return chance >= 1 || random.NextDouble(RollKind.PartDamage) < chance;
     }
 
     /// <summary>

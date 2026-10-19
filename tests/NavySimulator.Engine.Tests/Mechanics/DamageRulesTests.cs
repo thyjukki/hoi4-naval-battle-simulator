@@ -179,4 +179,20 @@ public class DamageRulesTests
         Assert.True(first.Sunk);
         Assert.False(second.Sunk);
     }
+
+    [Fact]
+    public void CriticalChance_IsScaledByTheTargetsReceiveChance()
+    {
+        // TFB's damage_control_1 and _2: critical_receive_chance -0.1 each; a logged battle showed 0.8 x the profile's chance.
+        var shooter = TestEntityFactory.Screen("dd", torpedoAttack: 10);
+        var target = TestEntityFactory.Screen("cl");
+        target.CountryModifiers = new([new(StaticModifiers.CriticalReceiveChance, -0.2)]);
+
+        var factor = DamageRules.CriticalChanceFactor(shooter, target, new(1, 1), new(1, 1), 0, defines);
+        var plain = DamageRules.Profile(shooter, target, WeaponSlot.Torpedo, 1.0, defines);
+        var scaled = DamageRules.Profile(shooter, target, WeaponSlot.Torpedo, 1.0, defines, factor);
+
+        Assert.Equal(0.8, factor, 9);
+        Assert.Equal(plain.CriticalChance * 0.8, scaled.CriticalChance, 9);
+    }
 }

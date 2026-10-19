@@ -48,7 +48,7 @@ public static class SubmarineRules
         }
 
         if (submarine.RevealTimer == 0 && enemyDetection > 0 &&
-            random.NextDouble() <= RevealChance(submarine, enemyDetection, ownPositioning, false, defines))
+            random.NextDouble(RollKind.SubmarineReveal) <= RevealChance(submarine, enemyDetection, ownPositioning, false, defines))
         {
             submarine.RevealTimer = (int)defines.NNavy.SUBMARINE_HIDE_TIMEOUT;
         }
@@ -57,7 +57,7 @@ public static class SubmarineRules
     /// <summary>[RE] After a submarine fires its torpedoes it may be revealed (resetting the timer if it already is).</summary>
     public static void RevealAfterFiring(Ship submarine, double enemyDetection, double ownPositioning, GameDefines defines, IRandomSource random)
     {
-        if (enemyDetection > 0 && random.NextDouble() <= RevealChance(submarine, enemyDetection, ownPositioning, true, defines))
+        if (enemyDetection > 0 && random.NextDouble(RollKind.SubmarineReveal) <= RevealChance(submarine, enemyDetection, ownPositioning, true, defines))
         {
             submarine.RevealTimer = (int)defines.NNavy.SUBMARINE_HIDE_TIMEOUT;
         }

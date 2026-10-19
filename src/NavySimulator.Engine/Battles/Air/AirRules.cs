@@ -161,7 +161,7 @@ public static class AirRules
             return 0;
         }
 
-        var roll = random.NextDouble();
+        var roll = random.NextDouble(RollKind.Air);
         var defending = air.CARRIER_PERCENTAGE_DEFEND * defendingPlanes * defendingShare;
         var engaged = Math.Min(defending, attackingPlanes * air.COMBAT_MULTIPLANE_CAP);
         var defenderAttack = defenders.Average(wing => wing.Plane.Stats.AirAttack);
@@ -200,7 +200,7 @@ public static class AirRules
 
         var chance = navy.ANTI_AIR_TARGETTING_TO_CHANCE * Math.Max(targeting + 0.5 * (targeting - strikeAgility), 0.01);
 
-        if (random.NextDouble() > chance)
+        if (random.NextDouble(RollKind.Air) > chance)
         {
             return 0;
         }
@@ -208,7 +208,7 @@ public static class AirRules
         var fraction = Math.Clamp(targetAntiAir * navy.ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1);
         var expected = planesInReach * fraction;
         var kills = (int)Math.Floor(expected);
-        return random.NextDouble() < expected - kills ? kills + 1 : kills;
+        return random.NextDouble(RollKind.Air) < expected - kills ? kills + 1 : kills;
     }
 
     /// <summary>[RE] A-AA-REDUCE (0x196fca0): min(MAX, MULT * (fleet AA term + target AA)^POW).</summary>
@@ -233,7 +233,7 @@ public static class AirRules
     public static int Hits(int strikers, double averageTargeting, GameDefines defines, IRandomSource random)
     {
         var fraction = Math.Clamp(averageTargeting * defines.NAir.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
-        return (int)Math.Round(strikers * fraction * random.NextDouble(), MidpointRounding.AwayFromZero);
+        return (int)Math.Round(strikers * fraction * random.NextDouble(RollKind.Air), MidpointRounding.AwayFromZero);
     }
 
     /// <summary>[RE] A-CRIT: gun crit defines with the piercing bonus always on; at least 0.001 when positive.</summary>

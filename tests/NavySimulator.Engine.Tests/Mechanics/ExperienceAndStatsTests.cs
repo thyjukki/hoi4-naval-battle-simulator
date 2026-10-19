@@ -91,4 +91,35 @@ public class ExperienceAndStatsTests
 
         Assert.Equal(2, defines.Validate().Count);
     }
+
+    [Fact]
+    public void LevelModifiers_UseTheExperienceAtTheStartOfTheHour()
+    {
+        var ship = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats(), 20);
+
+        ship.Experience = 5; // lost to hits during the hour
+
+        Assert.Equal(0.0, ExperienceRules.NavalDamageFactor(ship, defines), 9);
+
+        ship.LevelExperience = ship.Experience; // the next hour starts
+
+        Assert.Equal(-0.1, ExperienceRules.NavalDamageFactor(ship, defines), 9);
+    }
+
+    [Fact]
+    public void OrganizationRegain_OnlyForRetreatingAndEscapedShips_UpToTheMaximum()
+    {
+        var ship = TestEntityFactory.Screen("dd");
+        ship.CurrentOrganization = 10;
+
+        Assert.Equal(0, ExperienceRules.HourlyOrganizationRegain(ship, defines));
+
+        ship.CurrentStatus = ShipStatus.Retreating;
+        Assert.Equal(0.2, ExperienceRules.HourlyOrganizationRegain(ship, defines), 9);
+
+        ship.CurrentStatus = ShipStatus.Retreated;
+        ship.CurrentOrganization = ship.GetFinalStats().Organization - 0.05;
+        Assert.Equal(0.05, ExperienceRules.HourlyOrganizationRegain(ship, defines), 9);
+        Assert.Equal(ship.GetFinalStats().Organization, ship.CurrentOrganization, 9);
+    }
 }

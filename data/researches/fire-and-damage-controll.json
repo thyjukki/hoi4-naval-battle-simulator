@@ -2,10 +2,18 @@
   "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
-      "id": "damage_control_1"
+      "id": "damage_control_1",
+      "countryModifiers": {
+        "critical_receive_chance": -0.1,
+        "naval_critical_effect_factor": -0.1
+      }
     },
     {
-      "id": "damage_control_2"
+      "id": "damage_control_2",
+      "countryModifiers": {
+        "critical_receive_chance": -0.1,
+        "naval_critical_effect_factor": -0.1
+      }
     },
     {
       "id": "fire_control_methods_1",

@@ -8,7 +8,7 @@
     "iterations": 10,
     "rules": {
       "weatherEnabled": false,
-      "startHourOfDay": 12
+      "startHourOfDay": 13
     },
     "attacker": {
       "fleetID": "Jukki_bb_fleet_usa",
