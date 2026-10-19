@@ -63,6 +63,39 @@ public class BattleSessionTests
     }
 
     [Fact]
+    public void Manpower_IsRefilledOnlyAfterTheHourAtMidnight()
+    {
+        // Unarmed ships take no losses, so every change comes from the daily refill.
+        var attacker = new[] { TestEntityFactory.Screen("a1", lightAttack: 0) };
+        var defender = new[] { TestEntityFactory.Screen("d1", lightAttack: 0) };
+        var session = new BattleSession(TestEntityFactory.Scenario(attacker, defender, new BattleRules { StartHourOfDay = 22, MaxHours = 30 }), 1);
+        attacker[0].CurrentManpower = 100;
+
+        session.Step(2);
+        Assert.Equal(100, attacker[0].CurrentManpower);
+
+        session.StepHour();
+        Assert.Equal(120, attacker[0].CurrentManpower);
+
+        session.Step(23);
+        Assert.Equal(120, attacker[0].CurrentManpower);
+
+        session.StepHour();
+        Assert.Equal(140, attacker[0].CurrentManpower);
+    }
+
+    [Fact]
+    public void Night_NeedsWeather()
+    {
+        // S-NIGHT [CAL]: with weather off the game's darkness stays 0 all day.
+        var withWeather = new BattleSession(MixedScenario(new BattleRules { StartHourOfDay = 22 }), 1);
+        var withoutWeather = new BattleSession(MixedScenario(new BattleRules { StartHourOfDay = 22, WeatherEnabled = false }), 1);
+
+        Assert.True(withWeather.IsNight(0));
+        Assert.False(withoutWeather.IsNight(0));
+    }
+
+    [Fact]
     public void MaxHoursEndsTheBattleAsTimeout()
     {
         var session = new BattleSession(MixedScenario(new BattleRules { MaxHours = 2 }), 3);

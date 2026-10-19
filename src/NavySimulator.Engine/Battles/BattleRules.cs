@@ -9,12 +9,16 @@ public sealed record BattleRules
     /// <summary>S-DMG-RANDOM: <see cref="DamageRandomnessModel.Game"/> is confirmed; <c>None</c> exists for tests.</summary>
     public DamageRandomnessModel DamageRandomness { get; init; } = DamageRandomnessModel.Game;
 
-    /// <summary>S-NIGHT: apply the <c>night</c> static modifier while it is dark. The darkness model is [ASSUMED].</summary>
+    /// <summary>
+    /// S-NIGHT: apply the <c>night</c> static modifier while it is dark. The darkness model is [ASSUMED]. Night needs
+    /// weather: with <see cref="WeatherEnabled"/> false there is none [CAL].
+    /// </summary>
     public bool NightEnabled { get; init; } = true;
 
     /// <summary>
     /// S-WEATHER: apply the battle region's weather. False is the game with the console command <c>disable_weather</c>
-    /// [RE]. Weather terms are not modelled yet, so this only changes the notes for now.
+    /// [RE], which also leaves the battle without darkness, so night is off too [CAL]. Weather terms are not modelled
+    /// yet.
     /// </summary>
     public bool WeatherEnabled { get; init; } = true;
 

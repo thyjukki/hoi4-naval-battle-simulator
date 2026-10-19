@@ -19,7 +19,11 @@ Aim for controlled, repeatable fights rather than battles from a real campaign.
 - If you can, a snapshot every hour or every few hours (pause and read the battle screen). Hourly HP and org curves are the strongest signal for cadence, activation and firing-order questions.
 - For air: when carrier strikes happen (hours) and planes lost.
 
-**Repeat.** Single battles are noisy; 10 or more repetitions of the same setup give a usable distribution. Check whether reloading a save replays the identical battle. If it does, vary something irrelevant (for example engage an hour later) to get independent samples, and record what you varied.
+**Repeat.** Single battles are noisy; 10 or more repetitions of the same setup give a usable distribution. Reloading a save replays the identical battle, shot for shot; editing the save's `multiplayer_random_seed` gives an independent one ([LOG](reverse-engineering/findings/LOG-ingame-logging.md)).
+
+## Recording automatically
+
+[`tools/ingame/`](../tools/ingame/README.md) does the repetitions unattended, about one battle a minute: for each seed it loads the save, types `ai`, `weather` and `gamespeed 5`, and logs every combat hour (HP, org, manpower, state of each ship) and every shot (hit chance, rolls, damage) from inside the game, so hourly curves no longer need reading off the battle screen. Set the battle up once by hand and save it; the runner does the rest. Battles fought with weather off have no night either (darkness stays 0); `"rules": { "weatherEnabled": false }` turns both off in the simulator (S-NIGHT).
 
 ## File format
 

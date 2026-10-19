@@ -24,6 +24,7 @@ Lookup index of every function, struct field, modifier id and define read site i
 | [S-STATS-design-stats.md](S-STATS-design-stats.md) | S-STATS-* (design, MIO, equipment bonuses, technologies, combat getters) |
 | [A-air-combat.md](A-air-combat.md) | A-* (implemented in `Engine/Battles/Air/`) |
 | [S-WEATHER-weather-toggle.md](S-WEATHER-weather-toggle.md) | S-WEATHER (weather console toggle, the weather a battle reads) |
+| [LOG-ingame-logging.md](LOG-ingame-logging.md) | Objects and hooks behind `tools/ingame/` (logging battles from the running game); observed: replay by seed, hour counter, no night with weather off |
 
 ## Shared facts
 

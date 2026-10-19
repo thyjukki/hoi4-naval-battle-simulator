@@ -49,10 +49,12 @@ public class DamageRulesTests
 
         var profile = DamageRules.Profile(hunter, submarine, WeaponSlot.Light, 1.0, defines);
 
-        // Light piercing 0.5 vs armor 5 is ratio 0.1: tier 4, damage factor 0.3; depth charge damage x0.7.
+        // Light piercing 0.5 vs the green submarine's combat armor 5 x 0.9 is ratio 0.11: tier 4, damage factor 0.3;
+        // depth charge damage x0.7, x0.9 for the green hunter's combat attack. In the hit multiplier the two vanilla
+        // green malus terms (damage -0.1, defense -0.1) cancel.
         Assert.True(profile.IsDepthCharge);
         Assert.Equal(4, profile.PiercingTier);
-        Assert.Equal(10 * 0.7 * 0.3, profile.BaseDamage, 9);
+        Assert.Equal(10 * 0.7 * 0.9 * 0.3, profile.BaseDamage, 9);
     }
 
     [Fact]
@@ -63,9 +65,40 @@ public class DamageRulesTests
 
         var profile = DamageRules.Profile(shooter, target, WeaponSlot.Torpedo, 1.0, defines);
 
-        Assert.Equal(10, profile.BaseDamage, 9);
+        // x0.9: the green shooter's combat attack (naval_damage_factor -0.1).
+        Assert.Equal(10 * 0.9, profile.BaseDamage, 9);
         Assert.Equal(0.75, profile.TorpedoFactor);
         Assert.Equal(2.0, profile.CriticalMultiplier);
+    }
+
+    [Fact]
+    public void Profile_CountsTheDamageFactorTwiceLikeALoggedInGameHit()
+    {
+        // TFB: the green malus is naval_damage_factor -0.1 only, randomness 0.2, STR factor 0.5. In-game shot
+        // (findings/LOG-ingame-logging.md): profile damage 17.8605 = 28.35 x 0.9 x 0.7, roll 0.75116, no crit, HP 9.16428.
+        var tfb = GameDefines.Vanilla();
+        tfb.StaticModifiers.Blocks[StaticModifiers.ShipExperienceMalusMin] = new(StringComparer.Ordinal) { [StaticModifiers.NavalDamageFactor] = -0.1 };
+        tfb.NNavy.COMBAT_DAMAGE_RANDOMNESS = 0.2;
+        tfb.NNavy.COMBAT_DAMAGE_TO_STR_FACTOR = 0.5;
+        var shooter = TestEntityFactory.CreateShip("bul", ShipRole.Screen, TestEntityFactory.ScreenStats() with { LightAttack = 28.35, LightPiercing = 6.75 });
+        var target = TestEntityFactory.CreateShip("rom", ShipRole.Screen, TestEntityFactory.ScreenStats() with { Armor = 8.4, Hp = 132 });
+
+        var profile = DamageRules.Profile(shooter, target, WeaponSlot.Light, 1.0, tfb);
+        var hit = DamageRules.RollHit(target, profile, tfb, new BattleRules(), new ScriptedRandomSource(0.75116, 0.13266));
+
+        Assert.Equal(28.35 * 0.9 * 0.7 * 0.9, profile.BaseDamage, 9);
+        Assert.False(hit.IsCritical);
+        Assert.Equal(9.16428, hit.StrDamage, 4);
+    }
+
+    [Fact]
+    public void Profile_ReadsThePiercingTierAgainstCombatArmor()
+    {
+        // Vanilla green target: naval_defense_factor -0.1, so armor 5 counts as 4.5 and piercing 4.5 reaches tier 1.
+        var shooter = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { LightPiercing = 4.5 });
+        var target = TestEntityFactory.CreateShip("cl", ShipRole.Screen, TestEntityFactory.ScreenStats() with { Armor = 5 });
+
+        Assert.Equal(1, DamageRules.Profile(shooter, target, WeaponSlot.Light, 1.0, defines).PiercingTier);
     }
 
     [Fact]

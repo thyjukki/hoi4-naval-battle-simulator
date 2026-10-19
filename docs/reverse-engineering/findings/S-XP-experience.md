@@ -203,28 +203,59 @@ HP fraction lost: `xp *= 1 - ELF * dmg / hpBefore`. The manpower formula MATCHES
 
 ## S-MANPOWER: manpower recovery during battle
 
-**What the game does.** The only gameplay reader of `NNavy.DAILY_MANPOWER_GAIN_RATIO` is the refill branch
-of the ship manpower update `0xc3e4e0(ship, refill)` (`0xc3e5be`). It does the following:
-- recomputes max manpower (`ship+0x80c`) from the equipment;
-- if `refill`: `deficit = max - cur`, `gain = min(deficit, ceil(max * DAILY_MANPOWER_GAIN_RATIO))`,
-  drawn from the national pool (`0xcfe7e0`); excess manpower is returned to the pool.
+**Corrected 2026-10-19.** The first pass read `gamestate+0xa39` as a setup/loading flag and concluded that ships
+never regain manpower in combat. Both were wrong: the flag is `HasGameStarted()`, and the daily task-force update
+refills ships whether or not they are fighting. The recorded CL3 battle (calibration.md) showed it first: the save
+written in the battle's last hour had 74 of 75 and 71 of 74 ships at full manpower after heavy HP losses.
 
-`refill = true` is reached only through `0xd7a7e0(taskforce, force)`. That function refills a task force
-only if `force` is set or the gamestate flag `+0xa39` is set:
-- `force = true` comes only from game-start initialisation (`0x6ff065`, called from `CInGameIdler::InitData`
-  `0xdd70ae`);
-- every other caller passes `force = false`, including the task-force vtable slot 19 `0xd69090` and 15 more
-  sites;
-- `+0xa39` is set on startup, game reset and savegame loading (`0x1edff0` callers `0xdd9b20` "on_startup",
-  `0x1a5630` "Resetting game", `0xdda5d0` "LOADING_SAVEGAME").
+**What the game does.**
+- **The refill.** The only gameplay reader of `NNavy.DAILY_MANPOWER_GAIN_RATIO` is the refill branch of the ship
+  manpower update `0xc3e4e0(ship, refill)` (`0xc3e5be`). It does the following:
+  - recomputes max manpower (`ship+0x80c`) from the equipment;
+  - if `refill`: `deficit = max - cur`, then `gain = min(deficit, ceil(max * DAILY_MANPOWER_GAIN_RATIO))`. The
+    product is taken in fx5 (`max * 100000 * ratio / 100000`), and rounded up when it has a fractional part
+    (0xc3e5b4..0xc3e62c).
+  - The gain is drawn from the national pool (`0xcfe7e0`, which returns the shortfall); a surplus goes back to
+    the pool (`0xcfe1b0`).
+- **Who refills.** `refill = true` is reached only through `0xd7a7e0(taskforce, force)`:
+  `if (HasGameStarted() || force) for each ship: 0xc3e4e0(ship, true)`.
+- **The flag.** `HasGameStarted()` is `gamestate+0xa39`, as the assert at 0x1de23e..0x1de295 names it:
+  `!CCurrentGameState::GetInstance()->HasGameStarted() || _AllPlaythroughData.Contains( Tag )`, guarded by
+  `cmp byte [gamestate+0xa39], 0`.
+  - The setter `0x1edff0(gamestate, value)` writes its second argument: `mov [rcx+0xa39], dl`.
+  - It is set to 1 only at "on_startup" in `ingameidler.cpp` (`0xdd9b20`, `mov dl, 1` at 0xdd9c48), just before
+    the `on_startup` on_action fires.
+  - It is cleared (`xor edx, edx`) by "Resetting game" `0x1a5630`, "LOADING_SAVEGAME" `0xdda5d0`, the main
+    menu / exit to frontend `0xdd3a50`, `0xb3d9b0` and `0xdcb3f0`, and by gamestate init `0x1e0610`
+    (0x1e063a).
+  - So it is 1 for the whole of a running game.
+- **When.** `CTaskForce` vtable `0x2962f70`, slot 19 (`+0x98`) = `0xd69090`, the task force's daily update. Its
+  first instruction calls `0xd7a7e0(tf, false)`. The in-combat test `0xc00000` comes only after it and gates
+  other work. The daily chain:
+  - the gamestate tick `0x1dd370` advances the date by one hour (0x1dd4ac..0x1dd67a);
+  - it then runs the hourly update `0x1df400`, which calls the combat manager's hourly update `0xbb8ae0`
+    (0x1e0103);
+  - then, only if the day changed (`cmp [rsp+0x58], r13d` at 0x1de3f5), it runs `gamestate.daily` `0x1d4810`
+    (0x1de479);
+  - `gamestate.daily` runs `country.daily` `0x6e76a0` for every country (0x1d59eb);
+  - `country.daily` contains `fleets.daily`, which calls `0xd54840` for each fleet (country `+0x278`, count
+    `+0x284`);
+  - `0xd54840` calls vtable `+0x98` on each task force of the fleet (fleet `+0xb8`, count `+0xc4`).
+  - The same function's `army.daily` and `railway_guns.daily` loops call slot 19 on armies and railway guns.
+    `NRailwayGun.DAILY_MANPOWER_GAIN_RATIO`'s comment says "daily".
+- **No other path.** Other writers of ship manpower `+0x808`: the constructor (`0xc30060`, -1), the damage loss
+  `0xc3e40f`, `CNavalDeployment::CreateUnit` (`0xd0fcd7`, a new ship's crew), and the sinking code `0xd783b0`.
+  None of them refill.
 
-No naval-combat or hourly path refills manpower.
+So every day, after the combat hour of the 00:00 tick, every ship of every country regains
+`min(deficit, ceil(max * DAILY_MANPOWER_GAIN_RATIO))`, in battle or not. With 1200-crew ships and the vanilla
+0.05, that is 60 a day.
 
-**Verdict.** MATCHES the engine default: `DailyManpowerRecoveryInBattle` is off, and manpower does **not**
-recover during combat. The define's own comment ("ships not in combat") agrees. Replace the [ASSUMED] tag
-with [RE]. In 1.19.3 the define-driven daily refill appears to run only during setup and loading. How ships
-regain manpower in port in normal play (e.g. through repair) was not traced. **Confidence:** high that
-there is no in-combat recovery; medium on the "+0xa39 = setup/loading" reading.
+**Verdict.** DIFFERED: the engine never refilled. It now applies the daily gain after each battle hour at 00:00
+(`ExperienceRules.DailyManpowerGain`). Calibration agrees: over 200 seeds of the CL3 battle, 74.5 of 75 and 70.1
+of 73.3 ships end at full manpower, against 74/75 and 71/74 in the save. **Confidence:** high on the chain, the
+flag and the formula. The day boundary (the hour whose clock reads 00:00) follows from the day comparison in the
+tick, not from a decoded date format.
 
 ---
 
@@ -258,8 +289,8 @@ there is no in-combat recovery; medium on the "+0xa39 = setup/loading" reading.
 4. **Loss**: `xp *= max(0, hpBefore - hpDamage*NNavy.EXPERIENCE_LOSS_FACTOR) / hpBefore`, independent of
    manpower. Keep the manpower loss as it is: relative to max manpower, rounded, floor at
    `MIN_MANPOWER_RATIO_TO_DROP`. Note the unresolved `(1 + casualty modifier)` term.
-5. **S-MANPOWER**: keep recovery off. Tag the rule [RE] and consider removing
-   `DailyManpowerRecoveryInBattle`, or keep it documented as non-game behaviour.
+5. **S-MANPOWER** (corrected): refill every ship afloat once a day, in combat too, after the combat hour at
+   00:00: `min(deficit, ceil(max * DAILY_MANPOWER_GAIN_RATIO))`.
 6. Spec: update S-XP (levels, effects, gain, loss) and S-MANPOWER with these IDs and addresses.
 
 ## Open / UNRESOLVED

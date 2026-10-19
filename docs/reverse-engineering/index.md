@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG].
 
 ## 1. Functions
 
@@ -19,15 +19,23 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | RVA | Name / role | Spec IDs | Finding |
 |---|---|---|---|
 | 0x36f0 | console command registration (`weather`, `enable_weather`, `disable_weather`, `reloadweather`, `set_weather`, …) | S-WEATHER | [WTH/cmd] |
-| 0x1a5630 | "Resetting game": sets gamestate+0xa39 (via 0x1edff0) | S-MANPOWER | [XP/mp] |
-| 0x1edff0 | sets gamestate+0xa39 refill flag (callers: startup, reset, savegame load) | S-MANPOWER | [XP/mp] |
+| 0x1a5630 | "Resetting game": clears HasGameStarted (gamestate+0xa39) via 0x1edff0 | S-MANPOWER | [XP/mp] |
+| 0x1d4810 | `gamestate.daily`: runs `country.daily` 0x6e76a0 for every country (0x1d59eb) | S-MANPOWER | [XP/mp] |
+| 0x1dd370 | gamestate tick: date += 1 h, hourly update 0x1df400, then `gamestate.daily` 0x1d4810 only if the day changed (0x1de3f5) | S-MANPOWER, S-HOUR | [XP/mp] |
+| 0x1df400 | gamestate hourly update (`DoCountryHourlyUpdates`); calls the combat manager hourly update 0xbb8ae0 (0x1e0103) | S-HOUR | [XP/mp] |
+| 0x1e0610 | gamestate init (`InitGameState`): clears gamestate+0xa39 (0x1e063a) | S-MANPOWER | [XP/mp] |
+| 0x1edff0 | `SetGameStarted(gamestate, value)`: writes `value` to gamestate+0xa39; 1 only from "on_startup", 0 from reset, savegame load and the frontend | S-MANPOWER | [XP/mp] |
 | 0x22e040 | console `weather` / `enable_weather` / `disable_weather` handler (mode 0 toggle, 1 on, else off) | S-WEATHER | [WTH/cmd] |
+| 0x243be0 | console `combat_analyzer`: loads two OOBs, runs hourly updates until the combat ends; walks armies only (land-only) | — | [LOG] |
+| 0x25d2e0 | console `gamespeed <0-5>` handler (0 pauses) | — | [LOG] |
+| 0x27e220 | console `run <file>`: feeds each line through the console input | — | [LOG] |
 | 0x2874b0 | console `set_weather` ("Weather was set to '"); not decoded | S-WEATHER | [WTH/open] |
 | 0x535c40 | resolves member+0x10 convoy reference | S-TARGET | [TGT/bb] |
 | 0x5574d0 | modifier registration call `(token, id, …)` | — | [HIT/map], [DMG/conv] |
 | 0x557aa0 | add modifier block scaled by `s` | S-XP-EFFECT | [XP/effect] |
 | 0x55b160 | global modifier block (XP flat gain, one branch) | S-XP-GAIN | [XP/gain] |
 | 0x55f7f0 | modifier-definition registration (`MODIFIER_*` → id) | — | [HIT/map], [DMG/conv] |
+| 0x6e76a0 | `country.daily`: `army.daily` (slot 19 on armies), `fleets.daily` (0xd54840 per fleet, country +0x278/+0x284), `railway_guns.daily` (slot 19) | S-MANPOWER | [XP/mp] |
 | 0x6ff065 | game-start init: task-force manpower refill with force = true | S-MANPOWER | [XP/mp] |
 | 0x93c1d0 | define loader (only other reference to COMBAT_MIN_DURATION) | S-END | [HOUR/end] |
 | 0xa3b460 | ship reliability getter `[ship+0x328]` | S-CRIT | [HIT/crit] |
@@ -86,15 +94,17 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xc5c5c0 | fuel-related non-flying planes | A-LOSSES | [AIR/losses] |
 | 0xcfe7e0 | draw manpower from national pool | S-MANPOWER | [XP/mp] |
 | 0xd1b800 | reads 0x3334d70 (not COMBAT_DAMAGE_RANDOMNESS; who.py false positive) | S-DMG-RANDOM | [DMG/random] |
-| 0xd69090 | CTaskForce vtable slot 19 (manpower refill, force = false) | S-MANPOWER | [XP/mp] |
+| 0xd54840 | fleet daily update: vtable +0x98 (DailyUpdate) on each task force (fleet +0xb8, count +0xc4) | S-MANPOWER | [XP/mp] |
+| 0xd69090 | CTaskForce::DailyUpdate (vtable slot 19): first calls 0xd7a7e0(tf, false), before and regardless of the in-combat test | S-MANPOWER | [XP/mp] |
 | 0xd6eeb0 | unit ship list | S-POS | [POS/joined] |
 | 0xd6fa50 | task-force modifiers | S-DMG | [DMG/dmg] |
 | 0xd705f0 | CTaskForce update (vtable slot 18): per-ship XP | S-XP-GAIN | [XP/gain], [HOUR/hour] |
 | 0xd77ff0 | task force: manpower returned on sinking | S-XP | [DMG/xp] |
-| 0xd7a7e0 | refill task-force manpower `(tf, force)` | S-MANPOWER | [XP/mp] |
+| 0xd7a7e0 | refill task-force manpower `(tf, force)`: every ship if HasGameStarted() or force | S-MANPOWER | [XP/mp] |
 | 0xdd70ae | CInGameIdler::InitData | S-MANPOWER | [XP/mp] |
-| 0xdd9b20 | "on_startup" (caller of 0x1edff0) | S-MANPOWER | [XP/mp] |
-| 0xdda5d0 | "LOADING_SAVEGAME" (caller of 0x1edff0) | S-MANPOWER | [XP/mp] |
+| 0xdd3a50 | "LOADING_MAIN_MENU" / "EXITING_TO_FRONTEND": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
+| 0xdd9b20 | "on_startup" (`ingameidler.cpp`): sets HasGameStarted = 1 via 0x1edff0, before the on_action fires | S-MANPOWER | [XP/mp] |
+| 0xdda5d0 | "LOADING_SAVEGAME": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
 | 0xe23bb0 | strategic region init: `region+0x140 = region+0x60 mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT)` | A-CADENCE | [AIR/cadence] |
 | 0xe24530 | air clock: is this an air hour for the region | A-CADENCE | [AIR/cadence] |
 | 0xf185a0 | weather manager reset: cells, region states, seed, +0x348 = 1, +0x34a = 0 | S-WEATHER | [WTH/cmd] |
@@ -190,7 +200,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x1973d30 | is submarine (air target weight) | A-TARGET | [AIR/target] |
 | 0x1973e20 | Fire one weapon slot (timer, PickTarget, shot loop) | S-ORDER, S-COOLDOWN | [HOUR/order], [ACT/cooldown] |
 | 0x1973eea | fire chunk: last-shot record, torpedo-firing reveal | S-XP-GAIN, S-SUB | [XP/gain], [POS/sub] |
-| 0x19740c0 | hit/shot loop: hit, randomness, crit, part, apply | S-HIT, S-DMG, S-CRIT | [HIT/map], [DMG/pipe], [HOUR/order] |
+| 0x19740c0 | hit/shot loop: hit, randomness, crit, part, apply; `(shooterMember, targetMember, weapon, shooterShip, …)`, returns 1 when the target sank | S-HIT, S-DMG, S-CRIT | [HIT/map], [DMG/pipe], [HOUR/order], [LOG] |
 | 0x1975150 | air part damage (CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR) | A-CRIT | [AIR/crit] |
 | 0x1975280 | retreat roll P | S-RETREAT | [ACT/retreat], [HOUR/end] |
 | 0x1975400 | sub reveal chance | S-SUB | [ACT/sub] |
@@ -239,7 +249,8 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x1c6c580 | group air step | A-CADENCE | [AIR/graph], [HOUR/hour] |
 | 0x2014abf | script trigger reading ship level | S-XP-EFFECT | [XP/effect] |
 | 0x2072200 | define reader storing fx15 (27 defines) | S-XP-GAIN | [XP/top] |
-| 0x2233db0 | `random_fixed` | all | see §4 |
+| 0x221f310 | resolve a `{type, id}` handle to its object (null if deleted) | — | [LOG] |
+| 0x2233db0 | `random_fixed(int64* out, file, line)` | all | see §4, [LOG] |
 | 0x2233fa0 | random int31 | FEX, A-* | [HOUR/fex], [AIR/conv] |
 | 0x24ed3f0 | fx5 → fx15 | — | [XP/top] |
 | 0x24ed580 | fx15 → fx5 | — | [XP/top] |
@@ -251,7 +262,9 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 
 | RVA | Meaning | Finding |
 |---|---|---|
+| 0x2962f70 | CTaskForce vtable (RTTI `.?AVCTaskForce@@`, base CUnit); CArmy 0x295a2b0, CRailwayGun 0x2972228 share slots 18/19 | [XP/mp] |
 | 0x2963000 | CTaskForce vtable slot 18 (= 0xd705f0) | [XP/gain] |
+| 0x2963008 | CTaskForce vtable slot 19, DailyUpdate (= 0xd69090) | [XP/mp] |
 | 0x29ddb08 | CNavalCombat vtable (+0x48 valid 0x15c44e0, +0x60 CanRetreat 0x15c28e0, +0x78 Update 0x15c3600, +0x80 EndHour 0x15c3690) | [HOUR/chain], [ACT/retreat] |
 | 0x29e3e98 | naval combatant vtable | [HOUR/chain], [POS/top] |
 | 0x29e3f08 / 0x29e3f30 / 0x29e3f48 / 0x29e3f98 | combatant slots +0x70 (0x161f790), +0x98 (0x161f810), +0xb0 (0x161e400), +0x100 (0x1621a70) | [HOUR/hour] |
@@ -323,6 +336,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 
 | Offset | Meaning | Finding |
 |---|---|---|
+| +0x8 / +0xc | handle `{type 51, id}`: the save's ship `id={ id type=51 }` | [LOG] |
 | +0x1b8 | base surface detection | [POS/detect] |
 | +0x1c8 | surface visibility | [HIT/ship] |
 | +0x1d0 | sub visibility | [HIT/ship] |
@@ -354,6 +368,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 
 | Offset | Meaning | Finding |
 |---|---|---|
+| +0x8 | ship handle `{type, id}` (resolved with 0x221f310) | [LOG] |
 | +0x10 | convoy reference (no ship) | [TGT/bb], [DMG/apply] |
 | +0xe0 | state: 1 waiting, 2 fighting, 4 joining, 8 retreating, 0x10 escaped (0x19739bd), 0x20 sunk (0x1975bea); mask 0xb = in battle, 0x34 = not present (settled by recheck) | [HOUR/hour], [ACT/bg], [TGT/bb], [POS/top] |
 | +0xe4 | joining countdown (hours) | [HOUR/hour], [POS/top] |
@@ -402,11 +417,11 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | Offset | Meaning | Finding |
 |---|---|---|
 | +0x28 / +0x30 | attacker / defender combatant (CCombat) | [HOUR/chain] |
-| +0x44 | hours (first-hour value 0 or 1 ?) | [HOUR/chain], [ACT/bg], [POS/recompute] |
+| +0x44 | hours: 1 during the first hour's Update, incremented in EndHour (observed) | [HOUR/chain], [ACT/bg], [POS/recompute], [LOG] |
 | +0x98 / +0xa0 | the same two sides, typed | [HOUR/chain] |
 | +0x38 | → +0xc8 strategic region of the battle (medium) | [WTH/combat] |
 | +0xa8, +0xb0 | weather type (0 none; 2/3/4/5 from region-state flags +0x108/+0x110/+0x118/+0x120); +0xb0 = region weather state +0x48, the weather modifier holder (0 without a state) | [HOUR/hour], [AIR/conv], [WTH/combat] |
-| +0xb8 | province darkness (> 0 = dark) | [HOUR/night], [AIR/conv] |
+| +0xb8 | province darkness (> 0 = dark); always 0 with weather off (observed) | [HOUR/night], [AIR/conv], [LOG] |
 | +0x10c / +0x10d | convoy-type / special combat flags (HOUR, ACT). **disagrees**: AIR calls +0x10c the port-strike flag | [HOUR/hour], [ACT/sub], [AIR/conv] |
 | +0x118 | fleet distance | [HOUR/hour] |
 | +0x120 | "air every hour" flag (ctor 0, no setter found) | [AIR/cadence] |
@@ -415,6 +430,8 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 
 | Offset | Meaning | Finding |
 |---|---|---|
+| +0x8 / +0xc | handle `{type, id}` (task force type 61) | [LOG] |
+| fleet +0xb8 / +0xc4 | task forces / count | [XP/mp], [LOG] |
 | +0x1a8 | combats list ([0] = first) | [XP/gain] |
 | +0x1b4 | > 0 = in combat | [XP/gain] |
 | +0x348 / +0x354 | ships / count | [XP/gain] |
@@ -451,8 +468,14 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | wing | +0x390 + 8×idx | raw equipment stat (idx 0x2f defence?, 0x30 attack?, 0x31 agility, 0x34 naval attack, 0x35 naval targeting) | [AIR/conv] |
 | strategic region | +0x60 | region id? | [AIR/cadence] |
 | strategic region | +0x140 | air phase | [AIR/cadence] |
+| global | 0x332f260 | gamestate pointer | [LOG] |
+| global | 0x3452520 / 0x3452524 | RNG counter / seed (the save's `multiplayer_random_count` / `multiplayer_random_seed`, observed) | [LOG] |
+| global | 0x3452529 | log every `random_fixed` call (console `randomlog`) | [LOG] |
+| gamestate | +0x310 / +0x31c | countries / count | [LOG] |
+| country | +0x278 / +0x284 | fleets / count | [XP/mp], [LOG] |
+| country | +0x290 / +0x29c | armies / count | [LOG] |
 | gamestate | +0x468 | date in hours | [AIR/cadence] |
-| gamestate | +0xa39 | manpower refill flag (startup/reset/load?) | [XP/mp] |
+| gamestate | +0xa39 | HasGameStarted(): 1 in a running game, 0 while loading, resetting or in the menu (named by the assert at 0x1de28e) | [XP/mp] |
 | gamestate | +0x688 | weather manager | [WTH/cmd] |
 | weather manager | +0x10 | weather cells (0x180 bytes each; +0x28 active) | [WTH/cmd] |
 | weather manager | +0x40 / +0x4c | region weather states (0x160 bytes each) / count | [WTH/combat] |
@@ -605,7 +628,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | LEADER_EXPERIENCE_SCALE | 0xc3be74 → 0xc0f200 | captain XP | [XP/gain] |
 | FIELD_EXPERIENCE_SCALE, FIELD_EXPERIENCE_MAX_PER_DAY | 0xc3bee3 → 0x12a6740 | national XP | [XP/gain] |
 | XP_GAIN_FACTOR | 0xc1133e | unrelated code | [XP/gain] |
-| DAILY_MANPOWER_GAIN_RATIO | 0xc3e4e0 (0xc3e5be) | refill, not in combat | [XP/mp] |
+| DAILY_MANPOWER_GAIN_RATIO | 0xc3e4e0 (0xc3e5be) | daily refill, in combat too | [XP/mp] |
 | HOURS_DELAY_AFTER_EACH_COMBAT | 0xe24530, 0xe23bb0 | air clock | [AIR/cadence] |
 | CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT | 0x197d770 (0x197d8a9) | written, no effect | [AIR/cadence] |
 | CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO, SELECTED_SORTIE_INITIAL_TIME, BASE_CARRIER_SORTIE_EFFICIENCY | 0x1976db0 | sortie base | [AIR/sortie] |
@@ -638,7 +661,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | fx5 ↔ fx15 | 0x24ed3f0 / 0x24ed580 | conversions | [XP/top] |
 | fixed → int | 0x24ed730 | round half away from zero | [DMG/conv], [AIR/conv] |
 | negate | 0x24ef6f0 | stores `-x`; −1.0 is the "no value" sentinel | [DMG/conv] |
-| RNG | 0x2233db0 | `random_fixed`: hash of seed + counter, 31 bits, `% 100000` → U ∈ {0, …, 0.99999}; (file, line) tag per call | [DMG/conv], [HIT/map] |
+| RNG | 0x2233db0 | `random_fixed(out, file, line)`: hash of seed + counter, 31 bits, `% 100000` → U ∈ {0, …, 0.99999}; (file, line) tag per call. A save replays the identical battle; editing its `multiplayer_random_seed` gives a different one | [DMG/conv], [HIT/map], [LOG] |
 | RNG int | 0x2233fa0 | random int31 | [AIR/conv] |
 | weighted draw | 0x24f08a0 | air target pick | [AIR/target] |
 | chance checks | — | ACT: `roll <= chance`; hit: `100·U < hc`; crit: `U <= p`; part: `U < p` | [ACT], [HIT/crit], [DMG/rng] |
@@ -650,7 +673,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 Cross-file disagreements are flagged "**disagrees**" in the tables above; the three settled ones are in [findings/README.md][README/disagree].
 
 - Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
-- Darkness value computation; whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
+- Darkness value computation (with weather on; it is 0 with weather off [LOG]); whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
 - `0xc31030` part instance aggregation. [DMG/open]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
 - Whether light guns and depth charges both fire in one slot-2 call. [ACT/open]
@@ -660,15 +683,12 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - Purpose of side vt+0x100 `0x1621a70`. [HOUR/hour]
 - Modifier names by index: 0x57/0x58/0x5a (and other positioning/retreat modifiers), 0x1b1/0x1b3/0x1bd, 0x1b2/0x1d0, 0x34/0x35. [HOUR/end], [TGT/screen], [POS/pos], [XP/open]
 - Ship `+0x678` hit profile mult, `+0x568`, `0xc3b130`. [HIT/ship], [HIT/crit]
-- NAVAL_DAMAGE_FACTOR counted twice (attack getter and hit multiplier)? [DMG/open]
+- ~~NAVAL_DAMAGE_FACTOR counted twice (attack getter and hit multiplier)?~~ Yes: observed in logged hits (the experience malus applies in the shot profile and again per hit). [DMG/open], [LOG]
 - Ship `+0x738` link; damage to non-ship targets (`0x1ad8610`). [DMG/open]
 - Experience-level damage bonus location (DMG: not in the hit path; XP: only through `naval_damage_factor`/`naval_defense_factor` modifiers). [DMG/open], [XP/effect]
-- Whether `combat+0x44` is 0 or 1 in the first hour. [POS/recompute]
 - Refresh frequency of the enemy count snapshot (0x161f810) vs the firing loop. [TGT/bb]
 - Convoy-escort dominance helper 0x143c720 and the mission enum. [POS/convoy]
-- Whether sunk/escaped ships leave the group before `[group+0x14]` is read. [XP/open]
 - Order of the task-force update 0xd705f0 vs the combat hour (this hour's shots or last hour's). [XP/open]
-- How ships regain manpower in port; the `+0xa39` reading. [XP/mp]
 - `combat+0x120` setter; `region+0x60` = region id? [AIR/open]
 - `airfx+0xe8` name (equipment +0x260). [AIR/open]
 - Top-speed term in 0xf7ad60; plane stat indices 0x2f/0x30. [AIR/open]
@@ -678,6 +698,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
 
 [README]: findings/README.md
+[LOG]: findings/LOG-ingame-logging.md
 [README/disagree]: findings/README.md#disagreements-between-findings-and-how-they-were-settled
 [README-RE]: README.md#status
 [HOUR]: findings/S-HOUR-order-and-end.md

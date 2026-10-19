@@ -3,7 +3,8 @@ using NavySimulator.Engine.Defines;
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
-/// S-XP [RE]: ship experience levels, their combat modifiers, hourly combat gain, and losses from damage.
+/// S-XP [RE]: ship experience levels, their combat modifiers, hourly combat gain, and losses from damage; S-MANPOWER [RE]:
+/// the daily manpower refill.
 /// Spec: docs/mechanics/surface.md.
 /// </summary>
 public static class ExperienceRules
@@ -120,6 +121,27 @@ public static class ExperienceRules
         var applied = Math.Min(loss, ship.CurrentManpower - floor);
         ship.CurrentManpower -= applied;
         return applied;
+    }
+
+    /// <summary>
+    /// S-MANPOWER [RE] 0xc3e4e0 (refill): once a day every ship regains min(deficit, ceil(maxManpower ×
+    /// DAILY_MANPOWER_GAIN_RATIO)), in combat too. The ceiling is taken in fx5 as the game does. The national manpower
+    /// pool is [ASSUMED] never short.
+    /// </summary>
+    public static int DailyManpowerGain(Ship ship, GameDefines defines)
+    {
+        var deficit = ship.MaxManpower - ship.CurrentManpower;
+
+        if (deficit <= 0)
+        {
+            return 0;
+        }
+
+        var ratioFx5 = (long)Math.Round(defines.NNavy.DAILY_MANPOWER_GAIN_RATIO * 100000, MidpointRounding.AwayFromZero);
+        var step = (int)Math.Max(0, (ship.MaxManpower * ratioFx5 + 99999) / 100000);
+        var gain = Math.Min(deficit, step);
+        ship.CurrentManpower += gain;
+        return gain;
     }
 
     private static int RoundHalfAway(double value)

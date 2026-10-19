@@ -1,12 +1,14 @@
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Random;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
 /// S-DMG, S-CRIT and S-DMG-APPLY [RE] (0x1970a90, 0x19740c0, 0xc3e0e0). Spec: docs/mechanics/surface.md.
-/// Order: attack x piercing, x (1 - positioning penalty + damage factor - defense factor), x randomness, x torpedo
-/// reduction, split into HP and organization damage, x critical multiplier.
+/// Order: combat attack (with the damage factor) x piercing against combat armor (with the defense factor), x (1 -
+/// positioning penalty + damage factor - defense factor), x randomness, x torpedo reduction, split into HP and
+/// organization damage, x critical multiplier. The damage and defense factors therefore count twice.
 /// </summary>
 public static class DamageRules
 {
@@ -42,7 +44,7 @@ public static class DamageRules
                 WeaponSlot.Heavy => againstSubmarine ? 0 : shooterStats.HeavyAttack,
                 _ => againstSubmarine ? shooterStats.DepthChargeAttack * navy.DEPTH_CHARGES_DAMAGE_MULT : shooterStats.LightAttack
             };
-            tier = PiercingTier(piercing, targetStats.Armor, defines);
+            tier = PiercingTier(piercing, CombatArmor(target, targetStats, defines), defines);
             piercingFactor = TierValue(navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES, tier);
             criticalChance = navy.COMBAT_BASE_CRITICAL_CHANCE * (1.0 - reliability) * TierValue(navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES, tier);
             criticalMultiplier = 1.0 + (1.0 - reliability) * navy.COMBAT_CRITICAL_DAMAGE_MULT;
@@ -50,9 +52,29 @@ public static class DamageRules
         }
 
         // naval_critical_score_chance_factor / naval_critical_receive_chance_factor modifiers are not modelled.
-        var baseDamage = Math.Max(0, attack * piercingFactor * DamageMultiplier(shooter, target, shooterPositioning, defines));
+        var baseDamage = Math.Max(0, attack * AttackFactor(shooter, defines) * piercingFactor *
+                                     DamageMultiplier(shooter, target, shooterPositioning, defines));
         return new ShotProfile(baseDamage, tier, piercingFactor, criticalChance, criticalMultiplier, torpedoFactor,
             slot == WeaponSlot.Light && againstSubmarine);
+    }
+
+    /// <summary>
+    /// S-STATS-COMBAT [RE + CAL] 0xc34a50: the combat attack getter's factor, max(0, 1 + naval_damage_factor). Only the
+    /// experience term is modelled. The hit multiplier adds naval_damage_factor again (logged in-game hits:
+    /// docs/reverse-engineering/findings/LOG-ingame-logging.md).
+    /// </summary>
+    public static double AttackFactor(Ship shooter, GameDefines defines)
+    {
+        return Math.Max(0, 1.0 + ExperienceRules.NavalDamageFactor(shooter, defines));
+    }
+
+    /// <summary>
+    /// S-STATS-COMBAT [RE] 0xc34a50 kind 4: armor x max(0, 1 + naval_defense_factor), the armor the piercing tier is read
+    /// against. Only the experience term is modelled.
+    /// </summary>
+    public static double CombatArmor(Ship target, ShipStats targetStats, GameDefines defines)
+    {
+        return targetStats.Armor * Math.Max(0, 1.0 + ExperienceRules.NavalDefenseFactor(target, defines));
     }
 
     /// <summary>[RE] max(0, 1 - positioning penalty + shooter naval_damage_factor - target naval_defense_factor).</summary>

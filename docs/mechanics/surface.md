@@ -16,7 +16,7 @@ Finding: [S-STATS-design-stats.md](../reverse-engineering/findings/S-STATS-desig
 - **S-STATS-SHIP** (0xc3d090): technology blocks are sub-unit bonuses. `ship = variant × (1 + tech) + tech` for the additive set: org, HP, reliability, hit chance factors, torpedo damage reduction, torpedo enemy crit chance and naval weather penalty. Organization comes from the sub-unit, so it is never scaled.
 - **S-STATS-CLAMP**: reliability ≥ 0, production cost ≥ 0.1.
 - **S-STATS-PARTS** (lasting stat penalties from damaged parts) is not modelled (S-CRIT-PART).
-- **S-STATS-COMBAT**: attack (`max(0, stat × (1 + Σ attack factors + naval_damage_factor + …))`), armor (`× max(0, 1 + defence factors + naval_defense_factor + …)`) and speed (`× max(0.1, 1 + naval_speed_factor + …)`) modifiers are combat-time, not design stats. Only the experience and night terms are modelled. Spirits are still applied as [LEGACY] stat modifiers; their real effects belong here.
+- **S-STATS-COMBAT**: attack (`max(0, stat × (1 + Σ attack factors + naval_damage_factor + …))`), armor (`× max(0, 1 + defence factors + naval_defense_factor + …)`) and speed (`× max(0.1, 1 + naval_speed_factor + …)`) modifiers are combat-time, not design stats. Only the experience terms are modelled: `naval_damage_factor` in attack and `naval_defense_factor` in armor (the armor the piercing tier is read against). Both enter the S-DMG hit multiplier again, so each counts twice [RE + CAL: logged in-game hits, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)]. `naval_night_attack` and the rest are not modelled. Spirits are still applied as [LEGACY] stat modifiers; their real effects belong here.
 
 ## S-HOUR: hour structure [RE]
 
@@ -119,15 +119,17 @@ shot hits when U < hit   (no upper cap: hit >= 1 always hits)
 
 **Code.** `HitChanceRules.cs`.
 
-## S-NIGHT: night [RE effect, ASSUMED darkness]
+## S-NIGHT: night [RE effect, ASSUMED darkness, CAL: none with weather off]
 
 The static modifier `night` is applied to the battle province "multiplied by amount of darkness": `naval_hit_chance -0.25`, `naval_retreat_speed +0.1` (and `carrier_traffic -1.0` for air), vanilla values; the block is read from the loaded game/mod folder (TFB: `carrier_traffic -0.75`, `naval_torpedo_hit_chance_factor -0.15`). The per-weapon entries (`naval_light_gun|heavy_gun|torpedo_hit_chance_factor`) add to the slot's hit factor in S-HIT-MODS. The engine uses darkness 1 from 20:00 to 06:00 and 0 otherwise (`HardcodedValues.NightStartHour/NightEndHour`, `BattleRules.StartHourOfDay`). The game computes darkness per province from the day/night terminator; that is not decoded. `BattleRules.NightEnabled` turns night off.
+
+[CAL] **No night with weather off.** The darkness comes from the weather manager (`0xf19660`), and after `weather` / `disable_weather` it stays 0: in-game logs of the CL3 battle (Black Sea, May, 341 and 395 hours) read darkness 0 every hour, and the light-gun hit chance was the same at every hour of day ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)). The engine therefore has no night when `BattleRules.WeatherEnabled` is false.
 
 ## S-WEATHER: weather [RE toggle; terms not modelled]
 
 Each hour the battle reads the weather of its strategic region: a weather type and the region's modifier holder ([RE finding](../reverse-engineering/findings/S-WEATHER-weather-toggle.md)). The weather static modifiers add `naval_hit_chance` to S-HIT-MODS (vanilla `weather_rain_light` −0.05, `weather_rain_heavy` −0.2, `weather_snow` −0.05, `weather_blizzard` −0.1) and change `carrier_traffic` (A-SORTIE) and `naval_strike` (A-HIT). None of these terms is modelled yet; `battleScenario.weather` only shows up in the notes.
 
-The console commands `weather` (toggle) and `disable_weather` reset the weather, rebuild every region's weather state and stop the hourly weather update, so the battle reads a region state that nothing has filled: no weather [RE, medium: the rebuilt state is not decoded]. `BattleRules.WeatherEnabled = false` (scenario `rules.weatherEnabled`) is that setting: the scenario's weather is ignored, and so will the weather terms be once they are modelled. Use it for battles recorded with weather off.
+The console commands `weather` (toggle) and `disable_weather` reset the weather, rebuild every region's weather state and stop the hourly weather update, so the battle reads a region state that nothing has filled: no weather [RE, medium: the rebuilt state is not decoded]. `BattleRules.WeatherEnabled = false` (scenario `rules.weatherEnabled`) is that setting: the scenario's weather is ignored, and so will the weather terms be once they are modelled. It also turns night off (S-NIGHT). Use it for battles recorded with weather off.
 
 ## S-DMG: damage of a hit [RE]
 
@@ -135,7 +137,8 @@ Per slot and target the game computes, once before its shots:
 - heavy: `heavyAttack × pierce(heavyPiercing, armor)`; nothing against submarines;
 - light: `lightAttack × pierce(lightPiercing, armor)`; against a submarine: `depthChargeAttack × DEPTH_CHARGES_DAMAGE_MULT (0.7) × pierce(lightPiercing, subArmor)`. Depth charges **do** go through armor;
 - torpedo: `torpedoAttack`, no armor; later `× (1 - torpedo damage reduction)`;
-- `base = max(0, damage × max(0, 1 - positioningPenalty + shooter naval_damage_factor - target naval_defense_factor))`. The modifiers come from experience (S-XP); admirals and doctrines would add to them.
+- the attack and armor above are the combat values of S-STATS-COMBAT: `attack × max(0, 1 + shooter naval_damage_factor)` and `armor × max(0, 1 + target naval_defense_factor)`;
+- `base = max(0, damage × max(0, 1 - positioningPenalty + shooter naval_damage_factor - target naval_defense_factor))`. The modifiers come from experience (S-XP); admirals and doctrines would add to them. Each factor therefore counts twice [RE + CAL]: with TFB's green malus (`naval_damage_factor -0.1` only) every logged in-game hit is `profile × 0.9 × 0.9 × randomness`, the profile already including one 0.9 ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)). In vanilla the green malus also has `naval_defense_factor -0.1`, so between two green fleets the hit multiplier terms cancel but attack and armor are each ×0.9.
 
 Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (range ×0.975 to ×1.475); crit roll (S-CRIT); torpedo reduction; split into HP and organization (S-DMG-APPLY); critical multiplier on both.
 
@@ -143,7 +146,7 @@ Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (
 - **S-DMG-RANDOM**: `1 + R × (U - 0.05)` is confirmed (`DamageRandomnessModel.Game`). The define comment's "7–10" reading is wrong for 1.19.3.
 - `COMBAT_ARMOR_PIERCING_DAMAGE_REDUCTION` (0, "deprecated") is still read; not modelled.
 
-**Code.** `DamageRules.Profile`, `RollHit`. **Open:** `naval_damage_factor` also appears in the attack getter, so it may count twice when it comes from admirals or doctrines (not relevant while only experience feeds it).
+**Code.** `DamageRules.Profile` (`AttackFactor`, `CombatArmor`, `DamageMultiplier`), `RollHit`.
 
 ## S-CRIT: critical hits [RE]
 
@@ -187,6 +190,8 @@ BASE_ESCAPE_SPEED (0.05) + min(tick × ESCAPE_SPEED_PER_COMBAT_DAY (0.015) / 24,
 ```
 Each hour a retreating ship adds `speed / 24` to its progress and escapes at 1. A 30-knot capital with full screening at tick 10 escapes in about 59 hours.
 
+[CAL] Country `naval_retreat_speed` modifiers add to the same sum and are **not modelled** (combat-modifier layer). In the CL3 battle both countries had TFB's `smoke_generator` technology (`naval_retreat_speed = 0.2`): the logged escape progress of every retreating cruiser grew by exactly 0.2 a day more than the formula above, and the ships escaped in 31–35 hours instead of the engine's 42–48 ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
+
 **Code.** `RetreatRules.EscapeSpeedPerDay`, `AdvanceRetreat`.
 
 ## S-SUB: submarines [RE]
@@ -208,9 +213,17 @@ Each hour a retreating ship adds `speed / 24` to its progress and escapes at 1. 
 
 **Code.** `ExperienceRules.cs`.
 
-## S-MANPOWER: reinforcement during battle [RE]
+## S-MANPOWER: reinforcement during battle [RE + CAL]
 
-Ships do not regain manpower in combat (`DAILY_MANPOWER_GAIN_RATIO` is "for ships not in combat"); the old option is removed.
+Ships regain manpower **once a day, in combat too**, despite the define's comment ("ships not in combat"). The game's daily update (`gamestate.daily` → `country.daily` → `fleets.daily` → `CTaskForce::DailyUpdate`) refills every task force without checking for combat:
+- `gain = min(maxManpower - manpower, ceil(maxManpower × DAILY_MANPOWER_GAIN_RATIO (0.05)))`, the ceiling taken in fx5; 60 a day for a 1200-crew ship.
+- It runs after the combat hour of the tick that starts a new day (00:00), so after battle hour `h` with `(startHourOfDay + h) % 24 == 0`.
+- Every ship afloat refills, including escaped ones (still in their task force).
+- The manpower is drawn from the country's pool. [ASSUMED] The pool is never short.
+
+Calibration: in the CL3 battle (`battle-scenario-la-vs-torp-cl3.json`) the save from the battle's last hour had 74 of 75 BUL and 71 of 74 ROM ships at full manpower after losing 25% and 72% of their HP. Without the refill the simulator left almost every ship short; with it, 74.5 and 70.1 on average (200 seeds).
+
+**Code.** `ExperienceRules.DailyManpowerGain`, `BattleSession.ApplyDailyManpowerGain`. Manpower matters in combat through the crew factor in hit chance (S-HIT-MODS).
 
 ## S-END: end of battle [RE]
 

@@ -13,7 +13,7 @@ namespace NavySimulator.Engine.Battles;
 ///    timer, advances its state (waiting, fighting, retreating), decides whether to retreat, and fires its weapon slots
 ///    (heavy, torpedo, light) at one target per slot. Damage applies immediately, so ships sunk by the attacker do not
 ///    fire in the defender's turn. The side's air groups strike after its surface fire in air hours (A-*);
-/// 3. experience gain, then the end-of-battle check.
+/// 3. experience gain, the daily manpower refill when the hour is 00:00, then the end-of-battle check.
 /// "Tick" is the game's combat hour counter, which is 1 in battle hour 0.
 /// The session owns the scenario's ships while it runs: do not run two sessions on the same scenario at once.
 /// Stepping in any chunk sizes gives the same battle as <see cref="RunToEnd"/> for the same random source.
@@ -154,6 +154,7 @@ public sealed class BattleSession
         SideTurn(defender, attacker, hour, tick);
         ApplyExperienceGain(hour);
         LogHour(hour, hourStartShots);
+        ApplyDailyManpowerGain(hour);
         RecordHour(hour, hourStartShots, hourStartStrikes);
         hoursFought++;
 
@@ -509,6 +510,23 @@ public sealed class BattleSession
         }
     }
 
+    // S-MANPOWER [RE]: the daily update runs after the combat hour of the tick that starts a new day (00:00) and refills
+    // every ship of the country, in battle or not; escaped ships are still in their task force, sunk ones are gone.
+    private void ApplyDailyManpowerGain(int hour)
+    {
+        if (HourOfDay(hour) != 0)
+        {
+            return;
+        }
+
+        var gained = allShips.Where(ship => !ship.IsSunk).Sum(ship => ExperienceRules.DailyManpowerGain(ship, defines));
+
+        if (gained > 0)
+        {
+            log.Add($"Hour {hour}: day change, ships regain {gained} manpower");
+        }
+    }
+
     private bool IsBattleOver(int hour)
     {
         var attackerPresent = attacker.HasShipsInBattle;
@@ -543,10 +561,11 @@ public sealed class BattleSession
         return true;
     }
 
-    // S-NIGHT [ASSUMED darkness model]: 1 during night hours, 0 otherwise.
+    // S-NIGHT [ASSUMED darkness model]: 1 during night hours, 0 otherwise. [CAL] With weather off the game's darkness
+    // stays 0 (it comes from the weather manager), so there is no night.
     private double Darkness(int hour)
     {
-        if (!rules.NightEnabled)
+        if (!rules.NightEnabled || !rules.WeatherEnabled)
         {
             return 0;
         }

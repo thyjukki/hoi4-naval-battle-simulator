@@ -42,6 +42,22 @@ public class ExperienceAndStatsTests
         Assert.Equal(10 * 1 * 1 * 0.04 * 0.04, ExperienceRules.HourlyGain(9, 9, true, defines), 9);
     }
 
+    [Theory]
+    [InlineData(400, 300, 320)]
+    [InlineData(400, 390, 400)]
+    [InlineData(400, 400, 400)]
+    [InlineData(1210, 600, 661)]
+    public void DailyManpowerGain_IsTheRatioOfMaxRoundedUp_CappedAtTheDeficit(int max, int current, int expected)
+    {
+        var ship = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats(), manpower: max);
+        ship.CurrentManpower = current;
+
+        var gain = ExperienceRules.DailyManpowerGain(ship, defines);
+
+        Assert.Equal(expected, ship.CurrentManpower);
+        Assert.Equal(expected - current, gain);
+    }
+
     [Fact]
     public void ShipStats_KeepsTorpedoAndDepthChargeHitFactorsThroughAddAndScale()
     {
