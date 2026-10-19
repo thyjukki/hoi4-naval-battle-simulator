@@ -9,10 +9,19 @@
     },
     "mioId": {
       "type": "string",
-      "enum": [
-        "battle_line_armor_armor_ha",
-        "battle_line_armor_armor_la"
+      "minLength": 1,
+      "description": "An MIO ID from mios/ (imported by NavySimulator import-mios; the game's organization IDs).",
+      "examples": [
+        "USA_brooklyn_naval_yard_organization",
+        "JAP_kure_naval_arsenal_organization"
       ]
+    },
+    "mioBonus": {
+      "type": "object",
+      "description": "S-STATS-MIO: equipment stat bonuses by the game's stat key, e.g. armor_value = 0.05.",
+      "additionalProperties": {
+        "type": "number"
+      }
     },
     "researchId": {
       "type": "string",
@@ -38,16 +47,55 @@
     },
     "spiritId": {
       "type": "string",
-      "enum": [
-        "brave_commanders",
-        "close_combat",
-        "decisive_battle",
-        "efficient_communications",
-        "fleet_defense",
-        "inclement_weather",
-        "naval_tripwire",
-        "night_fighting"
+      "minLength": 1,
+      "description": "A spirit ID from spirits/ (imported by NavySimulator import-doctrines; the game's idea IDs).",
+      "examples": [
+        "decisive_battle_spirit",
+        "efficient_communications_spirit",
+        "night_fighting_spirit",
+        "close_combat_navy_spirit"
       ]
+    },
+    "countryEffects": {
+      "type": "object",
+      "description": "S-DOCTRINE-EFFECT: what a doctrine part or spirit gives its country, with the game's script keys.",
+      "properties": {
+        "countryModifiers": {
+          "type": "object",
+          "description": "Country modifiers by game key (S-STATS-COUNTRY).",
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "unitBonuses": {
+          "type": "object",
+          "description": "Sub-unit bonuses by sub-unit or sub-unit category, then by game stat key (S-STATS-SHIP).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "equipmentBonuses": {
+          "type": "object",
+          "description": "equipment_bonus blocks by equipment type, archetype or hull, then by game stat key (S-STATS-BONUS).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "scripted": {
+          "type": "array",
+          "description": "Script parts the simulator does not run (effect, enable_tactic = x, research_bonus, ...).",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "shipRole": {
       "type": "string",
@@ -68,6 +116,9 @@
         "carrierSubDetection": { "type": "number" },
         "carrierSurfaceDetection": { "type": "number" },
         "carrierSize": { "type": "number" },
+        "navalRange": {
+          "type": "number"
+        },
         "lightAttack": { "type": "number" },
         "lightPiercing": { "type": "number" },
         "heavyAttack": { "type": "number" },
@@ -87,7 +138,64 @@
         "productionCost": { "type": "number" }
       },
       "additionalProperties": false
+    },
+    "admiral": {
+      "type": "object",
+      "description": "S-ADMIRAL: a navy leader's skills and traits, as a character's navy_leader block has them.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The character ID, e.g. USA_chester_w_nimitz. In a scenario: the character the admiral was picked from, empty for a made-up one."
+        },
+        "name": {
+          "type": "string",
+          "description": "The game's name (localisation)."
+        },
+        "country": {
+          "type": "string",
+          "description": "The tag of the country that recruits the character."
+        },
+        "skill": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "The overall skill level."
+        },
+        "attackSkill": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "Attack skill level (leader-skills/: attack_skill)."
+        },
+        "defenseSkill": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "Defense skill level."
+        },
+        "maneuveringSkill": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "Maneuvering skill level."
+        },
+        "coordinationSkill": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1,
+          "description": "Coordination skill level."
+        },
+        "traits": {
+          "type": "array",
+          "description": "Leader trait IDs from leader-traits/.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
     }
   }
 }
-

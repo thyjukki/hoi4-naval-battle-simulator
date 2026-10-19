@@ -9,6 +9,7 @@
       "equipmentType": "capital_ship",
       "year": 1940,
       "manpower": 9000,
+      "navalDominanceFactor": 800,
       "baseStats": {
         "speed": 32,
         "reliability": 0.8,
@@ -16,7 +17,8 @@
         "surfaceVisibility": 20,
         "surfaceDetection": 20,
         "subDetection": 1,
-        "productionCost": 5500
+        "productionCost": 5500,
+        "navalRange": 4500
       },
       "slots": [
         {

@@ -24,9 +24,11 @@ public static class TargetingRules
 
     /// <summary>
     /// [RE] Farthest line the slot reaches this time. Uses the enemy counts snapshot taken at the start of the side's
-    /// turn. The torpedo slot rolls once against the enemy screening values.
+    /// turn. The torpedo slot rolls once against the enemy screening values, each first made
+    /// <c>1 - (1 - screening) × (1 + penetration)</c> by the shooter's <c>naval_torpedo_screen_penetration_factor</c>.
     /// </summary>
-    public static int MaxLine(WeaponSlot slot, EnemyLineCounts enemy, ScreeningSummary enemyScreening, IRandomSource random)
+    public static int MaxLine(WeaponSlot slot, EnemyLineCounts enemy, ScreeningSummary enemyScreening, IRandomSource random,
+        double screenPenetration = 0)
     {
         switch (slot)
         {
@@ -36,13 +38,20 @@ public static class TargetingRules
                 return enemy.Capitals == 0 || enemy.Screens == 0 ? 3 : 2;
             default:
             {
-                // naval_torpedo_screen_penetration_factor is not modelled (it would scale 1 - screening).
+                // [RE] 0x1972cb7: the penetration scales the unscreened share (S-TARGET-TORP).
+                var screening = Penetrated(enemyScreening.ScreeningEfficiency, screenPenetration);
+                var carrierScreening = Penetrated(enemyScreening.CarrierScreeningEfficiency, screenPenetration);
                 var roll = random.NextDouble(RollKind.TorpedoLine);
-                return roll <= enemyScreening.ScreeningEfficiency ? 1
-                    : roll <= enemyScreening.CarrierScreeningEfficiency ? 2
+                return roll <= screening ? 1
+                    : roll <= carrierScreening ? 2
                     : 3;
             }
         }
+    }
+
+    private static double Penetrated(double screening, double penetration)
+    {
+        return penetration == 0 ? screening : Math.Max(0, 1 - Math.Max(0, 1 - screening) * (1 + penetration));
     }
 
     /// <summary>
@@ -72,7 +81,8 @@ public static class TargetingRules
         BattleSide own,
         BattleSide enemy,
         GameDefines defines,
-        IRandomSource random)
+        IRandomSource random,
+        double darkness = 0)
     {
         var stats = shooter.GetFinalStats();
 
@@ -82,7 +92,11 @@ public static class TargetingRules
             return null;
         }
 
-        var maxLine = MaxLine(slot, own.EnemyCounts, enemy.Screening, random);
+        // [RE] The penetration is the shooter's modifier 0x1bd through the member getter (convoys: 0).
+        var penetration = slot == WeaponSlot.Torpedo && shooter.Role != ShipRole.Convoy
+            ? MemberModifierRules.Get(shooter, StaticModifiers.NavalTorpedoScreenPenetrationFactor, own.Screening, darkness, defines)
+            : 0;
+        var maxLine = MaxLine(slot, own.EnemyCounts, enemy.Screening, random, penetration);
         var minLine = MinLine(shooter, own.Participant.Aggressiveness, own.EnemyCounts);
         var candidates = new List<(Ship Target, double Weight)>();
 

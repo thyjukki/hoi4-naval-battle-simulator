@@ -1,0 +1,467 @@
+{
+  "$schema": "../schemas/leader-skills.schema.json",
+  "skills": [
+    {
+      "id": "skill",
+      "levels": [
+        {
+          "level": 1
+        },
+        {
+          "level": 2
+        },
+        {
+          "level": 3
+        },
+        {
+          "level": 4
+        },
+        {
+          "level": 5
+        },
+        {
+          "level": 6
+        },
+        {
+          "level": 7
+        },
+        {
+          "level": 8
+        },
+        {
+          "level": 9
+        }
+      ]
+    },
+    {
+      "id": "attack_skill",
+      "levels": [
+        {
+          "level": 1,
+          "modifiers": {
+            "naval_damage_factor": 0.025
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.02,
+            "ships_at_battle_start": 0.02
+          }
+        },
+        {
+          "level": 2,
+          "modifiers": {
+            "naval_damage_factor": 0.05
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.04,
+            "ships_at_battle_start": 0.04
+          }
+        },
+        {
+          "level": 3,
+          "modifiers": {
+            "naval_damage_factor": 0.075
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.06,
+            "ships_at_battle_start": 0.06
+          }
+        },
+        {
+          "level": 4,
+          "modifiers": {
+            "naval_damage_factor": 0.1
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.08,
+            "ships_at_battle_start": 0.08
+          }
+        },
+        {
+          "level": 5,
+          "modifiers": {
+            "naval_damage_factor": 0.125
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.1,
+            "ships_at_battle_start": 0.1
+          }
+        },
+        {
+          "level": 6,
+          "modifiers": {
+            "naval_damage_factor": 0.15
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.12,
+            "ships_at_battle_start": 0.12
+          }
+        },
+        {
+          "level": 7,
+          "modifiers": {
+            "naval_damage_factor": 0.175
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.14,
+            "ships_at_battle_start": 0.14
+          }
+        },
+        {
+          "level": 8,
+          "modifiers": {
+            "naval_damage_factor": 0.2
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.16,
+            "ships_at_battle_start": 0.16
+          }
+        },
+        {
+          "level": 9,
+          "modifiers": {
+            "naval_damage_factor": 0.225
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.18,
+            "ships_at_battle_start": 0.18
+          }
+        },
+        {
+          "level": 10,
+          "modifiers": {
+            "naval_damage_factor": 0.25
+          },
+          "buildingModuleModifiers": {
+            "spotting_chance": 0.2,
+            "ships_at_battle_start": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "defense_skill",
+      "levels": [
+        {
+          "level": 1,
+          "modifiers": {
+            "naval_defense_factor": 0.025
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.0075,
+            "screening_efficiency": 0.0075
+          }
+        },
+        {
+          "level": 2,
+          "modifiers": {
+            "naval_defense_factor": 0.05
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.015,
+            "screening_efficiency": 0.015
+          }
+        },
+        {
+          "level": 3,
+          "modifiers": {
+            "naval_defense_factor": 0.075
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.0225,
+            "screening_efficiency": 0.0225
+          }
+        },
+        {
+          "level": 4,
+          "modifiers": {
+            "naval_defense_factor": 0.1
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.03,
+            "screening_efficiency": 0.03
+          }
+        },
+        {
+          "level": 5,
+          "modifiers": {
+            "naval_defense_factor": 0.125
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.0375,
+            "screening_efficiency": 0.0375
+          }
+        },
+        {
+          "level": 6,
+          "modifiers": {
+            "naval_defense_factor": 0.15
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.045,
+            "screening_efficiency": 0.045
+          }
+        },
+        {
+          "level": 7,
+          "modifiers": {
+            "naval_defense_factor": 0.175
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.0525,
+            "screening_efficiency": 0.0525
+          }
+        },
+        {
+          "level": 8,
+          "modifiers": {
+            "naval_defense_factor": 0.2
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.06,
+            "screening_efficiency": 0.06
+          }
+        },
+        {
+          "level": 9,
+          "modifiers": {
+            "naval_defense_factor": 0.225
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.0675,
+            "screening_efficiency": 0.0675
+          }
+        },
+        {
+          "level": 10,
+          "modifiers": {
+            "naval_defense_factor": 0.25
+          },
+          "buildingModuleModifiers": {
+            "naval_enemy_fleet_size_ratio_penalty_factor": 0.075,
+            "screening_efficiency": 0.075
+          }
+        }
+      ]
+    },
+    {
+      "id": "maneuvering_skill",
+      "levels": [
+        {
+          "level": 1,
+          "modifiers": {
+            "positioning": 0.025,
+            "naval_retreat_speed": 0.01
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.01,
+            "naval_retreat_chance": 0.015
+          }
+        },
+        {
+          "level": 2,
+          "modifiers": {
+            "positioning": 0.05,
+            "naval_retreat_speed": 0.02
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.02,
+            "naval_retreat_chance": 0.03
+          }
+        },
+        {
+          "level": 3,
+          "modifiers": {
+            "positioning": 0.075,
+            "naval_retreat_speed": 0.03
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.03,
+            "naval_retreat_chance": 0.045
+          }
+        },
+        {
+          "level": 4,
+          "modifiers": {
+            "positioning": 0.1,
+            "naval_retreat_speed": 0.04
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.04,
+            "naval_retreat_chance": 0.06
+          }
+        },
+        {
+          "level": 5,
+          "modifiers": {
+            "positioning": 0.125,
+            "naval_retreat_speed": 0.05
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.05,
+            "naval_retreat_chance": 0.075
+          }
+        },
+        {
+          "level": 6,
+          "modifiers": {
+            "positioning": 0.15,
+            "naval_retreat_speed": 0.06
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.06,
+            "naval_retreat_chance": 0.09
+          }
+        },
+        {
+          "level": 7,
+          "modifiers": {
+            "positioning": 0.175,
+            "naval_retreat_speed": 0.07
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.07,
+            "naval_retreat_chance": 0.105
+          }
+        },
+        {
+          "level": 8,
+          "modifiers": {
+            "positioning": 0.2,
+            "naval_retreat_speed": 0.08
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.08,
+            "naval_retreat_chance": 0.12
+          }
+        },
+        {
+          "level": 9,
+          "modifiers": {
+            "positioning": 0.225,
+            "naval_retreat_speed": 0.09
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.09,
+            "naval_retreat_chance": 0.135
+          }
+        },
+        {
+          "level": 10,
+          "modifiers": {
+            "positioning": 0.25,
+            "naval_retreat_speed": 0.1
+          },
+          "buildingModuleModifiers": {
+            "convoy_retreat_speed": 0.1,
+            "naval_retreat_chance": 0.15
+          }
+        }
+      ]
+    },
+    {
+      "id": "coordination_skill",
+      "levels": [
+        {
+          "level": 1,
+          "modifiers": {
+            "naval_coordination": 0.01
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.01,
+            "navy_org_factor": 0.025
+          }
+        },
+        {
+          "level": 2,
+          "modifiers": {
+            "naval_coordination": 0.03
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.02,
+            "navy_org_factor": 0.05
+          }
+        },
+        {
+          "level": 3,
+          "modifiers": {
+            "naval_coordination": 0.05
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.03,
+            "navy_org_factor": 0.075
+          }
+        },
+        {
+          "level": 4,
+          "modifiers": {
+            "naval_coordination": 0.07
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.04,
+            "navy_org_factor": 0.1
+          }
+        },
+        {
+          "level": 5,
+          "modifiers": {
+            "naval_coordination": 0.09
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.05,
+            "navy_org_factor": 0.125
+          }
+        },
+        {
+          "level": 6,
+          "modifiers": {
+            "naval_coordination": 0.12
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.06,
+            "navy_org_factor": 0.15
+          }
+        },
+        {
+          "level": 7,
+          "modifiers": {
+            "naval_coordination": 0.14
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.07,
+            "navy_org_factor": 0.175
+          }
+        },
+        {
+          "level": 8,
+          "modifiers": {
+            "naval_coordination": 0.16
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.08,
+            "navy_org_factor": 0.2
+          }
+        },
+        {
+          "level": 9,
+          "modifiers": {
+            "naval_coordination": 0.18
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.09,
+            "navy_org_factor": 0.225
+          }
+        },
+        {
+          "level": 10,
+          "modifiers": {
+            "naval_coordination": 0.2
+          },
+          "buildingModuleModifiers": {
+            "naval_coordination": 0.1,
+            "navy_org_factor": 0.25
+          }
+        }
+      ]
+    }
+  ]
+}

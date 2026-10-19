@@ -116,6 +116,12 @@ public static class ShipDataWriter
         }
 
         node["manpower"] = hull.Manpower;
+
+        if (hull.NavalDominanceFactor != 0)
+        {
+            node["navalDominanceFactor"] = hull.NavalDominanceFactor;
+        }
+
         node["baseStats"] = Stats(hull.BaseStats);
         node["slots"] = new JsonArray(hull.Slots.Select(slot =>
         {

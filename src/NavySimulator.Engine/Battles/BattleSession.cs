@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
 
@@ -78,6 +79,7 @@ public sealed class BattleSession
             }
         }
 
+        SetNavalDominance();
         airPhase = new AirPhase(scenario, attacker, defender);
         AddInputNotes();
         shipHistory = recordShipHistory ? [] : null;
@@ -149,6 +151,7 @@ public sealed class BattleSession
         var tick = hour + 1;
         var hourStartShots = shots.Count;
         var hourStartStrikes = airStrikes.Count;
+        JoinLandBasedPlanes(hour);
         BeginHour(hour);
         SideTurn(attacker, defender, hour, tick);
         SideTurn(defender, attacker, hour, tick);
@@ -156,6 +159,7 @@ public sealed class BattleSession
         ApplyOrganizationRegain();
         LogHour(hour, hourStartShots);
         ApplyDailyManpowerGain(hour);
+        ApplyDailyAirReinforcement(hour);
         RecordHour(hour, hourStartShots, hourStartStrikes);
         hoursFought++;
 
@@ -242,10 +246,14 @@ public sealed class BattleSession
         // Carrier air strength uses the previous hour's screening, as the game computes positioning first.
         var attackerAir = airPhase.CarrierAirStrength(attacker, hour, Darkness(hour));
         var defenderAir = airPhase.CarrierAirStrength(defender, hour, Darkness(hour));
-        attacker.Positioning = PositioningRules.Calculate(attacker.Lines, defender.Lines, defines, attackerAir.A, defenderAir);
-        defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines, defenderAir.A, attackerAir);
-        attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines);
-        defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines);
+        attacker.Positioning = PositioningRules.Calculate(attacker.Lines, defender.Lines, defines, attackerAir.A, defenderAir,
+            SideModifier(attacker, StaticModifiers.Positioning), FleetSizePenaltyFactor(defender));
+        defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines, defenderAir.A, attackerAir,
+            SideModifier(defender, StaticModifiers.Positioning), FleetSizePenaltyFactor(attacker));
+        attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines,
+            SideModifier(attacker, StaticModifiers.ScreeningEfficiency), Country(attacker, StaticModifiers.ScreeningWithoutScreens));
+        defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines,
+            SideModifier(defender, StaticModifiers.ScreeningEfficiency), Country(defender, StaticModifiers.ScreeningWithoutScreens));
         attacker.SubmarineDetection = SubmarineRules.Detection(attacker.Ships, defines);
         defender.SubmarineDetection = SubmarineRules.Detection(defender.Ships, defines);
 
@@ -293,7 +301,8 @@ public sealed class BattleSession
                     ship.RetreatProgress = 0;
 
                     if (rules.RetreatEnabled &&
-                        RetreatRules.TryStartRetreat(ship, tick, own.Participant.Aggressiveness, defines, random))
+                        RetreatRules.TryStartRetreat(ship, tick, own.Participant.Aggressiveness, defines, random,
+                            enemy.Participant.Admiral?.TraitModifiers.Get(StaticModifiers.NavalEnemyRetreatChance) ?? 0))
                     {
                         log.Add($"Hour {hour}: {own.Label} {ship.ID} is retreating (HP {ship.CurrentHP:F1}/{ship.GetFinalStats().Hp:F1})");
                         events.Add(new BattleEvent(hour, own.Label, ship.ID, BattleEventKind.RetreatStarted,
@@ -354,7 +363,7 @@ public sealed class BattleSession
             {
                 tallies[target].SunkHour = hour;
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
-                    $"sunk by an air strike from {record.Source}", record.Source));
+                    $"sunk by an air strike from {record.Source}{PrideNote(target)}", record.Source));
                 ReinforceAfterSinking(enemy, hour);
             }
 
@@ -390,7 +399,7 @@ public sealed class BattleSession
                 continue;
             }
 
-            var target = TargetingRules.SelectTarget(shooter, slot, own, enemy, defines, random);
+            var target = TargetingRules.SelectTarget(shooter, slot, own, enemy, defines, random, Darkness(hour));
 
             if (target is null)
             {
@@ -402,7 +411,7 @@ public sealed class BattleSession
 
             if (slot == WeaponSlot.Torpedo && shooter.Role == ShipRole.Submarine)
             {
-                SubmarineRules.RevealAfterFiring(shooter, enemy.SubmarineDetection, own.Positioning, defines, random);
+                SubmarineRules.RevealAfterFiring(shooter, enemy.SubmarineDetection, own.Positioning, defines, random, Darkness(hour));
             }
         }
     }
@@ -411,7 +420,8 @@ public sealed class BattleSession
     private void FireAt(Ship shooter, Ship target, WeaponSlot slot, BattleSide own, BattleSide enemy, int hour)
     {
         var criticalChanceFactor = DamageRules.CriticalChanceFactor(shooter, target, own.Screening, enemy.Screening, Darkness(hour), defines);
-        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines, criticalChanceFactor);
+        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines, criticalChanceFactor, Darkness(hour), own.Screening,
+            enemy.Screening);
         var hitChance = HitChanceRules.Calculate(shooter, target, slot, own.Screening, Darkness(hour), defines);
         var weapon = profile.IsDepthCharge ? WeaponType.DepthCharge : slot switch
         {
@@ -443,7 +453,7 @@ public sealed class BattleSession
             {
                 tallies[target].SunkHour = hour;
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
-                    $"sunk by {shooter.ID} ({weapon})", shooter.ID));
+                    $"sunk by {shooter.ID} ({weapon}){PrideNote(target)}", shooter.ID));
                 ReinforceAfterSinking(enemy, hour);
             }
 
@@ -506,15 +516,15 @@ public sealed class BattleSession
                 if (tally.FiredThisHour)
                 {
                     var gain = ExperienceRules.HourlyGain(enemy.Ships.Count, side.Ships.Count, tally.LastTargetWasConvoy, defines);
-                    ExperienceRules.AddExperience(ship, gain, defines);
+                    ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
                 }
                 else if (ship.IsInBattle && airPhase.GroupsOf(side).FirstOrDefault(group => group.Carrier == ship) is { } group)
                 {
                     // [RE] A carrier that did not fire gains from its sortie efficiency instead.
                     var efficiency = Math.Clamp(airPhase.SortieEfficiency(group, side, hour, Darkness(hour)), 0, 1);
                     var navy = defines.NNavy;
-                    ExperienceRules.AddExperience(ship,
-                        navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN, defines);
+                    var gain = navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN;
+                    ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
                 }
             }
         }
@@ -532,13 +542,30 @@ public sealed class BattleSession
         }
     }
 
-    // S-ORG-REGAIN [CAL]: after the hour, retreating and escaped ships regain organization.
+    // S-ORG-REGAIN [CAL]: after the hour, retreating and escaped ships regain organization, more on the side with naval
+    // dominance (S-DOMINANCE).
     private void ApplyOrganizationRegain()
     {
         foreach (var ship in allShips)
         {
-            ExperienceRules.HourlyOrganizationRegain(ship, defines);
+            var dominance = sideByShip[ship].HasNavalDominance ? defines.NNavy.NAVAL_DOMINANCE_ORG_RECOVERY : 0;
+            ExperienceRules.HourlyOrganizationRegain(ship, defines, dominance);
         }
+    }
+
+    // S-DOMINANCE [RE + ASSUMED]: each side's dominance from its ships at the start; the larger one (both on a tie) has
+    // dominance for the whole battle.
+    private void SetNavalDominance()
+    {
+        if (!rules.NavalDominanceEnabled)
+        {
+            return;
+        }
+
+        attacker.NavalDominance = NavalDominanceRules.SideDominance(attacker.Ships, defines);
+        defender.NavalDominance = NavalDominanceRules.SideDominance(defender.Ships, defines);
+        attacker.HasNavalDominance = NavalDominanceRules.IsDominant(attacker.NavalDominance, defender.NavalDominance);
+        defender.HasNavalDominance = NavalDominanceRules.IsDominant(defender.NavalDominance, attacker.NavalDominance);
     }
 
     // S-MANPOWER [RE]: the daily update runs after the combat hour of the tick that starts a new day (00:00) and refills
@@ -555,6 +582,29 @@ public sealed class BattleSession
         if (gained > 0)
         {
             log.Add($"Hour {hour}: day change, ships regain {gained} manpower");
+        }
+    }
+
+    // A-WINGS-EXT [RE]: the hourly air update runs before the combat: in air hours land-based planes join both sides.
+    private void JoinLandBasedPlanes(int hour)
+    {
+        if (airPhase.HasAir && AirRules.IsAirHour(HourOfDay(hour), rules.AirRegionPhase, defines))
+        {
+            airPhase.JoinLandBased(hour);
+        }
+    }
+
+    // A-REINFORCE [RE]: the daily update after the 00:00 combat hour refills land-based wings from the stockpile.
+    private void ApplyDailyAirReinforcement(int hour)
+    {
+        if (HourOfDay(hour) != 0 || !airPhase.HasAir)
+        {
+            return;
+        }
+
+        foreach (var side in new[] { attacker, defender })
+        {
+            log.AddRange(airPhase.ReinforceDaily(side).Select(line => $"Hour {hour}: day change, {line}"));
         }
     }
 
@@ -694,9 +744,41 @@ public sealed class BattleSession
                $"pos {side.Positioning:P0} screen {side.Screening.ScreeningEfficiency:P0} cvscreen {side.Screening.CarrierScreeningEfficiency:P0}";
     }
 
+    // S-POS-MOD, S-SCREEN [RE] 0x15c70b0: side-level reads of a modifier, Mod(id; country, location, admiral): the country
+    // and the side's commanding admiral's container A (S-ADMIRAL-MOD); the location part (region weather, naval terrain)
+    // is not modelled.
+    private static double SideModifier(BattleSide side, string key)
+    {
+        return side.Participant.CountryModifiers.Get(key) + (side.Participant.Admiral?.CombatModifiers.Get(key) ?? 0);
+    }
+
+    // [RE] 0x161d2d6: screening_without_screens is Mod with no location and no admiral, the country alone.
+    private static double Country(BattleSide side, string key)
+    {
+        return side.Participant.CountryModifiers.Get(key);
+    }
+
+    // S-POS-SIZE [RE] 0x161bfdc: the enemy commanding admiral's naval_enemy_fleet_size_ratio_penalty_factor (container A only).
+    private static double FleetSizePenaltyFactor(BattleSide enemy)
+    {
+        return enemy.Participant.Admiral?.CombatModifiers.Get(StaticModifiers.NavalEnemyFleetSizeRatioPenaltyFactor) ?? 0;
+    }
+
+    private static string PrideNote(Ship ship)
+    {
+        return ship.IsPrideOfTheFleet ? ", the pride of the fleet" : string.Empty;
+    }
+
     private void AddInputNotes()
     {
         notes.AddRange(airPhase.Notes);
+
+        if (rules.NavalDominanceEnabled)
+        {
+            var holders = new[] { attacker, defender }.Where(side => side.HasNavalDominance).Select(side => side.Label).ToList();
+            notes.Add(FormattableString.Invariant($"Naval dominance at the start: attacker {attacker.NavalDominance:0.#}, defender {defender.NavalDominance:0.#}; ") +
+                      (holders.Count == 0 ? "neither side has it." : $"{string.Join(" and ", holders)} regain{(holders.Count == 1 ? "s" : "")} organization with it."));
+        }
 
         // S-WEATHER [RE toggle]: weather terms are not modelled yet.
         if (!string.IsNullOrWhiteSpace(scenario.Weather) && !scenario.Weather.Equals("clear", StringComparison.OrdinalIgnoreCase))
@@ -706,9 +788,27 @@ public sealed class BattleSession
                 : $"Weather '{scenario.Weather}' is ignored: weather is off.");
         }
 
-        if (!string.IsNullOrWhiteSpace(scenario.Attacker.Commander) || !string.IsNullOrWhiteSpace(scenario.Defender.Commander))
+        foreach (var side in new[] { attacker, defender })
         {
-            notes.Add("Admirals are not simulated yet.");
+            if (side.Participant.Admiral is { } admiral)
+            {
+                var levels = admiral.SkillLevels;
+                notes.Add(FormattableString.Invariant(
+                    $"{side.Label} admiral {admiral.Name}: skill {levels[LeaderSkills.Skill]}, attack {levels[LeaderSkills.Attack]}, defense {levels[LeaderSkills.Defense]}, ") +
+                    FormattableString.Invariant($"maneuvering {levels[LeaderSkills.Maneuvering]}, coordination {levels[LeaderSkills.Coordination]}, ") +
+                    (admiral.Traits.Count == 0 ? "no traits." : $"traits {string.Join(", ", admiral.Traits.Select(trait => trait.ID))}."));
+            }
+
+            // S-POTF: the commanding admiral's in-combat bonus is the only side-wide effect.
+            if (side.Participant.PrideOfTheFleet is { } pride)
+            {
+                var commander = side.Participant.Admiral;
+                var attack = commander?.CombatModifiers.Get(StaticModifiers.NavalHasPotfInCombatAttack) ?? 0;
+                var defense = commander?.CombatModifiers.Get(StaticModifiers.NavalHasPotfInCombatDefense) ?? 0;
+                notes.Add($"{side.Label} pride of the fleet: {pride.ID}" + (attack != 0 || defense != 0
+                    ? FormattableString.Invariant($"; while it is in the battle the side's ships get attack {attack:+0.##%;-0.##%} and defense {defense:+0.##%;-0.##%} from the admiral.")
+                    : "; the admiral gives no bonus for it."));
+            }
         }
     }
 
@@ -747,7 +847,8 @@ public sealed class BattleSession
             tally.Hits,
             tally.DamageDealt,
             tally.HpDamageDealt,
-            tally.HpDamageTaken);
+            tally.HpDamageTaken,
+            stats.ProductionCost);
     }
 
     private SideResult BuildSideResult(BattleSide side)

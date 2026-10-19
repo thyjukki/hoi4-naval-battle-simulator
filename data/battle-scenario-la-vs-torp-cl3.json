@@ -11,26 +11,21 @@
     "dontRetreat": false,
     "rules": {
       "weatherEnabled": false,
+      "navalDominanceEnabled": true,
       "startHourOfDay": 12
     },
     "attacker": {
       "fleetID": "75_39lc_la",
-      "commander": "",
-      "doctrine": "",
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
-      "externalNavalStrikePlanes": 0,
       "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1", "smoke_generator", "damage_control_1", "damage_control_2"],
       "spiritIDs": [],
       "shipExperienceLevel": 0
     },
     "defender": {
       "fleetID": "75_39lc_torp",
-      "commander": "",
-      "doctrine": "",
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
-      "externalNavalStrikePlanes": 0,
       "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1", "smoke_generator", "damage_control_1", "damage_control_2"],
       "spiritIDs": [],
       "shipExperienceLevel": 0

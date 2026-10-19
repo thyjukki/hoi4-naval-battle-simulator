@@ -8,13 +8,17 @@
         {
             <span class="muted small">@fleet.ShipDesigns.Values.Sum() ships</span>
         }
+        @if (Cost is not null)
+        {
+            <span class="muted small" title="Production cost of the side's ships after its equipment bonuses (researches, doctrines, MIO traits); carrier air wings and MIO production bonuses are not counted">· @Cost.Total.ToString("N0") IC</span>
+        }
     </div>
     <div class="panel-body stack">
         <div class="fields">
             <div class="field span-2">
                 <label>Fleet</label>
                 <div class="row tight" style="flex-wrap: nowrap">
-                    <select class="grow @(fleet is null ? "invalid" : "")" @bind="Side.FleetID" @bind:after="Changed">
+                    <select class="grow @(fleet is null ? "invalid" : "")" @bind="Side.FleetID" @bind:after="FleetChanged">
                         @if (fleet is null)
                         {
                             <option value="@Side.FleetID">@(string.IsNullOrEmpty(Side.FleetID) ? "(choose a fleet)" : $"{Side.FleetID} (unknown)")</option>
@@ -44,6 +48,26 @@
                         }
                     </span>
                 }
+            </div>
+            <div class="field">
+                <label>Country</label>
+                <select @bind:get="Side.Country ?? string.Empty" @bind:set="SetCountry">
+                    <option value="">(any: every MIO)</option>
+                    @if (!string.IsNullOrEmpty(Side.Country) && countries.All(entry => entry.Country.ID != Side.Country))
+                    {
+                        <option value="@Side.Country">@Side.Country (unknown)</option>
+                    }
+                    @foreach (var group in countries.GroupBy(entry => entry.HasOwnMios))
+                    {
+                        <optgroup label="@(group.Key ? "With their own naval MIOs" : "Other countries (generic MIOs)")">
+                            @foreach (var (country, _) in group)
+                            {
+                                <option value="@country.ID">@(country.Name ?? country.ID) (@country.ID)</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+                <span class="hint">@(countries.Count == 0 ? "Import MIOs (Settings → Data) for the country list." : "Which MIOs the side can have.")</span>
             </div>
             <div class="field">
                 <label>Aggressiveness</label>
@@ -79,51 +103,306 @@
                 <span class="hint">Overrides every ship's level.</span>
             </div>
             <div class="field">
-                <label>Commander</label>
-                <input type="text" @bind="Side.Commander" @bind:after="Changed" />
-                <span class="hint">Not simulated yet.</span>
-            </div>
-            <div class="field">
-                <label>Doctrine</label>
-                <input type="text" @bind="Side.Doctrine" @bind:after="Changed" />
-                <span class="hint">Not simulated yet.</span>
+                <label>Pride of the Fleet</label>
+                <select class="@(PrideIsCandidate() ? "" : "invalid")" @bind:get="Side.PrideOfTheFleet ?? string.Empty" @bind:set="SetPrideOfTheFleet">
+                    <option value="">None</option>
+                    @if (!PrideIsCandidate())
+                    {
+                        <option value="@Side.PrideOfTheFleet">@Side.PrideOfTheFleet (@(designs.Any(design => design.ID == Side.PrideOfTheFleet) ? "not a capital ship or carrier" : "not in the fleet"))</option>
+                    }
+                    @foreach (var design in prideCandidates)
+                    {
+                        <option value="@design.ID">@design.ID</option>
+                    }
+                </select>
+                <span class="hint">@PrideHint()</span>
             </div>
         </div>
 
-        <div class="field">
-            <div class="row">
-                <span class="label">Researches</span>
-                <button class="small ghost right" @onclick="CopyResearches" title="Use the other side's researches">Copy from @OtherLabel</button>
+        <details class="section">
+            <summary><span class="label">Admiral</span><span class="small muted">@AdmiralSummary()</span></summary>
+            <div class="section-body stack">
+                <div class="row">
+                    <span class="hint">
+                        @if (Workspace.Catalog.Admirals.Count == 0)
+                        {
+                            <span>No admirals in the data directory: import them in Settings → Data (or <code>NavySimulator import-leaders</code>). A custom admiral needs the imported skills and traits too.</span>
+                        }
+                        else
+                        {
+                            <span>The admiral commanding the side's fleet. Picking one copies its skills and traits; edits stay in this scenario. Experience and traits gained during the battle are not simulated.</span>
+                        }
+                    </span>
+                    <button class="small ghost right" @onclick="CopyAdmiral" title="Use the other side's admiral">Copy from @OtherLabel</button>
+                </div>
+                <div class="fields">
+                    <div class="field span-2">
+                        <label>Admiral</label>
+                        <select @bind:get="AdmiralPick()" @bind:set="PickAdmiral">
+                            <option value="">None</option>
+                            <option value="@CustomAdmiral">Custom admiral</option>
+                            @if (Side.Admiral is { ID.Length: > 0 } picked && admirals.All(item => item.ID != picked.ID))
+                            {
+                                <option value="@picked.ID">@AdmiralInfo.Name(picked) (@(Workspace.FindAdmiral(picked.ID)?.Country ?? "not imported"))</option>
+                            }
+                            @foreach (var group in admirals.GroupBy(item => item.Country ?? string.Empty))
+                            {
+                                <optgroup label="@CountryLabel(group.Key)">
+                                    @foreach (var item in group)
+                                    {
+                                        <option value="@item.ID">@AdmiralInfo.Label(item)@(sharedNames.Contains(AdmiralInfo.Name(item)) ? $" · {item.ID}" : string.Empty)</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                        <span class="hint">@PickHint()</span>
+                    </div>
+                    @if (Side.Admiral is { } admiral)
+                    {
+                        <div class="field">
+                            <label>Name</label>
+                            <input type="text" @bind="admiral.Name" @bind:after="Changed" />
+                            @if (Workspace.FindAdmiral(admiral.ID) is { } source && !AdmiralInfo.SameAs(admiral, source))
+                            {
+                                <button class="small ghost" @onclick="() => PickAdmiral(source.ID)" title="Take the game's skills and traits again">Reset to the game's</button>
+                            }
+                        </div>
+                        @foreach (var (key, label) in AdmiralInfo.Skills)
+                        {
+                            var skill = key;
+                            <div class="field">
+                                <label>@label</label>
+                                <input type="number" min="0" max="@MaxSkill(skill)" @bind:get="AdmiralInfo.Level(admiral, skill)" @bind:set="value => SetSkill(skill, value)" />
+                                <span class="hint">@SkillHint(admiral, skill)</span>
+                            </div>
+                        }
+                    }
+                </div>
+                @if (Side.Admiral is { } withTraits)
+                {
+                    <div class="field">
+                        <label>Traits</label>
+                        <CheckList Items="TraitItems()" Selected="withTraits.Traits" OnChanged="Changed" MaxHeight="260" />
+                    </div>
+                    @if (effects?.Admiral is { } engine)
+                    {
+                        <div class="stack small" style="gap: 4px">
+                            <div><span class="muted">Every ship of the fleet:</span> @(AdmiralInfo.Summarize(engine.CombatModifiers.Values) is { Length: > 0 } fleetEffects ? fleetEffects : "nothing")</div>
+                            @foreach (var (subUnit, summary, inFleet) in SubUnitEffects(engine))
+                            {
+                                <div class="@(inFleet ? "" : "muted")"><span class="mono">@subUnit</span>: @summary@(inFleet ? "" : " (no such ship in the fleet)")</div>
+                            }
+                            @if (engine.Efficiency != 1)
+                            {
+                                <div>Leader efficiency @engine.Efficiency.ToString("P0") (skill_bonus_factor): the bonuses above are scaled by it.</div>
+                            }
+                            @foreach (var problem in Engine.Leaders.AdmiralRules.TraitProblems(engine))
+                            {
+                                <div>⚠ The game would not allow this: @problem.</div>
+                            }
+                            @if (effects.IgnoredAdmiralEffects() is { Count: > 0 } ignoredAdmiral)
+                            {
+                                <div class="muted">Not simulated: @string.Join(", ", ignoredAdmiral)</div>
+                            }
+                        </div>
+                    }
+                }
             </div>
-            <CheckList Items="ResearchItems()" Selected="Side.ResearchIDs" OnChanged="Changed" />
-        </div>
+        </details>
 
-        <div class="field">
-            <span class="label">Spirits</span>
-            <CheckList Items="SpiritItems()" Selected="Side.SpiritIDs" OnChanged="Changed" MaxHeight="160" />
-        </div>
+        <details class="section">
+            <summary><span class="label">Doctrines</span><span class="small muted">@DoctrineSummary()</span></summary>
+            <div class="section-body stack">
+                <div class="row">
+                    @if (Workspace.Catalog.DoctrineFolders.Count == 0)
+                    {
+                        <span class="hint">No doctrines in the data directory: import them in Settings → Data (or <code>NavySimulator import-doctrines</code>).</span>
+                    }
+                    <button class="small ghost right" @onclick="CopyDoctrines" title="Use the other side's doctrines and spirits">Copy from @OtherLabel</button>
+                </div>
+                <div class="fields">
+                    @foreach (var folder in Workspace.DoctrineFolders)
+                    {
+                        <DoctrineEditor Folder="folder" Side="Side" OnChanged="Changed"
+                                        Hint="@(folder.ID == Engine.Battles.BattleParticipant.NavalFolder ? null : "Recorded with the setup and checked for spirits; its effects are not simulated yet.")" />
+                    }
+                </div>
+            </div>
+        </details>
+
+        <details class="section">
+            <summary><span class="label">MIOs</span><span class="small muted">@MioSummary()</span></summary>
+            <div class="section-body stack">
+                <div class="row">
+                    <span class="hint">
+                        @if (Workspace.Catalog.Mios.Count == 0)
+                        {
+                            <span>No MIOs in the data directory: import them in Settings → Data (or <code>NavySimulator import-mios</code>).</span>
+                        }
+                        else
+                        {
+                            <span>Each design's MIO for this side (the designer's unless changed here), then the side's traits and policy per MIO, as in the game: every design of the MIO gets them.</span>
+                        }
+                    </span>
+                    <button class="small ghost right" @onclick="CopyMios" title="Use the other side's MIO assignments, traits and policies">Copy from @OtherLabel</button>
+                </div>
+                @if (Workspace.Catalog.Mios.Count > 0 && designs.Count > 0)
+                {
+                    <table class="data compact">
+                        <thead><tr><th>Design</th><th>MIO</th></tr></thead>
+                        <tbody>
+                            @foreach (var design in designs)
+                            {
+                                var row = design;
+                                var current = Workspace.FindMio(Workspace.EffectiveMioId(Side, row));
+                                var options = Workspace.AssignableMios(row, Side.Country);
+                                <tr>
+                                    <td class="nowrap">@row.ID</td>
+                                    <td>
+                                        <select class="@(current is not null && options.All(option => option.ID != current.ID) ? "invalid" : "")"
+                                                @bind:get="DesignMioValue(row)" @bind:set="value => SetDesignMio(row, value)">
+                                            <option value="">Designer's: @(Workspace.FindMio(row.MioID) is { } own ? MioInfo.Label(own) : row.MioID ?? "none")</option>
+                                            <option value="@NoMio">None</option>
+                                            @if (current is not null && options.All(option => option.ID != current.ID))
+                                            {
+                                                <option value="@current.ID">@MioInfo.Label(current) (@(string.IsNullOrEmpty(Side.Country) ? "does not cover this design" : $"not for {Side.Country} or this design"))</option>
+                                            }
+                                            @foreach (var group in options.GroupBy(MioInfo.Group).OrderBy(group => group.Key.EndsWith(')') ? 1 : 0).ThenBy(group => group.Key, StringComparer.Ordinal))
+                                            {
+                                                <optgroup label="@group.Key">
+                                                    @foreach (var option in group)
+                                                    {
+                                                        <option value="@option.ID">@MioInfo.Label(option)</option>
+                                                    }
+                                                </optgroup>
+                                            }
+                                        </select>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                @foreach (var (mio, mioDesigns) in mios)
+                {
+                    <MioEditor Mio="mio" Side="Side" Designs="mioDesigns" Open="@(mios.Count == 1)" OnChanged="Changed" />
+                }
+            </div>
+        </details>
+
+        <details class="section">
+            <summary><span class="label">Researches</span><span class="small muted">@SelectionSummary(Side.ResearchIDs)</span></summary>
+            <div class="section-body stack">
+                <div class="row">
+                    <button class="small ghost right" @onclick="CopyResearches" title="Use the other side's researches">Copy from @OtherLabel</button>
+                </div>
+                <CheckList Items="ResearchItems()" Selected="Side.ResearchIDs" OnChanged="Changed" />
+            </div>
+        </details>
+
+        <details class="section">
+            <summary><span class="label">Spirits</span><span class="small muted">@SelectionSummary(Side.SpiritIDs.Select(id => Workspace.Catalog.Spirits.FirstOrDefault(spirit => spirit.ID == id)?.Name ?? id))</span></summary>
+            <div class="section-body stack">
+                <CheckList Items="SpiritItems()" Selected="Side.SpiritIDs" OnChanged="Changed" MaxHeight="220" />
+            </div>
+        </details>
+
+        @if (effects is not null && (effects.ActiveEffects.Count > 0 || Side.Doctrines.Count > 0))
+        {
+            <details>
+                <summary class="small muted" style="cursor: pointer">
+                    Doctrine and spirit effects: @effects.ActiveEffects.Count sources@(ignored.Count > 0 ? $", {ignored.Count} parts not simulated" : string.Empty)
+                </summary>
+                <div class="stack small" style="margin-top: 6px; gap: 4px">
+                    @foreach (var (source, _) in effects.ActiveEffects)
+                    {
+                        <div><span class="mono">@source</span>: @EffectSummary(source)</div>
+                    }
+                    @if (ignored.Count > 0)
+                    {
+                        <div class="muted">Not simulated: @string.Join(", ", ignored)</div>
+                    }
+                </div>
+            </details>
+        }
 
         <details>
-            <summary class="small muted" style="cursor: pointer">Air: land-based planes and carrier settings</summary>
+            <summary class="small muted" style="cursor: pointer">Air: land-based planes, plane stockpile and carrier settings</summary>
+            <div class="stack" style="margin-top: 10px">
+                <div>
+                    <div class="row" style="margin-bottom: 6px">
+                        <strong class="small">Land-based planes</strong>
+                        <span class="muted small" title="A-EXTERNAL: each entry is one air base's planes. Each air hour they offer planes x mission efficiency, in this order, up to a cap that grows with the enemy's warship HP and the days fought; a wing that got in strikes with all its planes at every air hour.">one row per air base, in joining order</span>
+                        <button class="small right" @onclick="AddLandBased">Add</button>
+                    </div>
+                    @if (Side.LandBasedAirwings.Count > 0)
+                    {
+                        <div style="overflow-x: auto">
+                        <table class="data compact" style="width: 100%">
+                            <thead><tr><th>Plane</th><th class="num">Planes</th><th class="num" title="The air mission's efficiency (air base, range, coverage; not simulated): scales the planes offered to the battle each air hour">Mission eff.</th><th class="num" title="The mission's disruption factor: multiplies their attack; 1 when no enemy interceptors disrupt it">Disruption</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var landBased in Side.LandBasedAirwings)
+                                {
+                                    <tr>
+                                        <td>
+                                            <select @bind="landBased.PlaneID" @bind:after="Changed" style="width: 100%; max-width: 240px">
+                                                @if (Workspace.Catalog.Planes.All(plane => plane.ID != landBased.PlaneID))
+                                                {
+                                                    <option value="@landBased.PlaneID">@landBased.PlaneID (unknown)</option>
+                                                }
+                                                @foreach (var group in Workspace.Catalog.Planes.GroupBy(plane => IsStriker(plane.ID) ? "Naval strike" : "Other (no naval strike)"))
+                                                {
+                                                    <optgroup label="@group.Key">
+                                                        @foreach (var plane in group)
+                                                        {
+                                                            <option value="@plane.ID">@PlaneLabel(plane)</option>
+                                                        }
+                                                    </optgroup>
+                                                }
+                                            </select>
+                                        </td>
+                                        <td class="num"><input type="number" min="0" @bind="landBased.Planes" @bind:after="Changed" style="width: 70px" /></td>
+                                        <td class="num"><input type="number" min="0" step="0.05" placeholder="1" @bind="landBased.MissionEfficiency" @bind:after="Changed" style="width: 64px" /></td>
+                                        <td class="num"><input type="number" min="0" max="1" step="0.05" placeholder="1" @bind="landBased.DisruptionFactor" @bind:after="Changed" style="width: 64px" /></td>
+                                        <td><button class="small icon danger" title="Remove" @onclick="() => RemoveLandBased(landBased)">✕</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        </div>
+                    }
+                </div>
+                <div>
+                    <div class="row" style="margin-bottom: 6px">
+                        <strong class="small">Plane stockpile</strong>
+                        <span class="muted small" title="A-REINFORCE: at each day change the stockpile refills the land-based wings (own plane first, then planes of the same sub-unit and missions). Carrier wings get no planes while their task force is in combat.">refills land-based wings at each day change</span>
+                        <select class="right" style="max-width: 200px" @bind:get="string.Empty" @bind:set="AddStockpile" aria-label="Add a plane to the stockpile">
+                            <option value="">Add a plane…</option>
+                            @foreach (var plane in StockpileCandidates())
+                            {
+                                <option value="@plane.ID">@PlaneLabel(plane)</option>
+                            }
+                        </select>
+                    </div>
+                    @if (Side.PlaneStockpile.Count > 0)
+                    {
+                        <table class="data compact">
+                            <thead><tr><th>Plane</th><th class="num">In stock</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var planeId in Side.PlaneStockpile.Keys.ToList())
+                                {
+                                    <tr>
+                                        <td>@(Workspace.Catalog.Planes.FirstOrDefault(plane => plane.ID == planeId) is { } stocked ? PlaneLabel(stocked) : $"{planeId} (unknown)")</td>
+                                        <td class="num"><input type="number" min="0" @bind:get="Side.PlaneStockpile[planeId]" @bind:set="value => SetStockpile(planeId, value)" style="width: 80px" /></td>
+                                        <td><button class="small icon danger" title="Remove" @onclick="() => RemoveStockpile(planeId)">✕</button></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
             <div class="fields" style="margin-top: 10px">
-                <div class="field">
-                    <label>Land-based naval strike planes</label>
-                    <input type="number" min="0" @bind="Side.ExternalNavalStrikePlanes" @bind:after="Changed" />
-                </div>
-                <div class="field">
-                    <label>Their plane type</label>
-                    <select @bind:get="Side.ExternalPlaneID ?? string.Empty" @bind:set="SetExternalPlane">
-                        <option value="">(none)</option>
-                        @foreach (var plane in Workspace.Catalog.Planes)
-                        {
-                            <option value="@plane.ID">@plane.ID</option>
-                        }
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Their mission efficiency</label>
-                    <input type="number" step="0.05" min="0" placeholder="1" @bind="Side.ExternalMissionEfficiency" @bind:after="Changed" />
-                </div>
                 <div class="field">
                     <label>Carrier stance</label>
                     <select @bind="Side.CarrierStanceIndex" @bind:after="Changed">
@@ -150,24 +429,225 @@
     private static readonly double[] StanceRatios = Vanilla.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
     private static readonly int DefaultStance = (int)Vanilla.NNavy.CARRIER_OFFENSIVE_STANCE_DEFAULT_INDEX;
 
+    // The designMios value that assigns no MIO; the select shows it as "None".
+    private const string NoMio = "-";
+
+    // The admiral picker's value for a made-up admiral (character IDs never start with '*').
+    private const string CustomAdmiral = "*custom";
+
     private FleetDto? fleet;
+    private IReadOnlyList<ShipDesignDto> designs = [];
+    private IReadOnlyList<(CountryDto Country, bool HasOwnMios)> countries = [];
+    private IReadOnlyList<(MioDto Mio, IReadOnlyList<string> Designs)> mios = [];
+    private IReadOnlyList<AdmiralDto> admirals = [];
+    private IReadOnlyList<ShipDesignDto> prideCandidates = [];
+    private IReadOnlySet<string> sharedNames = new HashSet<string>();
+    private Engine.Battles.BattleParticipant? effects;
+    private IReadOnlyList<string> ignored = [];
 
     [Parameter, EditorRequired] public string Label { get; set; } = string.Empty;
     [Parameter, EditorRequired] public BattleParticipantDto Side { get; set; } = null!;
     [Parameter, EditorRequired] public BattleParticipantDto Other { get; set; } = null!;
     [Parameter] public EventCallback OnChanged { get; set; }
 
+    /// <summary>The side's fleet cost from the last valid build of the scenario; null hides it.</summary>
+    [Parameter] public FleetCost? Cost { get; set; }
+
     private string OtherLabel => Label == "attacker" ? "defender" : "attacker";
 
     protected override void OnParametersSet()
     {
-        fleet = Workspace.FindFleet(Side.FleetID);
+        Refresh();
     }
 
     private async Task Changed()
     {
-        fleet = Workspace.FindFleet(Side.FleetID);
+        Refresh();
         await OnChanged.InvokeAsync();
+    }
+
+    private void Refresh()
+    {
+        fleet = Workspace.FindFleet(Side.FleetID);
+        designs = Workspace.SideDesigns(Side);
+        prideCandidates = Workspace.PrideOfTheFleetCandidates(Side);
+        countries = Workspace.Countries();
+        mios = Workspace.SideMios(Side);
+        admirals = Workspace.Admirals(Side.Country);
+        // Mods can define one person twice (TFB: USA_chester_w_nimitz and USA_chester_w._nimitz); the ID tells them apart.
+        sharedNames = admirals.GroupBy(AdmiralInfo.Name).Where(group => group.Count() > 1).Select(group => group.Key).ToHashSet();
+        effects = Workspace.SideEffects(Side);
+        ignored = effects.IgnoredEffects().Except(effects.IgnoredAdmiralEffects()).ToList();
+    }
+
+    // A pride of the fleet the new fleet does not have is dropped.
+    private async Task FleetChanged()
+    {
+        if (!string.IsNullOrEmpty(Side.PrideOfTheFleet) && Workspace.SideDesigns(Side).All(design => design.ID != Side.PrideOfTheFleet))
+        {
+            Side.PrideOfTheFleet = null;
+        }
+
+        await Changed();
+    }
+
+    private async Task SetPrideOfTheFleet(string value)
+    {
+        Side.PrideOfTheFleet = string.IsNullOrEmpty(value) ? null : value;
+        await Changed();
+    }
+
+    private bool PrideIsCandidate()
+    {
+        return string.IsNullOrEmpty(Side.PrideOfTheFleet) || prideCandidates.Any(design => design.ID == Side.PrideOfTheFleet);
+    }
+
+    // S-POTF: what the pride of the fleet gives with this side's admiral.
+    private string PrideHint()
+    {
+        if (string.IsNullOrEmpty(Side.PrideOfTheFleet))
+        {
+            return prideCandidates.Count == 0 ? "The fleet has no capital ship or carrier." : "One capital ship or carrier of the fleet (the first of the design).";
+        }
+
+        return AdmiralInfo.PrideOfTheFleetEffects(effects?.Admiral);
+    }
+
+    // S-ADMIRAL: "" none, CustomAdmiral a made-up one, else the character it was picked from.
+    private string AdmiralPick()
+    {
+        return Side.Admiral is not { } admiral ? string.Empty : string.IsNullOrEmpty(admiral.ID) ? CustomAdmiral : admiral.ID;
+    }
+
+    private async Task PickAdmiral(string value)
+    {
+        Side.Admiral = value switch
+        {
+            "" => null,
+            CustomAdmiral => new AdmiralDto { Name = "Admiral" },
+            _ => Workspace.FindAdmiral(value) is { } admiral ? Workspace.Clone(admiral) : Side.Admiral
+        };
+        await Changed();
+    }
+
+    private async Task SetSkill(string skill, int level)
+    {
+        if (Side.Admiral is { } admiral)
+        {
+            AdmiralInfo.SetLevel(admiral, skill, Math.Max(0, level));
+            await Changed();
+        }
+    }
+
+    private async Task CopyAdmiral()
+    {
+        Side.Admiral = Other.Admiral is null ? null : Workspace.Clone(Other.Admiral);
+        await Changed();
+    }
+
+    private string PickHint()
+    {
+        if (Side.Admiral is not { } admiral)
+        {
+            return !string.IsNullOrEmpty(Side.Country) && admirals.Count == 0 && Workspace.Catalog.Admirals.Count > 0
+                ? $"The game has no admirals for {Side.Country}; use a custom one or clear the country."
+                : string.IsNullOrEmpty(Side.Country) ? "Every country's admirals; set the country to list only its own." : $"{Side.Country}'s admirals.";
+        }
+
+        if (string.IsNullOrEmpty(admiral.ID))
+        {
+            return "Made up for this scenario.";
+        }
+
+        return Workspace.FindAdmiral(admiral.ID) is { } source
+            ? AdmiralInfo.SameAs(admiral, source) ? $"{source.ID}, as in the game files." : $"{source.ID}, edited for this scenario."
+            : $"{admiral.ID} is not in the imported admirals; the scenario keeps its copy.";
+    }
+
+    private string CountryLabel(string tag)
+    {
+        if (string.IsNullOrEmpty(tag))
+        {
+            return "Country unknown";
+        }
+
+        var name = countries.FirstOrDefault(entry => entry.Country.ID == tag).Country?.Name;
+        return name is null ? tag : $"{name} ({tag})";
+    }
+
+    private int MaxSkill(string skill)
+    {
+        var max = Workspace.Library.LeaderSkills.MaxLevel(skill);
+        return max > 0 ? max : 10;
+    }
+
+    // S-ADMIRAL-SKILL: what the level read gives (trait adds included, clamped to the file's levels), e.g. "naval_damage_factor +10%".
+    private string SkillHint(AdmiralDto admiral, string skill)
+    {
+        var level = effects?.Admiral?.SkillLevels.GetValueOrDefault(skill) ?? AdmiralInfo.Level(admiral, skill);
+        var read = skill == Engine.Leaders.LeaderSkills.Skill ? level : Math.Clamp(level, 1, MaxSkill(skill));
+        var modifiers = Workspace.Library.LeaderSkills.Modifiers(skill, level).Values;
+        var text = modifiers.Count == 0 ? "no battle modifier" : AdmiralInfo.Summarize(modifiers);
+        return read == AdmiralInfo.Level(admiral, skill) ? text : $"reads level {read}: {text}";
+    }
+
+    private IReadOnlyList<CheckItem> TraitItems()
+    {
+        return Workspace.LeaderTraits
+            .Select(trait => new CheckItem(trait.ID, $"{trait.Name ?? trait.ID} · {AdmiralInfo.Summarize(trait)}", AdmiralInfo.Group(trait)))
+            .ToList();
+    }
+
+    // S-ADMIRAL-MOD: the traits' sub-unit modifiers by sub-unit, and whether the side's fleet has ships of that sub-unit.
+    private IReadOnlyList<(string SubUnit, string Summary, bool InFleet)> SubUnitEffects(Engine.Leaders.Admiral admiral)
+    {
+        var fleetSubUnits = designs.Select(design => Workspace.ShipTypeOf(design).Type?.ID).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        return admiral.Traits.SelectMany(trait => trait.SubUnitModifiers.Keys)
+            .Distinct(StringComparer.Ordinal)
+            .Select(subUnit => (subUnit, AdmiralInfo.Summarize(admiral.SubUnitModifiers(subUnit).Values), fleetSubUnits.Contains(subUnit)))
+            .ToList();
+    }
+
+    private string AdmiralSummary()
+    {
+        return Side.Admiral is not { } admiral
+            ? Workspace.Catalog.Admirals.Count == 0 ? "none · not imported" : "none"
+            : $"{AdmiralInfo.Name(admiral)} · {AdmiralInfo.SkillLine(admiral)} · {admiral.Traits.Count} traits";
+    }
+
+    private async Task CopyDoctrines()
+    {
+        Side.Doctrines = Workspace.Clone(Other.Doctrines ?? []);
+        Side.SpiritIDs.Clear();
+        Side.SpiritIDs.AddRange(Other.SpiritIDs);
+        await Changed();
+    }
+
+    // The source names of BattleParticipant.ActiveEffects: a grand doctrine, subdoctrine or spirit ID,
+    // "subdoctrine/reward" or "grand/track milestone".
+    private string EffectSummary(string source)
+    {
+        var folders = Workspace.Catalog.DoctrineFolders;
+        var parts = source.Split('/');
+        var milestone = parts.Length == 2 && parts[1].EndsWith(" milestone", StringComparison.Ordinal);
+        var dto = parts.Length == 1
+            ? folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == source)?.Effects
+              ?? folders.SelectMany(folder => folder.Subdoctrines).FirstOrDefault(item => item.ID == source)?.Effects
+              ?? Workspace.Catalog.Spirits.FirstOrDefault(item => item.ID == source)?.Effects
+            : milestone
+                ? folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == parts[0])?.Milestones
+                    .GetValueOrDefault(parts[1][..^" milestone".Length])
+                : folders.SelectMany(folder => folder.Subdoctrines).FirstOrDefault(item => item.ID == parts[0])?.Rewards
+                    .FirstOrDefault(reward => reward.ID == parts[1])?.Effects;
+        return DoctrineInfo.Summarize(dto);
+    }
+
+    private string DoctrineName(string id)
+    {
+        var folders = Workspace.Catalog.DoctrineFolders;
+        return folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == id)?.Name
+               ?? folders.SelectMany(folder => folder.Subdoctrines).FirstOrDefault(item => item.ID == id)?.Name
+               ?? id;
     }
 
     private async Task SetRepairPriority(string value)
@@ -182,10 +662,126 @@
         await Changed();
     }
 
-    private async Task SetExternalPlane(string value)
+    private bool IsStriker(string planeId)
     {
-        Side.ExternalPlaneID = string.IsNullOrEmpty(value) ? null : value;
+        return Workspace.Library.Planes.TryGetValue(planeId, out var plane) && plane.IsNavalStriker(Vanilla.Hardcoded);
+    }
+
+    private static string PlaneLabel(PlaneDto plane)
+    {
+        return plane.Name is { } name ? $"{name} ({plane.ID})" : plane.ID;
+    }
+
+    private async Task AddLandBased()
+    {
+        var striker = Workspace.Catalog.Planes.LastOrDefault(plane => plane.Archetype == "nav_bomber_equipment") ??
+                      Workspace.Catalog.Planes.FirstOrDefault(plane => IsStriker(plane.ID));
+        Side.LandBasedAirwings.Add(new LandBasedAirwingDto { PlaneID = striker?.ID ?? string.Empty, Planes = 100 });
         await Changed();
+    }
+
+    private async Task RemoveLandBased(LandBasedAirwingDto landBased)
+    {
+        Side.LandBasedAirwings.Remove(landBased);
+        await Changed();
+    }
+
+    /// <summary>Planes not in the stockpile yet, the side's own (carrier wings, land-based) first.</summary>
+    private IEnumerable<PlaneDto> StockpileCandidates()
+    {
+        var used = Workspace.FindFleet(Side.FleetID) is { } fleet
+            ? fleet.CarrierAirwings.Values.SelectMany(loadouts => loadouts).SelectMany(loadout => loadout.Wings).Select(wing => wing.PlaneID)
+            : [];
+        var own = used.Concat(Side.LandBasedAirwings.Select(entry => entry.PlaneID)).ToHashSet(StringComparer.Ordinal);
+        return Workspace.Catalog.Planes.Where(plane => !Side.PlaneStockpile.ContainsKey(plane.ID)).OrderBy(plane => own.Contains(plane.ID) ? 0 : 1);
+    }
+
+    private async Task AddStockpile(string planeId)
+    {
+        if (!string.IsNullOrEmpty(planeId))
+        {
+            Side.PlaneStockpile.TryAdd(planeId, 0);
+            await Changed();
+        }
+    }
+
+    private async Task SetStockpile(string planeId, int count)
+    {
+        Side.PlaneStockpile[planeId] = Math.Max(0, count);
+        await Changed();
+    }
+
+    private async Task RemoveStockpile(string planeId)
+    {
+        Side.PlaneStockpile.Remove(planeId);
+        await Changed();
+    }
+
+    private async Task CopyMios()
+    {
+        Side.Mios = Workspace.Clone(Other.Mios ?? []);
+        Side.DesignMios = Workspace.Clone(Other.DesignMios ?? []);
+        await Changed();
+    }
+
+    private async Task SetCountry(string value)
+    {
+        Side.Country = string.IsNullOrEmpty(value) ? null : value;
+        await Changed();
+    }
+
+    // "" keeps the designer's MIO, NoMio assigns none, anything else is an MIO ID.
+    private string DesignMioValue(ShipDesignDto design)
+    {
+        return Side.DesignMios.TryGetValue(design.ID, out var assigned) ? (string.IsNullOrEmpty(assigned) ? NoMio : assigned) : string.Empty;
+    }
+
+    private async Task SetDesignMio(ShipDesignDto design, string value)
+    {
+        if (string.IsNullOrEmpty(value) || value == design.MioID)
+        {
+            Side.DesignMios.Remove(design.ID);
+        }
+        else
+        {
+            Side.DesignMios[design.ID] = value == NoMio ? string.Empty : value;
+        }
+
+        await Changed();
+    }
+
+    // Folded section summaries.
+    private string DoctrineSummary()
+    {
+        var parts = Workspace.DoctrineFolders
+            .Where(folder => Side.Doctrines.ContainsKey(folder.ID))
+            .Select(folder => folder.GrandDoctrines.FirstOrDefault(doctrine => doctrine.ID == Side.Doctrines[folder.ID].GrandDoctrine)?.Name ?? Side.Doctrines[folder.ID].GrandDoctrine)
+            .ToList();
+        return parts.Count == 0 ? "none" : string.Join(" · ", parts);
+    }
+
+    private string MioSummary()
+    {
+        if (Workspace.Catalog.Mios.Count == 0)
+        {
+            return "not imported";
+        }
+
+        var assigned = designs.Count(design => Workspace.EffectiveMioId(Side, design) is not null);
+        var traits = Side.Mios.Values.Sum(setup => setup.Traits.Count);
+        var country = string.IsNullOrEmpty(Side.Country) ? string.Empty : $"{Side.Country} · ";
+        return $"{country}{assigned} / {designs.Count} designs with an MIO · {traits} traits unlocked";
+    }
+
+    private static string SelectionSummary(IEnumerable<string> items)
+    {
+        var list = items.ToList();
+        return list.Count switch
+        {
+            0 => "none",
+            <= 3 => string.Join(", ", list),
+            _ => $"{list.Count} selected"
+        };
     }
 
     private async Task CopyResearches()
@@ -206,15 +802,20 @@
             .ToList();
     }
 
+    // S-SPIRIT: grouped by spirit slot; a spirit whose has_doctrine conditions the side does not meet says what it needs.
     private IReadOnlyList<CheckItem> SpiritItems()
     {
-        return Workspace.Catalog.Spirits
+        var doctrines = effects?.Doctrines ?? [];
+        return Workspace.Spirits
             .Select(spirit => new CheckItem(
                 spirit.ID,
-                StatInfo.Summarize(spirit.StatModifiers, spirit.StatAverages, spirit.StatMultipliers) is { Length: > 0 } summary
-                    ? summary + AppliesTo(spirit.AppliesToRoles, spirit.AppliesToTypes)
-                    : "no stat effect the engine models yet",
-                Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(spirit) ?? string.Empty)))
+                string.Join(" · ", new[]
+                {
+                    spirit.Name ?? string.Empty,
+                    DoctrineInfo.MissingDoctrines(spirit, doctrines, DoctrineName) is { } missing ? $"⚠ {missing}" : string.Empty,
+                    DoctrineInfo.Summarize(spirit.Effects)
+                }.Where(part => part.Length > 0)),
+                spirit.CategoryName ?? spirit.Category))
             .ToList();
     }
 

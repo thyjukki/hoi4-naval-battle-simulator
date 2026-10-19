@@ -130,7 +130,7 @@ public sealed class BatchRunner(Workspace workspace)
     {
         var invariant = CultureInfo.InvariantCulture;
         var builder = new StringBuilder();
-        builder.AppendLine("seed,outcome,hours,attackerSunk,attackerRetreated,attackerHpLost,attackerHpDealt,defenderSunk,defenderRetreated,defenderHpLost,defenderHpDealt");
+        builder.AppendLine("seed,outcome,hours,attackerSunk,attackerRetreated,attackerHpLost,attackerHpDealt,defenderSunk,defenderRetreated,defenderHpLost,defenderHpDealt,attackerIcLost,defenderIcLost");
 
         foreach (var run in runs)
         {
@@ -145,7 +145,9 @@ public sealed class BatchRunner(Workspace workspace)
                 run.Defender.ShipsSunk.ToString(invariant),
                 run.Defender.ShipsRetreated.ToString(invariant),
                 run.Defender.HpLost.ToString("F2", invariant),
-                run.Defender.HpDamageDealt.ToString("F2", invariant)));
+                run.Defender.HpDamageDealt.ToString("F2", invariant),
+                FleetCost.Of(run, run.Attacker.Label).Sunk.ToString("F2", invariant),
+                FleetCost.Of(run, run.Defender.Label).Sunk.ToString("F2", invariant)));
         }
 
         return builder.ToString();

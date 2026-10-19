@@ -182,57 +182,75 @@
             @if (CarrierDesigns().Any())
             {
                 <div class="panel">
-                    <div class="panel-head"><h2>Carrier air wings</h2><span class="muted small">per carrier of the design</span></div>
+                    <div class="panel-head">
+                        <h2>Carrier air wings</h2>
+                        <span class="muted small">per carrier; strike wings attack ships, fighter wings defend the side's carriers</span>
+                    </div>
                     <div class="panel-body stack">
                         @foreach (var carrierId in CarrierDesigns())
                         {
-                            var wings = editing.CarrierAirwings.GetValueOrDefault(carrierId) ?? [];
-                            var deck = Workspace.FindDesign(carrierId) is { } carrierDesign ? Workspace.DesignStats(carrierDesign)?.CarrierSize ?? 0 : 0;
-                            <div>
-                                <div class="row" style="margin-bottom: 6px">
-                                    <strong>@carrierId</strong>
-                                    <span class="muted small">deck size @deck.ToString("F0") · @wings.Sum(wing => wing.Airwings) wings, @wings.Sum(wing => wing.Airwings * (wing.PlaneCount == 0 ? 10 : wing.PlaneCount)) planes</span>
-                                    <button class="small right" @onclick="() => AddWing(carrierId)">Add wing</button>
-                                </div>
-                                @if (wings.Count == 0)
-                                {
-                                    <p class="muted small">No air wings: this carrier flies no strikes.</p>
-                                }
-                                else
-                                {
-                                    <table class="data compact">
-                                        <thead><tr><th>Plane</th><th>Type</th><th class="num">Wings</th><th class="num" title="Planes per wing; 0 means 10">Planes / wing</th><th></th></tr></thead>
-                                        <tbody>
-                                            @foreach (var wing in wings)
+                            var count = editing.ShipDesigns.GetValueOrDefault(carrierId);
+                            var capacity = Workspace.FindDesign(carrierId) is { } carrierDesign ? (Workspace.DesignStats(carrierDesign)?.CarrierSize ?? 0) * Defaults.NAir.CARRIER_SIZE_STAT_INCREMENT : 0;
+                            @for (var index = 0; index < count; index++)
+                            {
+                                var carrier = index;
+                                var loadout = CarrierLoadouts.Find(editing, carrierId, carrier);
+                                var planes = CarrierLoadouts.Planes(loadout);
+                                <div>
+                                    <div class="row" style="margin-bottom: 6px">
+                                        <strong>@carrierId #@(carrier + 1)</strong>
+                                        <span class="muted small @(planes > capacity ? "bad" : null)" title="Planes above the deck capacity (carrier size × CARRIER_SIZE_STAT_INCREMENT) lower the sortie efficiency">
+                                            @CarrierLoadouts.Wings(loadout) wings, @planes / @capacity.ToString("F0") planes
+                                        </span>
+                                        <span class="right row tight">
+                                            @if (loadout is { Wings.Count: > 0 } && CarrierCount() > 1)
                                             {
-                                                <tr>
-                                                    <td>
-                                                        <select @bind="wing.PlaneID" @bind:after="StateHasChanged">
-                                                            @if (Workspace.Catalog.Planes.All(plane => plane.ID != wing.PlaneID))
-                                                            {
-                                                                <option value="@wing.PlaneID">@wing.PlaneID (unknown)</option>
-                                                            }
-                                                            @foreach (var plane in Workspace.Catalog.Planes)
-                                                            {
-                                                                <option value="@plane.ID">@plane.ID</option>
-                                                            }
-                                                        </select>
-                                                    </td>
-                                                    <td>
-                                                        <select @bind="wing.Type">
-                                                            <option value="fighter">fighter</option>
-                                                            <option value="bomber">bomber</option>
-                                                        </select>
-                                                    </td>
-                                                    <td class="num"><input type="number" min="1" @bind="wing.Airwings" style="width: 70px" /></td>
-                                                    <td class="num"><input type="number" min="0" @bind="wing.PlaneCount" style="width: 70px" /></td>
-                                                    <td><button class="small icon danger" title="Remove" @onclick="() => RemoveWing(carrierId, wing)">✕</button></td>
-                                                </tr>
+                                                <button class="small ghost" title="Give every carrier of the fleet a copy of these wings" @onclick="() => CopyToAll(carrierId, carrier)">Use for every carrier</button>
                                             }
-                                        </tbody>
-                                    </table>
-                                }
-                            </div>
+                                            <button class="small" @onclick="() => CarrierLoadouts.AddWing(editing, carrierId, carrier, DefaultCarrierPlane())">Add wing</button>
+                                        </span>
+                                    </div>
+                                    @if (loadout is not { Wings.Count: > 0 })
+                                    {
+                                        <p class="muted small">No air wings: this carrier flies no strikes.</p>
+                                    }
+                                    else
+                                    {
+                                        <table class="data compact">
+                                            <thead><tr><th>Plane</th><th>Role</th><th class="num">Wings</th><th class="num" title="Planes per wing; 0 means 10">Planes / wing</th><th></th></tr></thead>
+                                            <tbody>
+                                                @foreach (var wing in loadout.Wings)
+                                                {
+                                                    <tr>
+                                                        <td>
+                                                            <select @bind="wing.PlaneID" @bind:after="StateHasChanged">
+                                                                @if (Workspace.Catalog.Planes.All(plane => plane.ID != wing.PlaneID))
+                                                                {
+                                                                    <option value="@wing.PlaneID">@wing.PlaneID (unknown)</option>
+                                                                }
+                                                                <optgroup label="Carrier capable">
+                                                                    @foreach (var plane in Workspace.Catalog.Planes.Where(plane => plane.CarrierCapable))
+                                                                    {
+                                                                        <option value="@plane.ID">@PlaneLabel(plane)</option>
+                                                                    }
+                                                                </optgroup>
+                                                                @if (Workspace.Catalog.Planes.FirstOrDefault(plane => plane.ID == wing.PlaneID) is { CarrierCapable: false } landPlane)
+                                                                {
+                                                                    <option value="@landPlane.ID">@PlaneLabel(landPlane) (not carrier capable)</option>
+                                                                }
+                                                            </select>
+                                                        </td>
+                                                        <td class="muted small">@PlaneRole(wing.PlaneID)</td>
+                                                        <td class="num"><input type="number" min="1" @bind="wing.Airwings" style="width: 70px" /></td>
+                                                        <td class="num"><input type="number" min="0" @bind="wing.PlaneCount" style="width: 70px" /></td>
+                                                        <td><button class="small icon danger" title="Remove" @onclick="() => CarrierLoadouts.RemoveWing(editing, carrierId, carrier, wing)">✕</button></td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
+                                </div>
+                            }
                         }
                     </div>
                 </div>
@@ -242,7 +260,8 @@
 </div>
 
 @code {
-    private static readonly int MaxExperienceLevel = Engine.Battles.Mechanics.ExperienceRules.MaxLevel(Engine.Defines.GameDefines.Vanilla());
+    private static readonly Engine.Defines.GameDefines Defaults = Engine.Defines.GameDefines.Vanilla();
+    private static readonly int MaxExperienceLevel = Engine.Battles.Mechanics.ExperienceRules.MaxLevel(Defaults);
 
     private string filter = string.Empty;
     private string? selectedId;
@@ -410,6 +429,7 @@
         if (int.TryParse(value, out var count) && count > 0)
         {
             editing!.ShipDesigns[designId] = count;
+            CarrierLoadouts.Trim(editing, designId);
         }
     }
 
@@ -443,26 +463,30 @@
         return editing!.ShipDesigns.Keys.Where(id => Workspace.FindDesign(id) is { } design && Workspace.RoleOf(design) == ShipRole.Carrier);
     }
 
-    private void AddWing(string carrierId)
+    private int CarrierCount()
     {
-        if (!editing!.CarrierAirwings.TryGetValue(carrierId, out var wings))
-        {
-            wings = [];
-            editing.CarrierAirwings[carrierId] = wings;
-        }
-
-        wings.Add(new CarrierAirwingAssignmentDto { PlaneID = Workspace.Catalog.Planes.FirstOrDefault()?.ID ?? string.Empty, Type = "bomber", Airwings = 1, PlaneCount = 10 });
+        return CarrierDesigns().Sum(id => editing!.ShipDesigns.GetValueOrDefault(id));
     }
 
-    private void RemoveWing(string carrierId, CarrierAirwingAssignmentDto wing)
+    private void CopyToAll(string designId, int index)
     {
-        var wings = editing!.CarrierAirwings[carrierId];
-        wings.Remove(wing);
+        CarrierLoadouts.CopyToAll(editing!, designId, index, CarrierDesigns());
+    }
 
-        if (wings.Count == 0)
-        {
-            editing.CarrierAirwings.Remove(carrierId);
-        }
+    private string DefaultCarrierPlane()
+    {
+        var planes = Workspace.Catalog.Planes.Where(plane => plane.CarrierCapable).ToList();
+        return (planes.LastOrDefault(plane => plane.Archetype == "cv_nav_bomber_equipment") ?? planes.FirstOrDefault() ?? Workspace.Catalog.Planes.FirstOrDefault())?.ID ?? string.Empty;
+    }
+
+    private static string PlaneLabel(PlaneDto plane)
+    {
+        return plane.Name is { } name ? $"{name} ({plane.ID})" : plane.ID;
+    }
+
+    private string PlaneRole(string planeId)
+    {
+        return Workspace.Library.Planes.TryGetValue(planeId, out var plane) ? CarrierLoadouts.Role(plane, Defaults.Hardcoded) : "?";
     }
 
     private double FleetTotal(StatInfo stat)

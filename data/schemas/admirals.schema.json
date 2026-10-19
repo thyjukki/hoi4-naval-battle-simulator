@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "admirals.schema.json",
+  "title": "NavySimulator admirals",
+  "description": "Every character of common/characters with a navy_leader block, with the country that recruits it, written by NavySimulator import-leaders (S-ADMIRAL).",
+  "type": "object",
+  "required": [
+    "admirals"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "admirals": {
+      "type": "array",
+      "items": {
+        "$ref": "common.schema.json#/$defs/admiral"
+      }
+    }
+  },
+  "additionalProperties": false
+}

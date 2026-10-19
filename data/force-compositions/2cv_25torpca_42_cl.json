@@ -11,9 +11,20 @@
       "carrierAirwings": {
         "39_carrier": [
           {
-            "planeID": "bomber_1936_untrained",
-            "type": "bomber",
-            "airwings": 2
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_1",
+                "airwings": 2
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_1",
+                "airwings": 2
+              }
+            ]
           }
         ]
       }
@@ -34,4 +45,3 @@
     }
   ]
 }
-

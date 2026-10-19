@@ -141,6 +141,14 @@
                 <label class="check"><input type="checkbox" @bind:get="Rules?.WeatherEnabled ?? DefaultRules.WeatherEnabled" @bind:set="SetWeather" /> Weather</label>
                 <span class="hint">Off is the game with the console command disable_weather.</span>
             </div>
+            <div class="field">
+                <label class="check"><input type="checkbox" @bind:get="Rules?.NavalDominanceEnabled ?? DefaultRules.NavalDominanceEnabled" @bind:set="SetNavalDominance" /> Naval dominance</label>
+                <span class="hint">The side with more naval dominance from its ships at the start (both patrolling the region) regains organization faster (NAVAL_DOMINANCE_ORG_RECOVERY).</span>
+            </div>
+            <div class="field">
+                <label class="check"><input type="checkbox" @bind:get="Rules?.CarrierWingsExecuteNavalStrike ?? DefaultRules.CarrierWingsExecuteNavalStrike" @bind:set="SetCarrierStrike" /> Carrier wings fly naval strikes</label>
+                <span class="hint">Carrier strike wings execute a naval strike mission, as logged in game battles (the game's setter is not decoded). Off: carriers do no damage.</span>
+            </div>
         </div>
     </div>
 
@@ -177,10 +185,29 @@
 <div class="row" style="margin-bottom: 10px">
     <button class="small" @onclick="Swap" title="Exchange the two sides (the attacker fires first each hour)">⇄ Swap sides</button>
     <button class="small" @onclick="Mirror" title="Give the defender the attacker's whole setup">Mirror attacker → defender</button>
+    @if (costs is { } cost)
+    {
+        <div class="right row tight" title="Production cost of each side's ships after its equipment bonuses (researches, doctrines, MIO traits). Carrier air wings, land-based planes and MIO production bonuses are not counted. The Battle and Batch pages show the IC lost.">
+            <span class="small muted">Fleet cost</span>
+            <span class="attacker nowrap">@cost.Attacker.Total.ToString("N0") IC</span>
+            <div class="stacked" style="width: 200px">
+                @foreach (var (side, total) in new[] { ("attacker", cost.Attacker.Total), ("defender", cost.Defender.Total) })
+                {
+                    var share = Share(total, cost.Attacker.Total + cost.Defender.Total);
+                    <span style="width: @((share * 100).ToString("F1", CultureInfo.InvariantCulture))%; background: var(--@side)">@(share >= 0.12 ? share.ToString("P0") : "")</span>
+                }
+            </div>
+            <span class="defender nowrap">@cost.Defender.Total.ToString("N0") IC</span>
+            @if (cost.Defender.Total > 0)
+            {
+                <span class="small muted nowrap">@((cost.Attacker.Total / cost.Defender.Total).ToString("F2")) : 1</span>
+            }
+        </div>
+    }
 </div>
 <div class="grid-2">
-    <SideEditor Label="attacker" Side="Scenario.Attacker" Other="Scenario.Defender" OnChanged="Edited" />
-    <SideEditor Label="defender" Side="Scenario.Defender" Other="Scenario.Attacker" OnChanged="Edited" />
+    <SideEditor Label="attacker" Side="Scenario.Attacker" Other="Scenario.Defender" Cost="costs?.Attacker" OnChanged="Edited" />
+    <SideEditor Label="defender" Side="Scenario.Defender" Other="Scenario.Attacker" Cost="costs?.Defender" OnChanged="Edited" />
 </div>
 
 @code {
@@ -193,6 +220,7 @@
     private string? message;
     private bool messageIsError;
     private ScenarioBuild? build;
+    private (FleetCost Attacker, FleetCost Defender)? costs;
     private bool validating;
     private CancellationTokenSource? pendingValidation;
 
@@ -239,6 +267,9 @@
             if (!cancellation.IsCancellationRequested)
             {
                 build = result;
+                costs = result.Scenario is { } built
+                    ? (FleetCost.Of(built.Attacker.Fleet.Ships), FleetCost.Of(built.Defender.Fleet.Ships))
+                    : null;
                 validating = false;
                 StateHasChanged();
             }
@@ -323,6 +354,11 @@
         await Edited();
     }
 
+    private static double Share(double part, double whole)
+    {
+        return whole <= 0 ? 0 : part / whole;
+    }
+
     private BattleRulesDto EnsureRules()
     {
         return Scenario.Rules ??= new BattleRulesDto();
@@ -355,6 +391,18 @@
     private async Task SetWeather(bool value)
     {
         EnsureRules().WeatherEnabled = value == DefaultRules.WeatherEnabled ? null : value;
+        await Edited();
+    }
+
+    private async Task SetCarrierStrike(bool value)
+    {
+        EnsureRules().CarrierWingsExecuteNavalStrike = value == DefaultRules.CarrierWingsExecuteNavalStrike ? null : value;
+        await Edited();
+    }
+
+    private async Task SetNavalDominance(bool value)
+    {
+        EnsureRules().NavalDominanceEnabled = value == DefaultRules.NavalDominanceEnabled ? null : value;
         await Edited();
     }
 

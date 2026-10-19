@@ -2,53 +2,45 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "mios.schema.json",
   "title": "NavySimulator MIOs",
+  "description": "Military industrial organizations that can be assigned to ships, written by NavySimulator import-mios with their include resolved (S-MIO). Bonus keys are the game's.",
   "type": "object",
   "$defs": {
-    "id": {
-      "type": "string",
-      "minLength": 1
+    "tokens": {
+      "type": "array",
+      "description": "Equipment types (capital_ship), archetypes (ship_hull_heavy), hulls or equipment groups (mio_cat_eq_all_battleship).",
+      "items": { "type": "string" }
     },
-    "shipRole": {
-      "type": "string",
-      "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
+    "numbers": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
     },
-    "shipType": {
-      "type": "string",
-      "minLength": 1,
-      "description": "A ship type (sub-unit) ID from ship-types/, a hull ID or a hull archetype (matched against ShipDesign.Types).",
-      "examples": ["destroyer", "light_cruiser", "heavy_cruiser", "battle_cruiser", "battleship", "sh_battleship", "carrier", "sh_carrier", "submarine", "ship_hull_torpedo_cruiser"]
-    },
-    "shipStats": {
+    "trait": {
       "type": "object",
       "properties": {
-        "speed": { "type": "number" },
-        "reliability": { "type": "number" },
-        "organization": { "type": "number" },
-        "hp": { "type": "number" },
-        "surfaceVisibility": { "type": "number" },
-        "subVisibility": { "type": "number" },
-        "surfaceDetection": { "type": "number" },
-        "subDetection": { "type": "number" },
-        "carrierSubDetection": { "type": "number" },
-        "carrierSurfaceDetection": { "type": "number" },
-        "carrierSize": { "type": "number" },
-        "lightAttack": { "type": "number" },
-        "lightPiercing": { "type": "number" },
-        "heavyAttack": { "type": "number" },
-        "heavyPiercing": { "type": "number" },
-        "torpedoAttack": { "type": "number" },
-        "depthChargeAttack": { "type": "number" },
-        "antiAir": { "type": "number" },
-        "armor": { "type": "number" },
-        "torpedoDamageReductionFactor": { "type": "number" },
-        "torpedoEnemyCriticalChanceFactor": { "type": "number" },
-        "torpedoHitChanceFactor": { "type": "number" },
-        "depthChargeHitChanceFactor": { "type": "number" },
-        "lightHitChangeFactor": { "type": "number" },
-        "lightHitChanceFactor": { "type": "number" },
-        "heavyHitChanceFactor": { "type": "number" },
-        "navalWeatherPenaltyFactor": { "type": "number" },
-        "productionCost": { "type": "number" }
+        "id": { "type": "string", "description": "The trait token; empty for an initial trait." },
+        "name": { "type": "string", "description": "The game's name (localisation)." },
+        "x": { "type": "number", "description": "Column in the tree grid (relative positions resolved)." },
+        "y": { "type": "number", "description": "Row in the tree grid." },
+        "special": { "type": "boolean", "description": "special_trait_background." },
+        "parents": {
+          "type": "array",
+          "description": "parent, any_parent and all_parents: every requirement must be met (S-MIO-TREE).",
+          "items": {
+            "type": "object",
+            "required": ["traits"],
+            "properties": {
+              "traits": { "type": "array", "items": { "type": "string" } },
+              "needed": { "type": "integer", "minimum": 1, "description": "num_parents_needed; 1 for any_parent, all for all_parents." }
+            },
+            "additionalProperties": false
+          }
+        },
+        "mutuallyExclusive": { "type": "array", "items": { "type": "string" } },
+        "limitToEquipmentTypes": { "$ref": "#/$defs/tokens" },
+        "equipmentBonus": { "$ref": "common.schema.json#/$defs/mioBonus" },
+        "productionBonus": { "$ref": "#/$defs/numbers", "description": "No effect in battle." },
+        "organizationModifiers": { "$ref": "#/$defs/numbers", "description": "Modifiers of the MIO itself; no effect in battle." },
+        "conditions": { "type": "array", "description": "visible/available triggers as script text (not checked).", "items": { "type": "string" } }
       },
       "additionalProperties": false
     }
@@ -62,36 +54,19 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "modifiers"],
+        "required": ["id"],
         "properties": {
           "id": { "$ref": "common.schema.json#/$defs/mioId" },
-          "modifiers": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "statModifiers": { "$ref": "#/$defs/shipStats" },
-                "statMultipliers": { "$ref": "#/$defs/shipStats" },
-                "statAverages": { "$ref": "#/$defs/shipStats" },
-                "appliesToRoles": {
-                  "type": "array",
-                  "items": { "$ref": "#/$defs/shipRole" },
-                  "uniqueItems": true
-                },
-                "appliesToTypes": {
-                  "type": "array",
-                  "items": { "$ref": "#/$defs/shipType" },
-                  "uniqueItems": true
-                }
-              },
-              "additionalProperties": false,
-              "anyOf": [
-                { "required": ["statModifiers"] },
-                { "required": ["statMultipliers"] },
-                { "required": ["statAverages"] }
-              ]
-            }
-          }
+          "name": { "type": "string", "description": "The game's name (localisation)." },
+          "countries": { "type": "array", "description": "Tags named in its allowed trigger (outside NOT).", "items": { "type": "string" } },
+          "excludedCountries": { "type": "array", "description": "Tags its allowed trigger names inside a NOT: the MIO is for every other country.", "items": { "type": "string" } },
+          "archetypeOnly": { "type": "boolean", "description": "allowed = { always = no }: only included by other MIOs." },
+          "debugOnly": { "type": "boolean", "description": "allowed = { is_debug = yes }: only in the game's debug mode." },
+          "include": { "type": "string", "description": "The MIO it was built from." },
+          "equipmentTypes": { "$ref": "#/$defs/tokens", "description": "equipment_type: the designs it can be assigned to (S-MIO-MATCH)." },
+          "initialTrait": { "$ref": "#/$defs/trait" },
+          "traits": { "type": "array", "items": { "$ref": "#/$defs/trait" } },
+          "conditions": { "type": "array", "items": { "type": "string" } }
         },
         "additionalProperties": false
       }
@@ -99,4 +74,3 @@
   },
   "additionalProperties": false
 }
-

@@ -1,0 +1,1864 @@
+{
+  "$schema": "../schemas/doctrines.schema.json",
+  "id": "air",
+  "name": "Air Doctrine",
+  "tracks": [
+    {
+      "id": "fighter_aircraft",
+      "name": "Fighter Aircraft"
+    },
+    {
+      "id": "strike_aircraft",
+      "name": "Strike Aircraft"
+    },
+    {
+      "id": "medium_aircraft",
+      "name": "Medium Aircraft"
+    },
+    {
+      "id": "heavy_aircraft",
+      "name": "Heavy Aircraft"
+    }
+  ],
+  "grandDoctrines": [
+    {
+      "id": "new_strategic_destruction",
+      "name": "Strategic Destruction",
+      "tracks": [
+        "fighter_aircraft",
+        "strike_aircraft",
+        "medium_aircraft",
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_escort_efficiency": 0.1,
+          "air_strategic_bomber_bombing_factor": 0.1
+        }
+      },
+      "milestones": {
+        "fighter_aircraft": {
+          "countryModifiers": {
+            "air_intercept_efficiency": 0.05
+          },
+          "unitBonuses": {
+            "category_fighter": {
+              "air_agility": 0.05
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "strike_aircraft": {
+          "countryModifiers": {
+            "army_bonus_air_superiority_factor": 0.05,
+            "air_nav_efficiency": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "medium_aircraft": {
+          "countryModifiers": {
+            "air_strategic_bomber_defence_factor": 0.1
+          },
+          "unitBonuses": {
+            "category_heavy_fighter": {
+              "air_agility": 0.05
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "heavy_aircraft": {
+          "countryModifiers": {
+            "air_strategic_bomber_bombing_factor": 0.05,
+            "air_mission_xp_gain_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "new_battlefield_support",
+      "name": "Battlefield Support",
+      "tracks": [
+        "fighter_aircraft",
+        "strike_aircraft",
+        "medium_aircraft",
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_superiority_detect_factor": 0.075,
+          "air_cas_efficiency": 0.05
+        }
+      },
+      "milestones": {
+        "fighter_aircraft": {
+          "countryModifiers": {
+            "air_ace_generation_chance_factor": 0.075,
+            "army_bonus_air_superiority_factor": 0.075
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "strike_aircraft": {
+          "countryModifiers": {
+            "air_cas_present_factor": 0.1
+          },
+          "unitBonuses": {
+            "category_cas": {
+              "air_agility": 0.1
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "medium_aircraft": {
+          "countryModifiers": {
+            "air_mission_xp_gain_factor": 0.05
+          },
+          "unitBonuses": {
+            "tac_bomber": {
+              "air_bombing": 0.05
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "heavy_aircraft": {
+          "countryModifiers": {
+            "air_strategic_bomber_bombing_factor": 0.075,
+            "air_interception_detect_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "new_operational_integrity",
+      "name": "Operational Integrity",
+      "tracks": [
+        "fighter_aircraft",
+        "strike_aircraft",
+        "medium_aircraft",
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_interception_detect_factor": 0.1,
+          "air_superiority_efficiency": 0.025
+        }
+      },
+      "milestones": {
+        "fighter_aircraft": {
+          "countryModifiers": {
+            "air_mission_xp_gain_factor": 0.075
+          },
+          "unitBonuses": {
+            "category_fighter": {
+              "air_agility": 0.075
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "strike_aircraft": {
+          "countryModifiers": {
+            "air_ace_generation_chance_factor": 0.05,
+            "army_bonus_air_superiority_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "medium_aircraft": {
+          "unitBonuses": {
+            "category_tac_bomber": {
+              "air_bombing": 0.1
+            },
+            "category_heavy_fighter": {
+              "air_agility": 0.075
+            }
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "heavy_aircraft": {
+          "countryModifiers": {
+            "air_strategic_bomber_defence_factor": 0.075,
+            "strategic_bomb_visibility": -0.2
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    }
+  ],
+  "subdoctrines": [
+    {
+      "id": "air_subdoctrine_fighter_homeland_defense",
+      "name": "Homeland Air Defense",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_home_defence_factor": 0.1
+        }
+      },
+      "rewards": [
+        {
+          "id": "interception_priority",
+          "name": "Big Wing Tactics",
+          "effects": {
+            "countryModifiers": {
+              "air_intercept_efficiency": 0.1
+            }
+          }
+        },
+        {
+          "id": "air_defense_grids",
+          "name": "Air Early Warning System",
+          "effects": {
+            "countryModifiers": {
+              "air_interception_detect_factor": 0.1
+            }
+          }
+        },
+        {
+          "id": "air_wing_knowledge_transfer",
+          "name": "Pilot Mentorship",
+          "effects": {
+            "countryModifiers": {
+              "air_untrained_pilots_penalty_factor": -0.075
+            }
+          }
+        },
+        {
+          "id": "experienced_pilots_protection",
+          "name": "Kill Board Competition",
+          "effects": {
+            "countryModifiers": {
+              "air_ace_generation_chance_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "mass_sorties",
+          "name": "Efficient Ground Crews",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_escort_fighter",
+      "name": "Medium-Range Escort",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_fighter": {
+            "air_range": 0.075
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "escort_procedures",
+          "name": "Top Cover",
+          "effects": {
+            "countryModifiers": {
+              "air_escort_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "extended_search_patterns",
+          "name": "Offensive Fighter Sweep",
+          "effects": {
+            "countryModifiers": {
+              "air_superiority_efficiency": 0.03
+            }
+          }
+        },
+        {
+          "id": "improved_maintenance_protocols",
+          "name": "Regular Engine Overhauls",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.1
+            }
+          }
+        },
+        {
+          "id": "increased_sky_presence",
+          "name": "Enemy Airfield Suppression",
+          "effects": {
+            "countryModifiers": {
+              "air_power_projection_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "constant_air_offensive",
+          "name": "Continuous Air Offensive",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.05,
+              "air_night_penalty": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_fighter_bombers",
+      "name": "Fighter-Bombers",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_cas": {
+            "air_attack": 0.2
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "target_prioritization",
+          "name": "Air-Ground Comms Channels",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "strafing_runs",
+          "name": "Battlefield Loitering",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_present_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "versatile_experience",
+          "name": "Extensive Debriefing",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "multi_mission_assignment",
+          "name": "Multi-role Capability",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "night_target_search",
+          "name": "Night Flying Experience",
+          "effects": {
+            "countryModifiers": {
+              "air_night_penalty": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_tactical_flexibility",
+      "name": "Airspace Dominance",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_superiority_efficiency": 0.03
+        }
+      },
+      "rewards": [
+        {
+          "id": "loose_formation",
+          "name": "Loose Formations",
+          "effects": {
+            "unitBonuses": {
+              "category_fighter": {
+                "air_agility": 0.05,
+                "air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "high_altitude_approach",
+          "name": "Unpredictable Air Patrol Patterns",
+          "effects": {
+            "countryModifiers": {
+              "air_superiority_detect_factor": 0.075
+            }
+          }
+        },
+        {
+          "id": "combat_discipline",
+          "name": "Efficient Search and Rescue Organization",
+          "effects": {
+            "countryModifiers": {
+              "air_wing_xp_loss_when_killed_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "high_speed_dive",
+          "name": "Boom and Zoom Tactics",
+          "effects": {
+            "unitBonuses": {
+              "category_fighter": {
+                "maximum_speed": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "aces_of_the_sky",
+          "name": "Aerial Elite Mentality",
+          "effects": {
+            "countryModifiers": {
+              "ace_effectiveness_factor": 0.075
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_dogfighting_mastery",
+      "name": "Knights of the Air",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_ace_generation_chance_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "pilot_quality_focus",
+          "name": "Veteran Instructor Cadre",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_xp_gain_factor": 0.05,
+              "air_training_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "force_rotation",
+          "name": "Rapid Interception Vectoring",
+          "effects": {
+            "countryModifiers": {
+              "air_interception_detect_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "fighter_command_system",
+          "name": "Dogfight Situational Awareness",
+          "effects": {
+            "unitBonuses": {
+              "category_fighter": {
+                "air_agility": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "combat_routines",
+          "name": "Counter-Air Patrol",
+          "effects": {
+            "countryModifiers": {
+              "air_superiority_efficiency": 0.03
+            }
+          }
+        },
+        {
+          "id": "improved_support_integration",
+          "name": "Short Range Sortie Efficiency",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.05,
+              "air_manpower_requirement_factor": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_fighter_central_field",
+      "name": "Naval Aviation",
+      "tracks": [
+        "fighter_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "sortie_efficiency": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "decoy_tactic",
+          "name": "Combat Air Patrol",
+          "effects": {
+            "countryModifiers": {
+              "air_superiority_detect_factor": 0.05,
+              "air_superiority_efficiency": 0.03
+            }
+          }
+        },
+        {
+          "id": "three_plane_formation",
+          "name": "Thach Weave",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_fighter": {
+                "air_agility": 0.05,
+                "maximum_speed": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "aggressive_spirit",
+          "name": "Naval Aces",
+          "effects": {
+            "countryModifiers": {
+              "air_ace_generation_chance_factor": 0.05,
+              "ace_effectiveness_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "naval_expertise",
+          "name": "Fighter Escort Target Spotting",
+          "effects": {
+            "countryModifiers": {
+              "naval_strike_targetting_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "all_weather_operations",
+          "name": "All-Weather Operations",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.05,
+              "carrier_traffic": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_night_bombing",
+      "name": "Night Strategic Bombing",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_strategic_bomber_night_penalty": -0.075
+        }
+      },
+      "rewards": [
+        {
+          "id": "night_raids",
+          "name": "Night Flying Training",
+          "effects": {
+            "countryModifiers": {
+              "air_night_penalty": -0.05
+            }
+          }
+        },
+        {
+          "id": "stealth_approach",
+          "name": "Stealthy Approach",
+          "effects": {
+            "countryModifiers": {
+              "strategic_bomb_visibility": -0.1
+            }
+          }
+        },
+        {
+          "id": "shared_principles",
+          "name": "Electronic Navigation Aid Training",
+          "effects": {
+            "countryModifiers": {
+              "air_untrained_pilots_penalty_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "bombing_discipline",
+          "name": "HE/Incendiary Bomb Mix",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_bombing_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "durable_airframes",
+          "name": "Night Fighter Avoidance",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_defence_factor": 0.075
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_carpet_bombing",
+      "name": "Carpet Bombing",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_strat_bomber": {
+            "air_bombing": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "veteran_bomber_crews",
+          "name": "Veteran Bomber Crews",
+          "effects": {
+            "countryModifiers": {
+              "ace_effectiveness_factor": 0.05,
+              "air_mission_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "breaking_the_spirit",
+          "name": "Transport Network Disruption",
+          "effects": {
+            "countryModifiers": {
+              "army_bonus_air_superiority_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "destruction_campaigns",
+          "name": "Aerial Pathfinders",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_bombing_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "coordinated_air_operations",
+          "name": "Secondary Target Designation",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "defensive_formation",
+          "name": "Tight Defensive Formations",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_defence_factor": 0.05
+            },
+            "unitBonuses": {
+              "category_strat_bomber": {
+                "air_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_deep_air_raids",
+      "name": "Deep Air Raids",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_strat_bomber": {
+            "air_range": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "bad_weather_operations",
+          "name": "Dead Reckoning Bomb Release",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.075
+            }
+          }
+        },
+        {
+          "id": "effective_targetting",
+          "name": "Delayed-Action Bombs",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_bombing_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "improved_mission_control",
+          "name": "Crew Rotation",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "escort_cooperation",
+          "name": "Escort Cooperation",
+          "effects": {
+            "countryModifiers": {
+              "air_escort_efficiency": 0.05,
+              "air_superiority_detect_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "long_range_missions",
+          "name": "Bomb/Fuel Balancing",
+          "effects": {
+            "countryModifiers": {
+              "air_range_factor": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_flying_fortresses",
+      "name": "Flying Fortresses",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_strat_bomber": {
+            "air_defence": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "high_level_bombing",
+          "name": "Combat Box",
+          "effects": {
+            "countryModifiers": {
+              "air_strategic_bomber_defence_factor": 0.1
+            }
+          }
+        },
+        {
+          "id": "experienced_gunners",
+          "name": "Collective Firepower",
+          "effects": {
+            "unitBonuses": {
+              "category_strat_bomber": {
+                "air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "pilot_rescue_missions",
+          "name": "Dead Engine Prop Feathering",
+          "effects": {
+            "countryModifiers": {
+              "air_wing_xp_loss_when_killed_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "extensive_training",
+          "name": "Veteran Crew Teamwork",
+          "effects": {
+            "countryModifiers": {
+              "air_training_xp_gain_factor": 0.05,
+              "air_ace_generation_chance_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "safety_landing_procedures",
+          "name": "Mass Production Reliability Improvements",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_coastal_air_patrol",
+      "name": "Coastal Air Patrol",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_maritime_patrol_bomber": {
+            "naval_strike_attack": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "coastal_air_minelaying",
+          "name": "Coastal Air Minelaying",
+          "effects": {
+            "countryModifiers": {
+              "mines_planting_by_air_factor": 0.1
+            }
+          }
+        },
+        {
+          "id": "evasive_techniques",
+          "name": "Disengagement Tactics",
+          "effects": {
+            "unitBonuses": {
+              "category_maritime_patrol_bomber": {
+                "air_agility": 0.05,
+                "air_defence": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "efficient_maritime_patrols",
+          "name": "Patrol Plane Secondary Strike Role",
+          "effects": {
+            "countryModifiers": {
+              "air_nav_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "fog_patrol",
+          "name": "Rain or Shine Mindset",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.05
+            }
+          }
+        },
+        {
+          "id": "improved_targetting_techniques",
+          "name": "Naval Munitions Targeting Experience",
+          "effects": {
+            "unitBonuses": {
+              "category_maritime_patrol_bomber": {
+                "naval_strike_targetting": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_open_ocean_air_patrol",
+      "name": "Deep Ocean Air Patrol",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_maritime_patrol_bomber": {
+            "air_range": 0.075
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "harbor_raids",
+          "name": "Harbor Raids",
+          "effects": {
+            "countryModifiers": {
+              "port_strike": 0.1
+            }
+          }
+        },
+        {
+          "id": "aerial_minesweeping",
+          "name": "Offensive Minefield Lane Clearance",
+          "effects": {
+            "countryModifiers": {
+              "mines_sweeping_by_air_factor": 0.1
+            }
+          }
+        },
+        {
+          "id": "self_reliance",
+          "name": "Escort Independence",
+          "effects": {
+            "unitBonuses": {
+              "category_maritime_patrol_bomber": {
+                "air_agility": 0.05,
+                "air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "night_patrols",
+          "name": "Night Patrols",
+          "effects": {
+            "countryModifiers": {
+              "air_night_penalty": -0.05,
+              "spotting_chance": 0.05
+            }
+          }
+        },
+        {
+          "id": "naval_destruction",
+          "name": "One Torpedo - One Hit Spirit",
+          "effects": {
+            "countryModifiers": {
+              "naval_strike_targetting_factor": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_heavy_aircraft_focus",
+      "name": "Multi-Role Heavy Aircraft Focus",
+      "tracks": [
+        "heavy_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_strat_bomber": {
+            "air_agility": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "heavy_aircraft_application",
+          "name": "Bombload Templates",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "specialized_payloads",
+          "name": "Mission-Oriented Payloads",
+          "effects": {
+            "unitBonuses": {
+              "category_strat_bomber": {
+                "air_bombing": 0.05
+              },
+              "category_maritime_patrol_bomber": {
+                "naval_strike_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "developed_training_programs",
+          "name": "Aircrew Knowledge Transfer",
+          "effects": {
+            "countryModifiers": {
+              "air_training_xp_gain_factor": 0.05,
+              "air_untrained_pilots_penalty_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "long_range_missions",
+          "name": "Continental Reach",
+          "effects": {
+            "unitBonuses": {
+              "category_strat_bomber": {
+                "air_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "efficient_fuel_management",
+          "name": "Efficient Fuel Management",
+          "effects": {
+            "countryModifiers": {
+              "air_fuel_consumption_factor": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_bomber_interception",
+      "name": "Heavy Interceptors",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_heavy_fighter": {
+            "air_attack": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "night_interceptions",
+          "name": "Night Fighter Training",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_night_penalty": -0.075
+            }
+          }
+        },
+        {
+          "id": "dispersed_fighting",
+          "name": "Bomber Formation Disruption",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_intercept_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "heavy_fighter_veteran_initiative",
+          "name": "Heavy Fighter Aces",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_ace_generation_chance_factor": 0.05,
+              "air_mission_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "high_altitude_approach",
+          "name": "Turn Fight Avoidance",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_heavy_fighter": {
+                "air_defence": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "bomber_interception_patrols",
+          "name": "Air Spotting Relays",
+          "effects": {
+            "countryModifiers": {
+              "air_interception_detect_factor": 0.075
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_long_range_escort",
+      "name": "Long-Range Escort",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_escort_efficiency": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "efficient_fly_routes",
+          "name": "Widespread Drop Tanks Usage",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_heavy_fighter": {
+                "air_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "mutual_air_cover",
+          "name": "All-Around Formation Defense",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_superiority_detect_factor": 0.075
+            }
+          }
+        },
+        {
+          "id": "training_instructors",
+          "name": "Comprehensive Pilot Training",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_training_xp_gain_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "fighter_baiting",
+          "name": "Fighter Baiting",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_heavy_fighter": {
+                "air_agility": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "far_reaching_airforce",
+          "name": "Fuel-Saving Expertise",
+          "effects": {
+            "countryModifiers": {
+              "air_range_factor": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_operational_air_support",
+      "name": "Operational Air Support",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_mission_efficiency": 0.075
+        }
+      },
+      "rewards": [
+        {
+          "id": "efficient_support_crews",
+          "name": "Aircrew Survival and Evasion Training",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_manpower_requirement_factor": -0.1,
+              "air_wing_xp_loss_when_killed_factor": -0.1
+            }
+          }
+        },
+        {
+          "id": "ground_interdictions",
+          "name": "Cab Rank Bombing",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "army_bonus_air_superiority_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "operational_airforce_presence",
+          "name": "Enemy Airfield Harassment",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_power_projection_factor": 0.1
+            }
+          }
+        },
+        {
+          "id": "heavy_fighter_support",
+          "name": "Heavy Fighter-Bombers",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_heavy_fighter": {
+                "air_agility": 0.05,
+                "air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "tactical_bomber_preservation",
+          "name": "Counter-Interception Techniques",
+          "effects": {
+            "unitBonuses": {
+              "category_tac_bomber": {
+                "air_agility": 0.05,
+                "air_defence": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_tactical_battlefield_support",
+      "name": "Tactical Battlefield Support",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_tac_bomber": {
+            "air_ground_attack": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "keypoint_bombing",
+          "name": "Preparatory Aerial Bombardment",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_cas_present_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "logistical_bombing",
+          "name": "Logistical Bombing",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "army_bonus_air_superiority_factor": 0.05,
+              "air_cas_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "ship_hunters",
+          "name": "Armor-Piercing Bomb Availability",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_tac_bomber": {
+                "naval_strike_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "dedicated_record_keeping",
+          "name": "Short-Range Fuel Economy",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_fuel_consumption_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "bomber_aces",
+          "name": "Bomber Aces",
+          "effects": {
+            "countryModifiers": {
+              "ace_effectiveness_factor": 0.075
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_theater_interdiction",
+      "name": "Theater Interdiction",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "air_strategic_bomber_bombing_factor": 0.075
+        }
+      },
+      "rewards": [
+        {
+          "id": "extended_reach",
+          "name": "Flightpath Optimization",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_tac_bomber": {
+                "air_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "night_bombing",
+          "name": "Night Bombing",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "air_night_penalty": -0.05,
+              "air_strategic_bomber_night_penalty": -0.05
+            }
+          }
+        },
+        {
+          "id": "precision_bombing",
+          "name": "Deep Penetration Raids",
+          "mastery": 75,
+          "effects": {
+            "unitBonuses": {
+              "category_tac_bomber": {
+                "air_bombing": 0.05,
+                "air_agility": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "port_raids",
+          "name": "Dockyard Raids",
+          "mastery": 75,
+          "effects": {
+            "countryModifiers": {
+              "port_strike": 0.1
+            }
+          }
+        },
+        {
+          "id": "improved_casualty_recovery",
+          "name": "Bail Out Drills",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.05,
+              "air_wing_xp_loss_when_killed_factor": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_aerial_reconnaissance",
+      "name": "Aerial Recon",
+      "tracks": [
+        "medium_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_scout_plane": {
+            "air_agility": 0.1
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "extended_reconnaissance_radius",
+          "name": "Wide Search Patterns",
+          "mastery": 50,
+          "effects": {
+            "unitBonuses": {
+              "category_scout_plane": {
+                "air_range": 0.15
+              }
+            }
+          }
+        },
+        {
+          "id": "improved_observation_procedures",
+          "name": "Photo Analysis Department",
+          "mastery": 50,
+          "effects": {
+            "countryModifiers": {
+              "intel_from_combat_factor": 0.075,
+              "army_intel_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "naval_recon",
+          "name": "Ship Silhouette Recognition",
+          "mastery": 50,
+          "effects": {
+            "countryModifiers": {
+              "navy_intel_factor": 0.05,
+              "spotting_chance": 0.075
+            }
+          }
+        },
+        {
+          "id": "distant_aerial_observation",
+          "name": "Air Intelligence Collation",
+          "mastery": 50,
+          "effects": {
+            "countryModifiers": {
+              "airforce_intel_factor": 0.05,
+              "air_mission_xp_gain_factor": 0.075
+            }
+          }
+        },
+        {
+          "id": "well_coordinated_strikes",
+          "name": "Bomb Damage Assessment",
+          "effects": {
+            "countryModifiers": {
+              "civilian_intel_factor": 0.05,
+              "air_strategic_bomber_bombing_factor": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_flying_artillery",
+      "name": "Flying Artillery",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_cas": {
+            "air_defence": 0.03
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "suppression_runs",
+          "name": "Multiple Daily Sorties",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "terrain_familiarity",
+          "name": "Priority Target Suppression",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_present_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "effective_payloads",
+          "name": "Point Target Destruction",
+          "effects": {
+            "unitBonuses": {
+              "category_cas": {
+                "air_ground_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "rugged_airframes",
+          "name": "Austere Airfield Experience",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.05,
+              "air_wing_xp_loss_when_killed_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "movement_interdiction",
+          "name": "Offensive Interdiction",
+          "effects": {
+            "countryModifiers": {
+              "air_close_air_support_org_damage_factor": 0.05,
+              "army_bonus_air_superiority_factor": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_dive_bombers",
+      "name": "Pinpoint Strikes",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_cas": {
+            "air_ground_attack": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "forward_air_controllers",
+          "name": "Forward Air Controllers",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.03,
+              "ground_attack_factor": 0.03
+            }
+          }
+        },
+        {
+          "id": "all_weather_drills",
+          "name": "Rugged Front Line Support Ethos",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.05
+            },
+            "unitBonuses": {
+              "category_cas": {
+                "air_agility": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "terrifying_precision",
+          "name": "Systematic Aerial Terrorization",
+          "effects": {
+            "countryModifiers": {
+              "air_close_air_support_org_damage_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "close_air_support_aces",
+          "name": "Close Air Support Aces",
+          "effects": {
+            "countryModifiers": {
+              "air_ace_generation_chance_factor": 0.05,
+              "ace_effectiveness_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "fighter_bomber_coordination",
+          "name": "Fighter Cooperation",
+          "effects": {
+            "countryModifiers": {
+              "air_escort_efficiency": 0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_flexible_fire_support",
+      "name": "Ground-Naval Coordination",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "ground_attack_factor": 0.05,
+          "naval_strike_targetting_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "cas_preservation",
+          "name": "Thorough Air Gunner Training",
+          "effects": {
+            "unitBonuses": {
+              "category_cas": {
+                "air_defence": 0.05,
+                "air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "adaptable_nav_bombers",
+          "name": "Anti-Shipping Attacks",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "naval_strike_attack": 0.05,
+                "air_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "forward_spotters",
+          "name": "Streamlined Support Request Procedure",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_efficiency": 0.05,
+              "air_nav_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "continuous_fire_support",
+          "name": "Mission-Capable Airframe Priority",
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "quick_turnaround",
+          "name": "Aerial Evasion Techniques",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "air_agility": 0.05
+              },
+              "category_cas": {
+                "air_agility": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_carrier_strikes",
+      "name": "Sea-To-Shore Air Power",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_carrier_cas": {
+            "air_range": 0.05
+          },
+          "category_carrier_nav_bomber": {
+            "air_range": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "deck_coordination",
+          "name": "Mass Coordinated Strikes",
+          "effects": {
+            "countryModifiers": {
+              "air_nav_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "specialized_torpedoes",
+          "name": "Torpedo Target Selection",
+          "effects": {
+            "countryModifiers": {
+              "naval_strike_targetting_factor": 0.05
+            },
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "naval_strike_attack": 0.04
+              }
+            }
+          }
+        },
+        {
+          "id": "strike_wave_tactics",
+          "name": "Dual-Purpose Munitions",
+          "effects": {
+            "countryModifiers": {
+              "air_cas_efficiency": 0.05
+            },
+            "unitBonuses": {
+              "category_carrier_cas": {
+                "air_ground_attack": 0.04
+              }
+            }
+          }
+        },
+        {
+          "id": "deck_cycle_training",
+          "name": "Well-Trained Catapult Crews",
+          "effects": {
+            "countryModifiers": {
+              "sortie_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "optimized_deck_space_usage",
+          "name": "Hangar Space Optimization",
+          "effects": {
+            "countryModifiers": {
+              "carrier_capacity_penalty_reduction": -0.05,
+              "air_accidents_factor": -0.05
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_naval_strike_tactics",
+      "name": "Precision Naval Bombing",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_strike_targetting_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "naval_disruption",
+          "name": "Interception Evasion Techniques",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "air_defence": 0.035,
+                "air_attack": 0.035
+              }
+            }
+          }
+        },
+        {
+          "id": "attack_synchronization",
+          "name": "Last Moment Munitions Release",
+          "effects": {
+            "countryModifiers": {
+              "air_nav_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "naval_strike_aces",
+          "name": "Naval Strike Aces",
+          "effects": {
+            "countryModifiers": {
+              "air_ace_generation_chance_factor": 0.05,
+              "ace_effectiveness_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "safety_protocols",
+          "name": "Take-Off and Landing Safety Measures",
+          "effects": {
+            "countryModifiers": {
+              "air_accidents_factor": -0.05
+            }
+          }
+        },
+        {
+          "id": "optimized_payload",
+          "name": "Long-Range Sealane Denial",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "air_range": 0.05,
+                "naval_strike_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "air_subdoctrine_naval_torpedo_tactics",
+      "name": "Torpedo Swarm Tactics",
+      "tracks": [
+        "strike_aircraft"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "category_carrier_nav_bomber": {
+            "naval_strike_attack": 0.05
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "port_strikes",
+          "name": "Shallow-Running Torpedos",
+          "effects": {
+            "countryModifiers": {
+              "port_strike": 0.1
+            }
+          }
+        },
+        {
+          "id": "low_level_attack_runs",
+          "name": "Wavetop Attack Runs",
+          "effects": {
+            "unitBonuses": {
+              "category_nav_bomber": {
+                "air_agility": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "extended_sea_patrols",
+          "name": "Extensive Patrolling",
+          "effects": {
+            "unitBonuses": {
+              "category_carrier_nav_bomber": {
+                "air_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "all_weather_training",
+          "name": "All-Weather Training",
+          "effects": {
+            "countryModifiers": {
+              "air_weather_penalty": -0.05
+            }
+          }
+        },
+        {
+          "id": "naval_strike_mastery",
+          "name": "Naval Strike Mastery",
+          "effects": {
+            "countryModifiers": {
+              "air_nav_efficiency": 0.05
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -49,12 +49,19 @@ public static class WeaponCadenceRules
         return tick > (int)defines.NNavy.ALL_SHIPS_ACTIVATE_TIME || tick > ActivationThreshold(ship, allShipsInBattle, defines);
     }
 
-    // [RE] 0x1972a70: BASE_GUN_COOLDOWNS is indexed by slot { heavy, torpedo, light }; at least MIN_GUN_COOLDOWN.
-    // naval_torpedo_cooldown_factor (torpedo only) is not modelled.
-    public static double CooldownHours(WeaponSlot slot, GameDefines defines)
+    // [RE] 0x1972a70: BASE_GUN_COOLDOWNS is indexed by slot { heavy, torpedo, light }; a ship's torpedo cooldown is
+    // x (1 + naval_torpedo_cooldown_factor) (modifier 0x1be, ship modifier sum); at least MIN_GUN_COOLDOWN.
+    public static double CooldownHours(WeaponSlot slot, GameDefines defines, Ship? ship = null)
     {
         var navy = defines.NNavy;
-        return Math.Max(navy.MIN_GUN_COOLDOWN, navy.BASE_GUN_COOLDOWNS[(int)slot]);
+        var cooldown = navy.BASE_GUN_COOLDOWNS[(int)slot];
+
+        if (slot == WeaponSlot.Torpedo && ship is not null)
+        {
+            cooldown *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalTorpedoCooldownFactor, 0, defines);
+        }
+
+        return Math.Max(navy.MIN_GUN_COOLDOWN, cooldown);
     }
 
     /// <summary>
@@ -63,7 +70,7 @@ public static class WeaponCadenceRules
     /// </summary>
     public static bool Charge(Ship ship, WeaponSlot slot, GameDefines defines)
     {
-        var cooldown = CooldownHours(slot, defines);
+        var cooldown = CooldownHours(slot, defines, ship);
         var index = (int)slot;
         ship.SlotCharge[index] = Math.Min(ship.SlotCharge[index] + 1.0, Math.Ceiling(cooldown));
         return ship.SlotCharge[index] >= cooldown;
@@ -72,7 +79,7 @@ public static class WeaponCadenceRules
     /// <summary>[RE] 0x19740c0: spends one cooldown of charge for a shot; returns false when the slot is out of charge.</summary>
     public static bool TrySpendShot(Ship ship, WeaponSlot slot, GameDefines defines)
     {
-        var cooldown = CooldownHours(slot, defines);
+        var cooldown = CooldownHours(slot, defines, ship);
         var index = (int)slot;
 
         if (ship.SlotCharge[index] < cooldown)

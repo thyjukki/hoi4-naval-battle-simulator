@@ -9,8 +9,10 @@ public class AirRulesTests
 {
     private readonly GameDefines defines = GameDefines.Vanilla();
 
-    private static PlaneEquipment Bomber() => new("bomber", new PlaneStats(AirDefense: 10, AirAttack: 5, NavalAttack: 20, Speed: 400, Agility: 40, NavalTargeting: 10, Reliability: 0.8));
-    private static PlaneEquipment Fighter() => new("fighter", new PlaneStats(AirDefense: 20, AirAttack: 30, Speed: 500, Agility: 50, Reliability: 0.8));
+    private static PlaneEquipment Bomber() => new("bomber", new PlaneStats(AirDefense: 10, AirAttack: 5, NavalAttack: 20, Speed: 400, Agility: 40, NavalTargeting: 10, Reliability: 0.8),
+        ["naval_bomber"], ["naval_bomber"], carrierCapable: true);
+    private static PlaneEquipment Fighter() => new("fighter", new PlaneStats(AirDefense: 20, AirAttack: 30, Speed: 500, Agility: 50, Reliability: 0.8),
+        ["fighter", "interceptor"], ["air_superiority", "interception"], carrierCapable: true);
 
     private static Ship Carrier(double deckSize = 3)
     {
@@ -31,7 +33,7 @@ public class AirRulesTests
     [Fact]
     public void SortieEfficiency_UsesTheStanceForTheFirstDayThenTheBase()
     {
-        var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), AirwingType.Bomber, 30)]);
+        var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), 30, defines.Hardcoded)]);
         var fullScreening = new ScreeningSummary(1, 1);
 
         // Stance index 4 (ratio 1.0): attacker uses it, defender 1 - 1.0; both get +0.1 from capital_screening_bonus.
@@ -44,7 +46,7 @@ public class AirRulesTests
     public void SortieEfficiency_IsZeroAtNightAndScalesWithOrganization()
     {
         var carrier = Carrier();
-        var group = AirGroup.ForCarrier(carrier, [new AirWing(Bomber(), AirwingType.Bomber, 30)]);
+        var group = AirGroup.ForCarrier(carrier, [new AirWing(Bomber(), 30, defines.Hardcoded)]);
         var noScreening = new ScreeningSummary(0, 0);
 
         Assert.Equal(0, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, defines), 9);
@@ -59,7 +61,7 @@ public class AirRulesTests
         // TFB: night carrier_traffic = -0.75; carrier doctrine carrier_night_traffic = +0.15.
         var tfb = GameDefines.Vanilla();
         tfb.StaticModifiers.Blocks[StaticModifiers.Night][StaticModifiers.CarrierTraffic] = -0.75;
-        var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), AirwingType.Bomber, 30)]);
+        var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), 30, defines.Hardcoded)]);
         var noScreening = new ScreeningSummary(0, 0);
 
         Assert.Equal(0.5 * 0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, tfb), 9);
@@ -106,8 +108,8 @@ public class AirRulesTests
     [Fact]
     public void Interception_FollowsTheDecodedFormula()
     {
-        AirWing[] bombers = [new(Bomber(), AirwingType.Bomber, 10)];
-        AirWing[] fighters = [new(Fighter(), AirwingType.Fighter, 20)];
+        AirWing[] bombers = [new(Bomber(), 10, defines.Hardcoded)];
+        AirWing[] fighters = [new(Fighter(), 20, defines.Hardcoded)];
 
         // D = 0.35 * 20 * 0.5 = 3.5; damage = 3.5 * 0.5 * 30 = 52.5; faster defenders add (1.25 - 1) * 52.5 * 0.65;
         // losses = (52.5 + 8.53125) * 0.01 / 10 = 0.061: none on a roll of 0.5, one on a roll of 0.01.
@@ -146,8 +148,18 @@ public class AirRulesTests
     {
         var target = TestEntityFactory.Capital("bb");
 
-        Assert.Equal(0.05 * 2 * 0.2, AirRules.CriticalChance(target, defines), 9);
+        Assert.Equal(0.05 * 2 * 0.2, AirRules.CriticalChance(target, 0, defines), 9);
         Assert.Equal(1 + 0.2 * 5 / 2, AirRules.CriticalMultiplier(target, 2, defines), 9);
+    }
+
+    [Fact]
+    public void CriticalReceiveChance_ActsWithTheOppositeSignOnAirCrits()
+    {
+        // [RE] 0x197af20: × max(0, 1 − v), so a pride of the fleet's −0.5 makes air crits 1.5 times as likely.
+        var target = TestEntityFactory.Capital("bb");
+
+        Assert.Equal(0.05 * 2 * 0.2 * 1.5, AirRules.CriticalChance(target, -0.5, defines), 9);
+        Assert.Equal(0.001, AirRules.CriticalChance(target, 2, defines), 9);
     }
 
     [Fact]

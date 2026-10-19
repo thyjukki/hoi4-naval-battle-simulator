@@ -9,6 +9,7 @@
       "equipmentType": "screen_ship",
       "year": 1922,
       "manpower": 250,
+      "navalDominanceFactor": 24,
       "baseStats": {
         "speed": 32,
         "reliability": 0.8,
@@ -20,7 +21,8 @@
         "torpedoDamageReductionFactor": 0.45,
         "torpedoEnemyCriticalChanceFactor": -0.05,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 450
+        "productionCost": 450,
+        "navalRange": 1500
       },
       "slots": [
         {
@@ -131,6 +133,7 @@
       "equipmentType": "screen_ship",
       "year": 1936,
       "manpower": 325,
+      "navalDominanceFactor": 30,
       "baseStats": {
         "speed": 33,
         "reliability": 0.85,
@@ -142,7 +145,8 @@
         "torpedoDamageReductionFactor": 0.5,
         "torpedoEnemyCriticalChanceFactor": -0.1,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 550
+        "productionCost": 550,
+        "navalRange": 1750
       },
       "slots": [
         {
@@ -257,6 +261,7 @@
       "equipmentType": "screen_ship",
       "year": 1940,
       "manpower": 400,
+      "navalDominanceFactor": 36,
       "baseStats": {
         "speed": 34,
         "reliability": 0.9,
@@ -268,7 +273,8 @@
         "torpedoDamageReductionFactor": 0.55,
         "torpedoEnemyCriticalChanceFactor": -0.15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 600
+        "productionCost": 600,
+        "navalRange": 2250
       },
       "slots": [
         {
@@ -393,6 +399,7 @@
       "equipmentType": "screen_ship",
       "year": 1944,
       "manpower": 500,
+      "navalDominanceFactor": 44,
       "baseStats": {
         "speed": 35,
         "reliability": 0.95,
@@ -404,7 +411,8 @@
         "torpedoDamageReductionFactor": 0.6,
         "torpedoEnemyCriticalChanceFactor": -0.2,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 650
+        "productionCost": 650,
+        "navalRange": 2500
       },
       "slots": [
         {

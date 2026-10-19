@@ -3,7 +3,9 @@
   "$id": "planes.schema.json",
   "title": "NavySimulator Planes",
   "type": "object",
-  "required": ["planes"],
+  "required": [
+    "planes"
+  ],
   "properties": {
     "$schema": {
       "type": "string"
@@ -12,32 +14,95 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "stats"],
+        "required": [
+          "id",
+          "stats"
+        ],
         "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/id" },
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "archetype": {
+            "type": "string",
+            "description": "The archetype the plane's stats, types and missions default to."
+          },
+          "archetypeName": {
+            "type": "string"
+          },
+          "year": {
+            "type": "integer"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Equipment type keywords, e.g. naval_bomber, fighter."
+          },
+          "missions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "allow_mission_type: missions the plane can fly."
+          },
+          "carrierCapable": {
+            "type": "boolean"
+          },
+          "subUnit": {
+            "type": "string",
+            "description": "The air sub-unit that needs the plane's archetype."
+          },
+          "subUnitTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The sub-unit's type keywords (the game's fighter tests read these)."
+          },
+          "carrierWingSize": {
+            "type": "integer"
+          },
+          "landWingSize": {
+            "type": "integer"
+          },
           "stats": {
             "type": "object",
-            "required": [
-              "airDefense",
-              "airAttack",
-              "navalAttack",
-              "speed",
-              "agility",
-              "airSuperiority",
-              "navalTargeting",
-              "reliability",
-              "productionCost"
-            ],
+            "required": [],
             "properties": {
-              "airDefense": { "type": "number" },
-              "airAttack": { "type": "number" },
-              "navalAttack": { "type": "number" },
-              "speed": { "type": "number" },
-              "agility": { "type": "number" },
-              "airSuperiority": { "type": "number" },
-              "navalTargeting": { "type": "number" },
-              "reliability": { "type": "number" },
-              "productionCost": { "type": "number" }
+              "airDefense": {
+                "type": "number"
+              },
+              "airAttack": {
+                "type": "number"
+              },
+              "navalAttack": {
+                "type": "number"
+              },
+              "speed": {
+                "type": "number"
+              },
+              "agility": {
+                "type": "number"
+              },
+              "airSuperiority": {
+                "type": "number"
+              },
+              "navalTargeting": {
+                "type": "number"
+              },
+              "reliability": {
+                "type": "number"
+              },
+              "productionCost": {
+                "type": "number"
+              },
+              "range": {
+                "type": "number"
+              }
             },
             "additionalProperties": false
           }
@@ -46,6 +111,6 @@
       }
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "Plane equipment imported by import-planes (A-PLANES); do not hand-edit."
 }
-

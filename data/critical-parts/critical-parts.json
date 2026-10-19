@@ -191,7 +191,8 @@
       "strDamageMultiplier": 0.25,
       "orgDamageMultiplier": 0.25,
       "statPenalties": {
-        "subVisibility": 0.66
+        "subVisibility": 0.66,
+        "navalRange": -750
       }
     },
     {

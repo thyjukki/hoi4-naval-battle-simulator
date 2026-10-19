@@ -32,6 +32,7 @@ public class ShipStatsDto
     public double LightHitChanceFactor { get; set; }
     public double HeavyHitChanceFactor { get; set; }
     public double ProductionCost { get; set; }
+    public double NavalRange { get; set; }
 
     public ShipStats ToDomain()
     {
@@ -62,7 +63,8 @@ public class ShipStatsDto
             HeavyHitChanceFactor: HeavyHitChanceFactor,
             TorpedoHitChanceFactor: TorpedoHitChanceFactor,
             DepthChargeHitChanceFactor: DepthChargeHitChanceFactor,
-            ProductionCost: ProductionCost);
+            ProductionCost: ProductionCost,
+            NavalRange: NavalRange);
     }
 }
 

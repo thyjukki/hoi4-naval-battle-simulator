@@ -99,7 +99,7 @@ public class RetreatAndSubmarineTests
         var scoped = CreateResearch("dd_only", ["Destroyer"], new Dictionary<string, double> { ["naval_retreat_speed"] = 0.05 });
         var screen = TestEntityFactory.Screen("cl");
 
-        var participant = new BattleParticipant(new Fleet("f", [screen]), string.Empty, string.Empty, 0, [smokeGenerator, scoped], []);
+        var participant = new BattleParticipant(new Fleet("f", [screen]), null, [smokeGenerator, scoped], []);
 
         Assert.Equal(0.25, participant.CountryModifiers.Get("naval_retreat_speed"), 9);
         Assert.Equal(0.25, screen.CountryModifiers.Get("naval_retreat_speed"), 9);

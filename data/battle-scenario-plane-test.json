@@ -8,18 +8,12 @@
     "iterations": 5,
     "attacker": {
       "fleetID": "1cv_no_plane",
-      "commander": "",
-      "doctrine": "",
-      "externalNavalStrikePlanes": 0,
       "researchIDs": ["sp_torpedo_cruiser_eq_bonus_torpedo"],
       "spiritIDs": [],
       "shipExperienceLevel": 0
     },
     "defender": {
       "fleetID": "1cv_1_plane",
-      "commander": "",
-      "doctrine": "",
-      "externalNavalStrikePlanes": 0,
       "researchIDs": [],
       "spiritIDs": [],
       "shipExperienceLevel": 0

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "doctrines.schema.json",
+  "title": "NavySimulator Doctrine Folder",
+  "description": "One doctrine folder (naval, air): tracks, grand doctrines and subdoctrines, written by NavySimulator import-doctrines (S-DOCTRINE).",
+  "type": "object",
+  "required": [
+    "id"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "description": "The folder ID, e.g. naval."
+    },
+    "name": {
+      "type": "string"
+    },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "grandDoctrines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The tracks it opens, in the game's order."
+          },
+          "effects": {
+            "$ref": "common.schema.json#/$defs/countryEffects"
+          },
+          "milestones": {
+            "type": "object",
+            "description": "Each track's milestone, by track ID: effects once all rewards of the track are unlocked.",
+            "additionalProperties": {
+              "$ref": "common.schema.json#/$defs/countryEffects"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "subdoctrines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "tracks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowInMultipleTracks": {
+            "type": "boolean"
+          },
+          "xor": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effects": {
+            "$ref": "common.schema.json#/$defs/countryEffects"
+          },
+          "rewards": {
+            "type": "array",
+            "description": "In unlock order.",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "mastery": {
+                  "type": "number",
+                  "description": "Mastery this reward needs after the previous one; default NDoctrines.DEFAULT_REWARD_MASTERY."
+                },
+                "effects": {
+                  "$ref": "common.schema.json#/$defs/countryEffects"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -9,6 +9,7 @@
       "equipmentType": "carrier",
       "year": 1939,
       "manpower": 4500,
+      "navalDominanceFactor": 300,
       "baseStats": {
         "speed": 26,
         "reliability": 0.7,
@@ -17,7 +18,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2400
+        "productionCost": 2400,
+        "navalRange": 3000
       },
       "slots": [
         {
@@ -106,6 +108,7 @@
       "equipmentType": "carrier",
       "year": 1940,
       "manpower": 5000,
+      "navalDominanceFactor": 300,
       "baseStats": {
         "speed": 26,
         "reliability": 0.75,
@@ -114,7 +117,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2600
+        "productionCost": 2600,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -213,6 +217,7 @@
       "equipmentType": "carrier",
       "year": 1942,
       "manpower": 5500,
+      "navalDominanceFactor": 350,
       "baseStats": {
         "speed": 26,
         "reliability": 0.8,
@@ -221,7 +226,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2800
+        "productionCost": 2800,
+        "navalRange": 5000
       },
       "slots": [
         {
@@ -331,6 +337,7 @@
       "equipmentType": "carrier",
       "year": 1948,
       "manpower": 6500,
+      "navalDominanceFactor": 400,
       "baseStats": {
         "speed": 30,
         "reliability": 0.85,
@@ -339,7 +346,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 4250
+        "productionCost": 4250,
+        "navalRange": 7500
       },
       "slots": [
         {
@@ -461,6 +469,7 @@
       "equipmentType": "carrier",
       "year": 1944,
       "manpower": 6000,
+      "navalDominanceFactor": 350,
       "baseStats": {
         "speed": 18,
         "reliability": 0.8,
@@ -469,7 +478,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 4500
+        "productionCost": 4500,
+        "navalRange": 7000
       },
       "slots": [
         {
@@ -612,6 +622,7 @@
       "equipmentType": "carrier",
       "year": 1922,
       "manpower": 5000,
+      "navalDominanceFactor": 250,
       "baseStats": {
         "speed": 24,
         "reliability": 0.65,
@@ -620,7 +631,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2400
+        "productionCost": 2400,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -709,6 +721,7 @@
       "equipmentType": "carrier",
       "year": 1922,
       "manpower": 1000,
+      "navalDominanceFactor": 200,
       "baseStats": {
         "speed": 28,
         "reliability": 0.65,
@@ -717,7 +730,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2100
+        "productionCost": 2100,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -795,6 +809,7 @@
       "equipmentType": "carrier",
       "year": 1936,
       "manpower": 2500,
+      "navalDominanceFactor": 175,
       "baseStats": {
         "speed": 22,
         "reliability": 0.7,
@@ -803,7 +818,8 @@
         "surfaceDetection": 26,
         "subDetection": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 1500
+        "productionCost": 1500,
+        "navalRange": 3000
       },
       "slots": [
         {

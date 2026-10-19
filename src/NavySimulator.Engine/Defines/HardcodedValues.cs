@@ -43,8 +43,33 @@ public sealed class HardcodedValues
     // [RE] S-STATS-COMBAT 0xc3d4a3: lower bound of the maximum organization.
     public double MinMaxOrganization { get; set; } = 0.001;
 
+    // [RE] S-ADMIRAL-MOD 0x60fbd0: the leader efficiency scales an admiral's modifier by the modifier definition's flags
+    // (registration 0x55f7f0, def+0x60). These "positive is bad" keys are scaled only where negative (a benefit); every
+    // other naval combat key is "positive is good" and scaled whatever its sign. "Neutral" keys, never scaled, have no
+    // naval combat reader.
+    public HashSet<string> LeaderModifiersScaledWhenNegative { get; set; } = new(
+    [
+        "navy_visibility", "naval_critical_effect_factor", "critical_receive_chance", "naval_torpedo_reveal_chance_factor",
+        "naval_torpedo_cooldown_factor", "naval_torpedo_enemy_critical_chance_factor", "carrier_capacity_penalty_reduction",
+        "navy_casualty_on_hit", "navy_casualty_on_sink", "naval_enemy_retreat_chance", "reassignment_duration_factor"
+    ], StringComparer.Ordinal);
+
     // [ASSUMED] S-NIGHT: province darkness is 1 from NightStartHour to NightEndHour and 0 otherwise. The game computes
     // darkness per province from the day/night terminator; that model is not decoded.
     public int NightStartHour { get; set; } = 20;
     public int NightEndHour { get; set; } = 6;
+
+    // [RE] A-WINGS-TYPES: the sub-unit type keywords of the fighter-type test 0xf63100 (flags & 0x100000c00: fighter,
+    // interceptor, heavy_fighter), which picks the defending carrier fighters (A-INTERCEPT), and of the sortie test
+    // (& 0x100000400: fighter, heavy_fighter; A-SORTIE). Both read the wing pool's sub-unit type, not the equipment's.
+    public HashSet<string> FighterSubUnitTypes { get; set; } = new(["fighter", "interceptor", "heavy_fighter"], StringComparer.Ordinal);
+    public HashSet<string> SortieFighterSubUnitTypes { get; set; } = new(["fighter", "heavy_fighter"], StringComparer.Ordinal);
+
+    // [RE] A-WINGS-STRIKE: a wing is in its air object's strike list when its available missions (the plane's
+    // allow_mission_type) have naval strike, naval kamikaze or port strike (& 0x190).
+    public HashSet<string> StrikeListMissions { get; set; } = new(["naval_bomber", "naval_kamikaze", "port_strike"], StringComparer.Ordinal);
+
+    // [RE] A-WINGS-STRIKE: only strike wings executing naval strike or naval kamikaze (& 0x90) enter the strike averages
+    // and take losses; a wing can execute only a mission its plane allows.
+    public HashSet<string> NavalStrikeMissions { get; set; } = new(["naval_bomber", "naval_kamikaze"], StringComparer.Ordinal);
 }

@@ -1,5 +1,6 @@
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Random;
 
 namespace NavySimulator.Engine.Battles.Air;
@@ -19,7 +20,8 @@ public static class AirRules
     /// <summary>
     /// [RE] A-SORTIE (0x1976db0, 0x19786c0): carrier sortie efficiency before the final clamp. During the first
     /// SELECTED_SORTIE_INITIAL_TIME hours the stance ratio replaces BASE_CARRIER_SORTIE_EFFICIENCY (the defender uses
-    /// 1 - ratio). Weather carrier traffic is not modelled.
+    /// 1 - ratio). Weather carrier traffic is not modelled. The group is one wing pool; deck crowding counts all planes
+    /// on the carrier (<paramref name="carrierPlanes"/>, A-WINGS-STRIKE).
     /// </summary>
     public static double SortieEfficiency(
         AirGroup group,
@@ -29,8 +31,8 @@ public static class AirRules
         int hour,
         double darkness,
         GameDefines defines,
-        double sortieEfficiencyModifier = 0,
-        double carrierNightTraffic = 0)
+        double carrierNightTraffic = 0,
+        int? carrierPlanes = null)
     {
         var carrier = group.Carrier ?? throw new ArgumentException("Only carrier groups have a sortie efficiency.", nameof(group));
         var navy = defines.NNavy;
@@ -43,21 +45,24 @@ public static class AirRules
             ratio = 1.0 - ratio;
         }
 
-        var baseEfficiency = (hour < navy.SELECTED_SORTIE_INITIAL_TIME ? ratio : navy.BASE_CARRIER_SORTIE_EFFICIENCY) + sortieEfficiencyModifier;
+        var baseEfficiency = (hour < navy.SELECTED_SORTIE_INITIAL_TIME ? ratio : navy.BASE_CARRIER_SORTIE_EFFICIENCY);
 
         // [RE] sortie_efficiency through the member getter: capital_screening_bonus for the carrier line (screening_bonus
-        // has none in vanilla), country modifiers and damaged parts (damaged_flight_deck, S-CRIT-PART).
+        // has none in vanilla), country modifiers (doctrines, spirits) and damaged parts (damaged_flight_deck, S-CRIT-PART).
         baseEfficiency += MemberModifierRules.Get(carrier, StaticModifiers.SortieEfficiency, ownScreening, darkness, defines);
 
-        if (group.Wings.Count > 0 && group.Wings[0].IsFighter)
+        // [RE] With a fighter wing first, fighter_sortie_efficiency (modifier 0x1b6) through the same getter, and the
+        // carrier experience level's.
+        if (group.Wings.Count > 0 && group.Wings[0].IsSortieFighter)
         {
-            baseEfficiency += CarrierExperienceFighterSortie(carrier, defines);
+            baseEfficiency += CarrierExperienceFighterSortie(carrier, defines) +
+                              MemberModifierRules.Get(carrier, StaticModifiers.FighterSortieEfficiency, ownScreening, darkness, defines);
         }
 
         // [RE] night = clamp(1 + darkness * night.carrier_traffic + (dark ? country carrier_night_traffic : 0), 0, 1).
         var night = Math.Clamp(1.0 + darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic) +
                                (darkness > 0 ? carrierNightTraffic : 0), 0, 1);
-        var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, group.Planes, defines) * night);
+        var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, carrierPlanes ?? group.Planes, defines) * night);
         var orgRatio = carrier.CurrentOrganization / CombatStatRules.MaxOrganization(carrier, defines);
         return Math.Max(0, sortie * orgRatio);
     }
@@ -136,7 +141,7 @@ public static class AirRules
         var stats = target.GetFinalStats();
         var weight = Math.Max(stats.Hp, 0.001) * typeScore *
                      (1.0 + navy.NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE * (1.0 - TargetingRules.HpRatio(target)));
-        return weight + navy.NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE * Math.Clamp(5.0 - stats.AntiAir, 0, 5);
+        return weight + navy.NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE * Math.Clamp(5.0 - CombatStatRules.AntiAir(target, defines), 0, 5);
     }
 
     /// <summary>
@@ -223,7 +228,7 @@ public static class AirRules
     /// <summary>[RE] Side fleet AA term: sum of warship AA * SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning (convoys add nothing).</summary>
     public static double FleetAntiAir(IEnumerable<Ship> sideShips, double positioning, GameDefines defines)
     {
-        return sideShips.Where(ship => ship.IsInBattle && ship.Role != ShipRole.Convoy).Sum(ship => ship.GetFinalStats().AntiAir) *
+        return sideShips.Where(ship => ship.IsInBattle && ship.Role != ShipRole.Convoy).Sum(ship => CombatStatRules.AntiAir(ship, defines)) *
                defines.NNavy.SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning;
     }
 
@@ -234,13 +239,17 @@ public static class AirRules
         return (int)Math.Round(strikers * fraction * random.NextDouble(RollKind.Air), MidpointRounding.AwayFromZero);
     }
 
-    /// <summary>[RE] A-CRIT: gun crit defines with the piercing bonus always on; at least 0.001 when positive.</summary>
-    public static double CriticalChance(Ship target, GameDefines defines)
+    /// <summary>
+    /// [RE] A-CRIT (0x197af20): gun crit defines with the piercing bonus always on, × max(0, 1 − the target's
+    /// critical_receive_chance) (the opposite sign of the surface rule: the game's behaviour, so a pride of the fleet's −0.5
+    /// gives ×1.5); at least 0.001 when the base chance is positive.
+    /// </summary>
+    public static double CriticalChance(Ship target, double criticalReceiveChance, GameDefines defines)
     {
         var navy = defines.NNavy;
         var reliability = Math.Min(target.GetFinalStats().Reliability, 1);
         var chance = navy.COMBAT_BASE_CRITICAL_CHANCE * (1.0 + navy.COMBAT_ARMOR_PIERCING_CRITICAL_BONUS) * (1.0 - reliability);
-        return chance > 0 ? Math.Max(chance, 0.001) : 0;
+        return chance > 0 ? Math.Max(chance * Math.Max(0, 1 - criticalReceiveChance), 0.001) : 0;
     }
 
     /// <summary>[RE] A-CRIT: one hit's worth is multiplied by 1 + CRIT_MULT * (1 - reliability), i.e. the strike by 1 + that / hits.</summary>
@@ -250,7 +259,7 @@ public static class AirRules
         return 1.0 + (1.0 - reliability) * defines.NNavy.COMBAT_CRITICAL_DAMAGE_MULT / Math.Max(hits, 1);
     }
 
-    /// <summary>[RE] A-EXTERNAL: cumulative cap on land-based planes that join the battle.</summary>
+    /// <summary>[RE] A-EXTERNAL: cap on the land-based planes a side takes in one air hour (the count resets every air hour).</summary>
     public static double ExternalJoinCap(IEnumerable<Ship> enemyShips, int hour, GameDefines defines)
     {
         var air = defines.NAir;
@@ -259,8 +268,17 @@ public static class AirRules
             Math.Floor(enemyHp * air.NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO * (1.0 + air.NAVAL_COMBAT_EXTERNAL_PLANES_JOIN_RATIO_PER_DAY * (hour / 24))));
     }
 
-    /// <summary>[RE] Per-plane naval strike stats (the plane stat getters include a x0.1).</summary>
-    public static (double Attack, double Targeting, double Agility) StrikeAverages(IReadOnlyList<AirWing> wings, GameDefines defines)
+    /// <summary>
+    /// [RE] Per-plane naval strike stats: the plane stat getters (0xf60f10, 0xf61280, 0xf60bc0) include a x0.1 (agility:
+    /// AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY) and x (1 + naval_strike_attack/targetting/agility_factor) of the planes'
+    /// country; planes from a carrier also take x (1 + navy_carrier_air_attack/targetting/agility_factor) (A-DMG, A-HIT,
+    /// A-AA-PREEMPT). Leader and plane experience terms are not modelled.
+    /// </summary>
+    public static (double Attack, double Targeting, double Agility) StrikeAverages(
+        IReadOnlyList<AirWing> wings,
+        GameDefines defines,
+        ModifierSet? country = null,
+        bool fromCarrier = false)
     {
         var planes = wings.Sum(wing => wing.Planes);
 
@@ -269,10 +287,13 @@ public static class AirRules
             return (0, 0, 0);
         }
 
+        var modifiers = country ?? ModifierSet.Empty;
+        double Factor(string strike, string carrier) => (1 + modifiers.Get(strike)) * (fromCarrier ? 1 + modifiers.Get(carrier) : 1);
         double Average(Func<PlaneStats, double> stat) => wings.Sum(wing => stat(wing.Plane.Stats) * wing.Planes) / planes;
-        return (0.1 * Average(stats => stats.NavalAttack),
-            0.1 * Average(stats => stats.NavalTargeting),
-            defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * Average(stats => stats.Agility));
+        return (0.1 * Average(stats => stats.NavalAttack) * Factor(StaticModifiers.NavalStrikeAttackFactor, StaticModifiers.NavyCarrierAirAttackFactor),
+            0.1 * Average(stats => stats.NavalTargeting) * Factor(StaticModifiers.NavalStrikeTargettingFactor, StaticModifiers.NavyCarrierAirTargettingFactor),
+            defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * Average(stats => stats.Agility) *
+            Factor(StaticModifiers.NavalStrikeAgilityFactor, StaticModifiers.NavyCarrierAirAgilityFactor));
     }
 
     /// <summary>[ASSUMED] Removes lost planes from the wings in order (strike wings first); the game's split is not decoded.</summary>

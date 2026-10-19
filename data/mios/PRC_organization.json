@@ -1,0 +1,591 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "PRC_shipbuilding_industry_bureau_organization",
+      "name": "Shipbuilding Industry Bureau",
+      "countries": [
+        "PRC"
+      ],
+      "include": "generic_escort_ship_organization",
+      "equipmentTypes": [
+        "screen_ship"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Escort Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "productionBonus": {
+          "production_capacity_factor": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "PRC_shipbuilding_industry_bureau_nascant_shipbuilding_trait",
+          "name": "Nascent Shipbuilding",
+          "x": 9,
+          "y": 0,
+          "special": true,
+          "equipmentBonus": {
+            "reliability": 0.1
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.2
+          }
+        },
+        {
+          "id": "PRC_shipbuilding_industry_bureau_office_of_the_science_technology_committee_trait",
+          "name": "Office of the Science and Technology Committee",
+          "x": 9,
+          "y": 3,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "PRC_shipbuilding_industry_bureau_nascant_shipbuilding_trait"
+              ],
+              "needed": 1
+            }
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_research_bonus": 0.15
+          }
+        },
+        {
+          "id": "generic_mio_trait_submarine_hunters",
+          "name": "ASW Role Optimization",
+          "x": 1,
+          "y": 0,
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "sub_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_mine_hunting_equipment",
+          "name": "High Speed Minesweeping Equipment",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_submarine_hunters"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "mines_sweeping": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_hydrodynamic_design",
+          "name": "Advanced Hydrodynamic Design",
+          "x": 1,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_mine_hunting_equipment"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_fleet_escorts",
+          "name": "Fleet Escort Role",
+          "x": 6,
+          "y": 0,
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_ships",
+          "name": "Anti-Air Ships",
+          "x": 3,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_escort_in_force"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_escort_in_force",
+          "name": "Escort in Force",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_anti_air_ships"
+          ],
+          "equipmentBonus": {
+            "lg_armor_piercing": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_layout",
+          "name": "Optimized Anti-Aircraft Firing Arcs",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 7,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_anti_air_gun_mounting",
+          "name": "Improved Anti-Air Gun Mounting",
+          "x": 3,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_mass_production",
+          "name": "Mass Production",
+          "x": 4,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_light_gun_mounting",
+          "name": "Improved Light Gun Mounting",
+          "x": 6,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            },
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { tag = PRC has_dlc = \"No Compromise, No Surrender\" }",
+        "available = { PRC = { has_completed_focus = PRC_establish_pla_navy } }"
+      ]
+    },
+    {
+      "id": "PRC_dalian_shipbuilding_company_organization",
+      "name": "Dalian Shipbuilding Company",
+      "countries": [
+        "PRC"
+      ],
+      "include": "generic_task_force_ship_organization",
+      "equipmentTypes": [
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Task Force Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "equipmentBonus": {
+          "max_strength": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "PRC_dalian_shipbuilding_company_carrier_learners",
+          "name": "Carrier Learners",
+          "x": 9,
+          "y": 0,
+          "special": true,
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier"
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_size_up_requirement": -0.15
+          },
+          "conditions": [
+            "available = { PRC = { has_completed_focus = PRC_carriers } }"
+          ]
+        },
+        {
+          "id": "PRC_dalian_shipbuilding_company_domestic_carriers_trait",
+          "name": "Domestic Carrier Program",
+          "x": 9,
+          "y": 1,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "PRC_dalian_shipbuilding_company_carrier_learners"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier"
+          ],
+          "productionBonus": {
+            "production_cost_factor": -0.05
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.25
+          }
+        },
+        {
+          "id": "PRC_dalian_shipbuilding_company_mass_production_carriers_trait",
+          "name": "Mass Production of Carriers",
+          "x": 9,
+          "y": 2,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "PRC_dalian_shipbuilding_company_domestic_carriers_trait"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier"
+          ],
+          "equipmentBonus": {
+            "build_cost_ic": -0.15
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_design_team_assign_cost": -0.2
+          },
+          "conditions": [
+            "available = { PRC = { has_completed_focus = PRC_naval_capstone } }"
+          ]
+        },
+        {
+          "id": "generic_mio_trait_long_range_cruising",
+          "name": "Long Range Cruising",
+          "x": 0,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_speed_cruising"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_cruising",
+          "name": "High Speed Cruising",
+          "x": 2,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_long_range_cruising"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_splinter_protection",
+          "name": "Splinter Protection",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_cruising",
+                "generic_mio_trait_high_speed_cruising"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier",
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_transom_stern",
+          "name": "Hydrodynamic Improvements",
+          "x": 0,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_underway_replenishment_equipment"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "fuel_consumption": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_underway_replenishment_equipment",
+          "name": "Underway Replenishment Equipment",
+          "x": 2,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_transom_stern"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "fuel_consumption": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_secondary_fire_director_control",
+          "name": "Secondary Fire Director Control",
+          "x": 5,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "screen_ship",
+            "carrier",
+            "ship_hull_carrier_super"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "naval_light_gun_hit_chance_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_flight_deck_edge_aa_mounts",
+          "name": "Flight Deck Edge AA Mounts",
+          "x": 4,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_secondary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier",
+            "ship_hull_carrier_super"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 4,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_flight_deck_edge_aa_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_rapid_fire_guns",
+          "name": "Rapid Fire Guns",
+          "x": 6,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_secondary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_velocity_guns"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_fitting_works",
+          "name": "Advanced Fitting Works",
+          "x": 6,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_rapid_fire_guns",
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_carrier_flight_operations_center",
+          "name": "Advanced Firefighting Pumps",
+          "x": 5,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts",
+                "generic_mio_trait_advanced_fitting_works",
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 3
+            }
+          ],
+          "equipmentBonus": {
+            "max_strength": 0.1
+          }
+        },
+        {
+          "id": "generic_mio_trait_primary_fire_director_control",
+          "name": "Primary Fire Director Control",
+          "x": 8,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "hg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_velocity_guns",
+          "name": "High Velocity Guns",
+          "x": 8,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_primary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_rapid_fire_guns"
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "hg_armor_piercing": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { tag = PRC has_dlc = \"No Compromise, No Surrender\" }",
+        "available = { OR = { PRC = { controls_state = 745 } 745 = { has_dynamic_modifier = { modifier = PRC_infiltrated_state_3 } } } }"
+      ]
+    }
+  ]
+}

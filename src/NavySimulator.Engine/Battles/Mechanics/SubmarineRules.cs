@@ -22,17 +22,23 @@ public static class SubmarineRules
         return detecting.Count == 0 ? 0 : detecting.Average() * defines.NNavy.NAVAL_COMBAT_SUB_DETECTION_FACTOR;
     }
 
-    /// <summary>[RE] min(1, D * SUBMARINE_REVEAL_DETECTION_MULTIPLIER [* firing multiplier] / max(stealth - V, 0.1)).</summary>
-    public static double RevealChance(Ship submarine, double enemyDetection, double ownPositioning, bool afterFiring, GameDefines defines)
+    /// <summary>
+    /// [RE] min(1, D * SUBMARINE_REVEAL_DETECTION_MULTIPLIER [* firing multiplier] / max(stealth - V, 0.1)). After firing,
+    /// V is also × (1 + naval_torpedo_reveal_chance_factor) of the submarine (0x1973f87).
+    /// </summary>
+    public static double RevealChance(Ship submarine, double enemyDetection, double ownPositioning, bool afterFiring, GameDefines defines,
+        double darkness = 0)
     {
         var navy = defines.NNavy;
-        var visibility = submarine.GetFinalStats().SubVisibility *
+        // [RE] 0xc3aa20: sub visibility x (1 + navy_visibility).
+        var visibility = CombatStatRules.Visibility(submarine, true, defines) *
                          (1.0 + navy.SUBMARINE_REVEAL_ON_MINIMUM_POSITIONING * (1.0 - ownPositioning));
         var numerator = enemyDetection * navy.SUBMARINE_REVEAL_DETECTION_MULTIPLIER;
 
         if (afterFiring)
         {
             numerator *= navy.SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER;
+            visibility *= 1.0 + MemberModifierRules.ShipModifier(submarine, StaticModifiers.NavalTorpedoRevealChanceFactor, darkness, defines);
         }
 
         var divider = Math.Max(navy.SUBMARINE_BASE_STEALTH_VALUE - visibility, defines.Hardcoded.MinSubmarineStealthDivider);
@@ -55,9 +61,11 @@ public static class SubmarineRules
     }
 
     /// <summary>[RE] After a submarine fires its torpedoes it may be revealed (resetting the timer if it already is).</summary>
-    public static void RevealAfterFiring(Ship submarine, double enemyDetection, double ownPositioning, GameDefines defines, IRandomSource random)
+    public static void RevealAfterFiring(Ship submarine, double enemyDetection, double ownPositioning, GameDefines defines, IRandomSource random,
+        double darkness = 0)
     {
-        if (enemyDetection > 0 && random.NextDouble(RollKind.SubmarineReveal) <= RevealChance(submarine, enemyDetection, ownPositioning, true, defines))
+        if (enemyDetection > 0 &&
+            random.NextDouble(RollKind.SubmarineReveal) <= RevealChance(submarine, enemyDetection, ownPositioning, true, defines, darkness))
         {
             submarine.RevealTimer = (int)defines.NNavy.SUBMARINE_HIDE_TIMEOUT;
         }

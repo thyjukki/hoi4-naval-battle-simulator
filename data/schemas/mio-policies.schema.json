@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mio-policies.schema.json",
+  "title": "NavySimulator MIO policies",
+  "description": "MIO policies a naval MIO can take, written by NavySimulator import-mios (S-MIO-POLICY).",
+  "type": "object",
+  "required": ["policies"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "description": "The game's name (localisation)." },
+          "allowedEquipmentTypes": {
+            "type": "array",
+            "description": "has_mio_equipment_type conditions of allowed: the MIO needs one of them in its equipment types. Empty: any MIO.",
+            "items": { "type": "string" }
+          },
+          "equipmentBonus": {
+            "type": "object",
+            "description": "By equipment type, archetype or group (same_as_mio: every design of the MIO), then by stat key.",
+            "additionalProperties": { "$ref": "common.schema.json#/$defs/mioBonus" }
+          },
+          "productionBonus": {
+            "type": "object",
+            "description": "No effect in battle.",
+            "additionalProperties": { "type": "object", "additionalProperties": { "type": "number" } }
+          },
+          "organizationModifiers": { "type": "object", "additionalProperties": { "type": "number" } },
+          "conditions": { "type": "array", "description": "allowed/visible/available triggers as script text (not checked).", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

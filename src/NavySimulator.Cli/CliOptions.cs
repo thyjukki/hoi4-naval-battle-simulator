@@ -23,6 +23,10 @@ public sealed class CliOptions
           --help              Show this help
 
         Import hulls, modules and ship types from the game: NavySimulator import-ship-data --help
+        Import doctrines and spirits from the game: NavySimulator import-doctrines --help
+        Import naval MIOs and their policies from the game: NavySimulator import-mios --help
+        Import admirals, their skills and traits from the game: NavySimulator import-leaders --help
+        Import plane equipment (no plane designer) from the game: NavySimulator import-planes --help
         List a scenario's ships as JSON (for tools/ingame/make_save.py): NavySimulator list-ships --help
         Replay a battle logged in the game with its own rolls: NavySimulator replay --help
         """;

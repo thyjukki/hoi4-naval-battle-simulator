@@ -29,8 +29,8 @@ public static class HitChanceRules
         return new HitChanceBreakdown(baseChance, shipProfile, weaponProfile, profileFactor, modifier, final);
     }
 
-    // S-HIT-SHIP [RE] 0xc37006: 100 * visibility / (max(0.5 * speed, 0.1) + 20); convoys use CONVOY_HIT_PROFILE.
-    // naval_visibility_factor and the per-ship hit profile multiplier are not modelled (1.0).
+    // S-HIT-SHIP [RE] 0xc37006: 100 * visibility / (max(0.5 * speed, 0.1) + 20); convoys use CONVOY_HIT_PROFILE. The
+    // visibility is the getter's, x (1 + navy_visibility) (0xc37067).
     public static double ShipHitProfile(Ship target, GameDefines defines)
     {
         var navy = defines.NNavy;
@@ -40,8 +40,7 @@ public static class HitChanceRules
             return navy.CONVOY_HIT_PROFILE;
         }
 
-        var stats = target.GetFinalStats();
-        var visibility = Math.Max(0, target.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility);
+        var visibility = CombatStatRules.Visibility(target, target.Role == ShipRole.Submarine, defines);
         var speedTerm = Math.Max(CombatStatRules.CombatSpeed(target, defines) * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
         return visibility * navy.HIT_PROFILE_MULT / (speedTerm + navy.HIT_PROFILE_SPEED_BASE);
     }

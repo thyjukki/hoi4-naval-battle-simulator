@@ -33,8 +33,15 @@ public static class ModifierInfo
     {
         return string.Join(", ", (modifiers ?? new Dictionary<string, double>())
             .Where(entry => entry.Value != 0)
-            .Select(entry => $"{Label(entry.Key)} {entry.Value * 100:+0.##;-0.##}%" +
-                             (BattleParticipant.ModelledCountryModifiers.Contains(entry.Key) ? string.Empty : " (not simulated)")));
+            .Select(entry => $"{Label(entry.Key)} {entry.Value * 100:+0.##;-0.##}%" + Status(entry.Key)));
+    }
+
+    // S-STATS-COUNTRY: whether combat reads the key, and if not, whether that is the game's own behavior.
+    private static string Status(string key)
+    {
+        return BattleParticipant.IsModelledCountryModifier(key) ? string.Empty
+            : BattleParticipant.CountryModifiersWithoutBattleEffect.Contains(key) ? " (no effect in battle)"
+            : " (not simulated)";
     }
 
     /// <summary>A research's effects: its ship stat blocks, then its country modifiers.</summary>

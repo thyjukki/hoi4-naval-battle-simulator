@@ -61,6 +61,8 @@ else
         <strong>@last.Scenario.ID</strong> (@(last.ScenarioFile ?? "unsaved")) · @runs.Count of @last.Requested runs@(last.Cancelled ? " (stopped)" : "") ·
         seeds @runs[0].Seed–@runs[^1].Seed · @last.Elapsed.TotalSeconds.ToString("F1") s ·
         defines @string.Join(" → ", last.Scenario.Defines.Sources)
+        · fleet cost <span class="attacker">@FleetCost.Of(runs[0], runs[0].Attacker.Label).Total.ToString("N0") IC</span>
+        vs <span class="defender">@FleetCost.Of(runs[0], runs[0].Defender.Label).Total.ToString("N0") IC</span>
         @if (Workspace.Json(last.ScenarioUsed) != Workspace.Json(Workspace.Scenario))
         {
             <span class="warn"> · the scenario has changed since</span>
@@ -90,9 +92,11 @@ else
                         @DistributionRow("Attacker sunk", runs.Select(run => (double)run.Attacker.ShipsSunk), "F2", "attacker")
                         @DistributionRow("Attacker escaped", runs.Select(run => (double)run.Attacker.ShipsRetreated), "F2", "attacker")
                         @DistributionRow("Attacker HP lost %", runs.Select(run => Ratio(run.Attacker.HpLost, run.Attacker.HpAtStart) * 100), "F1", "attacker")
+                        @DistributionRow("Attacker IC lost", runs.Select(run => FleetCost.Of(run, run.Attacker.Label).Sunk), "N0", "attacker")
                         @DistributionRow("Defender sunk", runs.Select(run => (double)run.Defender.ShipsSunk), "F2", "defender")
                         @DistributionRow("Defender escaped", runs.Select(run => (double)run.Defender.ShipsRetreated), "F2", "defender")
                         @DistributionRow("Defender HP lost %", runs.Select(run => Ratio(run.Defender.HpLost, run.Defender.HpAtStart) * 100), "F1", "defender")
+                        @DistributionRow("Defender IC lost", runs.Select(run => FleetCost.Of(run, run.Defender.Label).Sunk), "N0", "defender")
                     </tbody>
                 </table>
             </div>

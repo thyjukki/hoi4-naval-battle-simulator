@@ -9,7 +9,7 @@ index was built for (the runner checks its SHA-256), Steam running. The hooks an
 |---|---|
 | `run_battles.py` | Runner: per save and seed, starts the game on the save, types the console commands, unpauses, logs, closes the game |
 | `battle_logger.js` | Frida agent: hooks the combat hour and the shot loop, sends one record per combat hour |
-| `make_save.py` | Writes a simulator scenario into a battle save: designs, ships, aggressiveness, repair priority, technologies |
+| `make_save.py` | Writes a simulator scenario into a battle save: designs, ships, aggressiveness, repair priority, technologies, doctrines, spirits, MIOs, the admiral, the pride of the fleet, the region's naval dominance |
 | `savefile.py` | Reads plain-text saves (task forces, ships, design variants) and writes a copy with another dice seed |
 | `summarize.py` | Outcome of every logged run (length, HP left, ships fighting / escaped / sunk) and the spread over runs |
 | `compare.py` | Logged game runs against simulator runs: start values, outcome per design, hit chances per shooter, weapon and target |
@@ -33,10 +33,69 @@ scenario's ships (ship type, HP, organization, manpower, experience; `--defines`
 defines), then per side rewrites one of the country's design variants on each design's hull to the design's modules
 (named after the design, so the logs show the simulator's design IDs), replaces the task force's ships, sets
 `navy_engagement_rule` and `repair_mode` from the aggressiveness and repair priority, adds the game technologies behind
-the side's researches (`GAME_TECHS`: the simulator's research IDs are not the game's yet) and removes the running naval
-combat, so the game starts the battle afresh in the first hour. The game picks the attacker itself (in the CL3 template
-ROM). Spirits, commanders, doctrines and MIOs are not written. It reads the result back and checks ships, variants and
-experience. The game starts the battle an hour after the save's time (a counter-0 update that fires nothing), so the
+the side's researches (`GAME_TECHS`: the simulator's research IDs are not the game's yet), writes the side's doctrines
+into the save's `doctrine` block (per folder the grand doctrine and, per track in the grand doctrine's order, the
+subdoctrine, its mastery and unlocked reward count, plus the completed subdoctrines; S-DOCTRINE-SAVE), adds its spirits
+to the country's `politics={ ideas={ } }` list, makes the first ship of the side's `prideOfTheFleet` design the
+country's pride of the fleet (`pride_of_the_fleet={ id type=51 }` before `pride_of_the_fleet_date_lost`, or removes the
+template's when the side has none; S-POTF-SAVE), sets both countries' naval dominance in the battle region to their new
+ships' totals (`list-ships` gives each design's `navalDominance`; S-DOMINANCE), and removes the running naval combat, so
+the game starts the battle afresh in the first hour. The game picks the attacker itself (in the CL3 template ROM).
+
+Naval dominance: the region's `dominance={ values={ … } }` keeps each country's `current`, `target`, `base_target`,
+`previous` and `decline_from`; the game moves `current` toward the target once a day. Saves written before this kept
+the template's values (the CL3 fleets', BUL 17377 against ROM 17238), so in their battles the USA side regained
+organization faster until Japan's value passed it (hour 133, 157 or 181). The script now writes the new fleets' totals
+into the one region whose dominance lists both countries (it warns when there is none), as after a long patrol, which
+is what `rules.navalDominanceEnabled` assumes; the side with more dominance then keeps it until its ships' losses
+bring its value below the other side's (4 % of the old total a day at most).
+
+Loading a save rebuilds only the doctrine state and the country modifiers from that block; the doctrines' sub-unit
+bonuses come back from the country's `deployment={ unit_modifiers={ … } }` records, one per active part (`type` =
+`grand_doctrine`, `sub_doctrine`, `rewards` with the reward index or `milestones` with the track index, `id`), which the
+script writes from `data/doctrines`. A ship clamps its organisation to its maximum when it is read, and the country's
+`units` come before `deployment` in the save, so the script moves `deployment` before `units` (`--keep-block-order`
+leaves it); ship organisation is written with the doctrines' bonuses. Both steps follow the decoded load path
+([S-DOCTRINE-SAVE](../../docs/reverse-engineering/findings/S-DOCTRINE-doctrines.md)) but are not confirmed in a run yet:
+check the logged hour-0 organisation against `list-ships`.
+
+MIOs ([S-MIO-SAVE](../../docs/reverse-engineering/findings/S-MIO-equipment-matching.md#save-format-s-mio-save)): each
+MIO the side uses goes into the country's `production={ industrial_organisations={ … } }` with the side's unlocked
+traits (`unlocked={ trait="…" }`, one block each) and policy (`policy=…`). The template's countries stand in for the
+scenario's (BUL for the USA, ROM for Japan), so the script copies the MIO's block from the country that owns it in the
+save with a new handle; the game reads any MIO the database knows, whatever its `allowed`. Each rewritten variant gets
+`design_team={ id type=79 }` and `design_team_bonus={ … }`, the MIO bonus by game key from `list-ships` (`mioBonus`; the
+game keeps that snapshot and does not recompute it, S-MIO-TIMING). Keys the simulator has no stat for (production
+capacity, mines) are left out of the snapshot; none acts in combat.
+
+The admiral ([S-ADMIRAL-SAVE](../../docs/reverse-engineering/findings/S-ADMIRAL-leader-combat.md#save-format-s-admiral-save)):
+the country's first navy leader stands in for the side's: its name, skill levels and traits are rewritten (the portrait
+stays the stand-in's), and it becomes the leader of the fleet holding the battle task force (`leader={ id type=4713 }`
+after the fleet's id). No assignment date is saved, so the admiral loads without the reassignment cooldown.
+
+Carriers (A-WINGS-SAVE, [A-WINGS](../../docs/reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md)):
+each carrier gets an `air_base` in `strategic_air` (`carrier={ id type=51 }`, capacity = deck size × 10) and, per plane
+sub-unit on it, an `air_wing_pool` under the country with the carrier's wings (`count`, `manpower` = 40 per plane, the
+country's variant of the plane, `allow_mission_type` from the plane's missions, experience 0, no mission). The side's
+plane stockpile goes into the country's `production={ equipments={ … } }`, and its carrier stance into the task force's
+`sortie_efficiency`. New `{ id type=4713 }` references must stay at or below the header's `debug_current_ref_id`
+(the script raises it), or the game hands out the same ids at load. A design on a hull the country has no free
+variant of (Bulgaria has no `ship_hull_carrier_3` variant in 1936) gets a copy of its variant on a hull of the same
+family. The logger records every air object's strike (planes, wings with their executing mission) in raw.jsonl `air`.
+The game picks the attacker (ROM, so Japan in the USA vs Japan saves): with TFB's stance ratios of 1.0 the defender's
+carriers launch only their bonus sortie efficiency in the first 24 h, so compare with a simulator scenario that has
+the same attacker and the battle region's `airRegionPhase` (region 30: 6).
+
+Game rules: every written save turns TFB's Admiral Command Limit off (`game_rules={ navy_cap="DISABLED" }`). Under its
+default (cap 150) TFB weighs the ships under each admiral (destroyer and submarine 1, cruisers 2, battleships and
+battlecruisers 6, carriers and super-heavy battleships 8, super-heavy carriers 14) and gives the whole country a daily
+`naval_damage_factor` and torpedo hit chance penalty of 0.01 per point above 145; the simulator has one fleet per side
+and no such cap.
+
+Doctrine equipment bonuses (three lists of named bonus records) are not written, so the script warns when one reaches a
+design of the scenario. It reads the result back and checks ships, variants, experience, doctrines, spirits, MIOs,
+design teams and the fleet's admiral. After loading a new kind of save, check the game's `logs/error.log`: a block the
+game cannot read makes it skip the rest of the country (its fleet included), with one "Unexpected token" line per key. The game starts the battle an hour after the save's time (a counter-0 update that fires nothing), so the
 scenario's `rules.startHourOfDay` should be the save's hour + 1.
 
 ## Running
@@ -58,6 +117,9 @@ report the loaded game, attaches the logger, types `ai`, `weather` and `gamespee
 changes the first two) and unpauses. It stops when every combat has ended (`--extra-hours` keeps going, for example to
 catch a second engagement), closes the game and deletes the copy. `continue_game.json` is restored at the end.
 
+`--setup-only` loads one save and seed, types the console commands and leaves the game paused and running on the copy
+(nothing is logged; unpausing starts the battle), for looking at a new setup in the game first.
+
 A save replays the identical battle every time it is loaded with the same console commands; the seed is what makes
 repetitions independent. `--seeds 0` runs the save's own seed once. A run gives up when no combat has started after
 `--start-hours` (48) game hours.
@@ -75,6 +137,12 @@ One folder per run under `output/ingame/<save>_<timestamp>/<seed>/` (or `--out`)
 - `shots.csv`: one row per shot: shooter, target, weapon, the shot profile (damage, hit chance ×100, crit chance, crit
   multiplier, piercing, armor, damage reduction, cooldown), the hit / damage / crit rolls, and the HP and org damage
   with the target's HP, org and manpower before and after.
+- `modifiers.csv`: per combat hour (at its start) and ship: organization, the `max_organisation` stat, the live max
+  organization (0xc37e70), attack, armor and hit chance factor stats, and the ship modifier sum (0xc38760, with the
+  side's commanding admiral) for the hit chance, damage, defense and organization modifiers.
+- `holders.csv`: per combat hour and side: the commanding admiral (empty: none) and, for the side's first ship, every
+  non-zero value of the modifier sum's holders (country, task force, experience, captain, admiral) for the modifiers the
+  combat terms read. A change here shows where a game-side difference comes from.
 - `rolls.csv`: every `random_fixed` call of the combat update in call order: hour, sequence, source line, value, and the
   index of the shot loop it fell in (-1 outside one).
 - `raw.jsonl`: everything the logger sent, including every member's state at the start of each hour. With the rolls

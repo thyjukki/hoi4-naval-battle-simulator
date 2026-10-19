@@ -1,0 +1,225 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "BRA_amrj_organization",
+      "name": "Arsenal de Marinha do Rio de Janeiro",
+      "countries": [
+        "BRA"
+      ],
+      "include": "generic_escort_ship_organization",
+      "equipmentTypes": [
+        "screen_ship"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Escort Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "productionBonus": {
+          "production_capacity_factor": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "generic_mio_trait_submarine_hunters",
+          "name": "ASW Role Optimization",
+          "x": 1,
+          "y": 0,
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "sub_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_mine_hunting_equipment",
+          "name": "High Speed Minesweeping Equipment",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_submarine_hunters"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "mines_sweeping": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_hydrodynamic_design",
+          "name": "Advanced Hydrodynamic Design",
+          "x": 1,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_mine_hunting_equipment"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_fleet_escorts",
+          "name": "Fleet Escort Role",
+          "x": 6,
+          "y": 0,
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_ships",
+          "name": "Anti-Air Ships",
+          "x": 3,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_escort_in_force"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_escort_in_force",
+          "name": "Escort in Force",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_anti_air_ships"
+          ],
+          "equipmentBonus": {
+            "lg_armor_piercing": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_layout",
+          "name": "Optimized Anti-Aircraft Firing Arcs",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 7,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_anti_air_gun_mounting",
+          "name": "Improved Anti-Air Gun Mounting",
+          "x": 3,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_mass_production",
+          "name": "Mass Production",
+          "x": 4,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_light_gun_mounting",
+          "name": "Improved Light Gun Mounting",
+          "x": 6,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            },
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { tag = BRA }",
+        "available = { IF = { limit = { FROM = { NOT = { original_tag = BRA } } } } ELSE = { FROM = { controls_state = 500 } } }"
+      ]
+    }
+  ]
+}

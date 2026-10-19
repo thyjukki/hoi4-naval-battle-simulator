@@ -17,6 +17,10 @@ public class HullDto
 
     public int? Year { get; set; }
     public int Manpower { get; set; }
+
+    /// <summary>The hull equipment's <c>naval_dominance_factor</c> (S-DOMINANCE).</summary>
+    public double NavalDominanceFactor { get; set; }
+
     public ShipStatsDto BaseStats { get; set; } = new ShipStatsDto();
     public List<ModuleSlotDto> Slots { get; set; } = [];
     public List<ModuleCountLimitDto> ModuleCountLimits { get; set; } = [];

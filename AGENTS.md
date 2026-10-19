@@ -4,11 +4,11 @@
 - Simulate Hearts of Iron 4 (HOI4) naval battles as close to the real game as possible, down to decoded formulas.
 - Sources of truth, in order: reverse-engineering findings (`docs/reverse-engineering/findings/`), calibration against recorded in-game battles (`docs/calibration.md`), the game's own files (defines, unit/equipment scripts). The wiki and community testing are secondary.
 - The spec lives in `docs/mechanics/`. Every rule has an ID (`S-*` surface, `A-*` air) and provenance tags ([DEFINE], [RE], [CAL], [WIKI], [PDX], [COMMUNITY], [LEGACY], [ASSUMED]). Code cites the ID where it implements the rule.
-- Fleets consist of ships; ships have a design = hull + one module per hull slot + optional MIO; the ship type (light cruiser, battleship, ...) is not a hull but follows from hull and modules (S-DESIGN), and gives the role and organization; researches (technologies and equipment bonuses) and spirits add stat modifiers, combined as decoded in S-STATS (`docs/mechanics/surface.md`).
-- Battles are between 2 sides, each with a fleet, researches, spirits and the task force's aggressiveness (engagement rule: retreat threshold and which lines submarines attack) and repair priority (recorded, not used in combat). Use the game's terms: aggressiveness (Do Not Engage, Engage At Low/Medium/High Risk, Always Engage) and repair priority (Never repair, Low, Medium, High; not used in combat).
+- Fleets consist of ships; ships have a design = hull + one module per hull slot + optional MIO (the design names the MIO; the side unlocks its traits and policy, S-MIO); the ship type (light cruiser, battleship, ...) is not a hull but follows from hull and modules (S-DESIGN), and gives the role and organization; researches (technologies and equipment bonuses) and spirits add stat modifiers, combined as decoded in S-STATS (`docs/mechanics/surface.md`).
+- Battles are between 2 sides, each with a fleet, researches, doctrines (per folder: grand doctrine, a subdoctrine per track and the track's mastery; S-DOCTRINE), spirits, an admiral (skills and traits, picked from the country's admirals or made up; S-ADMIRAL), a pride of the fleet (one capital ship or carrier of the fleet; S-POTF) and the task force's aggressiveness (engagement rule: retreat threshold and which lines submarines attack) and repair priority (recorded, not used in combat). Use the game's terms: aggressiveness (Do Not Engage, Engage At Low/Medium/High Risk, Always Engage) and repair priority (Never repair, Low, Medium, High; not used in combat).
 
 ## Possible stats
-- Speed, Organization, HP, Reliability
+- Speed, Range, Organization, HP, Reliability
 - Light Attack / Piercing, Heavy Attack / Piercing, Torpedo Attack, Depth Charges
 - Armor, Anti-Air
 - Surface / Sub Visibility, Surface / Sub Detection
@@ -17,7 +17,7 @@
 ## Project Snapshot
 - Solution `NavySimulator.sln`:
   - `src/NavySimulator.Engine`: simulation only, no I/O. Namespace `NavySimulator.Engine`.
-  - `src/NavySimulator.GameData`: JSON setup loading (`Loading/`), importing hulls, modules and ship types from game/mod folders (`Import/`), saving edits back to JSON (`Saving/CatalogWriter`), report files (`Reports/ReportWriter`), Paradox script parser (`Paradox/`), defines `.lua` parser and binder (`Defines/`). Namespace `NavySimulator.GameData`.
+  - `src/NavySimulator.GameData`: JSON setup loading (`Loading/`), importing hulls, modules, ship types, doctrines and spirits from game/mod folders (`Import/`), saving edits back to JSON (`Saving/CatalogWriter`), report files (`Reports/ReportWriter`), Paradox script parser (`Paradox/`), defines `.lua` parser and binder (`Defines/`). Namespace `NavySimulator.GameData`.
   - `src/NavySimulator.Cli`: entrypoint (`Program.cs`) and options. Executable name `NavySimulator`.
   - `src/NavySimulator.Web`: the GUI, a local Blazor Server app (`Services/` for state and logic, `Components/` for pages). Spec in `docs/gui.md`.
   - `tests/NavySimulator.Engine.Tests`, `tests/NavySimulator.GameData.Tests`, `tests/NavySimulator.Web.Tests`: xUnit.
@@ -34,6 +34,9 @@
 - Setup: `SetupLoader.ReadCatalog` reads a data directory into a `ContentCatalog` (DTOs plus each item's source file); `SetupLoader.BuildScenario` validates and builds a `BattleScenario` from a catalog and a scenario DTO (in-memory edits included); `ContentLibrary` makes engine objects for previews. `LoadScenarioFromDirectory` is both steps in one.
 - Designs: `Hull` (slots, count limits), `StatModule` (category, forbidden categories, added equipment types), `ShipType` (a naval sub-unit) in `Engine/Ships/`; `DesignRules` checks a design and picks its ship type (S-DESIGN). Rule breaks are loader warnings, not errors, and a design's `allowAnyModule` silences them.
 - Air combat (`Engine/Battles/Air/`: `AirPhase`, `AirRules`) runs after each side's surface fire in air hours; spec `docs/mechanics/air.md`.
+- MIOs (`Engine/Mios/`: `Mio`, `MioSetup`, `MioRules`): a design names its MIO, a side can assign another one per design (`designMios`, `BattleParticipant.MioOf`) and sets unlocked traits and policy per MIO; `BattleParticipant` passes the side's MIO bonus into the design stats (S-MIO, S-STATS-MIO). A side's `country` limits its MIOs (S-MIO-COUNTRY, GameData `MioCountries`).
+- Admirals (`Engine/Leaders/`: `Admiral`, `AdmiralRules`, `LeaderTrait`, `LeaderSkills`): a side's admiral builds the game's two leader containers from skill levels and traits; `BattleParticipant` puts container A and the traits' sub-unit modifiers on every ship (`Ship.AdmiralModifiers`, read by `MemberModifierRules.ShipModifier`), and the session reads the admiral-only modifiers (fleet-size penalty, enemy retreat chance) from the enemy's admiral (S-ADMIRAL).
+- Doctrines and spirits (`Engine/Doctrines/`: `DoctrineRules`, `CountryEffects`; `Engine/Ships/Spirit.cs`): a side's active effects (grand doctrine, subdoctrines, rewards its mastery unlocks, milestones of complete tracks, spirits) become country modifiers, technology-like sub-unit bonuses and design equipment bonuses in `BattleParticipant` (S-DOCTRINE-EFFECT). Only the naval folder is simulated; air doctrines are recorded.
 - Reverse-engineering: findings in `docs/reverse-engineering/findings/` (hoi4.exe 1.19.3, with SHA-256), tooling in `tools/re/`. Re-run it after game patches before trusting the [RE] tags.
 
 ## Code Patterns to Follow Here
@@ -58,12 +61,12 @@
 - Define values: never hand-copy numbers into code. Add a property to the defines class with the exact game key and vanilla default; see `docs/mechanics/defines.md`.
 - Add regression tests in `tests/NavySimulator.Engine.Tests/Mechanics/` (rule-level, use `ScriptedRandomSource` for exact rolls) or `Battles/` (engine-level).
 - Calibration baselines live in `data/calibration/` (`docs/calibration.md#baselines`). After a combat rule change, replay the roll-logged seeds they list (`NavySimulator replay`; every shot should still match) and compare 200 simulator seeds with each case; `tools/ingame/make_calibration.py` rewrites a case with a new simulator reference.
-- Hull, module, ship type and critical part data: never hand-edit `data/hulls/`, `data/modules/`, `data/ship-types/` or `data/critical-parts/`; re-import them with `dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "<HOI4 dir>" --mod "<mod dir>"` (the user's data is TFB's: the local dev checkout over vanilla). IDs and names are the game's.
+- Hull, module, ship type and critical part data: never hand-edit `data/hulls/`, `data/modules/`, `data/ship-types/` or `data/critical-parts/`; re-import them with `dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "<HOI4 dir>" --mod "<mod dir>"` (the user's data is TFB's: the local dev checkout over vanilla). IDs and names are the game's. The same holds for `data/doctrines/` and `data/spirits/` with `import-doctrines`, for `data/mios/`, `data/mio-policies/`, `data/equipment-groups/` and `data/countries/` with `import-mios`, for `data/admirals/`, `data/leader-traits/` and `data/leader-skills/` with `import-leaders`, and for `data/planes/` with `import-planes` (the game's fixed plane equipment; no plane designer).
 - Reverse-engineering: check `docs/reverse-engineering/index.md` before decoding anything in hoi4.exe; add every newly decoded function and field to it, with pseudocode in a findings file.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 
 ## Known Integration Boundaries
 - No external dependencies beyond the .NET SDK (xUnit in tests).
-- Runtime input: `data/` JSON (`hulls/`, `modules/`, `ship-types/`, `mios/`, `ship-designs/`, `researches/`, `spirits/`, `planes/`, `force-compositions/`, `battle-scenario.json`) and optional defines (`data/defines/*.lua`, or a HOI4/mod folder).
+- Runtime input: `data/` JSON (`hulls/`, `modules/`, `ship-types/`, `critical-parts/`, `mios/`, `mio-policies/`, `equipment-groups/`, `countries/`, `admirals/`, `leader-traits/`, `leader-skills/`, `ship-designs/`, `researches/`, `doctrines/`, `spirits/`, `planes/`, `force-compositions/`, `battle-scenario.json`) and optional defines (`data/defines/*.lua`, or a HOI4/mod folder).
 - The GUI uses only the ASP.NET Core shared framework (no NuGet packages); its per-user settings live in the local application data folder, outside the repository.
 - Battle mechanics reference: https://hoi4.paradoxwikis.com/Naval_battle (snapshot in `docs/reference/`), treated as a secondary source.

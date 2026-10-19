@@ -1,3 +1,4 @@
+using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine;
@@ -21,7 +22,8 @@ public class Ship
         Design = design;
         InitialExperience = experience;
         MaxManpower = Math.Max(0, design.Hull.Manpower);
-        undamagedStats = design.GetFinalStats();
+        VariantStats = design.GetFinalStats();
+        undamagedStats = VariantStats;
         stats = undamagedStats;
         ResetCombatState();
     }
@@ -45,6 +47,21 @@ public class Ship
     /// <summary>S-STATS-COUNTRY: the country modifiers of the side the ship fights for, set by its <c>BattleParticipant</c>.</summary>
     public ModifierSet CountryModifiers { get; set; } = ModifierSet.Empty;
 
+    /// <summary>S-ADMIRAL: the admiral commanding the ship's fleet (and its side), set by its <c>BattleParticipant</c>; null: none.</summary>
+    public Admiral? Admiral { get; set; }
+
+    /// <summary>
+    /// S-ADMIRAL-MOD [RE]: what the admiral adds to every modifier read of this ship (0xc38760): container A plus the traits'
+    /// <c>sub_unit_modifiers</c> for the ship's sub-unit.
+    /// </summary>
+    public ModifierSet AdmiralModifiers { get; set; } = ModifierSet.Empty;
+
+    /// <summary>S-POTF: the pride of the fleet of the side the ship fights for (possibly this ship), set by its <c>BattleParticipant</c>; null: none.</summary>
+    public Ship? PrideOfTheFleet { get; set; }
+
+    /// <summary>S-POTF: whether this ship is its country's pride of the fleet.</summary>
+    public bool IsPrideOfTheFleet => ReferenceEquals(PrideOfTheFleet, this);
+
     /// <summary>Per weapon slot (<c>WeaponSlot</c> index) charge in cooldowns; a slot fires while charge >= cooldown.</summary>
     public double[] SlotCharge { get; } = new double[3];
 
@@ -59,13 +76,19 @@ public class Ship
     public IReadOnlyList<DamagedPart> DamagedParts => damagedParts;
 
     /// <summary>
-    /// Stats from hull, modules, MIO, researches and spirits, with the penalties of damaged parts (S-STATS-PARTS).
+    /// Stats from hull, modules, MIO, researches and doctrines, with the penalties of damaged parts (S-STATS-PARTS).
     /// Experience and battle modifiers are applied by the combat rules.
     /// </summary>
     public ShipStats GetFinalStats()
     {
         return stats;
     }
+
+    /// <summary>
+    /// The equipment variant's stats: the design with the side's equipment bonuses, before technology and doctrine
+    /// sub-unit bonuses and part damage (the game's <c>variant+0x100</c> stats, S-STATS-DESIGN).
+    /// </summary>
+    public ShipStats VariantStats { get; private set; }
 
     /// <summary>Times <paramref name="part"/> has been damaged on this ship.</summary>
     public int DamageCount(CriticalPart part)
@@ -102,18 +125,14 @@ public class Ship
     /// <summary>
     /// S-STATS-SHIP [RE] 0xc3d090: <c>ship = variant × (1 + tech) + tech</c> for the additive set (org, HP, reliability,
     /// hit chance factors, torpedo factors). Organization comes from the sub-unit in the game, so it is never scaled.
-    /// Spirits are applied afterwards as before [LEGACY]; their real effects are combat modifiers (S-STATS-COMBAT).
+    /// Technology here means every sub-unit bonus of the side: researches and doctrines (S-DOCTRINE-EFFECT).
+    /// <paramref name="mioBonus"/> is the side's bonus of the design's MIO (S-STATS-MIO); null: its initial trait only.
     /// </summary>
-    public void ApplyExternalModifiers(
-        IReadOnlyList<ShipStats> equipmentBonuses,
-        ShipStats technology,
-        ShipStats spiritModifiers,
-        ShipStats spiritAverages,
-        ShipStats spiritMultipliers)
+    public void ApplyExternalModifiers(IReadOnlyList<ShipStats> equipmentBonuses, ShipStats technology, ShipStats? mioBonus = null)
     {
-        var variant = Design.ComputeStats(equipmentBonuses);
+        var variant = Design.ComputeStats(equipmentBonuses, mioBonus);
+        VariantStats = variant;
         var updated = variant.Scale(technology with { Organization = 0 }).Add(technology.AdditiveSetOnly());
-        updated = updated.Add(spiritModifiers).Add(spiritAverages).Scale(spiritMultipliers);
 
         // S-STATS-CLAMP [RE] 0x142a217.
         undamagedStats = updated with

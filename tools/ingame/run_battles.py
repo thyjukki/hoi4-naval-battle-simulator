@@ -9,7 +9,8 @@ seed, the runner:
   3. waits for the game to load, attaches battle_logger.js with Frida, types the console commands (default: ai,
      weather) and unpauses at speed 5;
   4. records every naval combat hour until the combats end, then closes the game.
-Output per run in --out (default output/ingame/<save>_<timestamp>/<seed>/): meta.json, hours.csv, sides.csv,
+With --setup-only it stops after the console commands and leaves the game paused and running on the copy, to look at.
+Output per run in --out (default output/ingame/<save>_<timestamp>/<seed>/): meta.json, hours.csv, sides.csv, modifiers.csv, holders.csv,
 shots.csv and raw.jsonl. The game must not be running when it starts; the game window takes keyboard focus during a run.
 Requires: pip install frida-tools. Checks hoi4.exe against the SHA-256 the reverse-engineering index was built for.
 """
@@ -161,12 +162,22 @@ def run_one(save_path, seed, out_dir, args):
     run_name = f"nsim_{save_path.stem}" + ("" if seed is None else f"_s{seed}")
     run_save = SAVE_DIR / f"{run_name}.hoi4"
     run_save.write_bytes(data)
-    index = savefile.ship_index(save, set(args.locations) if args.locations else None)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     point_continue_at(run_save.name, run_name)
     started = time.time()
     game = subprocess.Popen([str(GAME_DIR / "hoi4.exe"), "-continuelastsave"], cwd=GAME_DIR)
+    if args.setup_only:
+        # load and type the commands, then leave the game paused and running, with its save copy
+        wait_for_load(started, args.load_timeout)
+        time.sleep(args.settle)
+        hwnd = game_window(game.pid)
+        if hwnd is None:
+            raise RuntimeError("game window not found")
+        console(hwnd, [c for c in args.commands.split(";") if c])
+        print(f"loaded {run_save.name} and typed {args.commands}; the game is paused (unpausing starts the battle, unlogged)")
+        return
+
+    index = savefile.ship_index(save, set(args.locations) if args.locations else None)
+    out_dir.mkdir(parents=True, exist_ok=True)
     messages = queue.Queue()
     session = None
     try:
@@ -321,6 +332,39 @@ def write_outputs(out_dir, hours, index, meta):
                                    hit["after"]["org"] / FX, hit["before"]["mp"], hit["after"]["mp"]) if hit else [None] * 8),
                                 loop.get("sank")])
 
+    # Start-of-hour combat inputs (battle_logger.js shipInputs, holderValues): per ship the stats, max organization and
+    # modifier sums; per side the commanding admiral and one ship's modifier holders.
+    with (out_dir / "modifiers.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        ship_mods = None
+        for h in hours:
+            for side_index, side in enumerate(h.get("start") or []):
+                for s in side["ships"]:
+                    inputs = s.get("inputs")
+                    if not inputs:
+                        continue
+                    if ship_mods is None:
+                        ship_mods = list(inputs["mods"])
+                        w.writerow(["combat", "hour", "side", "ship", "design", "org", "orgStat", "maxOrg", "light", "heavy", "torpedo", "armor",
+                                    "lightHit", "heavyHit", "torpedoHit", *ship_mods])
+                    w.writerow([h["combat"], h["hourAtUpdate"], side_index, s["id"], design(s["id"]), s["org"] / FX,
+                                *(inputs[k] / FX for k in ("orgStat", "maxOrg", "light", "heavy", "torpedo", "armor", "lightHit", "heavyHit", "torpedoHit")),
+                                *(inputs["mods"][m] / FX for m in ship_mods)])
+
+    with (out_dir / "holders.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["combat", "hour", "side", "admiral", "holder", "modifier", "value"])
+        for h in hours:
+            for side_index, side in enumerate(h.get("start") or []):
+                admiral = side.get("admiral")
+                admiral_text = "" if not admiral else f"type {admiral['type']} handle {admiral['handle'][0]}/{admiral['handle'][1]}"
+                for s in side["ships"]:
+                    for holder, values in (s.get("holders") or {}).items():
+                        for name, value in values.items():
+                            if value:
+                                w.writerow([h["combat"], h["hourAtUpdate"], side_index, admiral_text, holder, name, value / FX])
+                w.writerow([h["combat"], h["hourAtUpdate"], side_index, admiral_text, "", "", ""])
+
     with (out_dir / "rolls.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["combat", "tick", "hour", "seq", "line", "value", "loop"])
@@ -350,7 +394,11 @@ def main():
     parser.add_argument("--settle", type=float, default=5, help="seconds to wait after loading before typing")
     parser.add_argument("--stall-seconds", type=float, default=8)
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
+    parser.add_argument("--setup-only", action="store_true",
+                        help="load the first save and seed, type the commands and leave the game paused and running (nothing logged)")
     args = parser.parse_args()
+    if args.setup_only and (len(args.saves) > 1 or args.seeds > 1):
+        sys.exit("--setup-only loads one save with one seed")
 
     check_exe()
     if running_game_pids():

@@ -1,0 +1,151 @@
+using NavySimulator.Engine.Battles;
+using NavySimulator.Engine.Battles.Air;
+using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Tests.TestSupport;
+
+namespace NavySimulator.Engine.Tests.Mechanics;
+
+/// <summary>A-WINGS: wing roles, air objects per wing pool, land-based joins and daily reinforcement.</summary>
+public class AirWingsTests
+{
+    private readonly GameDefines defines = GameDefines.Vanilla();
+
+    private static PlaneEquipment CarrierBomber(string id = "cv_nb") => new(id, new PlaneStats(AirDefense: 13, NavalAttack: 10, Agility: 30, NavalTargeting: 10),
+        ["naval_bomber"], ["naval_bomber", "port_strike", "naval_patrol"], true, "cv_nav_bomber", ["naval_bomber"]);
+
+    private static PlaneEquipment CarrierFighter() => new("cv_f", new PlaneStats(AirAttack: 24, AirDefense: 11, Agility: 50, Speed: 390),
+        ["fighter", "interceptor"], ["air_superiority", "interception", "naval_patrol"], true, "cv_fighter", ["fighter"]);
+
+    // TFB: the equipment is { cas fighter }, the sub-unit { cas strategic_bomber }.
+    private static PlaneEquipment CarrierCas() => new("cv_cas", new PlaneStats(NavalAttack: 7.5, NavalTargeting: 7.5),
+        ["cas", "fighter"], ["cas", "naval_bomber", "port_strike"], true, "cv_cas", ["cas", "strategic_bomber"]);
+
+    private static PlaneEquipment LandBomber(string id = "nb") => new(id, new PlaneStats(AirDefense: 12, NavalAttack: 15, Agility: 30, NavalTargeting: 10),
+        ["naval_bomber"], ["naval_bomber", "port_strike"], false, "nav_bomber", ["naval_bomber"]);
+
+    [Fact]
+    public void Roles_FighterTestsReadTheSubUnit_AndTheSortieTestLeavesOutInterceptors()
+    {
+        var values = defines.Hardcoded;
+        var interceptor = new PlaneEquipment("ri", new PlaneStats(), ["interceptor"], ["interception"], false, "rocket_interceptor", ["interceptor"]);
+
+        Assert.False(CarrierCas().IsFighterType(values));
+        Assert.True(CarrierCas().IsInStrikeList(values));
+        Assert.True(CarrierFighter().IsFighterType(values));
+        Assert.False(CarrierFighter().IsInStrikeList(values));
+        Assert.True(interceptor.IsFighterType(values));
+        Assert.False(interceptor.IsSortieFighterType(values));
+
+        // A port-strike-only plane is in the strike list but cannot execute a naval strike.
+        var wing = new AirWing(new PlaneEquipment("sb", new PlaneStats(), ["strategic_bomber"], ["strategic_bomber", "port_strike"]), 10, values);
+        Assert.True(wing.IsStrikeWing);
+        Assert.False(wing.ExecutesNavalStrike);
+    }
+
+    [Fact]
+    public void CarrierGroups_AreOnePerWingPool_AndCrowdingCountsTheWholeCarrier()
+    {
+        var carrier = Carrier("cv", deckSize: 3);
+        var phase = Phase([carrier], wings: [new("cv_f", 1, 10), new("cv_nb", 2, 10), new("cv_f", 1, 10)]);
+        var groups = phase.GroupsOf(phase.Attacker);
+
+        Assert.Equal(["cv_fighter", "cv_nav_bomber"], groups.Select(group => group.Pool));
+        Assert.Equal([20, 20], groups.Select(group => group.Planes));
+        Assert.Equal(40, phase.CarrierPlanes(carrier));
+
+        // 40 planes on a 30-plane deck: crowd 1 - CAPACITY_PENALTY * (10 / 30) for every pool, the bomber pool's 20 included.
+        var bombers = groups[1];
+        var crowded = phase.SortieEfficiency(bombers, phase.Attacker, 30, 0);
+        var alone = AirRules.SortieEfficiency(bombers, phase.Attacker.Screening, true, 2, 30, 0, defines);
+        Assert.Equal(alone * (1 - defines.NAir.CAPACITY_PENALTY / 3), crowded, 9);
+    }
+
+    [Fact]
+    public void LandBased_JoinUpToTheCapEachAirHour_InListedOrder()
+    {
+        // One small enemy screen: the cap is NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP.
+        var cap = (int)defines.NAir.NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP;
+        var phase = Phase([TestEntityFactory.Screen("dd", lightAttack: 0)],
+            landBased: [new LandBasedAirwing("nb", cap + 30, 0.5), new LandBasedAirwing("nb2", 50)]);
+        var groups = phase.GroupsOf(phase.Attacker);
+
+        phase.JoinLandBased(0);
+
+        // The first base offers round((cap + 30) * 0.5) planes; when that fills the cap the second does not join.
+        Assert.True(groups[0].HasJoined);
+        Assert.Equal(Math.Min(cap, (int)Math.Round((cap + 30) * 0.5, MidpointRounding.AwayFromZero)), groups[0].Offered);
+        Assert.Equal((cap + 30) * 0.5 < cap, groups[1].HasJoined);
+        Assert.Equal(cap + 30, groups[0].Planes);
+    }
+
+    [Fact]
+    public void ReinforceDaily_RefillsLandWingsFromTheStockpile_ButNotCarrierWings()
+    {
+        var carrier = Carrier("cv");
+        var phase = Phase([carrier], wings: [new("cv_nb", 1, 10)], landBased: [new LandBasedAirwing("nb", 100)],
+            stockpile: new Dictionary<string, int> { ["nb"] = 25, ["nb2"] = 40, ["cv_nb"] = 50 });
+        var groups = phase.GroupsOf(phase.Attacker);
+        groups[0].Wings[0].Planes = 4;
+        groups[1].Wings[0].Planes = 30;
+
+        var lines = phase.ReinforceDaily(phase.Attacker);
+
+        // 70 missing: 25 of its own plane, then 40 of the other naval bomber of its sub-unit.
+        Assert.Equal(95, groups[1].Planes);
+        Assert.Equal(4, groups[0].Planes);
+        Assert.Equal(0, phase.StockpileOf(phase.Attacker)["nb"]);
+        Assert.Equal(0, phase.StockpileOf(phase.Attacker)["nb2"]);
+        Assert.Equal(50, phase.StockpileOf(phase.Attacker)["cv_nb"]);
+        Assert.Equal(["attacker land-based nb refilled 65 planes from the stockpile"], lines);
+    }
+
+    [Fact]
+    public void Simulate_WithoutCarrierNavalStrikeMissions_CarriersDoNoDamage()
+    {
+        var withMission = Simulate(new BattleRules { MaxHours = 48, NightEnabled = false });
+        var without = Simulate(new BattleRules { MaxHours = 48, NightEnabled = false, CarrierWingsExecuteNavalStrike = false });
+
+        Assert.Contains(withMission.AirStrikes, strike => strike.HpDamage > 0);
+        Assert.NotEmpty(without.AirStrikes);
+        Assert.All(without.AirStrikes, strike => Assert.Equal(0, strike.HpDamage));
+    }
+
+    private Results.BattleResult Simulate(BattleRules rules)
+    {
+        var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 4 });
+        var wings = new Dictionary<string, List<CarrierAirwingAssignment>> { [carrier.ID] = [new CarrierAirwingAssignment("cv_nb", 4, 10)] };
+        var attacker = new BattleParticipant(new Fleet("a", [carrier], wings), null, [], []);
+        var scenario = new BattleScenario("air", "ocean", "clear", 1, null, attacker, TestEntityFactory.Participant("d", [TestEntityFactory.Capital("bb")]),
+            Planes(), defines, rules);
+        return new BattleEngine().Simulate(scenario, 3);
+    }
+
+    private static Ship Carrier(string id, double deckSize = 4)
+    {
+        return TestEntityFactory.CreateShip(id, ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, CarrierSize = deckSize });
+    }
+
+    private static Dictionary<string, PlaneEquipment> Planes()
+    {
+        return new[] { CarrierBomber(), CarrierFighter(), CarrierCas(), LandBomber(), LandBomber("nb2") }.ToDictionary(plane => plane.ID);
+    }
+
+    private AirPhase Phase(
+        List<Ship> ships,
+        List<CarrierAirwingAssignment>? wings = null,
+        List<LandBasedAirwing>? landBased = null,
+        Dictionary<string, int>? stockpile = null)
+    {
+        var byShip = new Dictionary<string, List<CarrierAirwingAssignment>>();
+
+        foreach (var carrier in ships.Where(ship => ship.Role == ShipRole.Carrier))
+        {
+            byShip[carrier.ID] = wings ?? [];
+        }
+
+        var attacker = new BattleParticipant(new Fleet("a", ships, byShip), null, [], [], landBasedAirwings: landBased, planeStockpile: stockpile);
+        var defender = TestEntityFactory.Participant("d", [TestEntityFactory.Screen("enemy", lightAttack: 0)]);
+        var scenario = new BattleScenario("air", "ocean", "clear", 1, null, attacker, defender, Planes(), defines, new BattleRules());
+        return new AirPhase(scenario, new BattleSide("attacker", attacker), new BattleSide("defender", defender));
+    }
+}

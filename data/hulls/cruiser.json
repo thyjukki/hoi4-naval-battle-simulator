@@ -9,6 +9,7 @@
       "equipmentType": "screen_ship",
       "year": 1922,
       "manpower": 600,
+      "navalDominanceFactor": 100,
       "baseStats": {
         "speed": 28,
         "reliability": 0.8,
@@ -18,7 +19,8 @@
         "subDetection": 1,
         "armor": 3,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2000
+        "productionCost": 2000,
+        "navalRange": 2500
       },
       "slots": [
         {
@@ -161,6 +163,7 @@
       "equipmentType": "screen_ship",
       "year": 1936,
       "manpower": 800,
+      "navalDominanceFactor": 115,
       "baseStats": {
         "speed": 29,
         "reliability": 0.85,
@@ -170,7 +173,8 @@
         "subDetection": 1,
         "armor": 5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2100
+        "productionCost": 2100,
+        "navalRange": 3000
       },
       "slots": [
         {
@@ -326,6 +330,7 @@
       "equipmentType": "screen_ship",
       "year": 1940,
       "manpower": 1200,
+      "navalDominanceFactor": 130,
       "baseStats": {
         "speed": 30,
         "reliability": 0.9,
@@ -335,7 +340,8 @@
         "subDetection": 1,
         "armor": 7,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2200
+        "productionCost": 2200,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -504,6 +510,7 @@
       "equipmentType": "screen_ship",
       "year": 1944,
       "manpower": 1400,
+      "navalDominanceFactor": 150,
       "baseStats": {
         "speed": 31,
         "reliability": 0.95,
@@ -513,7 +520,8 @@
         "subDetection": 1,
         "armor": 9,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2300
+        "productionCost": 2300,
+        "navalRange": 4500
       },
       "slots": [
         {
@@ -698,6 +706,7 @@
       "equipmentType": "screen_ship",
       "year": 1929,
       "manpower": 1800,
+      "navalDominanceFactor": 130,
       "baseStats": {
         "speed": 25,
         "reliability": 0.8,
@@ -707,7 +716,8 @@
         "subDetection": 1,
         "armor": 6,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 3000
+        "productionCost": 3000,
+        "navalRange": 7000
       },
       "slots": [
         {
@@ -865,6 +875,7 @@
       "equipmentType": "screen_ship",
       "year": 1929,
       "manpower": 1800,
+      "navalDominanceFactor": 100,
       "baseStats": {
         "speed": 22,
         "reliability": 0.8,
@@ -874,7 +885,8 @@
         "subDetection": 1,
         "armor": 4,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 3500
+        "productionCost": 3500,
+        "navalRange": 1500
       },
       "slots": [
         {
@@ -1018,6 +1030,7 @@
       "equipmentType": "screen_ship",
       "year": 1940,
       "manpower": 960,
+      "navalDominanceFactor": 120,
       "baseStats": {
         "speed": 30,
         "reliability": 0.85,
@@ -1027,7 +1040,8 @@
         "subDetection": 1,
         "armor": 6.5,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2100
+        "productionCost": 2100,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -1174,6 +1188,7 @@
       "equipmentType": "screen_ship",
       "year": 1954,
       "manpower": 1400,
+      "navalDominanceFactor": 200,
       "baseStats": {
         "speed": 33,
         "reliability": 0.95,
@@ -1183,7 +1198,8 @@
         "subDetection": 1,
         "armor": 10,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2100
+        "productionCost": 2100,
+        "navalRange": 4500
       },
       "slots": [
         {

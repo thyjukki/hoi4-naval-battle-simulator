@@ -27,5 +27,11 @@ public sealed class BattleSide
     /// <summary>S-SUB: this side's submarine detection value (mean sub detection of ships that have any).</summary>
     public double SubmarineDetection { get; set; }
 
+    /// <summary>S-DOMINANCE: this side's naval dominance at the start of the battle (0 with the rule off).</summary>
+    public double NavalDominance { get; set; }
+
+    /// <summary>S-DOMINANCE: whether this side has naval dominance in the battle's region (S-ORG-REGAIN bonus).</summary>
+    public bool HasNavalDominance { get; set; }
+
     public bool HasShipsInBattle => Ships.Any(ship => ship.IsInBattle);
 }

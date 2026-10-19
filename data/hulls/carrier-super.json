@@ -9,6 +9,7 @@
       "equipmentType": "carrier",
       "year": 1939,
       "manpower": 10000,
+      "navalDominanceFactor": 400,
       "baseStats": {
         "speed": 30,
         "reliability": 0.7,
@@ -18,7 +19,8 @@
         "subDetection": 5,
         "carrierSize": 1,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 7000
+        "productionCost": 7000,
+        "navalRange": 5000
       },
       "slots": [
         {

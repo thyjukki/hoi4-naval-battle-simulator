@@ -15,14 +15,15 @@
       "carrierAirwings": {
         "39_carrier_no_aa": [
           {
-            "planeID": "bomber_1936_untrained",
-            "type": "bomber",
-            "airwings": 1,
-            "planeCount": 8
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_1",
+                "planeCount": 8
+              }
+            ]
           }
         ]
       }
     }
   ]
 }
-

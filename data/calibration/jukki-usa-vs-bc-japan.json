@@ -6,7 +6,7 @@
     "Their Finest Bruh (local dev checkout over vanilla 1.19.3)"
   ],
   "notes": "Mixed fleets generated into a save by tools/ingame/make_save.py (save jukki_usa_vs_bc_japan_battle_start.hoi4, Black Sea template, 1936.5.6.12): USA (BUL) 8 39_battleship_pure_la, 27 39lc_la, 6 shbb_4battery_2aa against Japan (ROM) 12 39_battlecruiser_pure_la, 54 dd_3_la, 5 shbb_4battery_2aa; 15 researches each, experience 20, Always Engage, Never repair. Weather off (the runner types 'weather'), so no night. The game makes ROM the combat attacker; the scenario's attacker is the USA. Seeds with rollLog replay with the game's own rolls (NavySimulator replay); all 11 match every shot as of 48972a4.",
-  "scenario": "jukki_usa_vs_bc_japan.json",
+  "scenario": "jukki_usa_vs_bc_japan_no_doctrines.json",
   "attackerCountry": "BUL",
   "conditions": {
     "startHourOfDay": 13,

@@ -1,0 +1,2842 @@
+{
+  "$schema": "../schemas/admirals.schema.json",
+  "admirals": [
+    {
+      "id": "AFG_generic_navy_1",
+      "name": "AFG_generic_navy_1",
+      "country": "AFG",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2
+    },
+    {
+      "id": "AFG_generic_navy_2",
+      "name": "AFG_generic_navy_2",
+      "country": "AFG",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1
+    },
+    {
+      "id": "AOI_vincenzo_de_feo",
+      "name": "Vincenzo de Feo",
+      "country": "AOI",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "ARG_alberto_teisaire",
+      "name": "Alberto Teisaire",
+      "country": "ARG",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "chief_engineer"
+      ]
+    },
+    {
+      "id": "ARG_benito_sueyro",
+      "name": "Benito Sueyro",
+      "country": "ARG",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "ARG_leon_scasso",
+      "name": "Leon Scasso",
+      "country": "ARG",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "AST_harold_farncomb",
+      "name": "Harold Farncomb",
+      "country": "AST",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "gunnery_expert",
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "AST_joseph_burnett",
+      "name": "Joseph Burnett",
+      "country": "AST",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 4
+    },
+    {
+      "id": "AST_eric_feldt",
+      "name": "Eric Feldt",
+      "country": "AST",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 3,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "AST_james_mcmanus",
+      "name": "James McManus",
+      "country": "AST",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 3,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "AST_victor_crutchley",
+      "name": "Victor Crutchley",
+      "country": "AST",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold"
+      ]
+    },
+    {
+      "id": "AUS_johannes_of_liechtenstein",
+      "name": "Johannes of Liechtenstein",
+      "country": "AUS",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "AUS_carl_heinz_birnbacher",
+      "name": "Carl Heinz Birnbacher",
+      "country": "AUS",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_augusto_rademaker",
+      "name": "Augusto Rademaker",
+      "country": "BRA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_henrique_aristides_guilhem",
+      "name": "Henrique Aristides Guilhem",
+      "country": "BRA",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_silvio_de_noronha",
+      "name": "Sílvio de Noronha",
+      "country": "BRA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_protogenes_guimaraes",
+      "name": "Protógenes Pereira Guimarães",
+      "country": "BRA",
+      "skill": 1,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_renato_de_almeida_guillobel",
+      "name": "Renato de Almeida Guillobel",
+      "country": "BRA",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BRA_alvaro_alberto_da_motta_e_silva",
+      "name": "Álvaro Alberto da Motta e Silva",
+      "country": "BRA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "BUL_atanas_shalapatov",
+      "name": "Atanas Shalapatov",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "CAN_harry_dewolf",
+      "name": "Harry DeWolf",
+      "country": "CAN",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "CAN_leonard_w_murray",
+      "name": "Leonard W. Murray",
+      "country": "CAN",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1
+    },
+    {
+      "id": "CAN_ht_bailliegrohman",
+      "name": "H.T. Baillie-Grohman",
+      "country": "CAN",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "CAN_james_d_prentice",
+      "name": "James D. Prentice",
+      "country": "CAN",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "CHI_jiang_dingwen_admiral",
+      "name": "Jiang Dingwen",
+      "country": "CHI",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "CHI_chan_chak",
+      "name": "Chan Chak",
+      "country": "CHI",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "blockade_runner",
+        "bold"
+      ]
+    },
+    {
+      "id": "CHL_vincente_merino_bielich",
+      "name": "Vicente Merino Bielich",
+      "country": "CHL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "spotter",
+        "fleet_protector",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "CHL_olegario_reyes",
+      "name": "Olegario Reyes Del Río",
+      "country": "CHL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "gentlemanly",
+        "blue_water_expert"
+      ]
+    },
+    {
+      "id": "CHL_emilio_soto",
+      "name": "Emilio Daroch Soto",
+      "country": "CHL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "seawolf"
+      ]
+    },
+    {
+      "id": "CHL_jorge_cobo",
+      "name": "Jorge Videla Cobo",
+      "country": "CHL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "gunnery_expert",
+        "fleet_protector"
+      ]
+    },
+    {
+      "id": "CRO_duro_jakcin",
+      "name": "Đuro Jakčin",
+      "country": "CRO",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "blockade_runner",
+        "spotter"
+      ]
+    },
+    {
+      "id": "DEN_emmanuel_briand_de_crevecoeur",
+      "name": "Emmanuel Briand de Crèvecoeur",
+      "country": "DEN",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "fly_swatter",
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "DEN_christian_evers",
+      "name": "Christian Evers",
+      "country": "DEN",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "seawolf",
+        "chief_engineer"
+      ]
+    },
+    {
+      "id": "DEN_paul_ipsen",
+      "name": "Paul Ipsen",
+      "country": "DEN",
+      "skill": 1,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "ENG_james_fownes_somerville",
+      "name": "James Fownes Somerville",
+      "country": "ENG",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "ENG_henry_harwood",
+      "name": "Henry Harwood",
+      "country": "ENG",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "ENG_andrew_cunningham",
+      "name": "Andrew Cunningham",
+      "country": "ENG",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "bold",
+        "navy_career_officer",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "ENG_bruce_fraser",
+      "name": "Bruce Fraser",
+      "country": "ENG",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "naval_lineage",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "ENG_john_tovey",
+      "name": "John Tovey",
+      "country": "ENG",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "ENG_bernard_rawlings",
+      "name": "Bernard Rawlings",
+      "country": "ENG",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "ENG_john_cunningham",
+      "name": "John Cunningham",
+      "country": "ENG",
+      "skill": 4,
+      "attackSkill": 2,
+      "defenseSkill": 4,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "green_water_expert"
+      ]
+    },
+    {
+      "id": "ENG_charles_forbes",
+      "name": "Charles Forbes",
+      "country": "ENG",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "fly_swatter"
+      ]
+    },
+    {
+      "id": "ENG_algernon_willis",
+      "name": "Algernon Willis",
+      "country": "ENG",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent",
+        "spotter"
+      ]
+    },
+    {
+      "id": "ENG_arthur_power",
+      "name": "Arthur Power",
+      "country": "ENG",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "FIN_ragnar_hakola",
+      "name": "Ragnar Hakola",
+      "country": "FIN",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "FIN_svante_sundman",
+      "name": "Svante Sundman",
+      "country": "FIN",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer",
+        "gunnery_expert",
+        "arctic_water_expert"
+      ]
+    },
+    {
+      "id": "FRA_francois_darlan",
+      "name": "François Darlan",
+      "country": "FRA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "bold",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "FRA_jeanmarie_charles_abrial",
+      "name": "Jean-Marie Charles Abrial",
+      "country": "FRA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "chief_engineer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "FRA_jeanpierre_esteva",
+      "name": "Jean-Pierre Esteva",
+      "country": "FRA",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "aviation_enthusiast"
+      ]
+    },
+    {
+      "id": "FRA_rene_emile_godfroy",
+      "name": "René-Emile Godfroy",
+      "country": "FRA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy",
+        "gentlemanly",
+        "battleship_adherent",
+        "spotter"
+      ]
+    },
+    {
+      "id": "FRA_jean_de_laborde",
+      "name": "Jean de Laborde",
+      "country": "FRA",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "GER_karl_donitz",
+      "name": "Karl Dönitz",
+      "country": "GER",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 5,
+      "traits": [
+        "navy_career_officer",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "GER_erich_raeder",
+      "name": "Erich Raeder",
+      "country": "GER",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "battleship_adherent",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "GER_alfred_saalwachter",
+      "name": "Alfred Saalwächter",
+      "country": "GER",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "GER_hermann_boehm",
+      "name": "Hermann Boehm",
+      "country": "GER",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 2,
+      "traits": [
+        "craven",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "GER_wilhelm_marschall",
+      "name": "Wilhelm Marschall",
+      "country": "GER",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "GER_gunther_lutjens",
+      "name": "Günther Lütjens",
+      "country": "GER",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 4,
+      "traits": [
+        "gentlemanly",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "GER_rolf_carls",
+      "name": "Rolf Carls",
+      "country": "GER",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "ironside",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "GRE_dimitrios_oikonomou",
+      "name": "Dimitrios Oikonomou",
+      "country": "GRE",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "trait_GRE_stauch_monarchist",
+        "air_controller"
+      ]
+    },
+    {
+      "id": "GRE_epameinondas_kavvadias",
+      "name": "Epameinondas Kavvadias",
+      "country": "GRE",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "fleet_protector",
+        "destroyer_leader"
+      ]
+    },
+    {
+      "id": "HOL_johannes_theodorus_furstner",
+      "name": "Johannes Theodorus Furstner",
+      "country": "HOL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "caustic_personality",
+        "blockade_runner",
+        "fly_swatter"
+      ]
+    },
+    {
+      "id": "HOL_conrad_helfrich",
+      "name": "Conrad Helfrich",
+      "country": "HOL",
+      "skill": 4,
+      "attackSkill": 5,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "seawolf",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "HOL_karel_doorman",
+      "name": "Karel Doorman",
+      "country": "HOL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "naval_lineage",
+        "fleet_protector"
+      ]
+    },
+    {
+      "id": "ITA_inigo_campioni",
+      "name": "Inigo Campioni",
+      "country": "ITA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "ITA_alberto_da_zara",
+      "name": "Alberto Da Zara",
+      "country": "ITA",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "ITA_giuseppe_fioravanzo",
+      "name": "Giuseppe Fioravanzo",
+      "country": "ITA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "ITA_carlo_bergamini",
+      "name": "Carlo Bergamini",
+      "country": "ITA",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "battleship_adherent",
+        "ironside"
+      ]
+    },
+    {
+      "id": "ITA_prince_aimone",
+      "name": "Prince Aimone",
+      "country": "ITA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "gentlemanly",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "ITA_angelo_iachino",
+      "name": "Angelo Iachino",
+      "country": "ITA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "ITA_giuseppe_di_bartolo",
+      "name": "Giuseppe di Bartolo",
+      "country": "ITA",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "bold",
+        "fleet_protector"
+      ]
+    },
+    {
+      "id": "ITA_junio_valerio_borghese",
+      "name": "Junio Valerio Borghese",
+      "country": "ITA",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "cuts_corners",
+        "seawolf",
+        "silent_hunter"
+      ]
+    },
+    {
+      "id": "JAN_grand_admiral_johan_mayen",
+      "name": "Grand Admiral Johan Mayen",
+      "country": "JAN",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 2,
+      "traits": [
+        "ground_pounder",
+        "ironside"
+      ]
+    },
+    {
+      "id": "JAP_isoroku_yamamoto",
+      "name": "Isoroku Yamamoto",
+      "country": "JAP",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 6,
+      "traits": [
+        "bold",
+        "aviation_enthusiast",
+        "superior_tactician",
+        "spotter",
+        "air_controller",
+        "flight_deck_manager"
+      ]
+    },
+    {
+      "id": "JAP_yuzuru_hiraga",
+      "name": "Yuzuru Hiraga",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "gunnery_expert",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "JAP_masafumi_arima",
+      "name": "Masafumi Arima",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "air_controller"
+      ]
+    },
+    {
+      "id": "JAP_teijiro_toyoda",
+      "name": "Teijirō Toyoda",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 3,
+      "traits": [
+        "navy_career_officer",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "JAP_chuuichi_nagumo",
+      "name": "Chūichi Nagumo",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy",
+        "superior_tactician",
+        "lancer"
+      ]
+    },
+    {
+      "id": "JAP_tamon_yamaguchi",
+      "name": "Tamon Yamaguchi",
+      "country": "JAP",
+      "skill": 4,
+      "attackSkill": 5,
+      "defenseSkill": 2,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 3,
+      "traits": [
+        "bold",
+        "aviation_enthusiast",
+        "cuts_corners"
+      ]
+    },
+    {
+      "id": "JAP_mineichi_koga",
+      "name": "Mineichi Koga",
+      "country": "JAP",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 3,
+      "traits": [
+        "bold",
+        "battleship_adherent",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "JAP_kiyoshi_hasegawa",
+      "name": "Kiyoshi Hasegawa",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "JAP_shigeyoshi_inoue",
+      "name": "Shigeyoshi Inoue",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 3,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast"
+      ]
+    },
+    {
+      "id": "JAP_nobutake_kondo",
+      "name": "Nobutake Kondō",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "battleship_adherent",
+        "naval_lineage",
+        "fly_swatter"
+      ]
+    },
+    {
+      "id": "JAP_takeo_takagi",
+      "name": "Takeo Takagi",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "JAP_soemu_toyoda",
+      "name": "Soemu Toyoda",
+      "country": "JAP",
+      "skill": 3,
+      "attackSkill": 5,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy",
+        "bold",
+        "ironside"
+      ]
+    },
+    {
+      "id": "JAP_jisaburo_ozawa",
+      "name": "Jisaburō Ozawa",
+      "country": "JAP",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "JAP_zengo_yoshida",
+      "name": "Zengo Yoshida",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy"
+      ]
+    },
+    {
+      "id": "JAP_hiroaki_abe",
+      "name": "Hiroaki Abe",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent"
+      ]
+    },
+    {
+      "id": "JAP_tadashige_daigo",
+      "name": "Tadashige Daigo",
+      "country": "JAP",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "JAP_gengo_hyakutake",
+      "name": "Gengo Hyakutake",
+      "country": "JAP",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "MEX_othon_blanco",
+      "name": "Othón P. Blanco Núñez de Cáceres",
+      "country": "MEX",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 3,
+      "traits": [
+        "old_guard_navy"
+      ]
+    },
+    {
+      "id": "MEX_heriberto_corona",
+      "name": "Heriberto Jara Corona",
+      "country": "MEX",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_media_personality"
+      ]
+    },
+    {
+      "id": "NOR_king_haakon_vii",
+      "name": "King Haakon VII of Norway",
+      "country": "NOR",
+      "skill": 5,
+      "attackSkill": 2,
+      "defenseSkill": 6,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 4,
+      "traits": [
+        "navy_media_personality",
+        "gentlemanly",
+        "naval_lineage",
+        "fleet_protector"
+      ]
+    },
+    {
+      "id": "NOR_elias_corneliussen",
+      "name": "Elias Corneliussen",
+      "country": "NOR",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "NOR_jacob_von_der_lippe",
+      "name": "Jakob von der Lippe",
+      "country": "NOR",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 3,
+      "traits": [
+        "inshore_fighter",
+        "big_guns_expert"
+      ]
+    },
+    {
+      "id": "NOR_edgar_otto",
+      "name": "Edgar Otto",
+      "country": "NOR",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "NOR_carsten_tank_nielsen",
+      "name": "Carsten Tank-Nielsen",
+      "country": "NOR",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "inshore_fighter",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "NOR_henry_diesen",
+      "name": "Henry Diesen",
+      "country": "NOR",
+      "skill": 3,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "navy_career_officer",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "NOR_edvard_christian_danielsen",
+      "name": "Edvard Christian Danielsen",
+      "country": "NOR",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "seawolf",
+        "inshore_fighter"
+      ]
+    },
+    {
+      "id": "NZL_edmund_rupert_drummond",
+      "name": "Edmund Rupert Drummond",
+      "country": "NZL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2
+    },
+    {
+      "id": "NZL_peter_phipps",
+      "name": "Peter Phipps",
+      "country": "NZL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 3,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "PER_gholamali_bayandor",
+      "name": "Gholam Ali Bayandor",
+      "country": "PER",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "chief_engineer"
+      ]
+    },
+    {
+      "id": "PER_abdollah_zelli",
+      "name": "Abdollah Zelli",
+      "country": "PER",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "cuts_corners"
+      ]
+    },
+    {
+      "id": "PER_azad_hashemi",
+      "name": "Azad Hashemi",
+      "country": "PER",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "PHI_infante_juan_iii",
+      "name": "Juan III",
+      "country": "PHI",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "ironside",
+        "big_guns_expert"
+      ]
+    },
+    {
+      "id": "POL_stefan_frankowski",
+      "name": "Stefan Frankowski",
+      "country": "POL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 4,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "POL_karol_korytowski",
+      "name": "Karol Korytowski",
+      "country": "POL",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "POL_jozef_unrug",
+      "name": "Józef Unrug",
+      "country": "POL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 5,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "war_hero"
+      ]
+    },
+    {
+      "id": "PRC_rao_shoukun",
+      "name": "Rao Shoukun",
+      "country": "PRC",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "PRC_su_zhenhua",
+      "name": "Su Zhenhua",
+      "country": "PRC",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "RAJ_herbert_fitzherbert",
+      "name": "Herbert Fitzherbert",
+      "country": "RAJ",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy"
+      ]
+    },
+    {
+      "id": "ROM_horia_macellariu",
+      "name": "Horia Macellariu",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "spotter"
+      ]
+    },
+    {
+      "id": "SAF_guy_hallifax",
+      "name": "Guy Hallifax",
+      "country": "SAF",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent"
+      ]
+    },
+    {
+      "id": "SIA_sindh_kamalanavin",
+      "name": "Sindh Kamalanavin",
+      "country": "SIA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer",
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "SIA_prayoon_yuthasastrkosol",
+      "name": "Prayoon Yuthasastrkosol",
+      "country": "SIA",
+      "skill": 1,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold"
+      ]
+    },
+    {
+      "id": "SIA_luang_subhachalasai",
+      "name": "Luang Subhachalasai",
+      "country": "SIA",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "SOV_filipp_oktyabrsky",
+      "name": "Filipp Oktyabrsky",
+      "country": "SOV",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "ironside",
+        "ground_pounder"
+      ]
+    },
+    {
+      "id": "SOV_sergey_gorshkov",
+      "name": "Sergey Gorshkov",
+      "country": "SOV",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "SOV_gordey_levchenko",
+      "name": "Gordey Levchenko",
+      "country": "SOV",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "green_water_expert"
+      ]
+    },
+    {
+      "id": "SOV_arseny_golovko",
+      "name": "Arseny Golovko",
+      "country": "SOV",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "spotter",
+        "arctic_water_expert"
+      ]
+    },
+    {
+      "id": "SOV_vladimir_kasatonov",
+      "name": "Vladimir Kasatonov",
+      "country": "SOV",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "seawolf"
+      ]
+    },
+    {
+      "id": "SWE_claes_lindstrom",
+      "name": "Claes Lindström",
+      "country": "SWE",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "battleship_adherent",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "SWE_rikard_persson",
+      "name": "Rikard Persson",
+      "country": "SWE",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "concealment_expert",
+        "smoke_screen_expert",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "SWI_georg_von_trapp",
+      "name": "Georg von Trapp",
+      "country": "SWI",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 5,
+      "traits": [
+        "navy_career_officer",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "TUR_sukru_okan",
+      "name": "Şükrü Okan",
+      "country": "TUR",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_media_personality",
+        "gentlemanly",
+        "trait_TUR_kemalist_champion"
+      ]
+    },
+    {
+      "id": "TUR_sadik_altincan",
+      "name": "Sadık Altıncan",
+      "country": "TUR",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_media_personality",
+        "bold"
+      ]
+    },
+    {
+      "id": "ITA_ferdinando_umberto_filippo_adalberto",
+      "name": "Ferdinando Umberto Filippo Adalberto",
+      "country": "TUR",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 3,
+      "traits": [
+        "gentlemanly",
+        "navy_media_personality",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "USA_ernest_king",
+      "name": "Ernest King",
+      "country": "USA",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 5,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "caustic_personality",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "USA_chester_w_nimitz",
+      "name": "Chester W. Nimitz",
+      "country": "USA",
+      "skill": 4,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 5,
+      "traits": [
+        "gentlemanly",
+        "naval_lineage",
+        "superior_tactician",
+        "spotter",
+        "blue_water_expert"
+      ]
+    },
+    {
+      "id": "USA_william_halsey_jr",
+      "name": "William Halsey, Jr.",
+      "country": "USA",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "aviation_enthusiast",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "USA_frank_jack_fletcher",
+      "name": "Frank Jack Fletcher",
+      "country": "USA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "gunnery_expert",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "USA_raymond_a_spruance",
+      "name": "Raymond A. Spruance",
+      "country": "USA",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 3,
+      "traits": [
+        "gentlemanly",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "USA_harold_rainsford_stark",
+      "name": "Harold Rainsford Stark",
+      "country": "USA",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "cuts_corners",
+        "blockade_runner",
+        "spotter"
+      ]
+    },
+    {
+      "id": "USA_arleigh_burke",
+      "name": "Arleigh Burke",
+      "country": "USA",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 4,
+      "traits": [
+        "old_guard_navy",
+        "bold",
+        "fleet_protector",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "USA_charles_m_cooke_jr",
+      "name": "Charles M. Cooke, Jr.",
+      "country": "USA",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "USA_chester_w._nimitz",
+      "name": "Chester W. Nimitz",
+      "country": "USA",
+      "skill": 5,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "naval_lineage",
+        "superior_tactician",
+        "spotter",
+        "blue_water_expert"
+      ]
+    },
+    {
+      "id": "USA_raymond_a._spruance",
+      "name": "Raymond A. Spruance",
+      "country": "USA",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "USA_charles_m._cooke_jr",
+      "name": "Charles M. Cooke, Jr.",
+      "country": "USA",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1
+    },
+    {
+      "id": "YUG_marijan_polic",
+      "name": "Marijan Polić",
+      "country": "YUG",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy",
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "YUG_duro_jakcin",
+      "name": "Đuro Jakčin",
+      "country": "YUG",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "blockade_runner",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_james_fownes_somerville",
+      "name": "James Fownes Somerville",
+      "country": "BUL",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_henry_harwood",
+      "name": "Henry Harwood",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "debug_andrew_cunningham",
+      "name": "Andrew Cunningham",
+      "country": "BUL",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "bold",
+        "navy_career_officer",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_bruce_fraser",
+      "name": "Bruce Fraser",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "naval_lineage",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "debug_john_tovey",
+      "name": "John Tovey",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_bernard_rawlings",
+      "name": "Bernard Rawlings",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "debug_john_cunningham",
+      "name": "John Cunningham",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 2,
+      "defenseSkill": 4,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "green_water_expert"
+      ]
+    },
+    {
+      "id": "debug_charles_forbes",
+      "name": "Charles Forbes",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "fly_swatter"
+      ]
+    },
+    {
+      "id": "debug_algernon_willis",
+      "name": "Algernon Willis",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_arthur_power",
+      "name": "Arthur Power",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert"
+      ]
+    },
+    {
+      "id": "debug_ernest_king",
+      "name": "Ernest King",
+      "country": "BUL",
+      "skill": 5,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "caustic_personality",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_frank_jack_fletcher",
+      "name": "Frank Jack Fletcher",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "air_controller",
+        "gunnery_expert",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_harold_rainsford_stark",
+      "name": "Harold Rainsford Stark",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "cuts_corners",
+        "blockade_runner",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_arleigh_burke",
+      "name": "Arleigh Burke",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "bold",
+        "fleet_protector",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_chester_w._nimitz",
+      "name": "Chester W. Nimitz",
+      "country": "BUL",
+      "skill": 5,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "naval_lineage",
+        "superior_tactician",
+        "spotter",
+        "blue_water_expert"
+      ]
+    },
+    {
+      "id": "debug_william_halsey_jr.",
+      "name": "William Halsey, Jr.",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "aviation_enthusiast",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_raymond_a._spruance",
+      "name": "Raymond A. Spruance",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_charles_m._cooke_jr",
+      "name": "Charles M. Cooke, Jr.",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1
+    },
+    {
+      "id": "debug_francois_darlan",
+      "name": "François Darlan",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "bold",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_jeanmarie_charles_abrial",
+      "name": "Jean-Marie Charles Abrial",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "chief_engineer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_jeanpierre_esteva",
+      "name": "Jean-Pierre Esteva",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "aviation_enthusiast"
+      ]
+    },
+    {
+      "id": "debug_rene_emile_godfroy",
+      "name": "René-Emile Godfroy",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "old_guard_navy",
+        "gentlemanly",
+        "battleship_adherent",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_jean_de_laborde",
+      "name": "Jean de Laborde",
+      "country": "BUL",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "debug_harry_dewolf",
+      "name": "Harry DeWolf",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_leonard_w_murray",
+      "name": "Leonard W. Murray",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1
+    },
+    {
+      "id": "debug_ht_bailliegrohman",
+      "name": "H.T. Baillie-Grohman",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_james_d_prentice",
+      "name": "James D. Prentice",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_filipp_oktyabrsky",
+      "name": "Filipp Oktyabrsky",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "ironside",
+        "ground_pounder"
+      ]
+    },
+    {
+      "id": "debug_sergey_gorshkov",
+      "name": "Sergey Gorshkov",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 2,
+      "traits": [
+        "bold",
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_gordey_levchenko",
+      "name": "Gordey Levchenko",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "green_water_expert"
+      ]
+    },
+    {
+      "id": "debug_arseny_golovko",
+      "name": "Arseny Golovko",
+      "country": "BUL",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "spotter",
+        "arctic_water_expert"
+      ]
+    },
+    {
+      "id": "debug_vladimir_kasatonov",
+      "name": "Vladimir Kasatonov",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "seawolf"
+      ]
+    },
+    {
+      "id": "debug_augusto_rademaker",
+      "name": "Augusto Rademaker",
+      "country": "BUL",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_henrique_aristides_guilhem",
+      "name": "Henrique Aristides Guilhem",
+      "country": "BUL",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_silvio_de_noronha",
+      "name": "Sílvio de Noronha",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_protogenes_guimaraes",
+      "name": "Protógenes Pereira Guimarães",
+      "country": "BUL",
+      "skill": 1,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_renato_de_almeida_guillobel",
+      "name": "Renato de Almeida Guillobel",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_alvaro_alberto_da_motta_e_silva",
+      "name": "Álvaro Alberto da Motta e Silva",
+      "country": "BUL",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer"
+      ]
+    },
+    {
+      "id": "debug_karl_donitz",
+      "name": "Karl Dönitz",
+      "country": "ROM",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 5,
+      "traits": [
+        "navy_career_officer",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "debug_erich_raeder",
+      "name": "Erich Raeder",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 3,
+      "traits": [
+        "battleship_adherent",
+        "naval_lineage"
+      ]
+    },
+    {
+      "id": "debug_alfred_saalwachter",
+      "name": "Alfred Saalwächter",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "debug_hermann_boehm",
+      "name": "Hermann Boehm",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 4,
+      "maneuveringSkill": 4,
+      "coordinationSkill": 2,
+      "traits": [
+        "craven",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_wilhelm_marschall",
+      "name": "Wilhelm Marschall",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "old_guard_navy",
+        "bold"
+      ]
+    },
+    {
+      "id": "debug_gunther_lutjens",
+      "name": "Günther Lütjens",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 4,
+      "traits": [
+        "gentlemanly",
+        "navy_career_officer",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_rolf_carls",
+      "name": "Rolf Carls",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 3,
+      "defenseSkill": 3,
+      "maneuveringSkill": 3,
+      "coordinationSkill": 4,
+      "traits": [
+        "ironside",
+        "naval_lineage",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_inigo_campioni",
+      "name": "Inigo Campioni",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_alberto_da_zara",
+      "name": "Alberto Da Zara",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_giuseppe_fioravanzo",
+      "name": "Giuseppe Fioravanzo",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "aviation_enthusiast",
+        "blockade_runner"
+      ]
+    },
+    {
+      "id": "debug_carlo_bergamini",
+      "name": "Carlo Bergamini",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gunnery_expert",
+        "battleship_adherent",
+        "ironside"
+      ]
+    },
+    {
+      "id": "debug_angelo_iachino",
+      "name": "Angelo Iachino",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_junio_valerio_borghese",
+      "name": "Junio Valerio Borghese",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
+      "traits": [
+        "cuts_corners",
+        "seawolf",
+        "silent_hunter"
+      ]
+    },
+    {
+      "id": "debug_isoroku_yamamoto",
+      "name": "Isoroku Yamamoto",
+      "country": "ROM",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "aviation_enthusiast",
+        "superior_tactician",
+        "spotter",
+        "air_controller",
+        "flight_deck_manager"
+      ]
+    },
+    {
+      "id": "debug_mineichi_koga",
+      "name": "Mineichi Koga",
+      "country": "ROM",
+      "skill": 4,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "battleship_adherent",
+        "superior_tactician",
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_kiyoshi_hasegawa",
+      "name": "Kiyoshi Hasegawa",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "debug_shigeyoshi_inoue",
+      "name": "Shigeyoshi Inoue",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "aviation_enthusiast"
+      ]
+    },
+    {
+      "id": "debug_takeo_takagi",
+      "name": "Takeo Takagi",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "spotter"
+      ]
+    },
+    {
+      "id": "debug_soemu_toyoda",
+      "name": "Soemu Toyoda",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 5,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy",
+        "bold",
+        "ironside"
+      ]
+    },
+    {
+      "id": "debug_jisaburo_ozawa",
+      "name": "Jisaburō Ozawa",
+      "country": "ROM",
+      "skill": 5,
+      "attackSkill": 5,
+      "defenseSkill": 3,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "bold",
+        "navy_career_officer",
+        "aviation_enthusiast",
+        "blockade_runner",
+        "superior_tactician"
+      ]
+    },
+    {
+      "id": "debug_zengo_yoshida",
+      "name": "Zengo Yoshida",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 2,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "old_guard_navy"
+      ]
+    },
+    {
+      "id": "debug_hiroaki_abe",
+      "name": "Hiroaki Abe",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 3,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent"
+      ]
+    },
+    {
+      "id": "debug_tadashige_daigo",
+      "name": "Tadashige Daigo",
+      "country": "ROM",
+      "skill": 1,
+      "attackSkill": 1,
+      "defenseSkill": 1,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "navy_career_officer",
+        "seawolf"
+      ]
+    },
+    {
+      "id": "debug_gengo_hyakutake",
+      "name": "Gengo Hyakutake",
+      "country": "ROM",
+      "skill": 2,
+      "attackSkill": 1,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "gentlemanly"
+      ]
+    },
+    {
+      "id": "debug_nobutake_kondō",
+      "name": "Nobutake Kondō",
+      "country": "ROM",
+      "skill": 3,
+      "attackSkill": 4,
+      "defenseSkill": 2,
+      "maneuveringSkill": 1,
+      "coordinationSkill": 1,
+      "traits": [
+        "battleship_adherent",
+        "naval_lineage",
+        "fly_swatter"
+      ]
+    }
+  ]
+}

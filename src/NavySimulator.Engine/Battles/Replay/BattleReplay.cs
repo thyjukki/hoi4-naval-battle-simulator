@@ -27,7 +27,12 @@ public static class BattleReplay
     private const double StateTolerance = 0.02;
     private const double FractionTolerance = 1e-4;
 
-    public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours)
+    /// <summary>
+    /// Replays the hours; <paramref name="onHour"/> gets each hour's game and engine shots, position by position, for
+    /// diagnostics beyond the first mismatch.
+    /// </summary>
+    public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours,
+        Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
         var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts);
@@ -56,6 +61,7 @@ public static class BattleReplay
             random.Finish();
 
             var engineShots = session.Shots.Skip(shotsBefore).ToList();
+            onHour?.Invoke(hour.Hour, hour.Shots, engineShots);
             var (matching, firstMismatch) = CompareShots(hour.Shots, engineShots);
             var gameDamage = hour.Shots.Where(shot => shipsById.ContainsKey(shot.ShooterId))
                 .GroupBy(shot => session.SideOf(shipsById[shot.ShooterId]))

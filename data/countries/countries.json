@@ -1,0 +1,563 @@
+{
+  "$schema": "../schemas/countries.schema.json",
+  "countries": [
+    {
+      "id": "GER",
+      "name": "Germany"
+    },
+    {
+      "id": "ITA",
+      "name": "Italy"
+    },
+    {
+      "id": "JAP",
+      "name": "Japan"
+    },
+    {
+      "id": "ENG",
+      "name": "Britain"
+    },
+    {
+      "id": "SOV",
+      "name": "Russia"
+    },
+    {
+      "id": "USA",
+      "name": "America"
+    },
+    {
+      "id": "FRA",
+      "name": "France"
+    },
+    {
+      "id": "AUS",
+      "name": "Austria"
+    },
+    {
+      "id": "SPR",
+      "name": "Spain"
+    },
+    {
+      "id": "HUN",
+      "name": "Hungary"
+    },
+    {
+      "id": "ROM",
+      "name": "Romania"
+    },
+    {
+      "id": "BUL",
+      "name": "Bulgaria"
+    },
+    {
+      "id": "FIN",
+      "name": "Finland"
+    },
+    {
+      "id": "MAN",
+      "name": "China"
+    },
+    {
+      "id": "SIA",
+      "name": "Siam"
+    },
+    {
+      "id": "DEN",
+      "name": "Denmark"
+    },
+    {
+      "id": "CZE",
+      "name": "Czechoslovakia"
+    },
+    {
+      "id": "YUG",
+      "name": "Yugoslavia"
+    },
+    {
+      "id": "IRQ",
+      "name": "Iraq"
+    },
+    {
+      "id": "SER",
+      "name": "Serbia"
+    },
+    {
+      "id": "RAJ",
+      "name": "India"
+    },
+    {
+      "id": "CAN",
+      "name": "Canada"
+    },
+    {
+      "id": "BRA",
+      "name": "Brazil"
+    },
+    {
+      "id": "SAF",
+      "name": "South Africa"
+    },
+    {
+      "id": "MON",
+      "name": "Mongolia"
+    },
+    {
+      "id": "MEX",
+      "name": "Mexico"
+    },
+    {
+      "id": "AST",
+      "name": "Australia"
+    },
+    {
+      "id": "NZL",
+      "name": "New Zealand"
+    },
+    {
+      "id": "HOL",
+      "name": "Netherlands"
+    },
+    {
+      "id": "BEL",
+      "name": "Belgium"
+    },
+    {
+      "id": "POL",
+      "name": "Poland"
+    },
+    {
+      "id": "GRE",
+      "name": "Greece"
+    },
+    {
+      "id": "NOR",
+      "name": "Norway"
+    },
+    {
+      "id": "IRE",
+      "name": "Ireland"
+    },
+    {
+      "id": "PHI",
+      "name": "Philippines"
+    },
+    {
+      "id": "COG",
+      "name": "Congo"
+    },
+    {
+      "id": "SWE",
+      "name": "Sweden"
+    },
+    {
+      "id": "LUX",
+      "name": "Luxembourg"
+    },
+    {
+      "id": "LIT",
+      "name": "Lithuania"
+    },
+    {
+      "id": "EST",
+      "name": "Estonia"
+    },
+    {
+      "id": "LAT",
+      "name": "Latvia"
+    },
+    {
+      "id": "WUR",
+      "name": "Baden-Württemberg"
+    },
+    {
+      "id": "SWI",
+      "name": "Switzerland"
+    },
+    {
+      "id": "TUR",
+      "name": "Turkey"
+    },
+    {
+      "id": "ALB",
+      "name": "Albania"
+    },
+    {
+      "id": "POR",
+      "name": "Portugal"
+    },
+    {
+      "id": "AFG",
+      "name": "Afghanistan"
+    },
+    {
+      "id": "ARG",
+      "name": "Argentina"
+    },
+    {
+      "id": "CHI",
+      "name": "China"
+    },
+    {
+      "id": "CHL",
+      "name": "Chile"
+    },
+    {
+      "id": "ETH",
+      "name": "Ethiopia"
+    },
+    {
+      "id": "KOR",
+      "name": "Korea"
+    },
+    {
+      "id": "PER",
+      "name": "Iran"
+    },
+    {
+      "id": "SIK",
+      "name": "Sinkiang"
+    },
+    {
+      "id": "VEN",
+      "name": "Venezuela"
+    },
+    {
+      "id": "YEM",
+      "name": "Yemen"
+    },
+    {
+      "id": "OMA",
+      "name": "Oman"
+    },
+    {
+      "id": "SLO",
+      "name": "Slovakia"
+    },
+    {
+      "id": "CRO",
+      "name": "Croatia"
+    },
+    {
+      "id": "PRC",
+      "name": "China"
+    },
+    {
+      "id": "ICE",
+      "name": "Iceland"
+    },
+    {
+      "id": "GEO",
+      "name": "Georgia"
+    },
+    {
+      "id": "SYR",
+      "name": "Syria"
+    },
+    {
+      "id": "EGY",
+      "name": "Egypt"
+    },
+    {
+      "id": "LBA",
+      "name": "Libya"
+    },
+    {
+      "id": "VIN",
+      "name": "Vietnam"
+    },
+    {
+      "id": "MAL",
+      "name": "Malaysia"
+    },
+    {
+      "id": "INS",
+      "name": "Indonesia"
+    },
+    {
+      "id": "UKR",
+      "name": "Ukraine"
+    },
+    {
+      "id": "BLR",
+      "name": "Belarus"
+    },
+    {
+      "id": "ANG",
+      "name": "Angola"
+    },
+    {
+      "id": "ZIM",
+      "name": "Zimbabwe"
+    },
+    {
+      "id": "PAK",
+      "name": "Pakistan"
+    },
+    {
+      "id": "BAN",
+      "name": "Bangladesh"
+    },
+    {
+      "id": "BRM",
+      "name": "Burma"
+    },
+    {
+      "id": "JAN",
+      "name": "Jan Mayen"
+    },
+    {
+      "id": "MAD",
+      "name": "Madagascar"
+    },
+    {
+      "id": "SRL",
+      "name": "Sri Lanka"
+    },
+    {
+      "id": "ALG",
+      "name": "Algeria"
+    },
+    {
+      "id": "MOR",
+      "name": "Morocco"
+    },
+    {
+      "id": "GHA",
+      "name": "Ghana"
+    },
+    {
+      "id": "IVO",
+      "name": "Côte d'Ivoire"
+    },
+    {
+      "id": "CSA",
+      "name": "Confederation of America"
+    },
+    {
+      "id": "BAS",
+      "name": "Antilles"
+    },
+    {
+      "id": "KUR",
+      "name": "Kurdistan"
+    },
+    {
+      "id": "KAR"
+    },
+    {
+      "id": "AOI",
+      "name": "Africa Orientale Italiana"
+    },
+    {
+      "id": "SMI",
+      "name": "Sápmi"
+    },
+    {
+      "id": "GRN",
+      "name": "Greenland"
+    },
+    {
+      "id": "UBD",
+      "name": "United Baltic Duchy"
+    },
+    {
+      "id": "KAT",
+      "name": "Katanga"
+    },
+    {
+      "id": "HES",
+      "name": "Hesse"
+    },
+    {
+      "id": "RKB",
+      "name": "Reichskommissariat Belgien-Nordfrankreich"
+    },
+    {
+      "id": "RKN",
+      "name": "Reichskommissariat Niederlande"
+    },
+    {
+      "id": "RKG",
+      "name": "Reichskommissariat Norwegen"
+    },
+    {
+      "id": "RKU",
+      "name": "Reichskommissariat Ukraine"
+    },
+    {
+      "id": "RKO",
+      "name": "Reichskommissariat Ostland"
+    },
+    {
+      "id": "RKK",
+      "name": "Reichskommissariat Kaukasien"
+    },
+    {
+      "id": "RKT",
+      "name": "Reichskommissariat Turkestan"
+    },
+    {
+      "id": "RKM",
+      "name": "Reichskommissariat Moskowien"
+    },
+    {
+      "id": "RKL",
+      "name": "Reichskommissariat Ural"
+    },
+    {
+      "id": "GEN",
+      "name": "Generalgouvernement"
+    },
+    {
+      "id": "RKH",
+      "name": "Protektorat Böhmen und Mähren"
+    },
+    {
+      "id": "RKI",
+      "name": "Reichskommissariat Iberien"
+    },
+    {
+      "id": "RKC",
+      "name": "Reichskommissariat Balkan"
+    },
+    {
+      "id": "RGB",
+      "name": "Reichskommissariat Großbritannien"
+    },
+    {
+      "id": "RKA",
+      "name": "Reichskommissariat Mittelafrika"
+    },
+    {
+      "id": "RNA",
+      "name": "Reichskommissariat Nordafrika"
+    },
+    {
+      "id": "RKV",
+      "name": "Reichskommissariat Klein-Venedig"
+    },
+    {
+      "id": "RAN",
+      "name": "Reichskommissariat Anden"
+    },
+    {
+      "id": "RCO",
+      "name": "Reichskommissariat Kolumbus"
+    },
+    {
+      "id": "RUS",
+      "name": "Reichskommissariat Nordamerika"
+    },
+    {
+      "id": "RHD",
+      "name": "Reichskommissariat Hindustan"
+    },
+    {
+      "id": "RAR",
+      "name": "Reichskommissariat Arabien"
+    },
+    {
+      "id": "ROA",
+      "name": "Reichskommissariat Ostasien"
+    },
+    {
+      "id": "RAA",
+      "name": "Reichskommissariat Australasien"
+    },
+    {
+      "id": "OBG"
+    },
+    {
+      "id": "DIP",
+      "name": "Indian Partisans"
+    },
+    {
+      "id": "PSH",
+      "name": "Pashtunistan"
+    },
+    {
+      "id": "HYD",
+      "name": "Hyderabad"
+    },
+    {
+      "id": "MYS",
+      "name": "Mysore"
+    },
+    {
+      "id": "RJP",
+      "name": "Rajputana"
+    },
+    {
+      "id": "CIP",
+      "name": "Central Indian Princely States"
+    },
+    {
+      "id": "RAS",
+      "name": "Madras States"
+    },
+    {
+      "id": "NWF",
+      "name": "North-Western Frontier Provinces"
+    },
+    {
+      "id": "KAS",
+      "name": "Kashmir"
+    },
+    {
+      "id": "MPU",
+      "name": "Manipur"
+    },
+    {
+      "id": "WIS",
+      "name": "Gujarat"
+    },
+    {
+      "id": "KOL",
+      "name": "Kolhapur and Deccan States"
+    },
+    {
+      "id": "KHL",
+      "name": "Khalistan"
+    },
+    {
+      "id": "SIN",
+      "name": "Sindh"
+    },
+    {
+      "id": "KLT",
+      "name": "Kalat"
+    },
+    {
+      "id": "SKK",
+      "name": "Sikkim"
+    },
+    {
+      "id": "FSA",
+      "name": "Federation of South Arabia"
+    },
+    {
+      "id": "ASY",
+      "name": "Assyria"
+    },
+    {
+      "id": "BHR",
+      "name": "Bahrain"
+    },
+    {
+      "id": "IMO",
+      "name": "Imamate of Oman"
+    },
+    {
+      "id": "BLC",
+      "name": "Balochistan"
+    },
+    {
+      "id": "KSR",
+      "name": "Kazakh"
+    },
+    {
+      "id": "RNG",
+      "name": "China"
+    }
+  ]
+}

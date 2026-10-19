@@ -1,0 +1,610 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "NOR_akers_mekaniske_verksted_organization",
+      "name": "Akers Mekaniske Verksted",
+      "countries": [
+        "NOR"
+      ],
+      "include": "generic_escort_ship_organization",
+      "equipmentTypes": [
+        "screen_ship",
+        "convoy_1"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Merchant and Escort Ships Builder",
+        "x": 0,
+        "y": 0,
+        "productionBonus": {
+          "production_capacity_factor": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "generic_mio_trait_submarine_hunters",
+          "name": "ASW Role Optimization",
+          "x": 1,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "sub_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_mine_hunting_equipment",
+          "name": "High Speed Minesweeping Equipment",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_submarine_hunters"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "mines_sweeping": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_hydrodynamic_design",
+          "name": "Advanced Hydrodynamic Design",
+          "x": 1,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_mine_hunting_equipment"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_fleet_escorts",
+          "name": "Fleet Escort Role",
+          "x": 6,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_ships",
+          "name": "Anti-Air Ships",
+          "x": 3,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_escort_in_force"
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_escort_in_force",
+          "name": "Escort in Force",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_anti_air_ships"
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "lg_armor_piercing": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_layout",
+          "name": "Optimized Anti-Aircraft Firing Arcs",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_fleet_escorts"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 7,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_anti_air_gun_mounting",
+          "name": "Improved Anti-Air Gun Mounting",
+          "x": 3,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_mass_production",
+          "name": "Mass Production",
+          "x": 4,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_improved_light_gun_mounting",
+          "name": "Improved Light Gun Mounting",
+          "x": 6,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_ships",
+                "generic_mio_trait_escort_in_force"
+              ],
+              "needed": 1
+            },
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "NOR_mio_trait_convoy_production",
+          "name": "Shipping Capitalist",
+          "x": 0,
+          "y": 0,
+          "special": true,
+          "limitToEquipmentTypes": [
+            "convoy"
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          },
+          "conditions": [
+            "available = { FROM = { NOR_johan_ludwig_mowinckel = { is_political_advisor = yes } } }"
+          ]
+        }
+      ],
+      "conditions": [
+        "allowed = { NOR_AAT = yes }"
+      ]
+    },
+    {
+      "id": "NOR_karljohansvern_verft_organization",
+      "name": "Karljohansvern Verft",
+      "countries": [
+        "NOR"
+      ],
+      "include": "generic_battle_line_ship_organization",
+      "equipmentTypes": [
+        "mio_cat_eq_all_battleship",
+        "mio_cat_eq_all_cruiser"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Battle Line Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "productionBonus": {
+          "production_capacity_factor": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "NOR_mio_trait_forsvarets_forskningsinstitutt",
+          "name": "Forsvarets Forskningsinstitutt Department",
+          "x": 9,
+          "y": 0,
+          "special": true,
+          "organizationModifiers": {
+            "military_industrial_organization_research_bonus": 0.1
+          },
+          "conditions": [
+            "available = { FROM = { has_completed_focus = NOR_the_royal_norwegian_navy } }"
+          ]
+        },
+        {
+          "id": "NOR_mio_trait_trondhjems_mekaniske_vaerksted",
+          "name": "Trondhjems Mekaniske Værksted",
+          "x": 3,
+          "y": 0,
+          "special": true,
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          },
+          "conditions": [
+            "available = { FROM = { controls_state = 143 } }"
+          ]
+        },
+        {
+          "id": "NOR_mio_trait_cruiser_specialization",
+          "name": "Cruiser Specialization",
+          "x": 3,
+          "y": 1,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "NOR_mio_trait_trondhjems_mekaniske_vaerksted"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "lg_attack": 0.1,
+            "max_strength": 0.05,
+            "armor_value": 0.02
+          },
+          "conditions": [
+            "available = { FROM = { controls_state = 143 } }"
+          ]
+        },
+        {
+          "id": "generic_mio_trait_external_armor_belt",
+          "name": "Vertical Armor Belt",
+          "x": 0,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_internal_armor_belt"
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_battleship"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_internal_armor_belt",
+          "name": "Inclined Armor Belt",
+          "x": 2,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_external_armor_belt"
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_battleship"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.15,
+            "build_cost_ic": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_hardened_critical_components",
+          "name": "Hardened Critical Components",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_internal_armor_belt",
+                "generic_mio_trait_external_armor_belt"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_battleship"
+          ],
+          "equipmentBonus": {
+            "naval_torpedo_enemy_critical_chance_factor": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_hydrodynamic_design",
+          "name": "Advanced Hydrodynamic Design",
+          "x": 0,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_hardened_critical_components"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_advanced_armor_design"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_armor_design",
+          "name": "Advanced Armor Design",
+          "x": 2,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_hardened_critical_components"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_advanced_hydrodynamic_design"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_air_layout",
+          "name": "Optimized Anti-Aircraft Firing Arcs",
+          "x": 4,
+          "y": 0,
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_secondary_battery_layout",
+          "name": "Secondary Battery Layout",
+          "x": 6,
+          "y": 0,
+          "equipmentBonus": {
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 5,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_anti_air_layout",
+                "generic_mio_trait_secondary_battery_layout"
+              ],
+              "needed": 2
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_secondary_fire_director_control",
+          "name": "Secondary Fire Director Control",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "naval_light_gun_hit_chance_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_combat_information_center",
+          "name": "Combat Information Center",
+          "x": 5,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_super_heavy_shells",
+                "generic_mio_trait_semi_armor_piercing_shells",
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            },
+            {
+              "traits": [
+                "generic_mio_trait_hardened_critical_components",
+                "generic_mio_trait_secondary_fire_director_control"
+              ],
+              "needed": 2
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_battleship"
+          ],
+          "equipmentBonus": {
+            "max_strength": 0.1
+          }
+        },
+        {
+          "id": "generic_mio_trait_primary_battery_layout",
+          "name": "Primary Battery Layout",
+          "x": 8,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "hg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_super_heavy_shells",
+          "name": "Shatter-Resistant Cap",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_primary_battery_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_semi_armor_piercing_shells",
+            "generic_mio_trait_high_velocity_guns"
+          ],
+          "equipmentBonus": {
+            "hg_attack": 0.05,
+            "hg_armor_piercing": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_semi_armor_piercing_shells",
+          "name": "Semi-Armor-Piercing Shells",
+          "x": 8,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_primary_battery_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_super_heavy_shells",
+            "generic_mio_trait_high_velocity_guns"
+          ],
+          "equipmentBonus": {
+            "lg_attack": 0.05,
+            "lg_armor_piercing": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_velocity_guns",
+          "name": "High Velocity Guns",
+          "x": 9,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_primary_battery_layout"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_super_heavy_shells",
+            "generic_mio_trait_semi_armor_piercing_shells"
+          ],
+          "equipmentBonus": {
+            "lg_armor_piercing": 0.1,
+            "hg_armor_piercing": 0.1,
+            "build_cost_ic": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { tag = NOR has_dlc = \"Arms Against Tyranny\" }"
+      ]
+    }
+  ]
+}

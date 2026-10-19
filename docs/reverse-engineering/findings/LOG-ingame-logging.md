@@ -119,6 +119,11 @@ The S-HOUR counter reading matches `BattleSession` ("tick is 1 in battle hour 0"
 
 ## Second case: a generated mixed fleet (jukki_usa_vs_bc_japan, 2026-10-19)
 
+(2026-10-19) The logger also records, at the start of each combat hour, every ship's live max organization (0xc37e70),
+stat block values and modifier sums (0xc38760) and, per side, the commanding admiral (`combatant+0x130`) and the
+modifier holders of one ship (country `+0x5b8` via 0xbb48f0, task force `+0x668`, experience `+0x750`, captain
+`[+0x8f8]+0x1b0`, admiral `+0x418`), read with the container getter 0x55e360 (`modifiers.csv`, `holders.csv`).
+
 `tools/ingame/make_save.py` wrote `data/jukki_usa_vs_bc_japan.json` into the CL3 battle-start save
 (`jukki_usa_vs_bc_japan_battle_start.hoi4`): BUL got 8 `39_battleship_pure_la`, 27 `39lc_la` and 6 `shbb_4battery_2aa`,
 ROM 12 `39_battlecruiser_pure_la`, 54 `dd_3_la` and 5 `shbb_4battery_2aa`, both with the scenario's researches as TFB
@@ -297,3 +302,19 @@ consecutive rolls (all |z| ≤ 2.1 over the ten most common line pairs), and giv
 regain for the whole battle moves the USA damage by at most 6 HP. With every replayed battle exact, the gap is most
 likely chance in the game sample.
 
+### Naval dominance (2026-10-19)
+
+The organization regain's 0.22 an hour (S-ORG-REGAIN) comes from naval dominance of the battle's region
+([S-DOMINANCE](S-DOMINANCE-naval-dominance.md)). Three observations:
+- **The save holds it.** The CL3 template save keeps region 30's dominance per country: BUL 17376.9375, ROM 17238
+  (`current` = `target` = `base_target`). The decoded ship formula (0xbd5d60) summed over each fleet gives exactly these
+  numbers.
+- **Generated saves kept the template's values.** `make_save.py` replaced the ships but not the region state, so every
+  `jukki_usa_vs_bc_japan` battle started from the CL3 fleets' values, BUL ahead by 139, with targets of 27349 (BUL) and
+  25925 (ROM). BUL ships regained 0.22 until a day's update put ROM ahead: hour 133, 157 or 181 depending on the seed.
+  A daily step toward the ships still afloat (TFB gain 0.03 of the target, loss 0.04 of the previous target) at 02:00
+  predicts that day in 26 of 27 battles. `make_save.py` now writes the new fleets' totals.
+- **Replays with it.** With `rules.navalDominanceEnabled` (the side with more at the start keeps dominance), the 11
+  roll-logged replays still match every shot; their 10,210 end-of-hour organization differences drop to 3,825, none
+  before the game hands dominance to ROM, the rest 0.02 an hour after it and the battle's last hour. 200 simulator seeds
+  move by 6.5 HP of USA damage (mixed fleet) and not at all for CL3.

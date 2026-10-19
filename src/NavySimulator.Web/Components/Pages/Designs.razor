@@ -94,6 +94,8 @@ else
     var (shipType, typeMatches) = Workspace.ShipTypeOf(editing);
     var slotRows = DesignSlots.Rows(Workspace.Catalog, Workspace.Library, editing);
     var designIssues = DesignSlots.DesignIssues(Workspace.Library, editing);
+    var assignableMios = Workspace.AssignableMios(editing);
+    var mio = Workspace.FindMio(editing.MioID);
     <div class="split wide-left">
         <div class="stack">
             <div class="panel">
@@ -145,13 +147,30 @@ else
                         </div>
                         <div class="field span-2">
                             <label>MIO</label>
-                            <select @bind:get="editing.MioID ?? string.Empty" @bind:set="SetMio">
+                            <select class="@(editing.MioID is not null && (mio is null || assignableMios.All(candidate => candidate.ID != mio.ID)) ? "invalid" : "")"
+                                    @bind:get="editing.MioID ?? string.Empty" @bind:set="SetMio">
                                 <option value="">(none)</option>
-                                @foreach (var mio in Workspace.Catalog.Mios)
+                                @if (editing.MioID is not null && assignableMios.All(candidate => candidate.ID != editing.MioID))
                                 {
-                                    <option value="@mio.ID">@mio.ID</option>
+                                    <option value="@editing.MioID">@(mio is null ? $"{editing.MioID} (unknown)" : $"{MioInfo.Label(mio)} (does not cover this design)")</option>
+                                }
+                                @foreach (var group in assignableMios.GroupBy(MioInfo.Group).OrderBy(group => group.Key.EndsWith(')') ? 1 : 0).ThenBy(group => group.Key, StringComparer.Ordinal))
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var candidate in group)
+                                        {
+                                            <option value="@candidate.ID">@MioInfo.Label(candidate)</option>
+                                        }
+                                    </optgroup>
                                 }
                             </select>
+                            <span class="hint">
+                                @if (mio?.InitialTrait is { } initial)
+                                {
+                                    <span>Initial trait: @(MioInfo.Summarize(initial) is { Length: > 0 } effect ? effect : "no effect in battle"). </span>
+                                }
+                                @(Workspace.Catalog.Mios.Count == 0 ? "No MIOs imported (Settings → Data)." : "Only MIOs that cover this hull are listed. In the scenario editor each side can assign another MIO to the design and unlocks traits and a policy; the stats here have the initial trait only.")
+                            </span>
                         </div>
                         <div class="field span-2">
                             <label>Ship type</label>

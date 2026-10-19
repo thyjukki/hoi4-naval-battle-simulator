@@ -17,6 +17,7 @@ public static class ShipStatKeys
         ["armor_value"] = nameof(ShipStatsDto.Armor),
         ["max_strength"] = nameof(ShipStatsDto.HP),
         ["naval_speed"] = nameof(ShipStatsDto.Speed),
+        ["naval_range"] = nameof(ShipStatsDto.NavalRange),
         ["reliability"] = nameof(ShipStatsDto.Reliability),
         ["build_cost_ic"] = nameof(ShipStatsDto.ProductionCost),
         ["surface_visibility"] = nameof(ShipStatsDto.SurfaceVisibility),
@@ -31,7 +32,10 @@ public static class ShipStatKeys
         ["naval_torpedo_hit_chance_factor"] = nameof(ShipStatsDto.TorpedoHitChanceFactor),
         ["naval_light_gun_hit_chance_factor"] = nameof(ShipStatsDto.LightHitChanceFactor),
         ["naval_heavy_gun_hit_chance_factor"] = nameof(ShipStatsDto.HeavyHitChanceFactor),
-        ["naval_weather_penalty_factor"] = nameof(ShipStatsDto.NavalWeatherPenaltyFactor)
+        ["naval_weather_penalty_factor"] = nameof(ShipStatsDto.NavalWeatherPenaltyFactor),
+
+        // A sub-unit stat (S-STATS-SHIP): technology and doctrine sub-unit bonuses set it; no ship equipment or module does.
+        ["max_organisation"] = nameof(ShipStatsDto.Organization)
     };
 
     /// <summary>Adds <paramref name="value"/> to the stat a game key maps to. Returns false for keys the stat model has no stat for.</summary>

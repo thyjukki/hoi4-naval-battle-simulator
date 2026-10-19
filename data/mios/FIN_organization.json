@@ -1,0 +1,433 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "FIN_crichton_vulcan_organization",
+      "name": "Crichton-Vulcan",
+      "countries": [
+        "FIN"
+      ],
+      "include": "generic_raider_ship_organization",
+      "equipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "submarine"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Raiding Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "equipmentBonus": {
+          "sub_visibility": -0.02
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "FIN_mio_trait_andros_engines",
+          "name": "Andros Engines",
+          "x": 4,
+          "y": 1,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_raiding",
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "naval_speed": 0.05,
+            "fuel_consumption": -0.05
+          },
+          "conditions": [
+            "available = { owner = { has_completed_focus = FIN_acquire_andros_dockyards } }"
+          ]
+        },
+        {
+          "id": "FIN_mio_trait_wartsila_engine_production",
+          "name": "Wärtsilä Engine Production",
+          "x": 6,
+          "y": 1,
+          "special": true,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_raiding",
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          },
+          "conditions": [
+            "available = { owner = { custom_trigger_tooltip = { tooltip = FIN_mio_trait_wartsila_engine_production_trigger_tt } has_completed_focus = FIN_wartsila_engine_production } }"
+          ]
+        },
+        {
+          "id": "FIN_mio_trait_rapid_raiders",
+          "name": "Rapid Raiders",
+          "x": 0,
+          "y": 0,
+          "special": true,
+          "mutuallyExclusive": [
+            "FIN_mio_trait_deep_sea_raiders"
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "lg_attack": 0.05,
+            "surface_detection": 0.05,
+            "sub_detection": 0.05
+          },
+          "conditions": [
+            "available = { owner = { has_completed_focus = FIN_rapid_raiders } }"
+          ]
+        },
+        {
+          "id": "FIN_mio_trait_deep_sea_raiders",
+          "name": "Deep Sea Raiders",
+          "x": 1,
+          "y": 0,
+          "special": true,
+          "mutuallyExclusive": [
+            "FIN_mio_trait_rapid_raiders"
+          ],
+          "limitToEquipmentTypes": [
+            "submarine"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "surface_detection": 0.05,
+            "sub_visibility": -0.05,
+            "torpedo_attack": 0.05
+          },
+          "conditions": [
+            "available = { owner = { has_completed_focus = FIN_deep_sea_raiders } }"
+          ]
+        },
+        {
+          "id": "FIN_mio_trait_modernization_program",
+          "name": "Modernization Program",
+          "x": 9,
+          "y": 0,
+          "special": true,
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          },
+          "conditions": [
+            "available = { owner = { custom_trigger_tooltip = { tooltip = FIN_mio_trait_wartsila_engine_production_trigger_tt } has_completed_focus = FIN_modernize_the_industry } }"
+          ]
+        },
+        {
+          "id": "generic_mio_trait_long_range_raiding",
+          "name": "Long Range Raiding",
+          "x": 2,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_speed_raiding"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_raiding",
+          "name": "High Speed Raiding",
+          "x": 8,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_long_range_raiding"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_diesel_powerplants",
+          "name": "Diesel Powerplants",
+          "x": 1,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "fuel_consumption": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_operation_stores",
+          "name": "High-Speed Operation Stores",
+          "x": 9,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "mines_planting": 0.05
+          },
+          "conditions": [
+            "visible = { has_dlc = \"Man the Guns\" }"
+          ]
+        },
+        {
+          "id": "generic_mio_trait_high_speed_operation_stores_no_mtg",
+          "name": "High-Speed Operation Stores",
+          "x": 9,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05
+          },
+          "conditions": [
+            "visible = { NOT = { has_dlc = \"Man the Guns\" } }"
+          ]
+        },
+        {
+          "id": "generic_mio_trait_raiding_capital_ships",
+          "name": "Raiding Capital Ships",
+          "x": 3,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_raiding",
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "surface_detection": 0.1,
+            "hg_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_long_range_engagement_ethos",
+          "name": "Long Range Engagement Ethos",
+          "x": 2,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_raiding_capital_ships"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.1,
+            "surface_detection": 0.03,
+            "hg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_quality_optics",
+          "name": "High-Quality Optics",
+          "x": 4,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_raiding_capital_ships"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_spotting_tops"
+          ],
+          "equipmentBonus": {
+            "surface_detection": 0.08
+          }
+        },
+        {
+          "id": "generic_mio_trait_raider_escort_requirements",
+          "name": "Raider Escort Requirements",
+          "x": 1,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_engagement_ethos"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "surface_detection": 0.05,
+            "naval_range": 0.1,
+            "naval_speed": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_unescorted_raider_requirements",
+          "name": "Unescorted Raider Requirements",
+          "x": 3,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_engagement_ethos",
+                "generic_mio_trait_high_quality_optics"
+              ],
+              "needed": 2
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_raiding_cruisers",
+          "name": "Raiding Cruisers",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_raiding",
+                "generic_mio_trait_high_speed_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "ship_hull_cruiser"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "surface_detection": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_raiding_submarines",
+          "name": "Raiding Submarines",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_speed_raiding",
+                "generic_mio_trait_long_range_raiding"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "submarine"
+          ],
+          "equipmentBonus": {
+            "sub_visibility": -0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_spotting_tops",
+          "name": "Spotting Tops",
+          "x": 6,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_raiding_cruisers",
+                "generic_mio_trait_raiding_submarines"
+              ],
+              "needed": 2
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_quality_optics"
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship",
+            "screen_ship"
+          ],
+          "equipmentBonus": {
+            "surface_detection": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_large_torpedo_banks",
+          "name": "Large Torpedo Banks",
+          "x": 8,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_raiding_submarines"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "torpedo_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_mass_produced_raiders",
+          "name": "Mass-Produced Raiders",
+          "x": 7,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_spotting_tops",
+                "generic_mio_trait_large_torpedo_banks"
+              ],
+              "needed": 2
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { original_tag = FIN has_dlc = \"Arms Against Tyranny\" }"
+      ]
+    }
+  ]
+}

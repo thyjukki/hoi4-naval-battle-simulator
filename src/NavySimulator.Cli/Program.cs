@@ -8,6 +8,26 @@ if (args.Length > 0 && args[0] == ImportShipDataCommand.Name)
     return ImportShipDataCommand.Run(args[1..]);
 }
 
+if (args.Length > 0 && args[0] == ImportDoctrinesCommand.Name)
+{
+    return ImportDoctrinesCommand.Run(args[1..]);
+}
+
+if (args.Length > 0 && args[0] == ImportMiosCommand.Name)
+{
+    return ImportMiosCommand.Run(args[1..]);
+}
+
+if (args.Length > 0 && args[0] == ImportLeadersCommand.Name)
+{
+    return ImportLeadersCommand.Run(args[1..]);
+}
+
+if (args.Length > 0 && args[0] == ImportPlanesCommand.Name)
+{
+    return ImportPlanesCommand.Run(args[1..]);
+}
+
 if (args.Length > 0 && args[0] == ListShipsCommand.Name)
 {
     return ListShipsCommand.Run(args[1..]);

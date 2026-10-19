@@ -18,7 +18,8 @@
         "mid_3_custom_slot": "ship_anti_air_4",
         "rear_1_custom_slot": "ship_heavy_battery_3",
         "rear_2_custom_slot": "ship_heavy_battery_3"
-      }
+      },
+      "mioID": "USA_brooklyn_naval_yard_organization"
     },
     {
       "id": "39_battlecruiser_pure_la",

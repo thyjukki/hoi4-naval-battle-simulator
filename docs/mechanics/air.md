@@ -1,19 +1,35 @@
 # Naval air combat spec
 
-Status: **implemented** in `src/NavySimulator.Engine/Battles/Air/` (`AirRules`, `AirPhase`, `AirGroup`, `AirWing`). The rules come from the reverse-engineering findings in [A-air-combat.md](../reverse-engineering/findings/A-air-combat.md) (hoi4.exe 1.19.3, `naval_fire_exchange_air.cpp`); each rule below names the function it was decoded from. Tags are explained in [README.md](README.md).
+Status: **implemented** in `src/NavySimulator.Engine/Battles/Air/` (`AirRules`, `AirPhase`, `AirGroup`, `AirWing`). The rules come from the reverse-engineering findings in [A-air-combat.md](../reverse-engineering/findings/A-air-combat.md) and [A-WINGS](../reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md) (hoi4.exe 1.19.3, `naval_fire_exchange_air.cpp`); each rule below names the function it was decoded from. Tags are explained in [README.md](README.md).
 
 Planes do not use hit profiles, armor or piercing. [RE]
 
 ## Overview of one air step
 
 An air step runs for each side **after that side's surface fire**, in air hours only (A-CADENCE). Within the step, each air group in turn does the following:
-1. Planes flying: `round(planes × clamp(sortie, 0, 1))` for a carrier group (A-SORTIE); all joined planes for a land-based group (A-EXTERNAL).
+1. Planes flying: `round(pool planes × clamp(sortie, 0, 1))` for a carrier group (A-SORTIE); all planes of a joined land-based group (A-EXTERNAL).
 2. Pick one target (A-TARGET).
 3. Enemy carrier fighters intercept (A-INTERCEPT).
 4. The target's AA fires once before the strike (A-AA-PREEMPT).
 5. Hits (A-HIT) and damage (A-DMG), reduced by fleet AA (A-AA-REDUCE), with a possible crit (A-CRIT).
 
-Air groups: one per carrier with wings (`fleet.carrierAirwingsByShipDesign`), plus one land-based group per side when `externalNavalStrikePlanes > 0` and `externalPlaneID` names a plane type. A sunk or escaped carrier's group stops flying.
+Air groups ("air objects"): one per **wing pool** on each carrier, i.e. per plane sub-unit (a carrier with fighters and naval bombers has two), plus one per entry of the side's `landBasedAirwings` (A-WINGS). A group without strike wings (a fighter pool) never strikes. A sunk or escaped carrier's groups stop flying. Before the side turns of an air hour, land-based planes join (A-EXTERNAL); after the 00:00 hour, the stockpile refills land-based wings (A-REINFORCE).
+
+## A-PLANES: plane equipment [PDX]
+
+Planes are the game's fixed plane equipment, imported by `NavySimulator import-planes` (GUI: Settings → Import planes) into `data/planes/planes.json`; there is no plane designer. The import takes every non-archetype entry of `common/units/equipment` whose archetype is an air archetype (`interface_category = interface_category_air`) without `module_slots` (so the designer airframes are left out) and is not a missile. Keys a variant leaves out are its archetype's: stats (`air_attack`, `air_defence`, `air_agility`, `maximum_speed`, `naval_strike_attack`, `naval_strike_targetting`, `reliability`, `air_range`, `build_cost_ic`, `air_superiority`), `type`, `allow_mission_type` and `carrier_capable`. Each plane also gets the air sub-unit whose `need` names its archetype (`common/units/air.txt`, e.g. `cv_nav_bomber`): its `type` (which the fighter tests read) and wing sizes (`carrier_air_wing_size` 10, `land_air_wing_size` 100 in vanilla and TFB). With the TFB dev checkout over vanilla: 62 planes, 15 carrier capable (`cv_fighter_equipment_0..4`, `cv_CAS_equipment_1..4`, `cv_nav_bomber_equipment_1..4`, the two scout planes).
+
+Not modelled yet: plane equipment upgrades (TFB's `plane_naval_upgrade`, `cv_plane_naval_upgrade`, ...), plane MIOs, equipment bonuses of technologies and ideas on planes, air doctrines.
+
+## A-WINGS: air objects, strike wings and fighters [RE]
+
+From [A-WINGS](../reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md):
+- **Air objects per wing pool** (0x1c6a7c0): a pool is the wings of one sub-unit on one base, so each carrier has one air object per plane sub-unit, in order of its first wing. Sortie, flying planes, stacking wings, interception attackers, AA and hits are per air object; deck crowding (A-SORTIE) and the positioning fill (S-POS) count every plane on the carrier.
+- **Strike list** (`wing+0x30 & 0x190`): wings whose plane allows `naval_bomber`, `port_strike` or `naval_kamikaze` (the game adds kamikaze to fighter-type sub-units of kamikaze-capable countries; not modelled). It does not depend on the mission the player set. TFB: carrier CAS and carrier naval bombers strike; carrier fighters do not.
+- **Executing mission** (0x1978e30, 0x197a1dc): only strike wings executing naval strike or kamikaze enter the strike averages (A-DMG) and take losses (A-LOSSES). Land-based wings join on that mission. What sets it for carrier wings is not decoded, but the game's own state shows it: in 10 logged TFB battles (2026-10-20, `output/ingame/jukki_usa_vs_bc_japan_carriers_battle_start_*`) every carrier naval bomber wing had `executing_mission = 0x10` (naval strike) with no assigned mission, and every carrier fighter wing `0x1` (air superiority) [LOG]. `rules.carrierWingsExecuteNavalStrike` (default true) does this; false (carriers do no damage) is kept for tests.
+- **Fighter-type** (0xf63100, `& 0x100000c00`): the plane's **sub-unit** `type` has `fighter`, `interceptor` or `heavy_fighter`; these wings defend in A-INTERCEPT. The A-SORTIE fighter bonus (`& 0x100000400`) needs `fighter` or `heavy_fighter`. TFB's CAS (equipment `{ cas fighter }`, sub-unit `{ cas strategic_bomber }`) is not a fighter. [ASSUMED] A plane without a known sub-unit uses its equipment `type`.
+
+Carrier wings are set per carrier in the force composition (`carrierAirwings`: per design, one loadout per ship in ship order; each wing entry is `airwings` wings of `planeCount` planes, 0 meaning 10). Planes that are not carrier capable are allowed with a loader warning. The game does not check deck capacity when it refills a wing; the simulator takes the wings as given.
 
 ## A-CADENCE: when planes strike [RE]
 
@@ -28,22 +44,22 @@ Air groups: one per carrier with wings (`fleet.carrierAirwingsByShipDesign`), pl
 ```
 ratio   = CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance]; defender uses 1 − ratio
 base    = (hour < SELECTED_SORTIE_INITIAL_TIME ? ratio : BASE_CARRIER_SORTIE_EFFICIENCY)
-        + carrier sortie_efficiency modifiers (spirits with sortieEffiency)
+        + the carrier's sortie_efficiency (country: doctrines, spirits; damaged flight deck)
         + screeningEff × screening_bonus.sortie_efficiency
         + carrierScreening × capital_screening_bonus.sortie_efficiency     (vanilla 0.1)
-        + fighter_sortie_efficiency from carrier experience, if the first wing is a fighter
+        + fighter_sortie_efficiency (carrier experience, country), if the pool's first wing is a fighter or heavy fighter
 crowd   = planes ≤ cap ? 1 : (r = (planes − cap)/cap) > 0.9 ? 0 : clamp(1 − CAPACITY_PENALTY × r, 0, 1)
-          with cap = deck size × CARRIER_SIZE_STAT_INCREMENT
+          with planes = all planes on the carrier, cap = deck size × CARRIER_SIZE_STAT_INCREMENT
 night   = clamp(1 + darkness × night.carrier_traffic + (dark ? carrierNightTraffic : 0), 0, 1)
           (vanilla −1: no sorties at night; TFB −0.75, so 25 %, +0.15 with its carrier doctrine)
 sortie  = max(0, base × crowd × night) × org / maxOrg
-flying  = round(allPlanesOnTheCarrier × clamp(sortie, 0, 1))
+flying  = round(poolPlanes × clamp(sortie, 0, 1))
 ```
 - The clamp comes only at the end, so a sortie efficiency above 1 offsets low org.
-- `planes` counts all wings on the carrier, fighters included.
+- The crowding counts every plane on the carrier; `flying` only the air object's pool (A-WINGS).
 - The stance does not split planes into offence and defence (A-STANCE).
-- `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the participant input `carrierNightTraffic`.
-- Not modelled: weather `carrier_traffic`, `carrier_capacity_penalty_reduction`, doctrine and leader modifiers.
+- `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the side's doctrines' and spirits' plus the participant input `carrierNightTraffic`.
+- Not modelled: weather `carrier_traffic`, `carrier_capacity_penalty_reduction`, leader modifiers.
 
 ## A-STANCE [RE]
 
@@ -65,18 +81,24 @@ F   = ownCarrierPlanes > cap ? 1 / (1 + NAVAL_COMBAT_PLANE_STACKING_PENALTY_EFFE
 
 ## A-EXTERNAL: land-based planes [RE]
 
+Each entry of a side's `landBasedAirwings` is one air base's wing on a naval strike mission over the region: one air object. From [A-WINGS-EXT](../reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-ext-land-based-planes-joining-a-naval-battle) (0xc57d30, 0x16205c0), at the start of every air hour, before the combat:
 ```
-cap = max(NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP,
-          floor(Σ enemy warship current HP × JOIN_RATIO × (1 + JOIN_RATIO_PER_DAY × floor(hour / 24))))
+joined = 0                                                   (each side; the count resets every air hour)
+cap    = max(NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP,
+             floor(Σ enemy warship current HP × JOIN_RATIO × (1 + JOIN_RATIO_PER_DAY × floor(hour / 24))))
+for each wing, in listed order [ASSUMED] while joined < cap:
+    budget  = round(wing planes × missionEfficiency)
+    add     = min(budget, cap − joined);  joined += add
+    the wing is in the battle from now on; it may lose at most add planes in its strikes until its next join
 ```
-- The cap is **cumulative** over the battle; lost planes do not free room.
+- A wing that has joined strikes at every air hour with **all its planes**, not only the joined count (read from code; worth an in-game check).
+- `missionEfficiency` is the mission's efficiency (air base, range, coverage, none simulated; an input): it only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless enemy interceptors disrupted the mission (an input; the disruption formula is in the finding).
 - Land-based planes skip the sortie step and get no carrier multiplier.
-- Their attack is multiplied by `externalMissionEfficiency`, an input (range, weather, airbase and fuel are not simulated).
-- Port strikes are not modelled.
+- Not modelled: port strikes, naval patrol wings (they join but have no strike wings), carrier wings of task forces outside the battle joining it (their budget also takes the stance ratio).
 
 ## A-INTERCEPT: carrier fighters vs strike planes [RE]
 
-`0x197b380`. The defenders are all fighter wings on the target side's carriers that are still in the battle; land-based fighters are not used.
+`0x197b380`. The defenders are all fighter-type wings (A-WINGS, by sub-unit) on the target side's carriers that are still in the battle; land-based fighters are not used.
 ```
 D       = CARRIER_PERCENTAGE_DEFEND × Σ defender planes × defShare
 engaged = min(D, Σ attacking strike-wing planes × COMBAT_MULTIPLANE_CAP)
@@ -106,7 +128,7 @@ The low-AA term is additive and, at real weights, negligible. Each group picks o
 `0x197c8b0`. Only the target fires.
 ```
 chance = ANTI_AIR_TARGETTING_TO_CHANCE × max(1.5 × ANTI_AIR_TARGETING − 0.5 × agi, 0.01)
-         agi = AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY × average agility of the selected strike wings
+         agi = AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY × average agility of the selected strike wings × A-STRIKE-MODS (agility)
 fires if U ≤ chance
 kills  = randomly rounded ceil((flying − intercepted) × F) × clamp(targetAA × ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1)
 ```
@@ -117,6 +139,7 @@ Convoys have no AA. Kamikaze is not modelled.
 `0x196fca0`:
 ```
 fleetAA   = Σ warship AA on the target side × SHIP_TO_FLEET_ANTI_AIR_RATIO × side positioning
+            (ship AA = (anti_air_attack + navy_anti_air_attack) × (1 + navy_anti_air_attack_factor), S-STATS-COMBAT; the target's AA too)
 reduction = min(MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE,
                 ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE × (fleetAA + targetAA)^ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE)
 ```
@@ -128,54 +151,71 @@ Convoys add nothing, either to the side total or as the target.
 strikers = flying − intercepted − aaKills
 hits     = round(strikers × clamp(avgTargeting × NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1) × U)
 ```
-- `avgTargeting` is `0.1 × designer naval targeting`, plane-weighted over the selected strike wings.
+- `avgTargeting` is `0.1 × naval targeting`, plane-weighted over the selected strike wings that execute naval strike (A-WINGS), × A-STRIKE-MODS (targeting).
 - The uniform U halves the expected hits.
-- Strikers include fighters, because `flying` counts all carrier planes.
+- `flying` counts the air object's pool, so carrier fighters (their own pool) are not strikers.
 - Weather `naval_strike` is not modelled.
 
 ## A-DMG: strike damage [RE]
 
 ```
-attack = 0.1 × plane-weighted designer naval attack of the selected strike wings
-       × (NAVAL_STRIKE_CARRIER_MULTIPLIER for a carrier group | externalMissionEfficiency for land-based)
+attack = 0.1 × plane-weighted naval attack of the selected strike wings executing naval strike × A-STRIKE-MODS (attack)
+       × (NAVAL_STRIKE_CARRIER_MULTIPLIER for a carrier group | disruptionFactor for land-based)
 base   = hits × attack × (1 − reduction)
 HP    -= base × NAVAL_STRIKE_DAMAGE_TO_STR;  org -= base × NAVAL_STRIKE_DAMAGE_TO_ORG
 ```
 There is no damage randomness and no HP-scaled org damage. Sinking and retreat follow the surface rules (`DamageRules.Apply`).
 
+## A-STRIKE-MODS: country modifiers of the strike stats [RE]
+
+The plane stat getters (`0xf60f10`, `0xf61280`, `0xf60bc0`) multiply naval attack, targeting and agility by `1 + naval_strike_attack_factor`, `1 + naval_strike_targetting_factor` and `1 + naval_strike_agility_factor` of the planes' country; planes from a carrier also take `1 + navy_carrier_air_attack_factor`, `1 + navy_carrier_air_targetting_factor` and `1 + navy_carrier_air_agility_factor` (TFB's carrier subdoctrines and Base Strike milestone). The side's doctrines and spirits supply them (S-DOCTRINE-EFFECT). Leader terms and the air doctrines' plane bonuses are not modelled. Code: `AirRules.StrikeAverages`.
+
 ## A-CRIT: crits from air [RE]
 
 ```
-chance = max(0.001, COMBAT_BASE_CRITICAL_CHANCE × (1 + COMBAT_ARMOR_PIERCING_CRITICAL_BONUS) × (1 − min(rel, 1)))   (0 if rel ≥ 1)
+base   = COMBAT_BASE_CRITICAL_CHANCE × (1 + COMBAT_ARMOR_PIERCING_CRITICAL_BONUS) × (1 − min(rel, 1))
+chance = base > 0 ? max(0.001, base × max(0, 1 − critical_receive_chance)) : 0
 mult   = 1 + COMBAT_CRITICAL_DAMAGE_MULT × (1 − rel) / hits
 ```
 - Air crits use the gun crit defines, not the torpedo ones.
 - In the game, a part hit (`CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR / rel`) replaces the multiplier. No part data is loaded, so the simulator always applies the multiplier and consumes the roll.
-- `critical_receive_chance` is not modelled. In the game it acts as `(1 − v)`, so a negative value raises the chance.
+- [RE] (0x197af20) The base chance is multiplied by `max(0, 1 − critical_receive_chance)` of the target, read through its member getter, before the 0.001 floor (which applies only when the base chance is positive). The sign is the opposite of the surface rule (S-CRIT), so a negative value (damage control, the pride of the fleet's −0.5) raises the chance: the game's behaviour, reproduced. Code: `AirRules.CriticalChance`.
 
 ## A-LOSSES [RE + ASSUMED]
 
-- Planes are lost to interception and to preemptive AA. Air groups persist for the whole battle.
+- Planes are lost to interception and to preemptive AA, only from strike wings executing naval strike (0x197a1dc); a land-based wing loses at most the planes it offered at its last join. Air groups persist for the whole battle.
 - [ASSUMED] Losses come off the wings in order. The game's split across wings is not decoded.
 - Plane experience is not modelled.
 
+## A-REINFORCE: planes from the stockpile [RE]
+
+From [A-WINGS-REINFORCE](../reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-reinforce-planes-from-the-stockpile): once a day, in the daily update after the 00:00 combat hour (with S-MANPOWER), the country's stockpile refills air wings, **all missing planes at once** up to the wing size, the wing with the highest `priority × 1000 + 500 (has a mission) + missing planes` first (the simulator's wings have equal priority and missions, so the one missing most).
+- **Carrier wings get no planes while their task force is in combat** (0xf5cda2), so in a battle only land-based wings refill. The new planes fly from the next air hour. Confirmed in game [LOG]: with 1000 carrier naval bombers in stock, the carriers' bomber pools only lost planes over 8 day changes in each of 10 battles.
+- A wing takes any stockpiled variant of its sub-unit with the same allowed missions. The simulator takes the wing's own plane first, then [ASSUMED] the others, counted as the wing's plane (the game mixes variants in a wing).
+- A land-based wing's size is its entry's planes. Manpower, the 48 h transfer timer and reinforcement preferences are not modelled.
+- Input: `planeStockpile` per side (plane ID → count); each refill is logged in the hourly log.
+
 ## Experience from sorties [RE]
 
-Carriers gain experience per sortie as part of S-XP (`ExperienceRules`).
+Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from the sortie efficiency of their first air object.
 
 ## Not modelled
 
-The weather terms (`carrier_traffic`, `naval_strike`), the country, doctrine and leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, plane experience, and how losses are split across wings.
+The weather terms (`carrier_traffic`, `naval_strike`), leader modifiers, air doctrines (S-DOCTRINE: recorded, not simulated), `carrier_capacity_penalty_reduction`, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, plane experience, how losses are split across wings, the disruption formula of land-based missions (an input), plane equipment upgrades and plane MIOs.
 
 ## Inputs
 
 | Field | Where | Meaning |
 |---|---|---|
-| `carrierAirwingsByShipDesign` | force composition | wings per carrier design (plane ID, type, count, planes per wing) |
-| `externalNavalStrikePlanes`, `externalPlaneID`, `externalMissionEfficiency` | participant | land-based naval strike planes |
+| `carrierAirwings` | force composition | wings per carrier: per design, one loadout per ship (plane ID, wings, planes per wing) |
+| `landBasedAirwings` | participant | land-based planes, one entry per air base: plane ID, planes, mission efficiency (offered planes), disruption factor (attack) |
+| `planeStockpile` | participant | planes in stock by plane ID (A-REINFORCE) |
 | `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
-| `carrierNightTraffic` | participant | sum of the country's `carrier_night_traffic` (doctrines, spirits) |
+| `carrierNightTraffic` | participant | extra `carrier_night_traffic` on top of the side's doctrines and spirits |
+| `doctrines`, `spiritIDs` | participant | S-DOCTRINE, S-SPIRIT: sortie, strike and night traffic modifiers |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
 | `rules.weatherEnabled` | scenario | weather off as with `disable_weather`, which also means no night (weather terms not modelled; S-WEATHER, S-NIGHT) |
+| `rules.carrierWingsExecuteNavalStrike` | scenario | A-WINGS [LOG]: carrier strike wings execute naval strike (default true) |
+| `rules.navalDominanceEnabled` | scenario | S-DOMINANCE: the side with more naval dominance at the start regains organization faster (not used by air) |
 
 Each strike is reported as an `AirStrikeRecord`: hour, side, source, target, planes flying, intercepted, shot down, hits, AA reduction, crit, HP and org damage, and sunk.

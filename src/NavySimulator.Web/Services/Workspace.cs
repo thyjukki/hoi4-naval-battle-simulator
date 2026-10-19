@@ -1,6 +1,8 @@
 using System.Text.Json;
 using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
+using NavySimulator.Engine.Battles.Mechanics;
+using NavySimulator.Engine.Mios;
 using NavySimulator.Engine.Stats;
 using NavySimulator.GameData;
 using NavySimulator.GameData.Contracts;
@@ -149,6 +151,114 @@ public sealed class Workspace
         {
             import = ShipDataImporter.Read(new GameFileSystem(game, mods));
             ShipDataWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
+    /// <summary>
+    /// Reads the naval and air doctrines and the navy and air spirits from the game and the Simulate-as mods (the same
+    /// sources as <see cref="ShipDataSources"/>), writes them over <c>doctrines/</c> and <c>spirits/</c> and reloads the
+    /// catalog. Scenarios keep their doctrine and spirit IDs.
+    /// </summary>
+    public DoctrineImport ImportDoctrines()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-doctrines --game <dir>' instead.");
+        }
+
+        DoctrineImport import;
+
+        lock (sync)
+        {
+            import = DoctrineImporter.Read(new GameFileSystem(game, mods));
+            DoctrineWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
+    /// <summary>
+    /// Reads the naval MIOs, their policies and the equipment groups from the game and the Simulate-as mods (the same
+    /// sources as <see cref="ShipDataSources"/>), writes them over <c>mios/</c>, <c>mio-policies/</c> and
+    /// <c>equipment-groups/</c> and reloads the catalog. Designs and scenarios keep their MIO IDs.
+    /// </summary>
+    public MioImport ImportMios()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-mios --game <dir>' instead.");
+        }
+
+        MioImport import;
+
+        lock (sync)
+        {
+            import = MioImporter.Read(new GameFileSystem(game, mods));
+            MioWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
+    /// <summary>
+    /// Reads the game's fixed plane equipment (A-PLANES) from the game and the Simulate-as mods (the same sources as
+    /// <see cref="ShipDataSources"/>), writes it over <c>planes/</c> and reloads the catalog. Fleets and scenarios keep
+    /// their plane IDs; the scenario check reports IDs that no longer exist.
+    /// </summary>
+    public PlaneImport ImportPlanes()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-planes --game <dir>' instead.");
+        }
+
+        PlaneImport import;
+
+        lock (sync)
+        {
+            import = PlaneImporter.Read(new GameFileSystem(game, mods));
+            PlaneWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
+    /// <summary>
+    /// Reads the navy skill levels, the admiral traits and the admirals from the game and the Simulate-as mods (the same
+    /// sources as <see cref="ShipDataSources"/>), writes them over <c>leader-skills/</c>, <c>leader-traits/</c> and
+    /// <c>admirals/</c> and reloads the catalog. Scenarios keep their admirals (each side holds a copy).
+    /// </summary>
+    public LeaderImport ImportLeaders()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-leaders --game <dir>' instead.");
+        }
+
+        LeaderImport import;
+
+        lock (sync)
+        {
+            import = LeaderImporter.Read(new GameFileSystem(game, mods));
+            LeaderWriter.Write(DataDirectory, import);
             LoadCatalog();
         }
 
@@ -342,6 +452,104 @@ public sealed class Workspace
         return Catalog.Fleets.FirstOrDefault(fleet => fleet.ID == id);
     }
 
+    public MioDto? FindMio(string? id)
+    {
+        return id is null ? null : Catalog.Mios.FirstOrDefault(mio => mio.ID == id);
+    }
+
+    /// <summary>
+    /// S-MIO-MATCH, S-MIO-COUNTRY: the MIOs whose equipment types cover the design, so the game lets it be assigned to
+    /// them, and that <paramref name="country"/> can have (every country when null).
+    /// </summary>
+    public IReadOnlyList<MioDto> AssignableMios(ShipDesignDto design, string? country = null)
+    {
+        var shipDesign = Library.TryCreateDesign(design);
+        return shipDesign is null
+            ? []
+            : Catalog.Mios.Where(mio => MioCountries.IsAvailable(mio, country) &&
+                                        Library.Mios.TryGetValue(mio.ID, out var engine) && MioRules.CanAssign(engine, shipDesign))
+                .ToList();
+    }
+
+    /// <summary>The designs of the side's fleet, in the fleet's order. Unknown IDs are left out.</summary>
+    public IReadOnlyList<ShipDesignDto> SideDesigns(BattleParticipantDto side)
+    {
+        return (FindFleet(side.FleetID)?.ShipDesigns.Keys.ToList() ?? [])
+            .Select(id => Catalog.ShipDesigns.FirstOrDefault(design => design.ID == id))
+            .OfType<ShipDesignDto>()
+            .ToList();
+    }
+
+    /// <summary>S-MIO: the MIO the side assigns a design to: its own assignment (empty: none), else the design's.</summary>
+    public static string? EffectiveMioId(BattleParticipantDto side, ShipDesignDto design)
+    {
+        return side.DesignMios.TryGetValue(design.ID, out var assigned) ? (string.IsNullOrEmpty(assigned) ? null : assigned) : design.MioID;
+    }
+
+    /// <summary>
+    /// The MIOs a side deals with: those its fleet's designs are assigned to (with the designs), then any other MIO it has
+    /// a setup for. Unknown IDs are left out.
+    /// </summary>
+    public IReadOnlyList<(MioDto Mio, IReadOnlyList<string> Designs)> SideMios(BattleParticipantDto side)
+    {
+        var assigned = SideDesigns(side)
+            .Select(design => (Design: design.ID, Mio: EffectiveMioId(side, design)))
+            .Where(entry => entry.Mio is not null)
+            .ToList();
+        var ids = assigned.Select(entry => entry.Mio!).Concat(side.Mios.Keys).Distinct(StringComparer.Ordinal);
+        return ids.Select(FindMio)
+            .OfType<MioDto>()
+            .Select(mio => (mio, (IReadOnlyList<string>)assigned.Where(entry => entry.Mio == mio.ID).Select(entry => entry.Design).ToList()))
+            .ToList();
+    }
+
+    /// <summary>
+    /// S-MIO-COUNTRY: the imported country tags, those with MIOs of their own first (alphabetical by name within each
+    /// group), with whether they have any.
+    /// </summary>
+    public IReadOnlyList<(CountryDto Country, bool HasOwnMios)> Countries()
+    {
+        var withMios = Catalog.Mios.SelectMany(mio => mio.Countries ?? []).ToHashSet(StringComparer.Ordinal);
+        return Catalog.Countries
+            .Select(country => (Country: country, HasOwnMios: withMios.Contains(country.ID)))
+            .OrderBy(entry => entry.HasOwnMios ? 0 : 1)
+            .ThenBy(entry => entry.Country.Name ?? entry.Country.ID, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    /// <summary>S-POTF [RE]: the side's fleet's designs the game lets a country make its pride of the fleet: capital ships and carriers.</summary>
+    public IReadOnlyList<ShipDesignDto> PrideOfTheFleetCandidates(BattleParticipantDto side)
+    {
+        return SideDesigns(side).Where(design => Library.TryCreateDesign(design) is { } shipDesign && PrideOfTheFleetRules.CanBePrideOfTheFleet(shipDesign)).ToList();
+    }
+
+    /// <summary>S-ADMIRAL: the imported admirals of a country (every admiral when null), by country then name.</summary>
+    public IReadOnlyList<AdmiralDto> Admirals(string? country)
+    {
+        return Catalog.Admirals
+            .Where(admiral => string.IsNullOrEmpty(country) || admiral.Country == country)
+            .OrderBy(admiral => admiral.Country ?? "~", StringComparer.Ordinal)
+            .ThenBy(AdmiralInfo.Name, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+    }
+
+    public AdmiralDto? FindAdmiral(string? id)
+    {
+        return string.IsNullOrEmpty(id) ? null : Catalog.Admirals.FirstOrDefault(admiral => admiral.ID == id);
+    }
+
+    /// <summary>S-ADMIRAL-TRAIT: the imported admiral traits, grouped as the editor lists them (basic first), then by name.</summary>
+    public IReadOnlyList<LeaderTraitDto> LeaderTraits =>
+        Catalog.LeaderTraits.OrderBy(AdmiralInfo.GroupIndex).ThenBy(trait => trait.Name ?? trait.ID, StringComparer.CurrentCultureIgnoreCase).ToList();
+
+    /// <summary>S-MIO-POLICY: the policies the MIO can take.</summary>
+    public IReadOnlyList<MioPolicyDto> PoliciesFor(MioDto mio)
+    {
+        return Library.Mios.TryGetValue(mio.ID, out var engine)
+            ? Catalog.MioPolicies.Where(policy => Library.MioPolicies.TryGetValue(policy.ID, out var rule) && MioRules.PolicyAllowed(engine, rule)).ToList()
+            : [];
+    }
+
     public HullDto? FindHull(string id)
     {
         return Catalog.Hulls.FirstOrDefault(hull => hull.ID == id);
@@ -373,7 +581,10 @@ public sealed class Workspace
         return Library.TryCreateDesign(design, problems)?.GetFinalStats();
     }
 
-    /// <summary>The stats of one ship of the design on a side with the side's researches and spirits (S-STATS-SHIP).</summary>
+    /// <summary>
+    /// The stats of one ship of the design on a side with the side's researches, doctrines and spirits (S-STATS-SHIP,
+    /// S-DOCTRINE-EFFECT).
+    /// </summary>
     public ShipStats? ShipStats(ShipDesignDto design, BattleParticipantDto side, List<string>? problems = null)
     {
         var shipDesign = Library.TryCreateDesign(design, problems);
@@ -384,10 +595,42 @@ public sealed class Workspace
         }
 
         var ship = new Ship(design.ID, shipDesign);
+        _ = PreviewParticipant(side, [ship]);
+        return ship.GetFinalStats();
+    }
+
+    /// <summary>
+    /// S-DOCTRINE-EFFECT: what the side's doctrines and spirits give, each effect with its source, and the parts combat
+    /// ignores. Unknown IDs are left out (the scenario check reports them).
+    /// </summary>
+    public BattleParticipant SideEffects(BattleParticipantDto side)
+    {
+        return PreviewParticipant(side, []);
+    }
+
+    /// <summary>The imported doctrine folders, the naval one (the one combat simulates) first.</summary>
+    public IReadOnlyList<DoctrineFolderDto> DoctrineFolders =>
+        Catalog.DoctrineFolders.OrderBy(folder => folder.ID == BattleParticipant.NavalFolder ? 0 : 1).ToList();
+
+    /// <summary>The imported spirits, navy spirits before air spirits, each in the game's slot order.</summary>
+    public IReadOnlyList<SpiritDto> Spirits =>
+        Catalog.Spirits.OrderBy(spirit => spirit.Category.StartsWith("air", StringComparison.Ordinal) ? 1 : 0).ToList();
+
+    /// <summary>The doctrine folder with this ID (<c>naval</c>, <c>air</c>), or null when it is not imported.</summary>
+    public DoctrineFolderDto? DoctrineFolder(string id)
+    {
+        return Catalog.DoctrineFolders.FirstOrDefault(folder => folder.ID == id);
+    }
+
+    // Previews use the vanilla defines (NDoctrines.DEFAULT_REWARD_MASTERY); battles use the scenario's.
+    private BattleParticipant PreviewParticipant(BattleParticipantDto side, List<Ship> ships)
+    {
         var researches = side.ResearchIDs.Where(Library.Researches.ContainsKey).Select(id => Library.Researches[id]).ToList();
         var spirits = side.SpiritIDs.Where(Library.Spirits.ContainsKey).Select(id => Library.Spirits[id]).ToList();
-        _ = new BattleParticipant(new Fleet("preview", [ship]), string.Empty, string.Empty, 0, researches, spirits);
-        return ship.GetFinalStats();
+        var admiral = side.Admiral is { } dto ? Library.CreateAdmiral(dto) : null;
+        return new BattleParticipant(new Fleet("preview", ships), admiral, researches, spirits,
+            doctrines: SetupLoader.BuildDoctrines(side, Library), mios: SetupLoader.BuildMios(side, Library),
+            designMios: SetupLoader.BuildDesignMios(side, Library));
     }
 
     public IReadOnlyList<string> FleetsUsingDesign(string designId)
@@ -642,8 +885,11 @@ public sealed class Workspace
         {
             side.ResearchIDs ??= [];
             side.SpiritIDs ??= [];
-            side.Commander ??= string.Empty;
-            side.Doctrine ??= string.Empty;
+            side.Doctrines ??= [];
+            side.Mios ??= [];
+            side.DesignMios ??= [];
+            side.LandBasedAirwings ??= [];
+            side.PlaneStockpile ??= [];
         }
     }
 

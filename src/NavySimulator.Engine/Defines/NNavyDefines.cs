@@ -392,4 +392,19 @@ public sealed class NNavyDefines
 
     /// <summary>Reworked sub reveal: applied when the submarine fires torpedoes.</summary>
     public double SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER { get; set; } = 1.1;
+
+    /// <summary>S-ORG-REGAIN: added to the organization regain factor of the side with naval dominance in the region.</summary>
+    public double NAVAL_DOMINANCE_ORG_RECOVERY { get; set; } = 0.1;
+
+    /// <summary>S-DOMINANCE: ship range where there is no penalty nor bonus to naval dominance.</summary>
+    public double DOMINANCE_PER_SHIP_PER_RANGE_NEUTRAL { get; set; } = 2000.0;
+
+    /// <summary>S-DOMINANCE: ship speed where there is no penalty nor bonus to naval dominance.</summary>
+    public double DOMINANCE_PER_SHIP_PER_SPEED_NEUTRAL { get; set; } = 20.0;
+
+    /// <summary>S-DOMINANCE: bonus to dominance per point of carrier size.</summary>
+    public double DOMINANCE_PER_SHIP_PER_CARRIER_SIZE { get; set; } = 0.1;
+
+    /// <summary>S-DOMINANCE: bonus to dominance per point of heavy attack.</summary>
+    public double DOMINANCE_PER_SHIP_PER_HEAVY_GUN_ATTACK { get; set; } = 0.01;
 }

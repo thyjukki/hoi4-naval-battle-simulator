@@ -9,6 +9,7 @@
       "equipmentType": "submarine",
       "year": 1922,
       "manpower": 200,
+      "navalDominanceFactor": 9,
       "baseStats": {
         "speed": 12,
         "reliability": 0.6,
@@ -17,7 +18,8 @@
         "subVisibility": 27,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 260
+        "productionCost": 260,
+        "navalRange": 2000
       },
       "slots": [
         {
@@ -68,6 +70,7 @@
       "equipmentType": "submarine",
       "year": 1936,
       "manpower": 200,
+      "navalDominanceFactor": 11,
       "baseStats": {
         "speed": 14,
         "reliability": 0.7,
@@ -76,7 +79,8 @@
         "subVisibility": 24,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 300
+        "productionCost": 300,
+        "navalRange": 2500
       },
       "slots": [
         {
@@ -128,6 +132,7 @@
       "equipmentType": "submarine",
       "year": 1940,
       "manpower": 200,
+      "navalDominanceFactor": 13,
       "baseStats": {
         "speed": 16,
         "reliability": 0.75,
@@ -136,7 +141,8 @@
         "subVisibility": 21,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 380
+        "productionCost": 380,
+        "navalRange": 3000
       },
       "slots": [
         {
@@ -205,6 +211,7 @@
       "equipmentType": "submarine",
       "year": 1944,
       "manpower": 200,
+      "navalDominanceFactor": 15,
       "baseStats": {
         "speed": 18,
         "reliability": 0.8,
@@ -213,7 +220,8 @@
         "subVisibility": 18,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 530
+        "productionCost": 530,
+        "navalRange": 3500
       },
       "slots": [
         {
@@ -282,6 +290,7 @@
       "equipmentType": "submarine",
       "year": 1940,
       "manpower": 200,
+      "navalDominanceFactor": 10,
       "baseStats": {
         "speed": 16,
         "reliability": 0.75,
@@ -290,7 +299,8 @@
         "subVisibility": 21,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 490
+        "productionCost": 490,
+        "navalRange": 5000
       },
       "slots": [
         {
@@ -364,6 +374,7 @@
       "equipmentType": "submarine",
       "year": 1940,
       "manpower": 200,
+      "navalDominanceFactor": 12,
       "baseStats": {
         "speed": 18,
         "reliability": 0.75,
@@ -372,7 +383,8 @@
         "subVisibility": 21,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 650
+        "productionCost": 650,
+        "navalRange": 6500
       },
       "slots": [
         {
@@ -446,6 +458,7 @@
       "equipmentType": "submarine",
       "year": 1940,
       "manpower": 100,
+      "navalDominanceFactor": 7,
       "baseStats": {
         "speed": 8.3,
         "reliability": 0.6,
@@ -454,7 +467,8 @@
         "subVisibility": 15,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 150
+        "productionCost": 150,
+        "navalRange": 500
       },
       "slots": [
         {
@@ -498,6 +512,7 @@
       "equipmentType": "submarine",
       "year": 1954,
       "manpower": 400,
+      "navalDominanceFactor": 14,
       "baseStats": {
         "speed": 20,
         "reliability": 0.75,
@@ -506,7 +521,8 @@
         "subVisibility": 16,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 1150
+        "productionCost": 1150,
+        "navalRange": 10000
       },
       "slots": [
         {
@@ -587,6 +603,7 @@
       "equipmentType": "submarine",
       "year": 1944,
       "manpower": 350,
+      "navalDominanceFactor": 14,
       "baseStats": {
         "speed": 18,
         "reliability": 0.75,
@@ -595,7 +612,8 @@
         "subVisibility": 20,
         "surfaceDetection": 15,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 850
+        "productionCost": 850,
+        "navalRange": 6500
       },
       "slots": [
         {

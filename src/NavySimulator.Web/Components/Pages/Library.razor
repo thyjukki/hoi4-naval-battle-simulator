@@ -23,7 +23,7 @@
                 <table class="data compact">
                     <thead>
                         <tr>
-                            <th>Hull</th><th>ID</th><th>Archetype</th><th class="num">Year</th><th class="num" title="Fixed + custom slots; hover for the allowed categories">Slots</th><th class="num">Manpower</th>
+                            <th>Hull</th><th>ID</th><th>Archetype</th><th class="num">Year</th><th class="num" title="Fixed + custom slots; hover for the allowed categories">Slots</th><th class="num">Manpower</th><th class="num" title="naval_dominance_factor: the hull's naval dominance before speed, range, heavy attack and carrier size">Dominance</th>
                             @foreach (var stat in HullStats)
                             {
                                 <th class="num">@stat.Label</th>
@@ -43,6 +43,7 @@
                                 <td class="num">@hull.Year</td>
                                 <td class="num" title="@SlotSummary(hull)">@fixedSlots + @(hull.Slots.Count - fixedSlots)</td>
                                 <td class="num">@hull.Manpower</td>
+                                <td class="num">@(hull.NavalDominanceFactor == 0 ? "" : hull.NavalDominanceFactor.ToString("0.##"))</td>
                                 @foreach (var stat in HullStats)
                                 {
                                     <td class="num">@(stat.Get(stats) == 0 ? "" : stat.Display(stats))</td>
@@ -95,18 +96,35 @@
 
             case "mios":
                 <table class="data compact">
-                    <thead><tr><th>MIO</th><th>Applies to</th><th>Effect (one equipment bonus per stat)</th></tr></thead>
+                    <thead><tr><th>MIO</th><th>ID</th><th>Countries</th><th>Covers</th><th>Initial trait</th><th class="num" title="Hover for the traits and their equipment bonuses">Traits</th><th>File</th></tr></thead>
                     <tbody>
-                        @foreach (var mio in Workspace.Catalog.Mios.Where(mio => Matches(mio.ID)))
+                        @foreach (var mio in Workspace.Catalog.Mios.Where(mio => Matches(mio.ID, mio.Name, string.Join(" ", mio.Countries))))
                         {
-                            @foreach (var modifier in mio.Modifiers)
-                            {
-                                <tr>
-                                    <td>@mio.ID</td>
-                                    <td class="muted">@Scope(modifier.AppliesToRoles, modifier.AppliesToTypes)</td>
-                                    <td class="small">@StatInfo.Summarize(modifier.StatModifiers, modifier.StatAverages, modifier.StatMultipliers)</td>
-                                </tr>
-                            }
+                            <tr class="@(mio.ArchetypeOnly || mio.DebugOnly ? "faint" : "")">
+                                <td>@(mio.Name ?? mio.ID)</td>
+                                <td class="muted small">@mio.ID</td>
+                                <td class="muted">@(mio.ArchetypeOnly ? "archetype only" : mio.DebugOnly ? "debug mode only" : string.Join(", ", mio.Countries))</td>
+                                <td class="small">@string.Join(", ", mio.EquipmentTypes.Select(GroupName))</td>
+                                <td class="small">@(mio.InitialTrait is { } initial ? MioInfo.Summarize(initial) : string.Empty)</td>
+                                <td class="num" title="@TraitList(mio)">@mio.Traits.Count</td>
+                                <td class="faint small">@Workspace.Catalog.SourceFileOf(mio)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <h4 style="margin: 14px 10px 6px">Policies</h4>
+                <table class="data compact">
+                    <thead><tr><th>Policy</th><th>ID</th><th>For MIOs with</th><th>Equipment bonus</th><th>Conditions</th></tr></thead>
+                    <tbody>
+                        @foreach (var policy in Workspace.Catalog.MioPolicies.Where(policy => Matches(policy.ID, policy.Name)))
+                        {
+                            <tr>
+                                <td>@(policy.Name ?? policy.ID)</td>
+                                <td class="muted small">@policy.ID</td>
+                                <td class="small muted">@(policy.AllowedEquipmentTypes.Count == 0 ? "any" : string.Join(", ", policy.AllowedEquipmentTypes.Select(GroupName)))</td>
+                                <td class="small">@MioInfo.Summarize(policy)</td>
+                                <td class="small faint">@string.Join("; ", policy.Conditions.Where(condition => !condition.StartsWith("allowed = { OR = { has_mio_equipment_type", StringComparison.Ordinal)))</td>
+                            </tr>
                         }
                     </tbody>
                 </table>
@@ -132,17 +150,69 @@
 
             case "spirits":
                 <table class="data compact">
-                    <thead><tr><th>Spirit</th><th>Applies to</th><th>Effect</th><th class="num">Sortie efficiency</th></tr></thead>
+                    <thead><tr><th>Slot</th><th>Spirit</th><th>Needs</th><th>Effect</th></tr></thead>
                     <tbody>
-                        @foreach (var spirit in Workspace.Catalog.Spirits.Where(spirit => Matches(spirit.ID)))
+                        @foreach (var spirit in Workspace.Spirits.Where(spirit => Matches(spirit.ID, spirit.Name, spirit.Category)))
                         {
-                            var summary = StatInfo.Summarize(spirit.StatModifiers, spirit.StatAverages, spirit.StatMultipliers);
                             <tr>
-                                <td>@spirit.ID</td>
-                                <td class="muted">@Scope(spirit.AppliesToRoles, spirit.AppliesToTypes)</td>
-                                <td class="small">@(summary.Length > 0 ? summary : "no effect the engine models yet (see Settings → content warnings)")</td>
-                                <td class="num">@(spirit.SortieEffiency == 0 ? "" : spirit.SortieEffiency.ToString("P0"))</td>
+                                <td class="muted">@(spirit.CategoryName ?? spirit.Category)</td>
+                                <td title="@spirit.ID">@(spirit.Name ?? spirit.ID)</td>
+                                <td class="small">
+                                    @string.Join(" and ", spirit.RequiredDoctrines.Select(group => string.Join(" or ", group)))
+                                    @if (spirit.OtherConditions.Count > 0)
+                                    {
+                                        <span class="muted" title="Not checked by the simulator">@(spirit.RequiredDoctrines.Count > 0 ? "; " : "")@string.Join("; ", spirit.OtherConditions)</span>
+                                    }
+                                </td>
+                                <td class="small">@DoctrineInfo.Summarize(spirit.Effects)</td>
                             </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "doctrines":
+                <table class="data compact">
+                    <thead><tr><th>Folder</th><th>Doctrine</th><th>Track</th><th>Effect</th></tr></thead>
+                    <tbody>
+                        @foreach (var folder in Workspace.DoctrineFolders)
+                        {
+                            @foreach (var doctrine in folder.GrandDoctrines.Where(doctrine => Matches(doctrine.ID, doctrine.Name)))
+                            {
+                                <tr>
+                                    <td class="muted">@(folder.Name ?? folder.ID)</td>
+                                    <td title="@doctrine.ID"><strong>@(doctrine.Name ?? doctrine.ID)</strong></td>
+                                    <td class="muted">grand doctrine</td>
+                                    <td class="small">@DoctrineInfo.Summarize(doctrine.Effects)</td>
+                                </tr>
+                                @foreach (var (track, milestone) in doctrine.Milestones)
+                                {
+                                    <tr>
+                                        <td></td>
+                                        <td class="muted">milestone</td>
+                                        <td class="muted">@track</td>
+                                        <td class="small">@DoctrineInfo.Summarize(milestone)</td>
+                                    </tr>
+                                }
+                            }
+                            @foreach (var subdoctrine in folder.Subdoctrines.Where(subdoctrine => Matches(subdoctrine.ID, subdoctrine.Name, string.Join(" ", subdoctrine.Tracks))))
+                            {
+                                <tr>
+                                    <td class="muted">@(folder.Name ?? folder.ID)</td>
+                                    <td title="@subdoctrine.ID">@(subdoctrine.Name ?? subdoctrine.ID)</td>
+                                    <td class="muted">@string.Join(", ", subdoctrine.Tracks)</td>
+                                    <td class="small">@DoctrineInfo.Summarize(subdoctrine.Effects)</td>
+                                </tr>
+                                @foreach (var (reward, threshold, _) in DoctrineInfo.Rewards(subdoctrine, 0))
+                                {
+                                    <tr>
+                                        <td></td>
+                                        <td class="muted" title="@reward.ID">↳ @(reward.Name ?? reward.ID)</td>
+                                        <td class="muted num">@threshold</td>
+                                        <td class="small">@DoctrineInfo.Summarize(reward.Effects)</td>
+                                    </tr>
+                                }
+                            }
                         }
                     </tbody>
                 </table>
@@ -152,15 +222,19 @@
                 <table class="data compact">
                     <thead>
                         <tr>
-                            <th>Plane</th><th class="num">Air attack</th><th class="num">Air defense</th><th class="num">Naval attack</th><th class="num">Naval targeting</th>
+                            <th>Plane</th><th>Name</th><th title="Naval battle role (A-WINGS): strike wings attack ships, fighter-type wings defend carriers">Role</th><th title="Carrier capable">CV</th><th class="num">Year</th><th class="num">Air attack</th><th class="num">Air defense</th><th class="num">Naval attack</th><th class="num">Naval targeting</th>
                             <th class="num">Agility</th><th class="num">Speed</th><th class="num">Air superiority</th><th class="num">Reliability</th><th class="num">Cost</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var plane in Workspace.Catalog.Planes.Where(plane => Matches(plane.ID)))
+                        @foreach (var plane in Workspace.Catalog.Planes.Where(plane => Matches(plane.ID) || Matches(plane.Name ?? string.Empty)))
                         {
                             <tr>
                                 <td>@plane.ID</td>
+                                <td>@plane.Name</td>
+                                <td class="muted small">@(Workspace.Library.Planes.TryGetValue(plane.ID, out var equipment) ? CarrierLoadouts.Role(equipment, Engine.Defines.GameDefines.Vanilla().Hardcoded) : "?")</td>
+                                <td>@(plane.CarrierCapable ? "✓" : "")</td>
+                                <td class="num">@plane.Year</td>
                                 <td class="num">@plane.Stats.AirAttack</td>
                                 <td class="num">@plane.Stats.AirDefense</td>
                                 <td class="num">@plane.Stats.NavalAttack</td>
@@ -181,7 +255,7 @@
 
 @code {
     private static readonly IReadOnlyList<StatInfo> HullStats =
-        StatInfo.All.Where(stat => stat.Key is "hp" or "armor" or "speed" or "reliability" or "surfaceVisibility" or "subVisibility"
+        StatInfo.All.Where(stat => stat.Key is "hp" or "armor" or "speed" or "navalRange" or "reliability" or "surfaceVisibility" or "subVisibility"
             or "surfaceDetection" or "subDetection" or "productionCost").ToList();
 
     private string tab = "hulls";
@@ -195,6 +269,7 @@
         yield return ("shipTypes", "Ship types", catalog.ShipTypes.Count);
         yield return ("mios", "MIOs", catalog.Mios.Count);
         yield return ("researches", "Researches", catalog.Researches.Count);
+        yield return ("doctrines", "Doctrines", catalog.DoctrineFolders.Sum(folder => folder.GrandDoctrines.Count + folder.Subdoctrines.Count));
         yield return ("spirits", "Spirits", catalog.Spirits.Count);
         yield return ("planes", "Planes", catalog.Planes.Count);
     }
@@ -215,6 +290,17 @@
         var rules = module.ForbiddenCategories.Select(category => $"forbids {CategoryName(category)}")
             .Concat(module.AddEquipmentTypes.Select(type => $"adds {type}"));
         return string.Join(", ", rules);
+    }
+
+    // An equipment group's name ("All Battleship"), or the token itself.
+    private string GroupName(string token)
+    {
+        return Workspace.Catalog.EquipmentGroups.FirstOrDefault(group => group.ID == token)?.Name ?? token;
+    }
+
+    private static string TraitList(MioDto mio)
+    {
+        return string.Join("\n", mio.Traits.Select(trait => $"{trait.Name ?? trait.ID}: {MioInfo.Summarize(trait)}"));
     }
 
     private string CategoryName(string category)

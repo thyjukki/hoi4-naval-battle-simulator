@@ -9,7 +9,17 @@ namespace NavySimulator.GameData.Tests.Loading;
 /// </summary>
 public sealed class DesignStatsTests : IDisposable
 {
-    private const string Mio = "battle_line_armor_armor_la";
+    // The battle line tree (TFB) with the traits of the in-game check: armor and the light attack branch.
+    private const string Mio = "USA_brooklyn_naval_yard_organization";
+
+    private static readonly string[] MioTraits =
+    [
+        "generic_mio_trait_internal_armor_belt", "generic_mio_trait_hardened_critical_components",
+        "generic_mio_trait_advanced_armor_design", "generic_mio_trait_anti_air_layout",
+        "generic_mio_trait_secondary_battery_layout", "generic_mio_trait_gyro_stabilized_mounts",
+        "generic_mio_trait_secondary_fire_director_control", "generic_mio_trait_combat_information_center",
+        "generic_mio_trait_primary_battery_layout", "generic_mio_trait_semi_armor_piercing_shells"
+    ];
     private readonly string dataDirectory;
 
     public DesignStatsTests()
@@ -103,11 +113,13 @@ public sealed class DesignStatsTests : IDisposable
         {
             ["fleetID"] = fleetId,
             ["commander"] = "",
-            ["doctrine"] = "",
-            ["externalNavalStrikePlanes"] = 0,
             ["researchIDs"] = new JsonArray(researchIds.Select(id => (JsonNode)JsonValue.Create(id)!).ToArray()),
             ["spiritIDs"] = new JsonArray(),
-            ["shipExperienceLevel"] = 0
+            ["shipExperienceLevel"] = 0,
+            ["mios"] = new JsonObject
+            {
+                [Mio] = new JsonObject { ["traits"] = new JsonArray(MioTraits.Select(id => (JsonNode)JsonValue.Create(id)!).ToArray()) }
+            }
         };
     }
 

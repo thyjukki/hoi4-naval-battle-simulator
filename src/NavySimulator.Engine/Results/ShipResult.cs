@@ -20,4 +20,5 @@ public sealed record ShipResult(
     int Hits,
     double DamageDealt,
     double HpDamageDealt,
-    double HpDamageTaken);
+    double HpDamageTaken,
+    double ProductionCost);

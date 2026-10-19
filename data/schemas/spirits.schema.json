@@ -2,8 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "spirits.schema.json",
   "title": "NavySimulator Spirits",
+  "description": "Navy and air spirits, written by NavySimulator import-doctrines (S-SPIRIT).",
   "type": "object",
-  "required": ["spirits"],
+  "required": [
+    "spirits"
+  ],
   "properties": {
     "$schema": {
       "type": "string"
@@ -12,37 +15,49 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id",
+          "category"
+        ],
         "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/spiritId" },
-          "statModifiers": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "statMultiplier": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "sortieEffiency": { "type": "number" },
-          "appliesToRoles": {
-            "type": "array",
-            "items": { "$ref": "common.schema.json#/$defs/shipRole" },
-            "uniqueItems": true
+          "id": {
+            "$ref": "common.schema.json#/$defs/spiritId"
           },
-          "appliesToTypes": {
+          "name": {
+            "type": "string",
+            "description": "The game's name (localisation)."
+          },
+          "category": {
+            "type": "string",
+            "description": "The idea category (spirit slot), e.g. naval_command_spirit."
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "requiredDoctrines": {
             "type": "array",
-            "items": { "$ref": "#/$defs/shipType" },
-            "uniqueItems": true
+            "description": "has_doctrine conditions of the available trigger: each group needs one of its doctrines; every group must be met.",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "otherConditions": {
+            "type": "array",
+            "description": "Other available/visible conditions as script text (not checked).",
+            "items": {
+              "type": "string"
+            }
+          },
+          "effects": {
+            "$ref": "common.schema.json#/$defs/countryEffects"
           }
         },
         "additionalProperties": false
       }
     }
   },
-  "$defs": {
-    "shipType": {
-      "type": "string",
-      "minLength": 1,
-      "description": "A ship type (sub-unit) ID from ship-types/, a hull ID or a hull archetype (matched against ShipDesign.Types).",
-      "examples": ["destroyer", "light_cruiser", "heavy_cruiser", "battle_cruiser", "battleship", "sh_battleship", "carrier", "sh_carrier", "submarine", "ship_hull_torpedo_cruiser"]
-    }
-  },
   "additionalProperties": false
 }
-

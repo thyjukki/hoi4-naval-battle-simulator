@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "equipment-groups.schema.json",
+  "title": "NavySimulator equipment groups",
+  "description": "Equipment groups of common/equipment_groups that hold ship equipment, written by NavySimulator import-mios (S-MIO-MATCH).",
+  "type": "object",
+  "required": ["equipmentGroups"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "equipmentGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "equipmentTypes"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "description": "The game's name (localisation)." },
+          "equipmentTypes": { "type": "array", "description": "Members as written: equipment types, archetypes, categories or other groups.", "items": { "type": "string" } }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

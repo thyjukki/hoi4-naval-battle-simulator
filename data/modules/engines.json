@@ -130,7 +130,8 @@
       "statMultipliers": {
         "speed": 0.15,
         "subVisibility": -0.05,
-        "productionCost": 0.3
+        "productionCost": 0.3,
+        "navalRange": -0.66
       }
     },
     {
@@ -144,7 +145,8 @@
       "statMultipliers": {
         "speed": 0.15,
         "subVisibility": -0.1,
-        "productionCost": 0.35
+        "productionCost": 0.35,
+        "navalRange": -0.33
       }
     },
     {
@@ -287,7 +289,8 @@
       ],
       "statMultipliers": {
         "speed": 0.6,
-        "productionCost": 0.25
+        "productionCost": 0.25,
+        "navalRange": 1
       }
     },
     {
@@ -353,7 +356,8 @@
       ],
       "statMultipliers": {
         "speed": 0.6,
-        "productionCost": 0.25
+        "productionCost": 0.25,
+        "navalRange": 1
       }
     }
   ]

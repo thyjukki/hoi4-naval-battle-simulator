@@ -1,29 +1,27 @@
-using NavySimulator.Engine.Stats;
+using NavySimulator.Engine.Doctrines;
 
 namespace NavySimulator.Engine;
 
-public class Spirit(
-    string id,
-    ShipStats statModifiers,
-    ShipStats statAverages,
-    ShipStats statMultipliers,
-    double sortieEffiency,
-    List<ShipRole> appliesToRoles,
-    List<string> appliesToTypes)
+/// <summary>
+/// S-SPIRIT: a navy or air spirit (an idea in a spirit slot). Its effects work like a doctrine's (S-DOCTRINE-EFFECT): in
+/// practice country modifiers.
+/// </summary>
+public class Spirit(string id, string category, IReadOnlyList<IReadOnlyList<string>> requiredDoctrines, CountryEffects effects)
 {
     public string ID { get; } = id;
-    public ShipStats StatModifiers { get; } = statModifiers;
-    public ShipStats StatAverages { get; } = statAverages;
-    public ShipStats StatMultipliers { get; } = statMultipliers;
-    public double SortieEffiency { get; } = sortieEffiency;
-    public List<ShipRole> AppliesToRoles { get; } = appliesToRoles;
-    public List<string> AppliesToTypes { get; } = appliesToTypes;
 
-    public bool AppliesTo(ShipRole role, List<string> hullTypes)
+    /// <summary>The idea category (spirit slot), e.g. <c>naval_command_spirit</c>.</summary>
+    public string Category { get; } = category;
+
+    /// <summary>The <c>has_doctrine</c> conditions of its <c>available</c> trigger: each group needs one of its doctrines.</summary>
+    public IReadOnlyList<IReadOnlyList<string>> RequiredDoctrines { get; } = requiredDoctrines;
+
+    public CountryEffects Effects { get; } = effects;
+
+    /// <summary>S-SPIRIT [PDX]: whether the side's doctrines meet every <c>has_doctrine</c> group.</summary>
+    public bool IsAvailable(IEnumerable<DoctrineSetup> doctrines)
     {
-        var roleMatch = AppliesToRoles.Count == 0 || AppliesToRoles.Contains(role);
-        var typeMatch = AppliesToTypes.Count == 0 || AppliesToTypes.Any(type => hullTypes.Contains(type, StringComparer.OrdinalIgnoreCase));
-        return roleMatch && typeMatch;
+        var setups = doctrines.ToList();
+        return RequiredDoctrines.All(group => group.Any(id => DoctrineRules.HasDoctrine(setups, id)));
     }
 }
-

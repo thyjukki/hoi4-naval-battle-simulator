@@ -1,8 +1,8 @@
 # Defines: sources and versions
 
 The engine reads every numeric combat constant from a `GameDefines` instance (`src/NavySimulator.Engine/Defines/`):
-- `NNavy`, `NAir`, `NMilitary`: properties named exactly like the game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), bound by name from any defines file;
-- `StaticModifiers`: the blocks of `common/modifiers/00_static_modifiers.txt` that naval combat applies directly (`screening_bonus`, `capital_screening_bonus`, `ship_experience_bonus_max`, `ship_experience_malus_min`, `carrier_experience_*`, `night`);
+- `NNavy`, `NAir`, `NMilitary`, `NDoctrines`: properties named exactly like the game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), bound by name from any defines file;
+- `StaticModifiers`: the blocks of `common/modifiers/00_static_modifiers.txt` that naval combat applies directly (`screening_bonus`, `capital_screening_bonus`, `ship_experience_bonus_max`, `ship_experience_malus_min`, `carrier_experience_*`, `night`, `pride_of_the_fleet`);
 - `HardcodedValues`: constants that are in no script file, tagged [RE] (read from hoi4.exe) or [ASSUMED].
 
 ## Loading order

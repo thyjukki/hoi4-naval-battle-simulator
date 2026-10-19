@@ -1,3 +1,4 @@
+using NavySimulator.Engine.Mios;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine;
@@ -8,19 +9,41 @@ public class ShipDesign
     public Hull Hull;
     public ShipType ShipType;
     public List<StatModule> Modules;
-    public MioBonus? MioBonus;
+
+    /// <summary>S-MIO: the MIO the design is assigned to (its design team), if any.</summary>
+    public Mio? Mio;
     private ShipStats? cachedFinalStats;
 
-    public ShipDesign(string id, Hull hull, ShipType shipType, List<StatModule> modules, MioBonus? mioBonus = null)
+    /// <param name="equipmentGroups">
+    /// The equipment groups (<c>common/equipment_groups</c>), each with its members expanded; the design belongs to every
+    /// group that holds its hull, archetype or one of its equipment types (S-MIO-MATCH).
+    /// </param>
+    public ShipDesign(
+        string id,
+        Hull hull,
+        ShipType shipType,
+        List<StatModule> modules,
+        Mio? mio = null,
+        IReadOnlyDictionary<string, IReadOnlySet<string>>? equipmentGroups = null)
     {
         ID = id;
         Hull = hull;
         ShipType = shipType;
         Modules = modules;
-        MioBonus = mioBonus;
+        Mio = mio;
         Types = new[] { shipType.ID, hull.ID, hull.Archetype }
             .Where(type => !string.IsNullOrEmpty(type))
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        var equipment = new[] { hull.ID, hull.Archetype }.Concat(EquipmentKeywords(hull))
+            .Where(type => !string.IsNullOrEmpty(type))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        EquipmentBonusTypes = equipment
+            .Concat((equipmentGroups ?? new Dictionary<string, IReadOnlySet<string>>())
+                .Where(group => equipment.Any(group.Value.Contains))
+                .Select(group => group.Key))
+            .Distinct(StringComparer.Ordinal)
             .ToList();
         CriticalPartCandidates = MergeCriticalParts(shipType, modules);
     }
@@ -37,12 +60,44 @@ public class ShipDesign
     public ShipRole Role => ShipType.Role;
 
     /// <summary>
-    /// The IDs that research, MIO and spirit type filters (<c>appliesToTypes</c>) match: the ship type (sub-unit), the
+    /// The IDs that technology-like (sub-unit) bonus filters (<c>appliesToTypes</c>) match: the ship type (sub-unit), the
     /// hull and the hull's archetype.
     /// </summary>
     public List<string> Types { get; }
 
-    /// <summary>Design stats without country equipment bonuses.</summary>
+    /// <summary>
+    /// S-MIO-MATCH, S-STATS-BONUS [RE] 0xa0a600, 0xc97e00: what an equipment bonus key or an MIO's equipment types match,
+    /// exactly (case-sensitive): the hull, its archetype, the hull's equipment type keywords (<see cref="EquipmentKeywords"/>)
+    /// and the equipment groups holding any of them. The game matches the variant's hull equipment, so the modules a
+    /// design installs and its ship type (sub-unit) do not count.
+    /// </summary>
+    public List<string> EquipmentBonusTypes { get; }
+
+    /// <summary>
+    /// S-MIO-MATCH [RE] 0xc95730, 0xf8b020: the hull's type keywords, its archetype's <c>type</c> and its default modules'
+    /// <c>add_equipment_type</c>, normalized: <c>capital_ship</c> drops <c>screen_ship</c>, <c>submarine</c> and
+    /// <c>convoy</c>; else <c>submarine</c> drops <c>screen_ship</c> and <c>convoy</c>; else <c>screen_ship</c> drops
+    /// <c>convoy</c>.
+    /// </summary>
+    public static IReadOnlyList<string> EquipmentKeywords(Hull hull)
+    {
+        var keywords = hull.DefaultModuleEquipmentTypes.Prepend(hull.EquipmentType)
+            .Where(type => !string.IsNullOrEmpty(type))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        string[] dropped = keywords.Contains(CapitalShip) ? [ScreenShip, Submarine, Convoy]
+            : keywords.Contains(Submarine) ? [ScreenShip, Convoy]
+            : keywords.Contains(ScreenShip) ? [Convoy]
+            : [];
+        return keywords.Except(dropped, StringComparer.Ordinal).ToList();
+    }
+
+    private const string CapitalShip = "capital_ship";
+    private const string ScreenShip = "screen_ship";
+    private const string Submarine = "submarine";
+    private const string Convoy = "convoy";
+
+    /// <summary>Design stats without country equipment bonuses, with the MIO's initial trait only.</summary>
     public ShipStats GetFinalStats()
     {
         return cachedFinalStats ??= ComputeStats([]);
@@ -54,10 +109,12 @@ public class ShipDesign
     /// MIO light/heavy/torpedo hit chance factors go to the add bucket (S-STATS-MIO). Carrier size's multiplier is a
     /// flat add and the result is floored. Equipment bonuses (idea or named, S-STATS-BONUS) are multiplicative for every stat.
     /// Organization is the ship type's <c>max_organisation</c>, added unscaled (S-STATS-SHIP: it is a sub-unit stat).
+    /// <paramref name="mioBonus"/> is the side's MIO bonus (<see cref="MioRules.EquipmentBonus"/>); null takes the MIO's
+    /// initial trait only.
     /// </summary>
-    public ShipStats ComputeStats(IReadOnlyList<ShipStats> equipmentBonuses)
+    public ShipStats ComputeStats(IReadOnlyList<ShipStats> equipmentBonuses, ShipStats? mioBonus = null)
     {
-        var mio = MioBonus?.GetEquipmentBonus(Role, Types) ?? new ShipStats();
+        var mio = mioBonus ?? MioRules.EquipmentBonus(this, Mio, null);
         var add = Modules.Aggregate(Hull.BaseStats, (current, module) => current.Add(module.StatModifiers))
             .Add(ShipStats.AverageNonZero(Modules.Select(module => module.StatAverages)))
             .Add(mio.HitChanceFactorsOnly());

@@ -38,6 +38,7 @@ public sealed class SideView(
     public double Hp => Designs.Sum(design => design.Hp);
     public double MaxHp => Designs.Sum(design => design.MaxHp);
     public double HpDamageDealt => DamageDealt.HpDamage;
+    public FleetCost Cost => FleetCost.Of(Ships);
     public int ShotsFired => Designs.Sum(design => design.ShotsFired);
     public int Hits => Designs.Sum(design => design.Hits);
 }

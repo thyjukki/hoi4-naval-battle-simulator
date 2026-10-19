@@ -278,6 +278,105 @@ damage multiplier.
 modifiers; they should not be folded into the design stats. **Confidence.** High for the structure; medium for the
 admiral terms (0xd6b1b0, 0xd6b590, 0x143e4a0, 0xc19c40 not decoded).
 
+**Superseded in part (2026-10-19)** by the full decode in [S-STATS-COMBAT-GETTER](#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded)
+below. Corrections to the block above: `submarine_attack` is added to the **base stat**, not to Σ; the `_against`
+terms look up the controller of the task force's province, not the enemy; `naval_has_potf_in_combat_*` comes only
+from the side's commanding admiral; the "admiral terms" are naval-terrain, night and sub-unit adjusters from the
+admiral's traits, plus a naval-terrain term per sub-unit that needs no admiral.
+
+## S-STATS-COMBAT-GETTER: the attack and armor getter 0xc34a50, fully decoded
+
+**Signature.** `0xc34a50(out, kind, tf, ship, unit, admiral)`. The wrappers 0xc3a5d0 / 0xc3a580 / 0xc3a890 / 0xc3ac00 /
+0xc3a520 call it with kind 0 / 1 / 2 / 3 / 4 and `(tf = ship+0x728, ship, unit = ship+0x80, admiral = their own third
+argument)`. Below, `Mod(id)` is the ship modifier sum `0xc38760(ship, id, admiral)` (sources in
+[S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md#the-ship-modifier-sum-0xc38760)), `d` is 0 for kinds 0–3 and 1
+for kind 4 (every defence id is its attack id + 1), and `×fx` is the truncating fixed-point multiply.
+
+```
+base = ship.stat[lg_attack | hg_attack | sub_attack | torpedo_attack | armor_value]   // ship+0x1e8/+0x1f8/+0x210/+0x208/+0x318 (stats 0x19/0x1b/0x1e/0x1d/0x3f)
+owner = country(tf+0x1dc if > 0 else tf+0x1d8)                  // 0xc34acf..0xc34afb, same choice as 0xc3acc0
+tgt   = owner+0xf88 [index(province(tf+0x1f0).controller)]      // 0xc34b00..0xc34b2e; province+0x188 = controller; tag 0 -> slot 0
+Σ = 0
+if unit.type has submarine   (ship+0x628 bit 7):                // 0xc34b32
+    if kind != 4: base += Mod(0x38 submarine_attack)            // 0xc34b66: a flat add to the stat
+    Σ += Mod(0xc2 + d)                                          // navy_submarine_attack_factor / _defence_factor
+    if tgt: Σ += tgt.targeted.Get(0x1cc + d)                    // 0xc34bc2, container tgt+0x130+0x10 (0xd23780)
+if unit.type has capital_ship (bit 6): Σ += Mod(0xc4 + d); if tgt: Σ += tgt.Get(0x1c8 + d)   // 0xc34bca..0xc34c35
+if unit.type has screen_ship  (bit 8): Σ += Mod(0xc6 + d); if tgt: Σ += tgt.Get(0x1ca + d)   // 0xc34c38..0xc34ca3
+if base == 0: return 0                                          // 0xc34ca6
+if kind != 4:
+    dark = 0xf19660(weatherManager, province(tf+0x1f0).id)      // 0xc34dc7: the darkness getter behind combat+0xb8
+    Σ += Mod(0x107 naval_night_attack) ×fx dark                 // 0xc34de4..0xc34e13
+Σ += Mod(0x1b7 + d)                                             // naval_damage_factor / naval_defense_factor (0xc34e3b)
+if province:
+    terrain = 0x15a5560([province+0xc8 region]+0x30)            // the strategic region's naval_terrain (water_fjords, …)
+    if ship+0x88 (sub-unit index) >= 0:
+        Σ += terrain.subUnit[ship+0x88].attack | .defence        // 0x143e4a0 (+0x10 | +0x18): 00_terrain.txt `battleship = { units = { attack defence } }`
+    else:
+        Σ += 0xd6b1b0 | 0xd6b590 (tf, terrain)                  // task-force fallback, not decoded
+    if admiral:
+        Σ += admiral.terrainAdjuster[terrain].attack | .defence  // 0xc19c40: leader+0x248 (_TerrainAdjusters), traits' terrain blocks (arctic_water_expert …)
+        Σ += dark ×fx admiral.night.attack | .defence            // leader+0x270 | +0x278: traits' `night = { }` block (dark recomputed for kind 4 too)
+if admiral:
+    Σ += admiral.subUnitAdjuster[ship sub-unit].attack | .defence // 0xc19ba0 on leader+0x128 (traits' block at trait+0x780)
+combat = 0xd6d0c0(tf)                                           // the task force's current naval combat
+potf   = resolve(owner(tf+0x1d8)+0x250)                         // 0x6f70f0: the country's pride of the fleet
+if combat and potf and 0xd6d0c0(potf+0x728) == combat:          // assert "Pride of the fleet has no task force!"
+    cmd = 0x15c3010(combat, tf+0x1e0)+0x130                     // commanding admiral of the side holding tf
+    if cmd: Σ += cmd+0x418 .Get(0x1d1 + d)                      // 0xc351ae: naval_has_potf_in_combat_attack / _defense
+if kind != 4:
+    fuel = max(0, tf+0x4f8 / tf+0x500)                          // 0xd6c6f0
+    if fuel < 1: Σ += (1 − fuel) ×fx (kind == 3 ? OUT_OF_FUEL_TORPEDO_FACTOR : OUT_OF_FUEL_ATTACK_FACTOR)
+out = max(0, base ×fx (1 + Σ))                                  // 0xc3522e..0xc35257
+```
+
+**Which admiral.** The shot profile passes the shooter side's commanding admiral `[[member+0xe8]+0x38]+0x130`
+(0x1970b12) for the four attacks and 0 for the target's armor (0x1970c12). With 0 the admiral-only lines are skipped
+and `Mod` falls back to the ship's own fleet admiral (0xd64510: `tf+0x340` fleet → its admiral). The pride-of-the-fleet
+line always uses the commanding admiral of the ship's side.
+
+**Answers.**
+- *Type gate.* The terms follow the sub-unit definition's `type = { }` set, not the design role: the parser 0x101e130
+  ORs `0xf88330(keyword)` into sub-unit+0x5a8 (= ship+0x628). Bits: 0 convoy, 6 capital_ship, 7 submarine, 8 screen_ship,
+  22 carrier, 37 missile_launcher, 39 support_ship (0xf88330 jump table at 0xf88538/0xf88584). A sub-unit with several
+  types gets each term. Vanilla and TFB: battleship, battlecruiser, heavy_cruiser (TFB also super_heavy_battleship) are
+  `capital_ship`; light_cruiser and destroyer `screen_ship`; carrier (TFB also super_heavy_carrier) is only `carrier`
+  (`#capital_ship` is commented out). So **carriers get neither the capital nor the screen factors, heavy cruisers get the
+  capital ones.**
+- *`naval_night_attack`* = `Mod(0x107) × darkness`, darkness of the shooter task force's province from 0xf19660, attack
+  kinds only. Darkness is 0 with weather off ([LOG](LOG-ingame-logging.md)). This settles README disagreement 11 (DMG was right).
+- *Pride of the fleet in combat.* The owner country's pride-of-the-fleet ship (`country+0x250`) must be in the same naval
+  combat as this ship's task force. It then helps every ship of that side's task forces of that country, the PotF
+  included. The value is read **only** from the commanding admiral's container `+0x418`; no other code reads 0x1d1/0x1d2
+  (id scan, see [S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md)). Separately, the PotF ship itself carries the static
+  modifier `pride_of_the_fleet` in every `Mod` (vanilla `critical_receive_chance −0.5`, `experience_gain_navy_unit_factor 0.25`).
+- *`_against`.* The six `navy_*_factor_against` attack/defence terms index the shooter country's targeted-modifier table
+  by the **controller of the province its task force is in**. Sea provinces have no controller, so the lookup lands on slot
+  0. The hit chance (0x1c7, 0x1970bd7) and crit (0x1d3, 0x1974254) `_against` terms index by the target ship's country
+  instead (0xc3acc0 on the target). Likely never active at sea; what slot 0 holds is not decoded.
+- *Fuel.* As above; `OUT_OF_FUEL_*` are read at 0xc351f7 / 0xc35212.
+- *Admiral terms.* Naval-terrain and night adjusters and the sub-unit adjuster from traits (above), the admiral container
+  inside every `Mod`, and the PotF value. The attack/defence/maneuvering skill levels act through `Mod` (vanilla navy
+  attack skill: `naval_damage_factor`, defence: `naval_defense_factor`), since they are in the admiral container.
+- *`naval_damage_factor` / `naval_defense_factor` from the country.* Yes: `Mod` = 0xc38760 adds the owner country's
+  container first, so country values (doctrines, spirits) enter the attack/armor here and again in the per-hit multiplier
+  (0x19740c0 → 0x1972570 → 0xc38760 with the commanding admiral).
+
+**Ship AA (A-AA-REDUCE, A-AA-PREEMPT, A-TARGET).** `0xc3a470(ship, out, admiral)`:
+`aa = (ship.stat[anti_air_attack] (ship+0x218) + Mod(0x88 navy_anti_air_attack)) ×fx (1 + Mod(0x89 navy_anti_air_attack_factor))`,
+no clamp. The fleet AA sum 0x161e400 (call 0x161e4ad), 0x161b51c and 0x196fca0 pass admiral 0 (own fleet admiral);
+air targeting 0x197a700 (0x197a869) and preemptive AA 0x197c8b0 (0x197c901) pass the commanding admiral. These are the
+only readers of 0x88/0x89, so `navy_anti_air_attack_factor` scales each ship's AA before the fleet sum
+(`× SHIP_TO_FLEET_ANTI_AIR_RATIO × positioning`), in preemptive AA and in air target weights.
+
+**Visibility.** 0xc3aa20 `sub visibility = max(0, ship+0x1d0 ×fx (1 + Mod(0x19f navy_visibility)))`; 0xc3ab80 is the same
+with surface visibility `ship+0x1c8`.
+
+**Verdict.** NEW for the spec: the type gate is the sub-unit `type`, carriers get no capital term, `submarine_attack` is
+flat, PotF and `_against` behave as above, naval terrain enters attack and armor. **Confidence.** High for the
+pseudocode (every term read off the code); medium for what slot 0 of the targeted table holds and for the task-force
+fallback 0xd6b1b0/0xd6b590 (sub-unit index < 0 only).
+
 ---
 
 ## Worked examples

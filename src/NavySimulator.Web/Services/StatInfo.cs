@@ -29,6 +29,7 @@ public sealed record StatInfo(string Key, string Label, string Group, Func<ShipS
         new("torpedoHitChanceFactor", "Torpedo hit chance", "Hit chance", stats => stats.TorpedoHitChanceFactor, "P1"),
         new("depthChargeHitChanceFactor", "Depth charge hit chance", "Hit chance", stats => stats.DepthChargeHitChanceFactor, "P1"),
         new("speed", "Speed", "Movement and sensors", stats => stats.Speed, "F2"),
+        new("navalRange", "Range", "Movement and sensors", stats => stats.NavalRange, "F0"),
         new("surfaceVisibility", "Surface visibility", "Movement and sensors", stats => stats.SurfaceVisibility, "F2", false, "Visibility"),
         new("subVisibility", "Sub visibility", "Movement and sensors", stats => stats.SubVisibility, "F2", false),
         new("surfaceDetection", "Surface detection", "Movement and sensors", stats => stats.SurfaceDetection, "F2"),

@@ -72,7 +72,7 @@ internal static class TestEntityFactory
 
     public static BattleParticipant Participant(string fleetId, IEnumerable<Ship> ships, Aggressiveness aggressiveness = Aggressiveness.EngageAtMediumRisk)
     {
-        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), string.Empty, string.Empty, 0, [], [], aggressiveness);
+        return new BattleParticipant(new Fleet(fleetId, ships.ToList()), null, [], [], aggressiveness);
     }
 
     public static BattleScenario Scenario(

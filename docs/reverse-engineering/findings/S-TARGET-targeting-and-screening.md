@@ -75,6 +75,8 @@ else:
 4. Counts include ships in every in-battle state (waiting, fighting, retreating), not only "active" ones.
 The ratio-times-factor shape matches the spec. **Confidence:** high (formula), medium (modifier names 0x1b1/0x1b3).
 
+**Update (2026-10-19): names confirmed** from the registration and the static token table: 0x1b1 = `screening_efficiency`, 0x1b3 = `screening_without_screens`, 0x1bd = `naval_torpedo_screen_penetration_factor` (S-TARGET-TORP). Both screening ids are read through `Mod` 0x15c70b0 (country + region weather + naval terrain + own admiral), so country sources count; "subs and the bit-39 type": bit 39 is the sub-unit type `support_ship` ([S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md)).
+
 ### The screening bonus (affects S-HIT-MODS, S-RETREAT-SPEED, A-SORTIE)
 0x1972570 is the member stat getter. For a member in box **2 or 3** (battle line or carrier line), each stat `s` gets:
 `s += screening * screening_bonus[s]`, plus for box 3 only `+ (1 - (1-screening)*(1-carrierScreening)) * capital_screening_bonus[s]`.

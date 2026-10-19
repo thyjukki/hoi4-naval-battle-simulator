@@ -1,0 +1,641 @@
+{
+  "$schema": "../schemas/spirits.schema.json",
+  "spirits": [
+    {
+      "id": "instilled_aggression_spirit",
+      "name": "Instilled Aggression",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ]
+    },
+    {
+      "id": "calculated_restraint_spirit",
+      "name": "Calculated Restraint",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ]
+    },
+    {
+      "id": "signals_training_spirit",
+      "name": "Signals Training",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ]
+    },
+    {
+      "id": "fleet_in_being_academy_spirit",
+      "name": "Grand Fleet",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being"
+        ]
+      ],
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "trait_ironside_xp_gain_factor": 0.2,
+          "trait_superior_tactician_xp_gain_factor": 0.2
+        }
+      }
+    },
+    {
+      "id": "trade_interdiction_academy_spirit",
+      "name": "Convoy Warfare",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding"
+        ]
+      ],
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "trait_seawolf_xp_gain_factor": 0.2,
+          "trait_blockade_runner_xp_gain_factor": 0.2
+        }
+      }
+    },
+    {
+      "id": "base_strike_academy_spirit",
+      "name": "Integrated Air Arm",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "requiredDoctrines": [
+        [
+          "new_base_strike"
+        ]
+      ],
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "trait_air_controller_xp_gain_factor": 0.2,
+          "trait_fleet_protector_xp_gain_factor": 0.2
+        }
+      }
+    },
+    {
+      "id": "best_of_the_best_naval_academy_spirit",
+      "name": "Best of the Best",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_leader_start_level": 2,
+          "navy_intel_to_others": -5
+        }
+      }
+    },
+    {
+      "id": "naval_academy_scholarships_spirit",
+      "name": "Academy Scholarships",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_naval_academy = yes"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_leader_start_level": 1,
+          "navy_leader_cost_factor": -0.4
+        }
+      }
+    },
+    {
+      "id": "ship_to_shore_navy_spirit",
+      "name": "Ship to Shore Training",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "requiredDoctrines": [
+        [
+          "new_base_strike",
+          "naval_gunfire_support"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "trait_ironside_xp_gain_factor": 0.35,
+          "shore_bombardment_collateral_damage_factor": 0.5
+        }
+      }
+    },
+    {
+      "id": "stay_at_your_posts_navy_spirit",
+      "name": "Stay at your Posts",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "screen_support_focus"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "trait_blockade_runner_xp_gain_factor": 0.35,
+          "naval_accidents_chance": -0.15
+        }
+      }
+    },
+    {
+      "id": "ast_ranc_naval_academy_spirit",
+      "name": "Royal Australian Naval College",
+      "category": "naval_academy_spirit",
+      "categoryName": "Spirit of Naval Academy",
+      "otherConditions": [
+        "has_completed_focus = AST_expand_our_naval_college",
+        "tag = AST"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_leader_start_level": 1,
+          "navy_leader_start_attack_level": 1,
+          "navy_leader_start_coordination_level": 1,
+          "navy_leader_start_defense_level": 1,
+          "navy_leader_start_maneuvering_level": 1,
+          "navy_intel_to_others": -5
+        }
+      }
+    },
+    {
+      "id": "jeune_ecole_spirit",
+      "name": "Jeune École",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "jeune_ecole"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "ship_hull_light_design_cost_factor": -0.6
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "flexible_contracts_spirit",
+      "name": "Flexible Contracts",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "effects": {
+        "countryModifiers": {
+          "naval_manufacturer_cost_factor": -0.8,
+          "ship_hull_cruiser_design_cost_factor": -0.6
+        }
+      }
+    },
+    {
+      "id": "integrated_designers_spirit",
+      "name": "Integrated Designers",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"Man the Guns\""
+      ],
+      "effects": {
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "naval_reform_spirit",
+      "name": "Naval Reform",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_base_strike"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "experience_gain_navy_factor": 0.15
+        }
+      }
+    },
+    {
+      "id": "naval_refit_yards_spirit",
+      "name": "Naval Refit Yards",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "repair_speed_factor": 0.2
+        }
+      }
+    },
+    {
+      "id": "fleet_in_being_navy_spirit",
+      "name": "Global Presence",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "ship_hull_heavy_design_cost_factor": -0.6
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "trade_interdiction_navy_spirit",
+      "name": "Submarine Primacy",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "ship_hull_submarine_design_cost_factor": -0.6
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "base_strike_navy_spirit",
+      "name": "Mobile Force",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_base_strike"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "ship_hull_carrier_design_cost_factor": -0.6
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "sea_lane_denial_navy_spirit",
+      "name": "Sea Lane Denial",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "coastal_minelaying"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "mines_planting_by_fleets_factor": 0.15
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "fleet_interoperability_navy_spirit",
+      "name": "Fleet Interoperability",
+      "category": "navy_spirit",
+      "categoryName": "Spirit of the Navy",
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_morale_factor": 0.2
+        },
+        "scripted": [
+          "research_bonus"
+        ]
+      }
+    },
+    {
+      "id": "close_combat_navy_spirit",
+      "name": "Close Combat",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_screen_attack_factor": 0.05,
+          "naval_torpedo_screen_penetration_factor": 0.05
+        }
+      }
+    },
+    {
+      "id": "night_fighting_spirit",
+      "name": "Night Fighting",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "torpedo_primacy",
+          "new_base_strike"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "night_spotting_chance": 0.1,
+          "naval_night_attack": 0.1
+        }
+      }
+    },
+    {
+      "id": "surprise_attacks_spirit",
+      "name": "Surprise Attacks",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_base_strike",
+          "massed_carrier_fleet"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_speed_after_initial_combat": 0.1,
+          "naval_retreat_chance_after_initial_combat": 0.1
+        }
+      }
+    },
+    {
+      "id": "efficient_communications_spirit",
+      "name": "Efficient Communications",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being",
+          "line_of_battle"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "positioning": 0.1
+        }
+      }
+    },
+    {
+      "id": "surface_raiders_spirit",
+      "name": "Surface Raiders",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "armored_raiders"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_speed": 0.25,
+          "naval_retreat_chance": 0.15
+        }
+      }
+    },
+    {
+      "id": "decisive_battle_spirit",
+      "name": "Decisive Battle",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_chance": -0.1,
+          "naval_retreat_speed": -0.1,
+          "naval_torpedo_hit_chance_factor": 0.1,
+          "naval_hit_chance": 0.1
+        }
+      }
+    },
+    {
+      "id": "inclimate_weather_experience_spirit",
+      "name": "Inclement Weather Experience",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_weather_penalty": -0.4
+        }
+      }
+    },
+    {
+      "id": "brave_commanders_spirit",
+      "name": "Brave Commanders",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being",
+          "capital_hunters"
+        ]
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_critical_score_chance_factor": 0.15,
+          "naval_retreat_chance": -0.05
+        }
+      }
+    },
+    {
+      "id": "bureau_of_ordnance_spirit",
+      "name": "Bureau of Ordnance",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "otherConditions": [
+        "tag = USA"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_torpedo_hit_chance_factor": -0.1
+        }
+      }
+    },
+    {
+      "id": "naval_tripwire_navy_spirit",
+      "name": "Naval Tripwire",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "coastal_defence_fleet"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_enemy_fleet_size_ratio_penalty_factor": 0.2
+        }
+      }
+    },
+    {
+      "id": "scouting_force_navy_spirit",
+      "name": "Scouting Force",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being",
+          "escort_carrier_support"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "spotting_chance": 0.1,
+          "naval_detection": 0.1
+        }
+      }
+    },
+    {
+      "id": "fleet_defense_navy_spirit",
+      "name": "Fleet Defense",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_base_strike",
+          "light_task_forces"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "screening_efficiency": 0.1,
+          "fighter_sortie_efficiency": 0.1
+        }
+      }
+    },
+    {
+      "id": "rapid_concentration_navy_spirit",
+      "name": "Rapid Concentration",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_base_strike",
+          "battlecruiser_supremacy"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_coordination": 0.15
+        }
+      }
+    },
+    {
+      "id": "aa_curtain_navy_spirit",
+      "name": "Anti-aircraft Curtain",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_fleet_in_being",
+          "battleship_antiair_screen"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_anti_air_attack_factor": 0.15
+        }
+      }
+    },
+    {
+      "id": "selective_engagement_navy_spirit",
+      "name": "Selective Engagement",
+      "category": "naval_command_spirit",
+      "categoryName": "Spirit of Naval Command",
+      "requiredDoctrines": [
+        [
+          "new_convoy_raiding",
+          "patrol_boats"
+        ]
+      ],
+      "otherConditions": [
+        "has_dlc = \"No Compromise, No Surrender\""
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_torpedo_reveal_chance_factor": -0.1
+        }
+      }
+    }
+  ]
+}

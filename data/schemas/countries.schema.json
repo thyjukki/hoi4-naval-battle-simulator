@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "countries.schema.json",
+  "title": "NavySimulator countries",
+  "description": "Country tags of common/country_tags (not the dynamic ones) with their names, written by NavySimulator import-mios (S-MIO-COUNTRY).",
+  "type": "object",
+  "required": ["countries"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "countries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Z0-9]{3}$", "description": "The tag, e.g. USA." },
+          "name": { "type": "string", "description": "The game's name (localisation)." }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

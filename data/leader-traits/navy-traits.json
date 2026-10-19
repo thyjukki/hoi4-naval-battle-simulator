@@ -1,0 +1,970 @@
+{
+  "$schema": "../schemas/leader-traits.schema.json",
+  "traits": [
+    {
+      "id": "war_hero",
+      "name": "War Hero",
+      "traitType": "personality_trait",
+      "nonSharedModifiers": {
+        "promote_cost_factor": -0.5,
+        "reassignment_duration_factor": 0.5
+      }
+    },
+    {
+      "id": "seawolf",
+      "name": "Sea Wolf",
+      "modifiers": {
+        "navy_submarine_attack_factor": 0.1
+      }
+    },
+    {
+      "id": "fleet_protector",
+      "name": "Fleet Protector",
+      "modifiers": {
+        "screening_efficiency": 0.2
+      }
+    },
+    {
+      "id": "blockade_runner",
+      "name": "Blockade Runner",
+      "modifiers": {
+        "naval_retreat_chance": 0.2,
+        "naval_retreat_speed": 0.15,
+        "convoy_retreat_speed": 0.05
+      }
+    },
+    {
+      "id": "superior_tactician",
+      "name": "Superior Tactician",
+      "modifiers": {
+        "naval_damage_factor": 0.025,
+        "naval_coordination": 0.015,
+        "ships_at_battle_start": 0.05,
+        "naval_hit_chance": 0.03,
+        "navy_org_factor": 0.05,
+        "naval_morale_factor": 0.05
+      }
+    },
+    {
+      "id": "spotter",
+      "name": "Spotter",
+      "modifiers": {
+        "spotting_chance": 0.1
+      }
+    },
+    {
+      "id": "fly_swatter",
+      "name": "Fly Swatter",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "navy_anti_air_attack_factor": 0.1
+      },
+      "parents": [
+        {
+          "traits": [
+            "cruiser_captain",
+            "destroyer_leader"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "ironside",
+      "name": "Ironside",
+      "modifiers": {
+        "naval_retreat_chance": -0.25,
+        "ships_at_battle_start": 0.1
+      }
+    },
+    {
+      "id": "air_controller",
+      "name": "Air Controller",
+      "modifiers": {
+        "navy_carrier_air_targetting_factor": 0.2,
+        "sortie_efficiency": 0.1
+      }
+    },
+    {
+      "id": "silent_hunter",
+      "name": "Silent Hunter",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_torpedo_reveal_chance_factor": -0.1
+      },
+      "parents": [
+        {
+          "traits": [
+            "seawolf"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "lancer"
+      ]
+    },
+    {
+      "id": "torpedo_expert",
+      "name": "Torpedo Expert",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_torpedo_hit_chance_factor": 0.1
+      },
+      "parents": [
+        {
+          "traits": [
+            "silent_hunter"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "lancer",
+      "name": "Lancer",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_torpedo_screen_penetration_factor": 0.15
+      },
+      "parents": [
+        {
+          "traits": [
+            "seawolf",
+            "spotter",
+            "fleet_protector"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "silent_hunter"
+      ]
+    },
+    {
+      "id": "destroyer_leader",
+      "name": "Destroyer Leader",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "destroyer": {
+          "naval_damage_factor": 0.05,
+          "naval_torpedo_hit_chance_factor": 0.05,
+          "naval_speed_factor": 0.05
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "fleet_protector",
+            "superior_tactician"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "loading_drill_master",
+      "name": "Loading Drill Master",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_torpedo_cooldown_factor": -0.25
+      },
+      "parents": [
+        {
+          "traits": [
+            "silent_hunter",
+            "lancer"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "hunter_killer",
+      "name": "Hunter-Killer",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "navy_submarine_detection_factor": 0.2
+      },
+      "parents": [
+        {
+          "traits": [
+            "search_pattern_expert",
+            "destroyer_leader"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "cruiser_captain",
+      "name": "Cruiser Commander",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "light_cruiser": {
+          "naval_damage_factor": 0.1,
+          "naval_speed_factor": 0.05
+        },
+        "heavy_cruiser": {
+          "naval_damage_factor": 0.1,
+          "naval_speed_factor": 0.05
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "fly_swatter",
+            "superior_tactician"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "search_pattern_expert",
+      "name": "Search Pattern Expert",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "spotting_chance": 0.2
+      },
+      "parents": [
+        {
+          "traits": [
+            "spotter",
+            "fleet_protector"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "lone_wolf",
+      "name": "Lone Wolf",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_enemy_fleet_size_ratio_penalty_factor": 0.1
+      },
+      "parents": [
+        {
+          "traits": [
+            "blockade_runner"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "concealment_expert"
+      ]
+    },
+    {
+      "id": "concealment_expert",
+      "name": "Concealment Expert",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "submarine": {
+          "navy_visibility": -0.05
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "blockade_runner"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "lone_wolf"
+      ]
+    },
+    {
+      "id": "smoke_screen_expert",
+      "name": "Smoke Screen Specialist",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_retreat_chance": 0.25
+      },
+      "parents": [
+        {
+          "traits": [
+            "lone_wolf",
+            "concealment_expert"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "big_guns_expert",
+      "name": "Big Guns Expert",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "battleship": {
+          "naval_damage_factor": 0.1
+        },
+        "battle_cruiser": {
+          "naval_damage_factor": 0.1
+        },
+        "sh_battleship": {
+          "naval_damage_factor": 0.1
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "ironside"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "ground_pounder",
+      "name": "Ground Pounder",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "shore_bombardment_bonus": 0.25
+      },
+      "parents": [
+        {
+          "traits": [
+            "ironside"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "safety_first",
+      "name": "Safety First",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "critical_receive_chance": -0.25
+      },
+      "parents": [
+        {
+          "traits": [
+            "ironside"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "marksman",
+      "name": "Marksman",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_critical_score_chance_factor": 0.1
+      },
+      "parents": [
+        {
+          "traits": [
+            "big_guns_expert"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "crisis_magician"
+      ]
+    },
+    {
+      "id": "crisis_magician",
+      "name": "Crisis Magician",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "naval_critical_effect_factor": -0.5
+      },
+      "parents": [
+        {
+          "traits": [
+            "safety_first"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "marksman"
+      ]
+    },
+    {
+      "id": "flight_deck_manager",
+      "name": "Flight Deck Manager",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "sortie_efficiency": 0.2
+      },
+      "parents": [
+        {
+          "traits": [
+            "air_controller"
+          ],
+          "needed": 1
+        }
+      ]
+    },
+    {
+      "id": "fighter_director",
+      "name": "Fighter Director",
+      "traitType": "assignable_trait",
+      "modifiers": {
+        "fighter_sortie_efficiency": 0.2
+      },
+      "parents": [
+        {
+          "traits": [
+            "flight_deck_manager"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "dive_bomber",
+        "torpedo_bomber"
+      ]
+    },
+    {
+      "id": "dive_bomber",
+      "name": "Dive Bomber",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "cv_cas": {
+          "navy_carrier_air_targetting_factor": 0.2,
+          "naval_strike_attack_factor": 0.1,
+          "air_mission_efficiency": 0.1
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "flight_deck_manager"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "fighter_director",
+        "torpedo_bomber"
+      ]
+    },
+    {
+      "id": "torpedo_bomber",
+      "name": "Torpedo Bomber",
+      "traitType": "assignable_trait",
+      "subUnitModifiers": {
+        "cv_nav_bomber": {
+          "naval_strike_attack_factor": 0.1,
+          "navy_carrier_air_targetting_factor": 0.1,
+          "air_mission_efficiency": 0.1
+        }
+      },
+      "parents": [
+        {
+          "traits": [
+            "flight_deck_manager"
+          ],
+          "needed": 1
+        }
+      ],
+      "mutuallyExclusive": [
+        "fighter_director",
+        "dive_bomber"
+      ]
+    },
+    {
+      "id": "arctic_water_expert",
+      "name": "Cold Water Expert",
+      "traitType": "basic_terrain_trait",
+      "modifiers": {
+        "naval_attrition": -0.08
+      }
+    },
+    {
+      "id": "inshore_fighter",
+      "name": "Inshore Fighter",
+      "traitType": "basic_terrain_trait",
+      "adjusters": {
+        "water_fjords": {
+          "attack": 0.1,
+          "defence": 0.1,
+          "movement": 0.1
+        }
+      }
+    },
+    {
+      "id": "blue_water_expert",
+      "name": "Blue Water Expert",
+      "traitType": "basic_terrain_trait",
+      "adjusters": {
+        "water_deep_ocean": {
+          "attack": 0.1,
+          "defence": 0.1,
+          "movement": 0.1
+        }
+      }
+    },
+    {
+      "id": "green_water_expert",
+      "name": "Green Water Expert",
+      "traitType": "basic_terrain_trait",
+      "adjusters": {
+        "water_shallow_sea": {
+          "attack": 0.1,
+          "defence": 0.1,
+          "movement": 0.1
+        }
+      }
+    },
+    {
+      "id": "old_guard_navy",
+      "name": "Old Guard",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "experience_gain_factor": -0.25
+      }
+    },
+    {
+      "id": "gentlemanly",
+      "name": "Gentlemanly",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_enemy_retreat_chance": 0.2,
+        "navy_org": 5
+      }
+    },
+    {
+      "id": "gunnery_expert",
+      "name": "Gunnery Expert",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "cuts_corners",
+      "name": "Cuts Corners",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_damage_factor": 0.2,
+        "naval_defense_factor": -0.1
+      }
+    },
+    {
+      "id": "chief_engineer",
+      "name": "Chief Engineer",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "critical_receive_chance": -0.05
+      }
+    },
+    {
+      "id": "navy_media_personality",
+      "name": "Media Personality",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_has_potf_in_combat_attack": 0.1,
+        "naval_has_potf_in_combat_defense": 0.1
+      }
+    },
+    {
+      "id": "bold",
+      "name": "Bold",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_damage_factor": 0.05,
+        "naval_speed_factor": 0.05
+      }
+    },
+    {
+      "id": "navy_career_officer",
+      "name": "Career Officer",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "experience_gain_factor": 0.1
+      }
+    },
+    {
+      "id": "battleship_adherent",
+      "name": "Battleship Adherent",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "navy_capital_ship_attack_factor": 0.1,
+        "navy_anti_air_attack_factor": -0.1
+      }
+    },
+    {
+      "id": "aviation_enthusiast",
+      "name": "Aviation Enthusiast",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "caustic_personality",
+      "name": "Caustic Personality",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "ships_at_battle_start": -0.1
+      }
+    },
+    {
+      "id": "craven",
+      "name": "Craven",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_retreat_chance": 0.25,
+        "naval_damage_factor": -0.05
+      }
+    },
+    {
+      "id": "naval_lineage",
+      "name": "Naval Lineage",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_retreat_chance": -0.25,
+        "ships_at_battle_start": 0.25
+      }
+    },
+    {
+      "id": "submarine_officer",
+      "name": "Submarine Captain",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "destroyer_officer",
+      "name": "Destroyer Captain",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "cruiser_officer",
+      "name": "Cruiser Captain",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "heavy_ship_officer",
+      "name": "Heavy Ship Captain",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "carrier_officer",
+      "name": "Carrier Captain",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "sick",
+      "name": "Sick",
+      "traitType": "status_trait",
+      "nonSharedModifiers": {
+        "skill_bonus_factor": -0.5,
+        "cannot_use_abilities": 1
+      }
+    },
+    {
+      "id": "wounded",
+      "name": "Wounded",
+      "traitType": "status_trait",
+      "nonSharedModifiers": {
+        "skill_bonus_factor": -0.5,
+        "cannot_use_abilities": 1
+      }
+    },
+    {
+      "id": "reassigned",
+      "name": "Reassigned",
+      "traitType": "status_trait",
+      "nonSharedModifiers": {
+        "skill_bonus_factor": -1,
+        "cannot_use_abilities": 1
+      }
+    },
+    {
+      "id": "disgruntled",
+      "name": "Disgruntled",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": -2,
+        "defense_skill": -2,
+        "logistics_skill": -2,
+        "planning_skill": -2
+      }
+    },
+    {
+      "id": "demoted",
+      "name": "Demoted",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": -1,
+        "defense_skill": -1,
+        "logistics_skill": -1,
+        "planning_skill": -1
+      }
+    },
+    {
+      "id": "substance_abuser",
+      "name": "Substance Abuser",
+      "traitType": "status_trait"
+    },
+    {
+      "id": "substance_addict",
+      "name": "Substance Addict",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": -2,
+        "defense_skill": -2,
+        "logistics_skill": -2,
+        "planning_skill": -2
+      }
+    },
+    {
+      "id": "hidden_sympathies",
+      "name": "Hidden Sympathies",
+      "traitType": "status_trait"
+    },
+    {
+      "id": "recently_promoted",
+      "name": "Recently Promoted",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": -1,
+        "defense_skill": -1,
+        "logistics_skill": -1,
+        "planning_skill": -1
+      }
+    },
+    {
+      "id": "trait_SPA_nationalist_sympathies",
+      "name": "Nationalist Sympathies",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SPA_falangist_loyalties",
+      "name": "Falangist Loyalties",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SPA_carlist_loyalties",
+      "name": "Carlist Loyalties",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SPR_republican_loyalties",
+      "name": "Republican Loyalties",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SPR_stalinist_loyalties",
+      "name": "Stalinist Loyalties",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SPR_anti_stalinist_loyalties",
+      "name": "Anti-Stalinist Loyalties",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_BUL_zveno_member",
+      "name": "Zveno Member",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_BUL_tsar_loyalist",
+      "name": "Tsar Loyalist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_BUL_ff_sympathizer",
+      "name": "Fatherland Front Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_TUR_kemalist_champion",
+      "name": "Kemalist Champion",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_GRE_stauch_monarchist",
+      "name": "Staunch Monarchist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_GRE_venezelist_loyalist",
+      "name": "Venezelist Loyalist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_GRE_marxist_acolyte",
+      "name": "Marxist Acolyte",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_GRE_fascist_sympathizer",
+      "name": "Fascist Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_HUN_fascist_sympathies",
+      "name": "Fascist Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_HUN_vitez",
+      "name": "Vitéz",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_JAP_kodoha_sympathizer",
+      "name": "Kodoha Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_royal_lineage",
+      "name": "Royal Lineage",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_kamikaze_proponent",
+      "name": "Kamikaze Proponent",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_tohokai_sympathies",
+      "name": "Tōhōkai Sympathies",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_IJA_loyalist",
+      "name": "Army Loyalist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_government_supporter",
+      "name": "Civilian Government Supporter",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "ETH_hero_of_ethiopia",
+      "name": "Hero of Ethiopia",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "army_morale_factor": 0.1,
+        "army_infantry_defence_factor": 0.05
+      }
+    },
+    {
+      "id": "JAP_samurai_lineage",
+      "name": "Samurai Lineage",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "JAP_samurai_revived",
+      "name": "Samurai",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "army_attack_factor": 0.05,
+        "recon_factor": 0.2,
+        "wounded_chance_factor": 0.5
+      }
+    },
+    {
+      "id": "JAP_communist_sympathizer",
+      "name": "Communist Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "BALTIC_ex_russian",
+      "name": "Russian Empire Veteran",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "BALTIC_anti_bolshevik",
+      "name": "Veteran Anti-Bolshevik",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "POL_sanation_left_leader",
+      "name": "Sanation Left Leader",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "POL_sanation_right_leader",
+      "name": "Sanation Right Leader",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "peasant_sympathiser",
+      "name": "Peasant Sympathiser",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SOV_cowed_by_stalin_navy",
+      "name": "Cowed by Stalin",
+      "traitType": "personality_trait",
+      "modifiers": {
+        "naval_retreat_chance": -0.25
+      },
+      "skills": {
+        "attack_skill": -2,
+        "defense_skill": -2
+      }
+    },
+    {
+      "id": "trait_SOV_determined",
+      "name": "Determined",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": 1,
+        "defense_skill": 1
+      }
+    },
+    {
+      "id": "trait_SOV_monarchist_sympathizer",
+      "name": "Monarchist Sympathizer",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SOV_stalinist",
+      "name": "Stalinist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SOV_trotskyist",
+      "name": "Trotskyist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SOV_bukharinist",
+      "name": "Bukharinist",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "trait_SOV_foreign_military_advisor",
+      "name": "Foreign Military Advisor",
+      "traitType": "personality_trait"
+    },
+    {
+      "id": "SIA_under_investigation",
+      "name": "Under Investigation",
+      "traitType": "status_trait",
+      "nonSharedModifiers": {
+        "skill_bonus_factor": -0.33,
+        "cannot_use_abilities": 1
+      }
+    },
+    {
+      "id": "SWE_wounded_in_protests",
+      "name": "Wounded by Rioters",
+      "traitType": "status_trait",
+      "nonSharedModifiers": {
+        "skill_bonus_factor": -0.75,
+        "cannot_use_abilities": 1
+      }
+    },
+    {
+      "id": "SWE_disillusioned_with_the_government",
+      "name": "Disillusioned with the Government",
+      "traitType": "status_trait",
+      "skills": {
+        "attack_skill": -3,
+        "defense_skill": -3,
+        "logistics_skill": -3,
+        "planning_skill": -3
+      }
+    }
+  ]
+}

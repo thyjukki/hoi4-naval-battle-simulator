@@ -443,6 +443,7 @@ else
 
     private RenderFragment SideCard(SideView side) => __builder =>
     {
+        var cost = side.Cost;
         <div class="panel side-card side-@side.Label">
             <div class="panel-head">
                 <h2 class="@side.Label">@side.Label</h2>
@@ -465,6 +466,13 @@ else
                     <dd>@side.Positioning.ToString("P1")</dd>
                     <dt>Screening</dt>
                     <dd>@side.Screening.ToString("P1") <span class="faint">carriers @side.CarrierScreening.ToString("P1")</span></dd>
+                    <dt title="Production cost of the side's ships after its equipment bonuses; air wings and MIO production bonuses not counted">Fleet cost</dt>
+                    <dd>@cost.Total.ToString("N0") IC</dd>
+                    <dt title="Production cost of the ships sunk; the HP damage of the others is valued at their cost (repaired in port in the game)">IC lost</dt>
+                    <dd>
+                        <span class="@(cost.Sunk > 0 ? "bad" : "")">@cost.Sunk.ToString("N0")</span> (@cost.SunkShare.ToString("P1")) sunk
+                        <span class="faint">+ @cost.Damaged.ToString("N0") in HP damage</span>
+                    </dd>
                     <dt>HP damage dealt</dt>
                     <dd>@side.HpDamageDealt.ToString("F1")</dd>
                     <dt>Shots / hits</dt>

@@ -20,7 +20,7 @@ public static class ShipDataImporter
     private static readonly HashSet<string> NavalUnitTypes = new(["capital_ship", "screen_ship", "carrier", "submarine"], StringComparer.Ordinal);
 
     // Numeric keys of an equipment entry that are not stats.
-    private static readonly HashSet<string> EquipmentNonStatKeys = new(["year", "priority", "visual_level", "manpower", "visual_tech_level_addition"], StringComparer.Ordinal);
+    private static readonly HashSet<string> EquipmentNonStatKeys = new(["year", "priority", "visual_level", "manpower", "visual_tech_level_addition", "naval_dominance_factor"], StringComparer.Ordinal);
 
     private static readonly string[] ModuleStatBlocks = ["add_stats", "multiply_stats", "add_average_stats"];
 
@@ -137,6 +137,7 @@ public static class ShipDataImporter
             EquipmentType = archetype.Block.GetString("type") ?? string.Empty,
             Year = (int?)(item.Block.GetDouble("year") ?? archetype.Block.GetDouble("year")),
             Manpower = (int)(item.Block.GetDouble("manpower") ?? archetype.Block.GetDouble("manpower") ?? 0),
+            NavalDominanceFactor = item.Block.GetDouble("naval_dominance_factor") ?? archetype.Block.GetDouble("naval_dominance_factor") ?? 0,
             BaseStats = stats,
             Slots = slots,
             ModuleCountLimits = resolver.CountLimits(item.ID),

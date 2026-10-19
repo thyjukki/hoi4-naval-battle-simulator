@@ -1,0 +1,562 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "CHL_arsenales_de_marina_organization",
+      "name": "Arsenales de Marina",
+      "countries": [
+        "CHL"
+      ],
+      "include": "generic_task_force_ship_organization",
+      "equipmentTypes": [
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Task Force Shipbuilders",
+        "x": 0,
+        "y": 0,
+        "equipmentBonus": {
+          "max_strength": 0.05
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.05
+        }
+      },
+      "traits": [
+        {
+          "id": "generic_mio_trait_long_range_cruising",
+          "name": "Long Range Cruising",
+          "x": 0,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_speed_cruising"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_speed_cruising",
+          "name": "High Speed Cruising",
+          "x": 2,
+          "y": 0,
+          "mutuallyExclusive": [
+            "generic_mio_trait_long_range_cruising"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "fuel_consumption": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_splinter_protection",
+          "name": "Splinter Protection",
+          "x": 1,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_long_range_cruising",
+                "generic_mio_trait_high_speed_cruising"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier",
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_transom_stern",
+          "name": "Hydrodynamic Improvements",
+          "x": 0,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_underway_replenishment_equipment"
+          ],
+          "equipmentBonus": {
+            "naval_speed": 0.05,
+            "fuel_consumption": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_underway_replenishment_equipment",
+          "name": "Underway Replenishment Equipment",
+          "x": 2,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_transom_stern"
+          ],
+          "equipmentBonus": {
+            "naval_range": 0.05,
+            "fuel_consumption": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_secondary_fire_director_control",
+          "name": "Secondary Fire Director Control",
+          "x": 5,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "screen_ship",
+            "carrier",
+            "ship_hull_carrier_super"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "naval_light_gun_hit_chance_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_flight_deck_edge_aa_mounts",
+          "name": "Flight Deck Edge AA Mounts",
+          "x": 4,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_secondary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_carrier",
+            "ship_hull_carrier_super"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_gyro_stabilized_mounts",
+          "name": "Gyro-Stabilized Mounts",
+          "x": 4,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_flight_deck_edge_aa_mounts"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_rapid_fire_guns",
+          "name": "Rapid Fire Guns",
+          "x": 6,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_secondary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_high_velocity_guns"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.05,
+            "lg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_fitting_works",
+          "name": "Advanced Fitting Works",
+          "x": 6,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_rapid_fire_guns",
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            }
+          ],
+          "productionBonus": {
+            "production_capacity_factor": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_carrier_flight_operations_center",
+          "name": "Advanced Firefighting Pumps",
+          "x": 5,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_gyro_stabilized_mounts",
+                "generic_mio_trait_advanced_fitting_works",
+                "generic_mio_trait_splinter_protection"
+              ],
+              "needed": 3
+            }
+          ],
+          "equipmentBonus": {
+            "max_strength": 0.1
+          }
+        },
+        {
+          "id": "generic_mio_trait_primary_fire_director_control",
+          "name": "Primary Fire Director Control",
+          "x": 8,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "hg_attack": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_velocity_guns",
+          "name": "High Velocity Guns",
+          "x": 8,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_primary_fire_director_control"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_rapid_fire_guns"
+          ],
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_cruiser"
+          ],
+          "equipmentBonus": {
+            "hg_armor_piercing": 0.05
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { has_dlc = \"Trial of Allegiance\" tag = CHL }"
+      ]
+    },
+    {
+      "id": "CHL_csav_organization",
+      "name": "CSAV",
+      "countries": [
+        "CHL"
+      ],
+      "include": "generic_refurbishment_repair_organization",
+      "equipmentTypes": [
+        "mio_cat_eq_all_battleship",
+        "mio_cat_eq_all_cruiser"
+      ],
+      "initialTrait": {
+        "id": "",
+        "name": "Refurbishment Repair Manufacturer",
+        "x": 0,
+        "y": 0,
+        "limitToEquipmentTypes": [
+          "capital_ship",
+          "screen_ship",
+          "ship_hull_submarine"
+        ],
+        "equipmentBonus": {
+          "max_strength": 0.03
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.01
+        }
+      },
+      "traits": [
+        {
+          "id": "generic_mio_trait_heavy_armored_hull",
+          "name": "Heavy Armored Hull",
+          "x": 1,
+          "y": 0,
+          "equipmentBonus": {
+            "armor_value": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_isolated_firemains",
+          "name": "Isolated Firemains",
+          "x": 0,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_heavy_armored_hull"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_torpedo_damage_reduction_factor": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_counter_flooding_system",
+          "name": "Counter Flooding Systems",
+          "x": 3,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_heavy_armored_hull"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "naval_torpedo_enemy_critical_chance_factor": -0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_anti_torpedo_bulge",
+          "name": "Anti-Torpedo Bulge",
+          "x": 1,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_counter_flooding_system",
+                "generic_mio_trait_isolated_firemains",
+                "generic_mio_trait_high_powered_steering"
+              ],
+              "needed": 3
+            }
+          ],
+          "equipmentBonus": {
+            "naval_torpedo_enemy_critical_chance_factor": -0.05,
+            "naval_torpedo_damage_reduction_factor": 0.08
+          }
+        },
+        {
+          "id": "generic_mio_trait_foam_fire_extinguishers",
+          "name": "Foam Fire Extinguishers",
+          "x": 6,
+          "y": 0,
+          "equipmentBonus": {
+            "reliability": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_bulkhead_shoring_procedure",
+          "name": "Bulkhead Shoring Procedure",
+          "x": 6,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_foam_fire_extinguishers"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "reliability": 0.01,
+            "armor_value": 0.02
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_powered_steering",
+          "name": "High Powered Steering",
+          "x": 5,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_bulkhead_shoring_procedure"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "reliability": 0.01,
+            "armor_value": 0.02
+          }
+        },
+        {
+          "id": "generic_mio_trait_flooding_boundries",
+          "name": "Flooding Boundaries",
+          "x": 6,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_bulkhead_shoring_procedure"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "max_strength": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_protected_pumps",
+          "name": "Protected Pumps",
+          "x": 6,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_flooding_boundries"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "max_strength": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_advanced_scanners",
+          "name": "Advanced Scanners",
+          "x": 7,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_foam_fire_extinguishers"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "sub_detection": 0.05,
+            "surface_detection": 0.05
+          }
+        },
+        {
+          "id": "generic_mio_trait_high_velocity_guns",
+          "name": "High Velocity Guns",
+          "x": 7,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_advanced_scanners"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "hg_armor_piercing": 0.03
+          }
+        },
+        {
+          "id": "generic_mio_trait_capital_destroyer_shells",
+          "name": "Capital Destroyer Shells",
+          "x": 7,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_deck_guns",
+            "generic_mio_trait_naval_all_purpose_defense_systems"
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "hg_armor_piercing": 0.05,
+            "hg_attack": 0.1,
+            "naval_range": -0.15,
+            "maximum_speed": -0.08
+          }
+        },
+        {
+          "id": "generic_mio_trait_deck_guns",
+          "name": "Deck Guns",
+          "x": 8,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_capital_destroyer_shells",
+            "generic_mio_trait_naval_all_purpose_defense_systems"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.06
+          }
+        },
+        {
+          "id": "generic_mio_trait_naval_all_purpose_defense_systems",
+          "name": "All-Purpose Defense Systems",
+          "x": 9,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "generic_mio_trait_high_velocity_guns"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "generic_mio_trait_capital_destroyer_shells",
+            "generic_mio_trait_deck_guns"
+          ],
+          "limitToEquipmentTypes": [
+            "capital_ship"
+          ],
+          "equipmentBonus": {
+            "anti_air_attack": 0.03,
+            "armor_value": 0.03,
+            "lg_attack": 0.03,
+            "naval_range": -0.05,
+            "maximum_speed": -0.04
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { has_dlc = \"Trial of Allegiance\" tag = CHL }"
+      ]
+    }
+  ]
+}

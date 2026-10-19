@@ -124,6 +124,10 @@ Called only for members in state 2 when `combat.CanRetreat()` = `hour >= COMBAT_
   Each factor is a truncating fixed multiply. Modifier names: 0x1b9 from the rdata name order (naval_enemy_retreat_chance,
   …, naval_torpedo_reveal_chance_factor = 0x1bc, naval_torpedo_cooldown_factor = 0x1be — consistent); 0x57/0x58 from
   their use (the second is gated by the "initial combat" duration); medium confidence on names.
+  **Update (2026-10-19): names confirmed** (registration + static token table): 0x57 `naval_retreat_chance`, 0x58
+  `naval_retreat_chance_after_initial_combat`, 0x1b9 `naval_enemy_retreat_chance`. The 0x1b9 term is read from the
+  opponent side's commanding admiral's container `+0x298` (0x19752d1 `[side+0x130]`, 0x1975371), not from a country, so
+  only admiral traits carry it ([S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md#the-admirals-containers)).
 - On success state = 8 (retreating); escape progress starts from 0.
 
 **Verdict.** DIFFERS: threshold is selected by the task force aggressiveness (engagement rule), not repair priority,

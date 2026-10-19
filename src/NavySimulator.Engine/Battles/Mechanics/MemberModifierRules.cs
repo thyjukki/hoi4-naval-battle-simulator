@@ -35,18 +35,27 @@ public static class MemberModifierRules
 
     /// <summary>
     /// [RE] The ship modifier sum 0xc38760, which the ship's own getters (combat speed, max organization, organization
-    /// regain, retreat chance) read: country modifiers, the night modifier × darkness, and each damaged part's modifier ×
+    /// regain, retreat chance) read: country modifiers, the static pride_of_the_fleet block on the pride of the fleet itself
+    /// (S-POTF, 0xc387e2), the night modifier × darkness, the fleet admiral's modifiers
+    /// (S-ADMIRAL-MOD: container A and the traits' sub-unit modifiers for the ship), and each damaged part's modifier ×
     /// its count × (1 + naval_critical_effect_factor) (S-CRIT-PART; [CAL] a broken propeller under TFB's damage control
-    /// left 0.28 of a ship's speed).
+    /// left 0.28 of a ship's speed). [RE] 0xc38b58: that factor is a full, separate read of this sum, admiral included.
     /// </summary>
     public static double ShipModifier(Ship ship, string key, double darkness, GameDefines defines)
     {
-        var value = ship.CountryModifiers.Get(key) + darkness * defines.StaticModifiers.Get(StaticModifiers.Night, key);
+        var value = ship.CountryModifiers.Get(key) + darkness * defines.StaticModifiers.Get(StaticModifiers.Night, key) +
+                    ship.AdmiralModifiers.Get(key);
+
+        if (ship.IsPrideOfTheFleet)
+        {
+            value += defines.StaticModifiers.Get(StaticModifiers.PrideOfTheFleet, key);
+        }
         var parts = ship.PartModifier(key);
 
         if (parts != 0)
         {
-            value += parts * (1 + ship.CountryModifiers.Get(StaticModifiers.NavalCriticalEffectFactor));
+            var effect = key == StaticModifiers.NavalCriticalEffectFactor ? 0 : ShipModifier(ship, StaticModifiers.NavalCriticalEffectFactor, darkness, defines);
+            value += parts * (1 + effect);
         }
 
         return value;

@@ -3,6 +3,9 @@ using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Doctrines;
+using NavySimulator.Engine.Leaders;
+using NavySimulator.Engine.Mios;
 using NavySimulator.GameData.Defines;
 using NavySimulator.GameData.Contracts;
 
@@ -10,6 +13,9 @@ namespace NavySimulator.GameData;
 
 public class SetupLoader
 {
+    // A-WINGS: planes per carrier wing when a wing gives none.
+    private const int DefaultWingPlanes = 10;
+
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions
     {
         PropertyNameCaseInsensitive = true
@@ -63,7 +69,7 @@ public class SetupLoader
         var catalog = new ContentCatalog(dataDirectoryPath);
         ValidateModuleStatWarnings(dataDirectoryPath, catalog.Warnings);
 
-        foreach (var folder in new[] { "hulls", "researches", "spirits", "mios" })
+        foreach (var folder in new[] { "hulls", "researches" })
         {
             ValidateStatBlockWarnings(dataDirectoryPath, folder, catalog.Warnings);
         }
@@ -78,17 +84,59 @@ public class SetupLoader
             catalog.CriticalParts.AddRange(ReadCollectionFromFolderOrFile<CriticalPartDto>(catalog, "critical-parts", "critical-parts.json", "criticalParts"));
         }
 
-        catalog.Mios.AddRange(ReadCollectionFromFolderOrFile<MioBonusDto>(catalog, "mios", "mios.json", "mios"));
+        catalog.Mios.AddRange(ReadCollectionFromFolderOrFile<MioDto>(catalog, "mios", "mios.json", "mios"));
+
+        // S-MIO-POLICY, S-MIO-MATCH: optional; data imported before MIOs existed has none.
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, MioPoliciesFolder)))
+        {
+            catalog.MioPolicies.AddRange(ReadCollectionFromFolderOrFile<MioPolicyDto>(catalog, MioPoliciesFolder, $"{MioPoliciesFolder}.json", "policies"));
+        }
+
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, EquipmentGroupsFolder)))
+        {
+            catalog.EquipmentGroups.AddRange(ReadCollectionFromFolderOrFile<EquipmentGroupDto>(catalog, EquipmentGroupsFolder, $"{EquipmentGroupsFolder}.json", "equipmentGroups"));
+        }
+
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, CountriesFolder)))
+        {
+            catalog.Countries.AddRange(ReadCollectionFromFolderOrFile<CountryDto>(catalog, CountriesFolder, $"{CountriesFolder}.json", "countries"));
+        }
+
+        // S-ADMIRAL: optional; data imported before admirals existed has none.
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, AdmiralsFolder)))
+        {
+            catalog.Admirals.AddRange(ReadCollectionFromFolderOrFile<AdmiralDto>(catalog, AdmiralsFolder, $"{AdmiralsFolder}.json", "admirals"));
+        }
+
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, LeaderTraitsFolder)))
+        {
+            catalog.LeaderTraits.AddRange(ReadCollectionFromFolderOrFile<LeaderTraitDto>(catalog, LeaderTraitsFolder, $"{LeaderTraitsFolder}.json", "traits"));
+        }
+
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, LeaderSkillsFolder)))
+        {
+            catalog.LeaderSkills.AddRange(ReadCollectionFromFolderOrFile<LeaderSkillDto>(catalog, LeaderSkillsFolder, $"{LeaderSkillsFolder}.json", "skills"));
+        }
+
         catalog.ShipDesigns.AddRange(ReadCollectionFromFolderOrFile<ShipDesignDto>(catalog, "ship-designs", "ship-designs.json", "shipDesigns"));
         catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
         catalog.Spirits.AddRange(ReadCollectionFromFolderOrFile<SpiritDto>(catalog, "spirits", "spirits.json", "spirits"));
         catalog.Planes.AddRange(ReadCollectionFromFolderOrFile<PlaneDto>(catalog, "planes", "planes.json", "planes"));
         catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
+        ReadDoctrineFolders(catalog);
         ValidateCountryModifierWarnings(catalog);
         ValidateDesignRuleWarnings(catalog);
         ValidateCriticalPartWarnings(catalog);
+        ValidateMioWarnings(catalog);
         return catalog;
     }
+
+    private const string MioPoliciesFolder = "mio-policies";
+    private const string EquipmentGroupsFolder = "equipment-groups";
+    private const string CountriesFolder = "countries";
+    private const string AdmiralsFolder = "admirals";
+    private const string LeaderTraitsFolder = "leader-traits";
+    private const string LeaderSkillsFolder = "leader-skills";
 
     /// <summary>
     /// The files <see cref="ReadCatalog"/> reads, data-directory relative with forward slashes: each collection
@@ -112,6 +160,19 @@ public class SetupLoader
             else
             {
                 files.Add(legacyFile);
+            }
+        }
+
+        // S-DOCTRINE, S-MIO, S-ADMIRAL: optional, no legacy file.
+        foreach (var folder in new[] { "doctrines", MioPoliciesFolder, EquipmentGroupsFolder, CountriesFolder, AdmiralsFolder, LeaderTraitsFolder, LeaderSkillsFolder })
+        {
+            var directory = Path.Combine(dataDirectoryPath, folder);
+
+            if (Directory.Exists(directory))
+            {
+                files.AddRange(Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
+                    .Select(path => $"{folder}/{Path.GetFileName(path)}"));
             }
         }
 
@@ -179,6 +240,7 @@ public class SetupLoader
         ValidateDuplicateIds(modules.Select(m => m.ID), "modules", errors);
         ValidateDuplicateIds(shipTypes.Select(t => t.ID), "shipTypes", errors);
         ValidateDuplicateIds(mios.Select(m => m.ID), "mios", errors);
+        ValidateDuplicateIds(catalog.MioPolicies.Select(p => p.ID), "mio policies", errors);
         ValidateDuplicateIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateDuplicateIds(researches.Select(r => r.ID), "researches", errors);
         ValidateDuplicateIds(spirits.Select(s => s.ID), "spirits", errors);
@@ -227,19 +289,8 @@ public class SetupLoader
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
         var knownTypes = KnownTypeFilters(catalog);
 
-        ValidateScopedRoleFilters(
-            mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToRoles))),
-            "mio modifier",
-            errors);
         ValidateScopedRoleFilters(researches.Select(r => (r.ID, r.AppliesToRoles)), "research", errors);
-        ValidateScopedRoleFilters(spirits.Select(s => (s.ID, s.AppliesToRoles)), "spirit", errors);
-        ValidateScopedTypeFilters(
-            mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToTypes ?? []))),
-            "mio modifier",
-            knownTypes,
-            errors);
         ValidateScopedTypeFilters(researches.Select(r => (r.ID, r.AppliesToTypes ?? [])), "research", knownTypes, errors);
-        ValidateScopedTypeFilters(spirits.Select(s => (s.ID, s.AppliesToTypes ?? [])), "spirit", knownTypes, errors);
 
         var designById = new Dictionary<string, ShipDesign>();
 
@@ -304,7 +355,7 @@ public class SetupLoader
                     continue;
                 }
 
-                if (!fleet.ShipDesigns.ContainsKey(shipDesignId))
+                if (!fleet.ShipDesigns.TryGetValue(shipDesignId, out var carrierCount))
                 {
                     errors.Add($"fleet '{fleet.ID}' has carrierAirwings for shipDesignID '{shipDesignId}' that is not present in shipDesigns.");
                 }
@@ -314,39 +365,37 @@ public class SetupLoader
                     errors.Add($"fleet '{fleet.ID}' has carrierAirwings for non-carrier shipDesignID '{shipDesignId}'.");
                 }
 
-                foreach (var assignment in carrierAirwing.Value ?? [])
+                var loadouts = carrierAirwing.Value ?? [];
+
+                if (loadouts.Count > carrierCount)
                 {
-                    if (string.IsNullOrWhiteSpace(assignment.PlaneID))
-                    {
-                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry with empty planeID for shipDesignID '{shipDesignId}'.");
-                        continue;
-                    }
+                    warnings.Add($"fleet '{fleet.ID}' has {loadouts.Count} carrierAirwings loadouts for {carrierCount} ships of '{shipDesignId}'; the extra ones are ignored.");
+                }
 
-                    if (!planeIds.Contains(assignment.PlaneID))
-                    {
-                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry referencing unknown planeID '{assignment.PlaneID}' for shipDesignID '{shipDesignId}'.");
-                    }
+                foreach (var (loadout, index) in loadouts.Select((loadout, index) => (loadout, index)))
+                {
+                    var where = $"carrier {index + 1} of '{shipDesignId}'";
 
-                    if (!TryParseAirwingType(assignment.Type, out _))
+                    foreach (var assignment in loadout?.Wings ?? [])
                     {
-                        errors.Add($"fleet '{fleet.ID}' has carrierAirwings entry with unknown type '{assignment.Type}' for shipDesignID '{shipDesignId}'.");
-                    }
-
-                    if (assignment.Airwings <= 0)
-                    {
-                        errors.Add($"fleet '{fleet.ID}' has non-positive airwings value {assignment.Airwings} for shipDesignID '{shipDesignId}'.");
-                    }
-
-                    if (assignment.PlaneCount < 0)
-                    {
-                        errors.Add(
-                            $"fleet '{fleet.ID}' has carrierAirwings entry with non-positive total plane count {assignment.PlaneCount} for shipDesignID '{shipDesignId}'.");
+                        ValidateCarrierWing(fleet.ID, where, assignment, planes, errors);
                     }
                 }
             }
         }
 
-        ValidateScenario(scenarioDto, fleetIds, researchIds, spiritIds, defines, errors);
+        ValidateScenario(scenarioDto, fleetIds, researchIds, spiritIds, planeIds, defines, errors);
+        ValidateDoctrines("attacker", scenarioDto.Attacker, library, errors);
+        ValidateDoctrines("defender", scenarioDto.Defender, library, errors);
+        ValidateMios("attacker", scenarioDto.Attacker, library, errors);
+        ValidateMios("defender", scenarioDto.Defender, library, errors);
+        ValidateCountry("attacker", scenarioDto.Attacker, catalog, errors);
+        ValidateCountry("defender", scenarioDto.Defender, catalog, errors);
+        ValidateAdmiral("attacker", scenarioDto.Attacker, library, errors);
+        ValidateAdmiral("defender", scenarioDto.Defender, library, errors);
+        var fleetsById = forceCompositionsFile.Fleets.GroupBy(fleet => fleet.ID).ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+        ValidatePrideOfTheFleet("attacker", scenarioDto.Attacker, fleetsById, errors);
+        ValidatePrideOfTheFleet("defender", scenarioDto.Defender, fleetsById, errors);
 
         if (errors.Count > 0)
         {
@@ -357,8 +406,16 @@ public class SetupLoader
         var spiritById = library.Spirits;
 
         var fleetDtoById = forceCompositionsFile.Fleets.ToDictionary(fleet => fleet.ID, StringComparer.Ordinal);
-        var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, defines);
-        var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, defines);
+        var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, library, defines);
+        var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, library, defines);
+        WarnAboutDoctrineRules("attacker", attacker);
+        WarnAboutDoctrineRules("defender", defender);
+        WarnAboutMioRules("attacker", scenarioDto.Attacker, attacker, catalog);
+        WarnAboutMioRules("defender", scenarioDto.Defender, defender, catalog);
+        WarnAboutAdmiral("attacker", attacker, library);
+        WarnAboutAdmiral("defender", defender, library);
+        WarnAboutPrideOfTheFleet("attacker", attacker);
+        WarnAboutPrideOfTheFleet("defender", defender);
 
         return new BattleScenario(
             scenarioDto.ID,
@@ -421,6 +478,8 @@ public class SetupLoader
             DamageRandomness = ParseEnum(dto.DamageRandomness, rules.DamageRandomness, "battleScenario.rules.damageRandomness", errors),
             NightEnabled = dto.NightEnabled ?? rules.NightEnabled,
             WeatherEnabled = dto.WeatherEnabled ?? rules.WeatherEnabled,
+            NavalDominanceEnabled = dto.NavalDominanceEnabled ?? rules.NavalDominanceEnabled,
+            CarrierWingsExecuteNavalStrike = dto.CarrierWingsExecuteNavalStrike ?? rules.CarrierWingsExecuteNavalStrike,
             StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
             AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase
         };
@@ -450,7 +509,6 @@ public class SetupLoader
         GameDefines defines)
     {
         var ships = new List<Ship>();
-        var carrierAirwingsByDesign = ParseCarrierAirwings(fleet.CarrierAirwings ?? []);
 
         foreach (var shipDesign in fleet.ShipDesigns.OrderBy(entry => entry.Key, StringComparer.Ordinal))
         {
@@ -465,7 +523,41 @@ public class SetupLoader
             }
         }
 
-        return new Fleet(fleet.ID, ships, carrierAirwingsByDesign);
+        return new Fleet(fleet.ID, ships, ParseCarrierAirwings(fleet, ships));
+    }
+
+    // S-DOCTRINE: optional; data imported before doctrines existed has none.
+    private static void ReadDoctrineFolders(ContentCatalog catalog)
+    {
+        var directory = Path.Combine(catalog.DataDirectory, "doctrines");
+
+        if (!Directory.Exists(directory))
+        {
+            return;
+        }
+
+        foreach (var path in Directory.GetFiles(directory, "*.json", SearchOption.TopDirectoryOnly).Order(StringComparer.OrdinalIgnoreCase))
+        {
+            var relativePath = $"doctrines/{Path.GetFileName(path)}";
+
+            try
+            {
+                var folder = JsonSerializer.Deserialize<DoctrineFolderDto>(File.ReadAllText(path), JsonOptions);
+
+                if (folder is null || string.IsNullOrWhiteSpace(folder.ID))
+                {
+                    catalog.ReadErrors.Add($"File '{relativePath}' must contain a doctrine folder with an 'id'.");
+                    continue;
+                }
+
+                catalog.SetSourceFile(folder, relativePath);
+                catalog.DoctrineFolders.Add(folder);
+            }
+            catch (JsonException exception)
+            {
+                catalog.ReadErrors.Add($"File '{relativePath}' has invalid JSON: {exception.Message}");
+            }
+        }
     }
 
     private static List<TItem> ReadCollectionFromFolderOrFile<TItem>(
@@ -595,9 +687,11 @@ public class SetupLoader
     {
         foreach (var research in catalog.Researches)
         {
-            foreach (var key in (research.CountryModifiers ?? []).Keys.Where(key => !BattleParticipant.ModelledCountryModifiers.Contains(key)))
+            foreach (var key in (research.CountryModifiers ?? []).Keys.Where(key => !BattleParticipant.IsModelledCountryModifier(key)))
             {
-                catalog.Warnings.Add($"{catalog.SourceFileOf(research)} '{research.ID}': country modifier '{key}' is not simulated yet and is ignored.");
+                catalog.Warnings.Add(BattleParticipant.CountryModifiersWithoutBattleEffect.Contains(key)
+                    ? $"{catalog.SourceFileOf(research)} '{research.ID}': country modifier '{key}' has no effect in battle (the game reads it from admirals only or outside combat)."
+                    : $"{catalog.SourceFileOf(research)} '{research.ID}': country modifier '{key}' is not simulated yet and is ignored.");
             }
         }
     }
@@ -618,6 +712,20 @@ public class SetupLoader
         foreach (var (item, part) in users.Where(user => !known.Contains(user.Part)))
         {
             catalog.Warnings.Add($"{item}: critical part '{part}' is not defined in critical-parts/ and is ignored.");
+        }
+    }
+
+    // S-MIO-MATCH: a design assigned to an MIO whose equipment types do not cover it gets the bonuses anyway.
+    private static void ValidateMioWarnings(ContentCatalog catalog)
+    {
+        var library = ContentLibrary.From(catalog);
+
+        foreach (var design in catalog.ShipDesigns.Where(design => !string.IsNullOrWhiteSpace(design.MioID)))
+        {
+            if (library.TryCreateDesign(design) is { Mio: { } mio } shipDesign && !MioRules.CanAssign(mio, shipDesign))
+            {
+                catalog.Warnings.Add($"{catalog.SourceFileOf(design)} '{design.ID}': MIO '{mio.ID}' does not cover this design ({string.Join(", ", mio.EquipmentTypes)}); the game would not allow it.");
+            }
         }
     }
 
@@ -992,6 +1100,7 @@ public class SetupLoader
         HashSet<string> fleetIds,
         HashSet<string> researchIds,
         HashSet<string> spiritIds,
+        HashSet<string> planeIds,
         GameDefines defines,
         List<string> errors)
     {
@@ -1016,8 +1125,8 @@ public class SetupLoader
             errors.Add("battleScenario.iterations must be greater than 0 when provided.");
         }
 
-        ValidateParticipant("attacker", scenario.Attacker, fleetIds, researchIds, spiritIds, defines, errors);
-        ValidateParticipant("defender", scenario.Defender, fleetIds, researchIds, spiritIds, defines, errors);
+        ValidateParticipant("attacker", scenario.Attacker, fleetIds, researchIds, spiritIds, planeIds, defines, errors);
+        ValidateParticipant("defender", scenario.Defender, fleetIds, researchIds, spiritIds, planeIds, defines, errors);
     }
 
     private static void ValidateParticipant(
@@ -1026,6 +1135,7 @@ public class SetupLoader
         HashSet<string> fleetIds,
         HashSet<string> researchIds,
         HashSet<string> spiritIds,
+        HashSet<string> planeIds,
         GameDefines defines,
         List<string> errors)
     {
@@ -1054,9 +1164,30 @@ public class SetupLoader
             }
         }
 
-        if (participant.ExternalNavalStrikePlanes < 0)
+        foreach (var landBased in participant.LandBasedAirwings)
         {
-            errors.Add($"battleScenario.{role}.externalNavalStrikePlanes must be >= 0.");
+            if (!planeIds.Contains(landBased.PlaneID))
+            {
+                errors.Add($"battleScenario.{role}.landBasedAirwings references unknown plane '{landBased.PlaneID}'.");
+            }
+
+            if (landBased.Planes < 0 || landBased.MissionEfficiency < 0 || landBased.DisruptionFactor < 0)
+            {
+                errors.Add($"battleScenario.{role}.landBasedAirwings '{landBased.PlaneID}' needs planes, missionEfficiency and disruptionFactor >= 0.");
+            }
+        }
+
+        foreach (var (planeId, count) in participant.PlaneStockpile)
+        {
+            if (!planeIds.Contains(planeId))
+            {
+                errors.Add($"battleScenario.{role}.planeStockpile references unknown plane '{planeId}'.");
+            }
+
+            if (count < 0)
+            {
+                errors.Add($"battleScenario.{role}.planeStockpile '{planeId}' must be >= 0.");
+            }
         }
 
         if (participant.ShipExperienceLevel.HasValue &&
@@ -1075,26 +1206,384 @@ public class SetupLoader
         IReadOnlyDictionary<string, ShipDesign> designById,
         IReadOnlyDictionary<string, Research> researchById,
         IReadOnlyDictionary<string, Spirit> spiritById,
+        ContentLibrary library,
         GameDefines defines)
     {
         // Each side gets its own Fleet and Ship instances, even when both sides use the same fleet definition.
         var fleet = BuildFleet(fleetDtoById[participant.FleetID], designById, participant.ShipExperienceLevel, defines);
+        var pride = PrideOfTheFleetShip(fleet, participant.PrideOfTheFleet);
         var participantResearches = participant.ResearchIDs.Select(researchId => researchById[researchId]).ToList();
         var participantSpirits = participant.SpiritIDs.Select(spiritId => spiritById[spiritId]).ToList();
 
         return new BattleParticipant(
             fleet,
-            participant.Commander,
-            participant.Doctrine,
-            participant.ExternalNavalStrikePlanes,
+            participant.Admiral is { } admiral ? library.CreateAdmiral(admiral, defines) : null,
             participantResearches,
             participantSpirits,
             ParseEnum(participant.Aggressiveness, Aggressiveness.EngageAtMediumRisk, "aggressiveness", []),
             ParseEnum(participant.RepairPriority, RepairPriority.High, "repairPriority", []),
-            participant.ExternalPlaneID,
-            participant.ExternalMissionEfficiency ?? 1.0,
             participant.CarrierStanceIndex,
-            participant.CarrierNightTraffic ?? 0);
+            participant.CarrierNightTraffic ?? 0,
+            BuildDoctrines(participant, library),
+            defines,
+            BuildMios(participant, library),
+            BuildDesignMios(participant, library),
+            pride,
+            participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0)).ToList(),
+            new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal));
+    }
+
+    /// <summary>S-POTF: the first ship of the named design in the fleet (ships of one design are alike); null when none.</summary>
+    public static Ship? PrideOfTheFleetShip(Fleet fleet, string? designId)
+    {
+        return string.IsNullOrEmpty(designId) ? null : fleet.Ships.FirstOrDefault(ship => ship.Design.ID == designId);
+    }
+
+    /// <summary>S-POTF: the pride of the fleet must name a design of the side's fleet.</summary>
+    private static void ValidatePrideOfTheFleet(string role, BattleParticipantDto participant, IReadOnlyDictionary<string, FleetDto> fleets, List<string> errors)
+    {
+        if (string.IsNullOrEmpty(participant.PrideOfTheFleet) || !fleets.TryGetValue(participant.FleetID, out var fleet))
+        {
+            return;
+        }
+
+        if (!fleet.ShipDesigns.ContainsKey(participant.PrideOfTheFleet))
+        {
+            errors.Add($"battleScenario.{role}.prideOfTheFleet names design '{participant.PrideOfTheFleet}', which is not in fleet '{fleet.ID}'.");
+        }
+    }
+
+    /// <summary>
+    /// S-POTF [RE] 0xc33a50, 0xc34280: a pride of the fleet the game would not let a player assign (not a capital ship or
+    /// carrier) is simulated, with a warning, as the game does for one set by a history file.
+    /// </summary>
+    private void WarnAboutPrideOfTheFleet(string role, BattleParticipant participant)
+    {
+        if (participant.PrideOfTheFleet is { } pride && !PrideOfTheFleetRules.CanBePrideOfTheFleet(pride.Design))
+        {
+            warnings.Add($"{role}: the pride of the fleet ({pride.Design.ID}) is a {pride.Design.ShipType.ID}, not a capital ship or carrier; it is simulated anyway.");
+        }
+    }
+
+    /// <summary>
+    /// S-MIO: the side's assignments of MIOs to designs (an empty ID: none). Lenient, for previews: unknown MIOs are left
+    /// out (<see cref="ValidateMios"/> reports them as errors).
+    /// </summary>
+    public static IReadOnlyDictionary<string, Engine.Mios.Mio?> BuildDesignMios(BattleParticipantDto participant, ContentLibrary library)
+    {
+        var assignments = new Dictionary<string, Engine.Mios.Mio?>(StringComparer.Ordinal);
+
+        foreach (var (designId, mioId) in participant.DesignMios ?? [])
+        {
+            if (string.IsNullOrEmpty(mioId))
+            {
+                assignments[designId] = null;
+            }
+            else if (library.Mios.TryGetValue(mioId, out var mio))
+            {
+                assignments[designId] = mio;
+            }
+        }
+
+        return assignments;
+    }
+
+    /// <summary>S-ADMIRAL: errors for an admiral the simulator cannot build: unknown traits, negative skill levels.</summary>
+    private static void ValidateAdmiral(string role, BattleParticipantDto participant, ContentLibrary library, List<string> errors)
+    {
+        if (participant.Admiral is not { } admiral)
+        {
+            return;
+        }
+
+        foreach (var trait in (admiral.Traits ?? []).Where(trait => !library.LeaderTraits.ContainsKey(trait)))
+        {
+            errors.Add($"battleScenario.{role}.admiral.traits references unknown leader trait '{trait}' (import leaders with 'NavySimulator import-leaders').");
+        }
+
+        foreach (var (key, level) in AdmiralSkills(admiral).Where(skill => skill.Level < 0))
+        {
+            errors.Add($"battleScenario.{role}.admiral has {key} {level}; skill levels are 0 or more.");
+        }
+    }
+
+    private static IEnumerable<(string Key, int Level)> AdmiralSkills(AdmiralDto admiral)
+    {
+        yield return (LeaderSkills.Skill, admiral.Skill);
+        yield return (LeaderSkills.Attack, admiral.AttackSkill);
+        yield return (LeaderSkills.Defense, admiral.DefenseSkill);
+        yield return (LeaderSkills.Maneuvering, admiral.ManeuveringSkill);
+        yield return (LeaderSkills.Coordination, admiral.CoordinationSkill);
+    }
+
+    /// <summary>
+    /// S-ADMIRAL-SKILL, S-ADMIRAL-TRAIT: an admiral the game would not have is still simulated, with a warning: a skill above
+    /// the highest level the skill files define (read at that level), traits whose parents the admiral lacks, mutually
+    /// exclusive traits. Without imported skill levels the skills do nothing, which is warned about too.
+    /// </summary>
+    private void WarnAboutAdmiral(string role, BattleParticipant participant, ContentLibrary library)
+    {
+        if (participant.Admiral is not { } admiral)
+        {
+            return;
+        }
+
+        if (library.LeaderSkills.Levels.Count == 0)
+        {
+            warnings.Add($"{role}: no leader skill levels in the data directory (import them with 'NavySimulator import-leaders'); the admiral's skills have no effect.");
+        }
+
+        // The overall skill is read without a clamp (its navy levels are empty in vanilla and TFB).
+        foreach (var (key, level) in admiral.SkillLevels.Where(skill => skill.Key != LeaderSkills.Skill))
+        {
+            var max = library.LeaderSkills.MaxLevel(key);
+
+            if (max > 0 && level > max)
+            {
+                warnings.Add($"{role}: the admiral's {key} {level} is above the highest level the game defines ({max}); level {max} is used.");
+            }
+        }
+
+        warnings.AddRange(AdmiralRules.TraitProblems(admiral).Select(problem => $"{role}: admiral {admiral.Name}: {problem}; it is simulated anyway."));
+    }
+
+    /// <summary>S-MIO-COUNTRY: a side's country must be a known tag, when tags are imported.</summary>
+    private static void ValidateCountry(string role, BattleParticipantDto participant, ContentCatalog catalog, List<string> errors)
+    {
+        if (!string.IsNullOrEmpty(participant.Country) && catalog.Countries.Count > 0 && catalog.Countries.All(country => country.ID != participant.Country))
+        {
+            errors.Add($"battleScenario.{role}.country references unknown country tag '{participant.Country}'.");
+        }
+    }
+
+    /// <summary>
+    /// S-MIO: the side's MIO setups. Lenient, for previews: unknown MIOs, traits and policies are left out
+    /// (<see cref="ValidateMios"/> reports them as errors).
+    /// </summary>
+    public static IReadOnlyList<MioSetup> BuildMios(BattleParticipantDto participant, ContentLibrary library)
+    {
+        var setups = new List<MioSetup>();
+
+        foreach (var (id, setup) in participant.Mios ?? [])
+        {
+            if (setup is null || !library.Mios.TryGetValue(id, out var mio))
+            {
+                continue;
+            }
+
+            var traits = (setup.Traits ?? []).Distinct(StringComparer.Ordinal).Select(mio.Trait).OfType<MioTrait>().ToList();
+            var policy = setup.Policy is { } policyId ? library.MioPolicies.GetValueOrDefault(policyId) : null;
+            setups.Add(new MioSetup(mio, traits, policy));
+        }
+
+        return setups;
+    }
+
+    /// <summary>S-MIO: errors for MIO setups the simulator cannot build: unknown MIOs, traits, policies and assigned designs.</summary>
+    private static void ValidateMios(string role, BattleParticipantDto participant, ContentLibrary library, List<string> errors)
+    {
+        foreach (var (designId, mioId) in participant.DesignMios ?? [])
+        {
+            if (!string.IsNullOrEmpty(mioId) && !library.Mios.ContainsKey(mioId))
+            {
+                errors.Add($"battleScenario.{role}.designMios.{designId} references unknown MIO '{mioId}' (import MIOs with 'NavySimulator import-mios').");
+            }
+        }
+
+        foreach (var (id, setup) in participant.Mios ?? [])
+        {
+            var path = $"battleScenario.{role}.mios.{id}";
+
+            if (!library.Mios.TryGetValue(id, out var mio))
+            {
+                errors.Add($"{path} references unknown MIO '{id}' (import MIOs with 'NavySimulator import-mios').");
+                continue;
+            }
+
+            foreach (var trait in (setup?.Traits ?? []).Where(trait => mio.Trait(trait) is null))
+            {
+                errors.Add($"{path}.traits: MIO '{id}' has no trait '{trait}'.");
+            }
+
+            if (setup?.Policy is { } policy && !library.MioPolicies.ContainsKey(policy))
+            {
+                errors.Add($"{path}.policy references unknown MIO policy '{policy}'.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// S-MIO-TREE, S-MIO-POLICY, S-MIO-MATCH, S-MIO-COUNTRY: MIO setups the game would not allow are still simulated, with
+    /// a warning: a trait whose parents are not unlocked, two mutually exclusive traits, a policy the MIO cannot take, a
+    /// design the side assigns to an MIO that does not cover it, an assignment for a design not in the side's fleet, and
+    /// an MIO the side's country cannot have.
+    /// </summary>
+    private void WarnAboutMioRules(string role, BattleParticipantDto dto, BattleParticipant participant, ContentCatalog catalog)
+    {
+        var fleetDesigns = participant.Fleet.Ships.Select(ship => ship.Design).DistinctBy(design => design.ID).ToList();
+
+        foreach (var designId in (dto.DesignMios ?? []).Keys.Where(id => fleetDesigns.All(design => design.ID != id)))
+        {
+            warnings.Add($"{role}: designMios names design '{designId}', which is not in the side's fleet; it is ignored.");
+        }
+
+        foreach (var design in fleetDesigns.Where(design => dto.DesignMios?.ContainsKey(design.ID) == true))
+        {
+            if (participant.MioOf(design) is { } assigned && !MioRules.CanAssign(assigned, design))
+            {
+                warnings.Add($"{role}: MIO '{assigned.ID}' does not cover design '{design.ID}' ({string.Join(", ", assigned.EquipmentTypes)}); the game would not allow it.");
+            }
+        }
+
+        var used = fleetDesigns.Select(participant.MioOf).OfType<Engine.Mios.Mio>().Select(mio => mio.ID).Concat(participant.Mios.Select(setup => setup.Mio.ID));
+
+        foreach (var mio in used.Distinct(StringComparer.Ordinal).Select(id => catalog.Mios.FirstOrDefault(item => item.ID == id)).OfType<MioDto>()
+                     .Where(mio => !MioCountries.IsAvailable(mio, dto.Country)))
+        {
+            warnings.Add($"{role}: {dto.Country} cannot have MIO '{mio.ID}' ({(mio.Countries.Count > 0 ? string.Join(", ", mio.Countries) : "archetype or excluded")}); it is simulated anyway.");
+        }
+
+        foreach (var setup in participant.Mios)
+        {
+            warnings.AddRange(MioRules.TreeProblems(setup).Select(problem => $"{role}: MIO '{setup.Mio.ID}': {problem}; it is simulated anyway."));
+
+            if (setup.Policy is { } policy && !MioRules.PolicyAllowed(setup.Mio, policy))
+            {
+                warnings.Add($"{role}: MIO '{setup.Mio.ID}' cannot take policy '{policy.ID}' (it needs {string.Join(" or ", policy.AllowedEquipmentTypes)}); it is simulated anyway.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// S-DOCTRINE: the side's doctrine setups, one per folder with a grand doctrine. Lenient, for previews: unknown grand
+    /// doctrines and subdoctrines are left out (<see cref="ValidateDoctrines"/> reports them as errors).
+    /// </summary>
+    public static IReadOnlyList<DoctrineSetup> BuildDoctrines(BattleParticipantDto participant, ContentLibrary library)
+    {
+        var setups = new List<DoctrineSetup>();
+
+        foreach (var (_, setup) in participant.Doctrines ?? [])
+        {
+            if (setup is null || !library.GrandDoctrines.TryGetValue(setup.GrandDoctrine ?? string.Empty, out var grand))
+            {
+                continue;
+            }
+
+            var tracks = (setup.Tracks ?? [])
+                .Where(track => track.Value is not null && library.Subdoctrines.ContainsKey(track.Value.Subdoctrine ?? string.Empty))
+                .Select(track => new TrackSetup(track.Key, library.Subdoctrines[track.Value.Subdoctrine], track.Value.Mastery))
+                .ToList();
+            setups.Add(new DoctrineSetup(grand, tracks));
+        }
+
+        return setups;
+    }
+
+    /// <summary>
+    /// S-DOCTRINE: errors for doctrine setups the simulator cannot build: unknown folders, grand doctrines and
+    /// subdoctrines, a grand doctrine of another folder, tracks the grand doctrine does not open, a subdoctrine in a track
+    /// it does not belong to, and negative mastery.
+    /// </summary>
+    private static void ValidateDoctrines(string role, BattleParticipantDto participant, ContentLibrary library, List<string> errors)
+    {
+        foreach (var (folder, setup) in participant.Doctrines ?? [])
+        {
+            var path = $"battleScenario.{role}.doctrines.{folder}";
+
+            if (setup is null)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(setup.GrandDoctrine))
+            {
+                if ((setup.Tracks ?? []).Count > 0)
+                {
+                    errors.Add($"{path} has tracks but no grandDoctrine.");
+                }
+
+                continue;
+            }
+
+            if (!library.GrandDoctrines.TryGetValue(setup.GrandDoctrine, out var grand))
+            {
+                errors.Add($"{path}.grandDoctrine references unknown grand doctrine '{setup.GrandDoctrine}' (import doctrines with 'NavySimulator import-doctrines').");
+                continue;
+            }
+
+            if (grand.Folder != folder)
+            {
+                errors.Add($"{path}.grandDoctrine '{grand.ID}' belongs to the {grand.Folder} folder.");
+            }
+
+            foreach (var (track, slot) in setup.Tracks ?? [])
+            {
+                if (!grand.Tracks.Contains(track))
+                {
+                    errors.Add($"{path}.tracks: '{grand.ID}' has no track '{track}' (tracks: {string.Join(", ", grand.Tracks)}).");
+                }
+
+                if (slot is null || string.IsNullOrWhiteSpace(slot.Subdoctrine))
+                {
+                    errors.Add($"{path}.tracks.{track}.subdoctrine must not be empty.");
+                    continue;
+                }
+
+                if (!library.Subdoctrines.TryGetValue(slot.Subdoctrine, out var subdoctrine))
+                {
+                    errors.Add($"{path}.tracks.{track}.subdoctrine references unknown subdoctrine '{slot.Subdoctrine}'.");
+                }
+                else if (!subdoctrine.Tracks.Contains(track))
+                {
+                    errors.Add($"{path}.tracks.{track}: subdoctrine '{subdoctrine.ID}' belongs to track {string.Join(" or ", subdoctrine.Tracks)}.");
+                }
+
+                if (slot.Mastery < 0)
+                {
+                    errors.Add($"{path}.tracks.{track}.mastery must be >= 0.");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// S-DOCTRINE, S-SPIRIT: setups the game would not allow are still simulated, with a warning: a subdoctrine in two
+    /// tracks without allow_in_multiple_tracks, xor'd subdoctrines in one folder, a spirit whose has_doctrine conditions
+    /// the side's doctrines do not meet, and two spirits in one spirit slot.
+    /// </summary>
+    private void WarnAboutDoctrineRules(string role, BattleParticipant participant)
+    {
+        foreach (var setup in participant.Doctrines)
+        {
+            var slotted = setup.Tracks.Select(track => track.Subdoctrine).ToList();
+
+            foreach (var repeated in slotted.GroupBy(subdoctrine => subdoctrine.ID).Where(group => group.Count() > 1 && !group.First().AllowInMultipleTracks))
+            {
+                warnings.Add($"{role}: subdoctrine '{repeated.Key}' is slotted in {repeated.Count()} tracks; the game allows one.");
+            }
+
+            // Either side of a pair may list the other; each pair is reported once.
+            var pairs = slotted.SelectMany(subdoctrine => subdoctrine.Xor
+                    .Where(id => id != subdoctrine.ID && slotted.Any(candidate => candidate.ID == id))
+                    .Select(id => string.CompareOrdinal(subdoctrine.ID, id) < 0 ? (First: subdoctrine.ID, Second: id) : (First: id, Second: subdoctrine.ID)))
+                .Distinct();
+
+            foreach (var (first, second) in pairs)
+            {
+                warnings.Add($"{role}: subdoctrines '{first}' and '{second}' exclude each other (xor) in the game.");
+            }
+        }
+
+        foreach (var spirit in participant.Spirits.Where(spirit => !spirit.IsAvailable(participant.Doctrines)))
+        {
+            var needs = spirit.RequiredDoctrines.Select(group => string.Join(" or ", group));
+            warnings.Add($"{role}: spirit '{spirit.ID}' needs doctrine {string.Join(" and ", needs)}; it is simulated anyway.");
+        }
+
+        foreach (var slot in participant.Spirits.GroupBy(spirit => spirit.Category).Where(group => group.Count() > 1))
+        {
+            warnings.Add($"{role}: {slot.Count()} spirits in the '{slot.Key}' slot ({string.Join(", ", slot.Select(spirit => spirit.ID))}); the game allows one.");
+        }
     }
 
     private static bool IsValidShipExperienceLevel(int level, GameDefines defines)
@@ -1147,44 +1636,58 @@ public class SetupLoader
         }
     }
 
-    private static Dictionary<string, List<CarrierAirwingAssignment>> ParseCarrierAirwings(
-        Dictionary<string, List<CarrierAirwingAssignmentDto>> carrierAirwingsByDesign)
+    private void ValidateCarrierWing(string fleetId, string where, CarrierAirwingAssignmentDto assignment, List<PlaneDto> planes, List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(assignment.PlaneID))
+        {
+            errors.Add($"fleet '{fleetId}' has a carrier wing with empty planeID on {where}.");
+            return;
+        }
+
+        if (planes.FirstOrDefault(plane => plane.ID == assignment.PlaneID) is not { } plane)
+        {
+            errors.Add($"fleet '{fleetId}' has a carrier wing of unknown planeID '{assignment.PlaneID}' on {where}.");
+        }
+        else if (!plane.CarrierCapable)
+        {
+            warnings.Add($"fleet '{fleetId}' has '{assignment.PlaneID}' on {where}, a plane that is not carrier capable.");
+        }
+
+        if (assignment.Airwings <= 0)
+        {
+            errors.Add($"fleet '{fleetId}' has a non-positive airwings value {assignment.Airwings} on {where}.");
+        }
+
+        if (assignment.PlaneCount < 0)
+        {
+            errors.Add($"fleet '{fleetId}' has a negative planeCount {assignment.PlaneCount} on {where}.");
+        }
+    }
+
+    /// <summary>A-WINGS: each carrier's wings by ship ID; the n-th loadout of a design goes to its n-th ship.</summary>
+    private static Dictionary<string, List<CarrierAirwingAssignment>> ParseCarrierAirwings(FleetDto fleet, List<Ship> ships)
     {
         var parsed = new Dictionary<string, List<CarrierAirwingAssignment>>(StringComparer.Ordinal);
 
-        foreach (var designEntry in carrierAirwingsByDesign)
+        foreach (var (designId, loadouts) in fleet.CarrierAirwings ?? [])
         {
-            var assignments = new List<CarrierAirwingAssignment>();
+            var designShips = ships.Where(ship => ship.Design.ID == designId).ToList();
 
-            foreach (var assignment in designEntry.Value ?? [])
+            foreach (var (loadout, ship) in (loadouts ?? []).Zip(designShips))
             {
-                if (!TryParseAirwingType(assignment.Type, out var type))
+                var assignments = (loadout?.Wings ?? [])
+                    .Where(wing => !string.IsNullOrWhiteSpace(wing.PlaneID) && wing.Airwings > 0)
+                    .Select(wing => new CarrierAirwingAssignment(wing.PlaneID, wing.Airwings, wing.PlaneCount == 0 ? DefaultWingPlanes : wing.PlaneCount))
+                    .ToList();
+
+                if (assignments.Count > 0)
                 {
-                    continue;
+                    parsed[ship.ID] = assignments;
                 }
-                
-                
-                assignments.Add(new CarrierAirwingAssignment(assignment.PlaneID, type, assignment.Airwings, assignment.PlaneCount == 0 ? 10 : assignment.PlaneCount));
-            }
-
-            if (assignments.Count > 0)
-            {
-                parsed[designEntry.Key] = assignments;
             }
         }
 
         return parsed;
-    }
-
-    private static bool TryParseAirwingType(string typeName, out AirwingType type)
-    {
-        if (typeName.Equals("figheter", StringComparison.OrdinalIgnoreCase))
-        {
-            type = AirwingType.Fighter;
-            return true;
-        }
-
-        return Enum.TryParse(typeName, true, out type);
     }
 }
 

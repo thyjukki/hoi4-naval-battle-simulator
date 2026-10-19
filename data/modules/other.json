@@ -81,6 +81,9 @@
       "criticalParts": [
         "leaking_fuel_tanks"
       ],
+      "statModifiers": {
+        "navalRange": 1000
+      },
       "statMultipliers": {
         "productionCost": 0.05
       }

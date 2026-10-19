@@ -6,7 +6,7 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 /// <summary>
 /// S-RETREAT and S-RETREAT-SPEED [RE] (0x19717f0, 0x1975280, 0x196fe80). Spec: docs/mechanics/surface.md.
 /// Not modelled: the side-wide retreat order, the aggressiveness check that makes outmatched task forces retreat (its
-/// strength score 0x1989c60 is not decoded), the convoy-raiding submarine rule, and retreat-chance modifiers.
+/// strength score 0x1989c60 is not decoded), and the convoy-raiding submarine rule.
 /// </summary>
 public static class RetreatRules
 {
@@ -27,8 +27,15 @@ public static class RetreatRules
     /// <summary>
     /// [RE] Called for an active ship before it fires, from tick COMBAT_MIN_DURATION on. Below the HP threshold it rolls
     /// COMBAT_RETREAT_DECISION_CHANCE; on success it starts retreating and does not fire this hour.
+    /// <paramref name="enemyRetreatChance"/> is the enemy commanding admiral's naval_enemy_retreat_chance.
     /// </summary>
-    public static bool TryStartRetreat(Ship ship, int tick, Aggressiveness aggressiveness, GameDefines defines, IRandomSource random)
+    public static bool TryStartRetreat(
+        Ship ship,
+        int tick,
+        Aggressiveness aggressiveness,
+        GameDefines defines,
+        IRandomSource random,
+        double enemyRetreatChance = 0)
     {
         var navy = defines.NNavy;
 
@@ -42,7 +49,7 @@ public static class RetreatRules
             return false;
         }
 
-        if (random.NextDouble(RollKind.RetreatDecision) > RetreatDecisionChance(ship, tick, defines))
+        if (random.NextDouble(RollKind.RetreatDecision) > RetreatDecisionChance(ship, tick, defines, enemyRetreatChance))
         {
             return false;
         }
@@ -55,10 +62,11 @@ public static class RetreatRules
 
     /// <summary>
     /// [RE] 0x1975280: COMBAT_RETREAT_DECISION_CHANCE × (1 + naval_retreat_chance) × (1 +
-    /// naval_retreat_chance_after_initial_combat, after COMBAT_INITIAL_DURATION), clamped to [0, 1]; a jammed rudder
-    /// (S-CRIT-PART) lowers it. The enemy's naval_enemy_retreat_chance is not modelled.
+    /// naval_retreat_chance_after_initial_combat, after COMBAT_INITIAL_DURATION) × (1 + the enemy commanding admiral's
+    /// naval_enemy_retreat_chance, read from its traits only: container B, S-ADMIRAL-MOD), clamped to [0, 1]; a jammed
+    /// rudder (S-CRIT-PART) lowers it.
     /// </summary>
-    public static double RetreatDecisionChance(Ship ship, int tick, GameDefines defines)
+    public static double RetreatDecisionChance(Ship ship, int tick, GameDefines defines, double enemyRetreatChance = 0)
     {
         var navy = defines.NNavy;
         var chance = navy.COMBAT_RETREAT_DECISION_CHANCE * (1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChance, 0, defines));
@@ -68,6 +76,7 @@ public static class RetreatRules
             chance *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChanceAfterInitialCombat, 0, defines);
         }
 
+        chance *= 1 + enemyRetreatChance;
         return Math.Clamp(chance, 0, 1);
     }
 

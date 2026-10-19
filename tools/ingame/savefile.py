@@ -30,6 +30,21 @@ class TaskForce:
 
 
 @dataclass
+class Track:
+    sub_doctrine: str | None
+    rewards: int
+    mastery: float
+
+
+@dataclass
+class DoctrineFolder:
+    folder: str
+    grand_doctrine: str | None
+    tracks: list[Track] = field(default_factory=list)
+    completed: list[str] = field(default_factory=list)
+
+
+@dataclass
 class Variant:
     id: int
     equipment_type: str
@@ -139,6 +154,80 @@ class SaveFile:
             max_manpower=int(values.get("max_manpower", 0)),
             experience=float(values.get("experience", 0)),
         )
+
+    def _children(self, start, end):
+        """(stripped line, line index) of the direct children of the block opening at `start`."""
+        i = start + 1
+        while i < end:
+            line = self.lines[i].strip()
+            yield line, i
+            i = self._block_end(i) + 1 if line.endswith("{") else i + 1
+
+    def doctrines(self, country):
+        """S-DOCTRINE-SAVE: the country's doctrine folders, by folder ID, from the global doctrine block."""
+        start = next(i for i, line in enumerate(self.lines) if line.rstrip("\r") == "doctrine={")
+        countries = next(i for line, i in self._children(start, self._block_end(start)) if line == "countries={")
+        for line, entry in self._children(countries, self._block_end(countries)):
+            children = list(self._children(entry, self._block_end(entry)))
+            if line != "{" or f'country="{country}"' not in (text for text, _ in children):
+                continue
+            folders = next((i for text, i in children if text == "folder={"), None)
+            result = {}
+            for text, i in self._children(folders, self._block_end(folders)) if folders is not None else []:
+                values = dict(t.split("=", 1) for t, _ in self._children(i, self._block_end(i)) if "=" in t and not t.endswith("{"))
+                folder = DoctrineFolder(values.get("folder", "").strip('"'), values["grand_doctrine"].strip('"') if "grand_doctrine" in values else None)
+                for t, j in self._children(i, self._block_end(i)):
+                    if t == "tracks={":
+                        for _, k in self._children(j, self._block_end(j)):
+                            track = dict(x.split("=", 1) for x, _ in self._children(k, self._block_end(k)) if "=" in x)
+                            folder.tracks.append(Track(track["sub_doctrine"].strip('"') if "sub_doctrine" in track else None,
+                                                       int(track.get("rewards", 0)), float(track.get("mastery", 0))))
+                    elif t == "completed_subdoctrines={":
+                        folder.completed = [w.strip('"') for x, _ in self._children(j, self._block_end(j)) for w in x.split()]
+                result[folder.folder] = folder
+            return result
+        return {}
+
+    def ideas(self, country):
+        """The idea IDs in the country's politics={ ideas={ ... } } block."""
+        start = next(i for i, line in enumerate(self.lines) if line.rstrip("\r") == "countries={")
+        block = next(i for line, i in self._children(start, self._block_end(start)) if line == f"{country}={{")
+        politics = next((i for line, i in self._children(block, self._block_end(block)) if line == "politics={"), None)
+        ideas = None if politics is None else next((i for line, i in self._children(politics, self._block_end(politics)) if line == "ideas={"), None)
+        return [] if ideas is None else [w for j in range(ideas + 1, self._block_end(ideas)) for w in self.lines[j].split()]
+
+    def country_children(self, country):
+        """The direct children of the country's block, in file order: [(key, line index)]."""
+        start = next(i for i, line in enumerate(self.lines) if line.strip() == "countries={" and not line.startswith("\t"))
+        block = next(i for line, i in self._children(start, self._block_end(start)) if line == f"{country}={{")
+        return [(line.split("=", 1)[0], i) for line, i in self._children(block, self._block_end(block))]
+
+    def region_dominance(self, region):
+        """S-DOMINANCE-SAVE: {country: {current, target, ...}} of region={ <region>={ dominance={ values={ ... } } } }."""
+        start = next(i for i, line in enumerate(self.lines) if line.rstrip("\r") == "region={")
+        block = next((i for line, i in self._children(start, self._block_end(start)) if line == f"{region}={{"), None)
+        result, tag = {}, None
+        for j in range(block + 1, self._block_end(block)) if block is not None else []:
+            line = self.lines[j].strip()
+            match = re.fullmatch(r'\{ "(\w+)"', line)
+            if match:
+                tag = match.group(1)
+            elif tag is not None and "=" in line and not line.endswith("{"):
+                key, value = line.split("=", 1)
+                result.setdefault(tag, {})[key] = float(value)
+        return result
+
+    def unit_modifier_records(self, country):
+        """S-DOCTRINE-SAVE: (type, number, id) of the country's deployment={ unit_modifiers={ ... } } records."""
+        deployment = next((i for key, i in self.country_children(country) if key == "deployment"), None)
+        if deployment is None:
+            return []
+        modifiers = next((i for line, i in self._children(deployment, self._block_end(deployment)) if line == "unit_modifiers={"), None)
+        records = []
+        for line, i in self._children(modifiers, self._block_end(modifiers)) if modifiers is not None else []:
+            values = dict(t.split("=", 1) for t, _ in self._children(i, self._block_end(i)) if "=" in t and not t.endswith("{"))
+            records.append((values.get("type"), int(values.get("number", 0)), values.get("id")))
+        return records
 
     def variants(self, ids=None):
         """Equipment variants from the top-level equipments section, by id (only `ids` if given)."""

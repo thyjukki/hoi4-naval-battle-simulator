@@ -31,6 +31,7 @@ public sealed class ShipDataImporterTests : IDisposable
                     max_strength = 100
                     naval_speed = 27
                     naval_range = 2500
+                    naval_dominance_factor = 100
                     manpower = 600
                 }
                 ship_hull_cruiser_1 = {
@@ -43,6 +44,7 @@ public sealed class ShipDataImporterTests : IDisposable
                     archetype = ship_hull_cruiser
                     parent = ship_hull_cruiser_1
                     max_strength = 110
+                    naval_dominance_factor = 115
                     module_slots = {
                         fixed_ship_battery_slot = inherit
                         front_1_custom_slot = { allowed_module_categories = { ship_light_battery } }
@@ -155,7 +157,18 @@ public sealed class ShipDataImporterTests : IDisposable
         Assert.Equal(600, second.Manpower);
         Assert.Equal(1936, second.Year);
         Assert.Equal("screen_ship", second.EquipmentType);
-        Assert.Contains("naval_range", import.IgnoredKeys.Keys);
+        Assert.Equal(2500, second.BaseStats.NavalRange);
+        Assert.DoesNotContain("naval_range", import.IgnoredKeys.Keys);
+    }
+
+    [Fact]
+    public void Hulls_TakeTheirNavalDominanceFactor_ElseTheArchetypes()
+    {
+        var import = ShipDataImporter.Read(new GameFileSystem(game));
+
+        Assert.Equal(100, import.Hulls.Single(hull => hull.ID == "ship_hull_cruiser_1").NavalDominanceFactor);
+        Assert.Equal(115, import.Hulls.Single(hull => hull.ID == "ship_hull_cruiser_2").NavalDominanceFactor);
+        Assert.DoesNotContain("naval_dominance_factor", import.IgnoredKeys.Keys);
     }
 
     [Fact]
@@ -295,6 +308,8 @@ public sealed class ShipDataImporterTests : IDisposable
         Assert.Equal("light_cruiser", Assert.Single(catalog.ShipTypes).ID);
         Assert.Equal(2, catalog.CriticalParts.Count);
         Assert.Equal(4, catalog.Hulls[1].Slots.Single(slot => slot.ID == "front_1_custom_slot").GameOrder);
+        Assert.Equal(115, catalog.Hulls[1].NavalDominanceFactor);
+        Assert.Equal(2500, catalog.Hulls[1].BaseStats.NavalRange);
         Assert.DoesNotContain("\"required\": false", File.ReadAllText(Path.Combine(data, "hulls", "cruiser.json")));
     }
 

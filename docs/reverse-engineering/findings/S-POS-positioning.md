@@ -55,6 +55,11 @@ pos  = clamp(pos, 0, 1)                                                      // 
   - 0x1b2 is most likely the `positioning` modifier.
   - 0x5a is applied only during the initial phase, using the *enemy* admiral, and only to the side with flag `+0xd8 == 0`
     (probably the defender). Its semantics match `naval_enemy_positioning_in_initial_attack`.
+  - **Update (2026-10-19): names confirmed** by joining the registration with the static token table: 0x1b2 is
+    `positioning`, 0x5a `naval_enemy_positioning_in_initial_attack`. The location part of `Mod` is the region weather holder
+    plus the region's naval terrain container (`+0xb8`); the admiral container `+0x418` holds no country modifiers, so a
+    country `positioning` counts once, through `country+0x5b8`
+    ([S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md#modid-country-location-admiral-0x15c70b0)).
 - **Order of terms.** No clamp is applied between terms. All terms are added up first and clamped to [0, 1] once at the end.
   So a detection bonus can offset penalties, but positioning never exceeds 1.
 - **Tooltip keys.** `POSITIONING_SURFACE_DETECTION_SUPERIORITY`, `POSITIONING_SHIP_RATIO_PENALTY`, `POSITIONING_CARRIER_RATIO_PENALTY`,
@@ -128,6 +133,10 @@ if enemy > 0 and own >= MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY:          // int
   The result is equivalent to the spec.
 - The modifier is read from the **enemy's commanding admiral only**. It is almost certainly
   `naval_enemy_fleet_size_ratio_penalty_factor`, the only modifier with these semantics.
+- **Update (2026-10-19):** the name is confirmed (0x1d0 = `naval_enemy_fleet_size_ratio_penalty_factor`). The admiral
+  container `+0x418` is built from the leader's traits, skill levels, medals and leader-bound entries only, never from the
+  country, so a national spirit or doctrine with this modifier (vanilla `naval_tripwire_navy_spirit`) has no effect here
+  ([S-STATS-COUNTRY](S-STATS-COUNTRY-modifier-sources.md#the-admirals-containers)).
 
 **Verdict: MATCHES the spec's shape.** NEW: the enemy-admiral multiplier, and the exclusion of arriving ships from the
 count while sunk and departed ships are dropped. **Confidence: high** (modifier name medium).
@@ -263,6 +272,10 @@ vis = subShip.SubVisibility (0xc3aa20, STAT_NAVY_SUB_VISIBILITY) ×fixed (1 + 1.
 `posOwnSide` is the submarine's own side. `vis` is then multiplied by `(1 + Mod(0x1ba/0x1bc))` and fed to the reveal roll
 (0x1975400, or the SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER path). With the vanilla 1.0, a submarine side at
 0% positioning has double visibility.
+
+**Correction (2026-10-19):** 0x1ba (`naval_critical_score_chance_factor`) is read only in the hit function 0x19740c0, and
+0x1bc (`naval_torpedo_reveal_chance_factor`) only at 0x1973ff7 in the torpedo-firing reveal. The ordinary reveal has no
+such factor; its visibility modifier is `navy_visibility` (0x19f) inside 0xc3aa20 (ACT is right).
 
 **Verdict: NEW** for the spec. **Confidence: high** for the factor. The roll itself belongs to S-SUB.
 

@@ -209,6 +209,12 @@ The side update recomputes it each hour.
 **Verdict.** MATCHES the form, with two differences. The fleet term is also **multiplied by the side's positioning**. Convoys add nothing to the side total (only `0x1622d40` warships are summed) and nothing as the target. The side is all ships in all groups of that side; the target is counted once more inside the total.
 **Confidence.** High.
 
+**Update (2026-10-19).** `AA(ship, ·)` is 0xc3a470: `(anti_air_attack + navy_anti_air_attack) × (1 + navy_anti_air_attack_factor)`
+through the ship modifier sum, so country, admiral and experience values of both modifiers scale every ship's AA before the
+fleet sum. Its third argument is an admiral, not a context: 0 here (the ship's own fleet admiral is used), the side's
+commanding admiral in A-TARGET (0x197a869) and A-AA-PREEMPT (0x197c901). See
+[S-STATS-COMBAT-GETTER](S-STATS-design-stats.md#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded).
+
 ## A-HIT: how many planes hit
 
 **What the game does** (`0x197ac80`, 0x197ad4e..0x197ade7):

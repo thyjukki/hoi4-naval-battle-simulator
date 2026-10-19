@@ -90,6 +90,33 @@ public static class ExperienceRules
         return navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * factor;
     }
 
+    /// <summary>
+    /// S-XP-GAIN [RE] 0xc3b240: <c>(gain + flat) × (1 + factor)</c>, with flat experience_gain_navy_unit and factor
+    /// experience_gain_navy_unit_factor of the country, the pride of the fleet block for the pride itself (S-POTF: factor
+    /// +0.25), and the country's experience_gain_&lt;sub-unit&gt;_combat_factor for the ship's sub-unit. No admiral term;
+    /// the ship's medals are not modelled.
+    /// </summary>
+    public static double ModifiedGain(Ship ship, double gain, GameDefines defines)
+    {
+        var country = ship.CountryModifiers;
+        var flat = country.Get(StaticModifiers.ExperienceGainNavyUnit);
+        var factor = country.Get(StaticModifiers.ExperienceGainNavyUnitFactor) + country.Get(SubUnitCombatFactor(ship.Design.ShipType.ID));
+
+        if (ship.IsPrideOfTheFleet)
+        {
+            flat += defines.StaticModifiers.Get(StaticModifiers.PrideOfTheFleet, StaticModifiers.ExperienceGainNavyUnit);
+            factor += defines.StaticModifiers.Get(StaticModifiers.PrideOfTheFleet, StaticModifiers.ExperienceGainNavyUnitFactor);
+        }
+
+        return (gain + flat) * (1 + factor);
+    }
+
+    /// <summary>[RE] 0x1018080: the country modifier a sub-unit's combat experience gain reads, e.g. experience_gain_destroyer_combat_factor.</summary>
+    public static string SubUnitCombatFactor(string subUnit)
+    {
+        return $"experience_gain_{subUnit}_combat_factor";
+    }
+
     public static void AddExperience(Ship ship, double amount, GameDefines defines)
     {
         ship.Experience = Math.Clamp(ship.Experience + amount, 0, defines.NNavy.NAVY_MAX_XP);
@@ -116,7 +143,14 @@ public static class ExperienceRules
             return 0;
         }
 
-        // naval_casualty_on_hit_factor is not modelled.
+        // [RE] 0xc3e305: the loss ratio is x (1 + navy_casualty_on_hit); none at all when that is <= 0.
+        var casualty = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyCasualtyOnHit, 0, defines);
+
+        if (casualty <= 0)
+        {
+            return 0;
+        }
+
         var floor = RoundHalfAway(ship.MaxManpower * navy.MIN_MANPOWER_RATIO_TO_DROP);
 
         if (ship.CurrentManpower <= floor)
@@ -127,6 +161,11 @@ public static class ExperienceRules
         // [CAL] The game keeps strDamage / maxHp in fx5, truncated: rounding the exact ratio misses 48 of 22087 logged
         // losses (fractions just above .5 that the game rounds down), the truncated ratio none.
         var ratio = Math.Floor(strDamage / maxHp * 100000 + 1e-9) / 100000;
+
+        if (casualty != 1)
+        {
+            ratio = Math.Floor(ratio * casualty * 100000 + 1e-9) / 100000;
+        }
         var loss = RoundHalfAway(ship.MaxManpower * ratio * navy.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
         var applied = Math.Min(loss, ship.CurrentManpower - floor);
         ship.CurrentManpower -= applied;
@@ -165,12 +204,12 @@ public static class ExperienceRules
 
     /// <summary>
     /// S-ORG-REGAIN [RE + CAL] 0xc395a0: every ship that is not fighting regains
-    /// <c>(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + naval_morale_factor)</c> organization an hour, up to
-    /// its maximum (a fire, S-CRIT-PART, has naval_morale_factor −0.8). Not modelled: the +0.1 in that factor for the
-    /// side with naval dominance in the region (NAVAL_DOMINANCE_ORG_RECOVERY; 0.22 an hour in the logged battle) and a
-    /// ship value at +0x120.
+    /// <c>(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + naval_morale_factor + dominance)</c> organization an
+    /// hour, up to its maximum (a fire, S-CRIT-PART, has naval_morale_factor −0.8). <paramref name="dominance"/> is
+    /// NAVAL_DOMINANCE_ORG_RECOVERY for the side with naval dominance (S-DOMINANCE), else 0. Not modelled: a ship value at
+    /// +0x120 in the same factor.
     /// </summary>
-    public static double HourlyOrganizationRegain(Ship ship, GameDefines defines)
+    public static double HourlyOrganizationRegain(Ship ship, GameDefines defines, double dominance = 0)
     {
         if (ship.IsSunk || ship.CurrentStatus == ShipStatus.Active)
         {
@@ -179,7 +218,7 @@ public static class ExperienceRules
 
         var maximum = CombatStatRules.MaxOrganization(ship, defines);
         var regain = (defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMorale, 0, defines)) *
-                     Math.Max(0, 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMoraleFactor, 0, defines));
+                     Math.Max(0, 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMoraleFactor, 0, defines) + dominance);
         var gain = Math.Max(0, Math.Min(regain, maximum - ship.CurrentOrganization));
         ship.CurrentOrganization += gain;
         return gain;

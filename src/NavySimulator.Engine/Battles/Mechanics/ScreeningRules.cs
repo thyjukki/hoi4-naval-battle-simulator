@@ -7,10 +7,19 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 /// </summary>
 public static class ScreeningRules
 {
-    public static ScreeningSummary Calculate(BattleLines lines, double positioning, GameDefines defines)
+    /// <summary>
+    /// <paramref name="screeningEfficiency"/> and <paramref name="screeningWithoutScreens"/> are the side's country
+    /// modifiers <c>screening_efficiency</c> and <c>screening_without_screens</c> (doctrines, spirits).
+    /// </summary>
+    public static ScreeningSummary Calculate(
+        BattleLines lines,
+        double positioning,
+        GameDefines defines,
+        double screeningEfficiency = 0,
+        double screeningWithoutScreens = 0)
     {
         var navy = defines.NNavy;
-        var factor = ContributionFactor(positioning, defines);
+        var factor = ContributionFactor(positioning, defines, screeningEfficiency);
 
         // Ships in every in-battle state count; submarines do not take part in screening.
         var capitals = lines.Capitals.Count;
@@ -26,6 +35,12 @@ public static class ScreeningRules
         if (neededScreens > 0)
         {
             screening = Math.Clamp(screens / neededScreens * factor, 0, 1);
+
+            // [RE] 0x161ec40: a side with no screens gets screening_without_screens, added after the clamp.
+            if (screening == 0 && screens == 0)
+            {
+                screening += Math.Max(0, screeningWithoutScreens);
+            }
         }
 
         var carrierScreening = 1.0;
@@ -41,10 +56,10 @@ public static class ScreeningRules
         return new ScreeningSummary(screening, carrierScreening);
     }
 
-    // [RE] 1 + screening_efficiency modifier (none modelled) - penalty * (1 - positioning), at least 0.01.
-    public static double ContributionFactor(double positioning, GameDefines defines)
+    // [RE] 0x161ccb0: 1 + screening_efficiency - penalty * (1 - positioning), at least 0.01.
+    public static double ContributionFactor(double positioning, GameDefines defines, double screeningEfficiency = 0)
     {
-        var factor = 1.0 - defines.NNavy.SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
+        var factor = 1.0 + screeningEfficiency - defines.NNavy.SCREENING_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING * (1.0 - positioning);
         return Math.Max(factor, defines.Hardcoded.MinScreeningFactor);
     }
 

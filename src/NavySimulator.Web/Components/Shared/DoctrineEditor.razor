@@ -1,0 +1,159 @@
+@* Editor for a side's doctrines in one folder (S-DOCTRINE): grand doctrine, and per track the subdoctrine and its mastery. Edits Side.Doctrines in place. *@
+@using NavySimulator.Web.Services
+
+<div class="field span-2">
+    <label>@(Folder.Name ?? Folder.ID)</label>
+    <select @bind:get="Setup?.GrandDoctrine ?? string.Empty" @bind:set="SetGrandDoctrine">
+        <option value="">(none)</option>
+        @foreach (var doctrine in Folder.GrandDoctrines)
+        {
+            <option value="@doctrine.ID">@(doctrine.Name ?? doctrine.ID)</option>
+        }
+    </select>
+    @if (!string.IsNullOrEmpty(Hint))
+    {
+        <span class="hint">@Hint</span>
+    }
+    @if (Grand is { } grand)
+    {
+        <span class="hint" title="@DoctrineInfo.Summarize(grand.Effects)">@DoctrineInfo.Summarize(grand.Effects)</span>
+        <table class="data compact" style="margin-top: 6px">
+            <thead><tr><th>Track</th><th>Subdoctrine</th><th class="num">Mastery</th><th>Rewards</th></tr></thead>
+            <tbody>
+                @foreach (var trackId in grand.Tracks)
+                {
+                    var track = trackId;
+                    var slot = Setup!.Tracks.GetValueOrDefault(track);
+                    var subdoctrine = slot is null ? null : Folder.Subdoctrines.FirstOrDefault(candidate => candidate.ID == slot.Subdoctrine);
+                    var rewards = subdoctrine is null ? [] : DoctrineInfo.Rewards(subdoctrine, slot!.Mastery);
+                    var unlocked = rewards.Count(reward => reward.Unlocked);
+                    <tr>
+                        <td class="nowrap">@TrackName(track)</td>
+                        <td>
+                            <select @bind:get="slot?.Subdoctrine ?? string.Empty" @bind:set="value => SetSubdoctrine(track, value)">
+                                <option value="">(none)</option>
+                                @foreach (var candidate in Folder.Subdoctrines.Where(candidate => candidate.Tracks.Contains(track)))
+                                {
+                                    <option value="@candidate.ID">@(candidate.Name ?? candidate.ID)</option>
+                                }
+                                @if (slot is not null && subdoctrine is null)
+                                {
+                                    <option value="@slot.Subdoctrine">@slot.Subdoctrine (unknown)</option>
+                                }
+                            </select>
+                        </td>
+                        <td class="num">
+                            @if (slot is not null)
+                            {
+                                <input type="number" min="0" step="25" style="width: 76px" @bind:get="slot.Mastery" @bind:set="value => SetMastery(track, value)" />
+                            }
+                        </td>
+                        <td>
+                            @if (subdoctrine is not null)
+                            {
+                                <select title="Set the mastery to unlock this many rewards" @bind:get="unlocked.ToString()" @bind:set="value => SetRewards(track, subdoctrine, value)">
+                                    <option value="0">0 / @rewards.Count</option>
+                                    @for (var i = 0; i < rewards.Count; i++)
+                                    {
+                                        <option value="@(i + 1)">@(i + 1) / @rewards.Count (@rewards[i].Threshold)</option>
+                                    }
+                                </select>
+                                @if (rewards.Count > 0 && unlocked == rewards.Count)
+                                {
+                                    <span class="ok small" title="@DoctrineInfo.Summarize(grand.Milestones.GetValueOrDefault(track))"> milestone</span>
+                                }
+                            }
+                        </td>
+                    </tr>
+                    @if (subdoctrine is not null)
+                    {
+                        <tr>
+                            <td></td>
+                            <td colspan="3" class="small">
+                                <div class="muted" title="Subdoctrine effects">@DoctrineInfo.Summarize(subdoctrine.Effects)</div>
+                                @foreach (var reward in rewards)
+                                {
+                                    <div class="@(reward.Unlocked ? "" : "faint")" title="Unlocks at mastery @reward.Threshold">
+                                        @(reward.Unlocked ? "✓" : "·") @(reward.Reward.Name ?? reward.Reward.ID): @DoctrineInfo.Summarize(reward.Reward.Effects)
+                                    </div>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public DoctrineFolderDto Folder { get; set; } = null!;
+    [Parameter, EditorRequired] public BattleParticipantDto Side { get; set; } = null!;
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private DoctrineSetupDto? Setup => Side.Doctrines.GetValueOrDefault(Folder.ID);
+
+    private GrandDoctrineDto? Grand => Setup is { } setup ? Folder.GrandDoctrines.FirstOrDefault(doctrine => doctrine.ID == setup.GrandDoctrine) : null;
+
+    private string TrackName(string id)
+    {
+        return Folder.Tracks.FirstOrDefault(track => track.ID == id)?.Name ?? id;
+    }
+
+    private async Task SetGrandDoctrine(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            Side.Doctrines.Remove(Folder.ID);
+        }
+        else
+        {
+            // Tracks the new grand doctrine also opens keep their subdoctrine and mastery.
+            var tracks = Folder.GrandDoctrines.FirstOrDefault(doctrine => doctrine.ID == value)?.Tracks ?? [];
+            var kept = (Setup?.Tracks ?? []).Where(track => tracks.Contains(track.Key)).ToDictionary(track => track.Key, track => track.Value);
+            Side.Doctrines[Folder.ID] = new DoctrineSetupDto { GrandDoctrine = value, Tracks = kept };
+        }
+
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetSubdoctrine(string track, string value)
+    {
+        if (Setup is not { } setup)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(value))
+        {
+            setup.Tracks.Remove(track);
+        }
+        else if (setup.Tracks.TryGetValue(track, out var slot))
+        {
+            slot.Subdoctrine = value;
+        }
+        else
+        {
+            setup.Tracks[track] = new TrackSetupDto { Subdoctrine = value };
+        }
+
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetMastery(string track, double value)
+    {
+        if (Setup?.Tracks.GetValueOrDefault(track) is { } slot)
+        {
+            slot.Mastery = Math.Max(0, value);
+            await OnChanged.InvokeAsync();
+        }
+    }
+
+    private async Task SetRewards(string track, SubdoctrineDto subdoctrine, string value)
+    {
+        var count = int.TryParse(value, out var parsed) ? parsed : 0;
+        var rewards = DoctrineInfo.Rewards(subdoctrine, 0);
+        await SetMastery(track, count <= 0 || rewards.Count == 0 ? 0 : rewards[Math.Min(count, rewards.Count) - 1].Threshold);
+    }
+}

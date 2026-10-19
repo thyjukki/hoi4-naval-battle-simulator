@@ -4,8 +4,8 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 
 /// <summary>
 /// S-POS: positioning (0..1), computed for both sides at the start of every hour (0x161b960). Spec: docs/mechanics/surface.md.
-/// Not modelled (no inputs for them): admiral/country positioning modifiers, the carrier-ratio penalty (needs air),
-/// the penalty for ships joining a running battle, and the convoy-escort dominance bonus.
+/// Not modelled (no inputs for them): the defender's initial-phase modifier, the penalty for ships joining a running
+/// battle, and the convoy-escort dominance bonus.
 /// </summary>
 public static class PositioningRules
 {
@@ -14,10 +14,14 @@ public static class PositioningRules
         BattleLines enemy,
         GameDefines defines,
         double ownCarrierAir = 0,
-        (double A, double B) enemyCarrierAir = default)
+        (double A, double B) enemyCarrierAir = default,
+        double positioningModifier = 0,
+        double enemyFleetSizePenaltyFactor = 0)
     {
-        var positioning = defines.NNavy.BASE_POSITIONING;
-        positioning -= FleetSizePenalty(own.Count, enemy.Count, defines);
+        // S-POS-MOD [RE] 0x161bb4c: the side's positioning modifier (country: doctrines, spirits; admiral) joins the sum
+        // before the clamp.
+        var positioning = defines.NNavy.BASE_POSITIONING + positioningModifier;
+        positioning -= FleetSizePenalty(own.Count, enemy.Count, defines, enemyFleetSizePenaltyFactor);
         positioning -= CarrierRatioPenalty(ownCarrierAir, enemyCarrierAir.A, enemyCarrierAir.B, defines);
         positioning += DetectionBonus(own, enemy, defines);
         return Math.Clamp(positioning, 0, 1);
@@ -38,8 +42,9 @@ public static class PositioningRules
         return Math.Clamp(penalty, 0, navy.MAX_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR);
     }
 
-    // S-POS-SIZE [RE]: every ship in the battle counts 1 (all lines, retreating included).
-    public static double FleetSizePenalty(int ownShips, int enemyShips, GameDefines defines)
+    // S-POS-SIZE [RE]: every ship in the battle counts 1 (all lines, retreating included). 0x161bfdc: the penalty × (1 +
+    // the enemy commanding admiral's naval_enemy_fleet_size_ratio_penalty_factor) before the cap (S-ADMIRAL).
+    public static double FleetSizePenalty(int ownShips, int enemyShips, GameDefines defines, double enemyAdmiralFactor = 0)
     {
         var navy = defines.NNavy;
 
@@ -48,7 +53,7 @@ public static class PositioningRules
             return 0;
         }
 
-        var penalty = (ownShips / (double)enemyShips - 1.0) * navy.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR;
+        var penalty = (ownShips / (double)enemyShips - 1.0) * navy.HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR * (1 + enemyAdmiralFactor);
         return Math.Clamp(penalty, 0, navy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO);
     }
 

@@ -15,13 +15,15 @@ public static class ReplayCommand
     public const string Name = "replay";
 
     public const string Usage = """
-        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>]
+        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>]
 
           --log <dir>         A run folder of tools/ingame/run_battles.py (meta.json, raw.jsonl), logged with rolls
           --data <dir>        Data directory (default: ./data)
           --scenario <file>   Scenario the battle was generated from (default: battle-scenario.json)
           --defines <path>    Define source, as for a battle run (the game's mod folder)
           --details <n>       Hours to describe in detail (default 10)
+          --shots <file>      Write every shot, game and engine side by side, as CSV
+          --states <file>     Write every end-of-hour ship value that differs, as CSV
 
         Each hour starts from the game's logged state and is fought with the game's rolls; the attacker is the game's.
         """;
@@ -33,6 +35,8 @@ public static class ReplayCommand
         var defineSources = new List<string>();
         string? logDirectory = null;
         var details = 10;
+        string? shotsFile = null;
+        string? statesFile = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -65,6 +69,12 @@ public static class ReplayCommand
                     break;
                 case "--details":
                     details = int.Parse(args[++i]);
+                    break;
+                case "--shots":
+                    shotsFile = args[++i];
+                    break;
+                case "--states":
+                    statesFile = args[++i];
                     break;
                 default:
                     Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
@@ -111,7 +121,33 @@ public static class ReplayCommand
         }
 
         var map = log.MapOnto(scenario);
-        var reports = BattleReplay.Run(scenario, log.Hours(map));
+        using var shots = shotsFile is null ? null : new StreamWriter(shotsFile);
+        shots?.WriteLine("hour,index,gameShooter,gameWeapon,gameTarget,gameHit,gameHitChance,gameHpDamage," +
+                         "engineSide,engineShooter,engineWeapon,engineTarget,engineHit,engineHitChance,engineProfileFactor,engineHitModifier,engineDamage,enginePiercingTier,engineHpDamage");
+        var reports = BattleReplay.Run(scenario, log.Hours(map), shots is null ? null : (hour, game, engine) =>
+        {
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+            for (var i = 0; i < Math.Max(game.Count, engine.Count); i++)
+            {
+                var g = i < game.Count ? game[i] : null;
+                var e = i < engine.Count ? engine[i] : null;
+                shots.WriteLine(string.Join(",",
+                    hour, i,
+                    g?.ShooterId, g?.Weapon, g?.TargetId, g?.Hit, g?.HitChance.ToString("R", invariant), g?.HpDamage.ToString("R", invariant),
+                    e?.ShooterSide, e?.ShooterId, e?.Weapon, e?.TargetId, e?.Hit, e?.HitChance.ToString("R", invariant),
+                    e?.ProfileFactor.ToString("R", invariant), e?.HitModifier.ToString("R", invariant), e?.Damage.ToString("R", invariant),
+                    e?.PiercingTier, e?.HpDamage.ToString("R", invariant)));
+            }
+        });
+        if (statesFile is not null)
+        {
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+            File.WriteAllLines(statesFile, reports.SelectMany(report => report.StateMismatches.Select(mismatch => string.Join(",",
+                    report.Hour, mismatch.ShipId, mismatch.Field, mismatch.Game.ToString("R", invariant), mismatch.Engine.ToString("R", invariant))))
+                .Prepend("hour,ship,field,game,engine"));
+        }
+
         Print(scenario, log, reports, details);
         return 0;
     }

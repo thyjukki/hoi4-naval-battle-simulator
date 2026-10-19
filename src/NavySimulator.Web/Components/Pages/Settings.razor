@@ -108,9 +108,11 @@
                     <dd class="mono small" style="word-break: break-all">@Workspace.OutputDirectory</dd>
                     <dt>Content</dt>
                     <dd>
-                        @Workspace.Catalog.Hulls.Count hulls, @Workspace.Catalog.Modules.Count modules, @Workspace.Catalog.ShipTypes.Count ship types, @Workspace.Catalog.Mios.Count MIOs,
+                        @Workspace.Catalog.Hulls.Count hulls, @Workspace.Catalog.Modules.Count modules, @Workspace.Catalog.ShipTypes.Count ship types, @Workspace.Catalog.Mios.Count MIOs, @Workspace.Catalog.MioPolicies.Count MIO policies,
                         @Workspace.Catalog.ShipDesigns.Count designs, @Workspace.Catalog.Fleets.Count fleets, @Workspace.Catalog.Researches.Count researches,
-                        @Workspace.Catalog.Spirits.Count spirits, @Workspace.Catalog.Planes.Count planes
+                        @Workspace.Catalog.Spirits.Count spirits, @Workspace.Catalog.DoctrineFolders.Sum(folder => folder.GrandDoctrines.Count) grand doctrines,
+                        @Workspace.Catalog.DoctrineFolders.Sum(folder => folder.Subdoctrines.Count) subdoctrines, @Workspace.Catalog.Admirals.Count admirals,
+                        @Workspace.Catalog.LeaderTraits.Count admiral traits, @Workspace.Catalog.Planes.Count planes
                     </dd>
                 </dl>
                 <div class="row">
@@ -122,6 +124,34 @@
                     <span class="small muted">
                         From @(ShipDataGame is null ? "the game (no HOI4 install found)" : ShipDataSourceNames()): replaces the files in
                         <code>hulls/</code>, <code>modules/</code> and <code>ship-types/</code>. Designs are kept; the Designs page shows rules they break.
+                    </span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportDoctrines" disabled="@(importing || ShipDataGame is null)">Import doctrines and spirits</button>
+                    <span class="small muted">
+                        From the same sources: replaces the files in <code>doctrines/</code> (naval and air) and <code>spirits/</code> (navy and air spirits).
+                        Scenarios keep their selections; the scenario check reports IDs that no longer exist.
+                    </span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportMios" disabled="@(importing || ShipDataGame is null)">Import MIOs</button>
+                    <span class="small muted">
+                        From the same sources: replaces the files in <code>mios/</code> (naval MIOs with their trait trees), <code>mio-policies/</code>
+                        and <code>equipment-groups/</code>. Designs keep their MIO and scenarios their unlocked traits.
+                    </span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportLeaders" disabled="@(importing || ShipDataGame is null)">Import admirals</button>
+                    <span class="small muted">
+                        From the same sources: replaces the files in <code>admirals/</code> (every character with a navy leader role),
+                        <code>leader-traits/</code> and <code>leader-skills/</code>. Scenarios keep their admirals (a copy of the picked one).
+                    </span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportPlanes" disabled="@(importing || ShipDataGame is null)">Import planes</button>
+                    <span class="small muted">
+                        From the same sources: replaces the files in <code>planes/</code> with the game's fixed plane equipment
+                        (no plane designer). Fleets keep their carrier wings and scenarios their land-based planes and stockpiles.
                     </span>
                 </div>
                 <p class="small muted">Start the GUI with <code>--data &lt;dir&gt;</code> to work on another data directory.</p>
@@ -318,6 +348,103 @@
         {
             var import = await Task.Run(Workspace.ImportShipData);
             message = $"Imported {import.Hulls.Count} hulls, {import.Modules.Count} modules and {import.ShipTypes.Count} ship types from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportDoctrines()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportDoctrines);
+            var folders = string.Join(", ", import.Folders.Select(folder => $"{folder.GrandDoctrines.Count} {folder.ID} grand doctrines and {folder.Subdoctrines.Count} subdoctrines"));
+            message = $"Imported {folders} and {import.Spirits.Count} spirits from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportPlanes()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportPlanes);
+            message = $"Imported {import.Planes.Count} planes ({import.Planes.Count(plane => plane.CarrierCapable)} carrier capable) from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportLeaders()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportLeaders);
+            message = $"Imported {import.Admirals.Count} admirals, {import.Traits.Count} admiral traits and {import.Skills.Count} navy skills from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportMios()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportMios);
+            message = $"Imported {import.Mios.Count} naval MIOs ({import.Mios.Sum(item => item.Mio.Traits.Count)} traits) and {import.Policies.Count} policies from {ShipDataSourceNames()}." +
                       (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
             messageIsError = false;
         }

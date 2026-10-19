@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS].
 
 ## 1. Functions
 
@@ -19,7 +19,9 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | RVA | Name / role | Spec IDs | Finding |
 |---|---|---|---|
 | 0x36f0 | console command registration (`weather`, `enable_weather`, `disable_weather`, `reloadweather`, `set_weather`, …) | S-WEATHER | [WTH/cmd] |
+| 0x120540 | CNavyLeader vt+0x78: returns 0 (leaf) | S-ADMIRAL | [ADM/map] |
 | 0x1a5630 | "Resetting game": clears HasGameStarted (gamestate+0xa39) via 0x1edff0 | S-MANPOWER | [XP/mp] |
+| 0x1aeb50 | feature (DLC) flag by index (jump table): 0xf = bit 4 of 0x332f248 gates pride of the fleet (eligibility, history flag, AI); 0x3a gates the captain XP of 0xc31840 | S-POTF | [POTF/assign] |
 | 0x1d4810 | `gamestate.daily`: runs `country.daily` 0x6e76a0 for every country (0x1d59eb) | S-MANPOWER | [XP/mp] |
 | 0x1dd370 | gamestate tick: date += 1 h, hourly update 0x1df400, then `gamestate.daily` 0x1d4810 only if the day changed (0x1de3f5) | S-MANPOWER, S-HOUR | [XP/mp] |
 | 0x1df400 | gamestate hourly update (`DoCountryHourlyUpdates`); calls the combat manager hourly update 0xbb8ae0 (0x1e0103) | S-HOUR | [XP/mp] |
@@ -31,60 +33,131 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x27e220 | console `run <file>`: feeds each line through the console input | — | [LOG] |
 | 0x2874b0 | console `set_weather` ("Weather was set to '"); not decoded | S-WEATHER | [WTH/open] |
 | 0x535c40 | resolves member+0x10 convoy reference | S-TARGET | [TGT/bb] |
-| 0x5574d0 | modifier registration call `(token, id, …)` | — | [HIT/map], [DMG/conv] |
+| 0x5570f0 | add a modifier container into another (copy into a cleared one) | — | [STC/leader] |
+| 0x5574b0 | static modifier struct accessor (global 0x3330098, after 0x558710); same struct as 0x55b160 | S-POTF | [POTF/sink] |
+| 0x5574d0 | modifier registration call `(token, id, name, flags, a5, a6, a7, a8, a9)`: flags → `def+0x60`, a5 → +0x74, a6 → +0x64, strings → +0x00/+0x20/+0x40, a9 → +0x68, id → +0x6c, token → +0x70 | S-ADMIRAL-MOD | [HIT/map], [DMG/conv], [ADM/scale] |
+| 0x557840 | add a modifier holder × scale into a container | — | [STC/leader] |
 | 0x557aa0 | add modifier block scaled by `s` | S-XP-EFFECT | [XP/effect] |
-| 0x55b160 | global modifier block (XP flat gain, one branch) | S-XP-GAIN | [XP/gain] |
+| 0x5583a0 | clear a modifier container | — | [STC/leader] |
+| 0x55b160 | static modifier struct accessor (global 0x3330098; leaf). XP's "global block in one branch" is `pride_of_the_fleet` (+0xb0), read for the PotF ship at 0xc3b347 / 0xc3b36d | S-XP-GAIN | [XP/gain], [POTF/xp] |
+| 0x55e360 | modifier container `Get(container, out, id)` | all | [STC/names] |
 | 0x55f7f0 | modifier-definition registration (`MODIFIER_*` → id) | — | [HIT/map], [DMG/conv] |
+| 0x60d830 | static modifier loader: block name → offset (`night` +0x58, `pride_of_the_fleet` +0xb0 (0x60ea80), `pride_of_the_fleet_country` +0xb8 (0x60eada), `pride_of_the_fleet_sunk_temporary` +0xc0 (0x60eb34), `screening_bonus` +0x100, …) | S-HIT-MODS, S-STATS-COMBAT | [STC/sum], [POTF/static] |
+| 0x60fbd0 | scale a container's entries by a factor `(container, factor, depth)`; factor 1.0 = no-op. ~~bit 1 = scale, bit 2 = keep negatives~~ settled ([README/disagree]): flag bit 1 (positive is good) → every nonzero entry × factor; else bit 2 (neutral) → unchanged; else (positive is bad) → negative entries only; depth > 1 recurses into child containers `+0x18` | S-STATS-COUNTRY, S-ADMIRAL-MOD | [STC/leader], [ADM/scale] |
+| 0x6dade0 | `CCountry::UpdateModifiers` ("country.calc_modifier", see the doctrine table) into `country+0x5b8`: adds static `pride_of_the_fleet_country` (+0xb8) while `country+0x250` resolves (0x6dba8d); `pride_of_the_fleet_sunk_temporary` (+0xc0) while the date lost (`+0x260`) is set and `days(now) − days(lost) < PRIDE_OF_THE_FLEET_LOST_TEMP_MODIFIER_DURATION`, then `country+0x270 = 1` (0x6dbb48..0x6dbd48) | S-POTF, S-STATS-COUNTRY | [POTF/sink] |
 | 0x6e76a0 | `country.daily`: `army.daily` (slot 19 on armies), `fleets.daily` (0xd54840 per fleet, country +0x278/+0x284), `railway_guns.daily` (slot 19) | S-MANPOWER | [XP/mp] |
+| 0x6f70f0 | country → `&country+0x250`, the pride-of-the-fleet ship handle (leaf); all 30 callers classified | S-STATS-COMBAT | [STATS/getter], [POTF/readers] |
 | 0x6ff065 | game-start init: task-force manpower refill with force = true | S-MANPOWER | [XP/mp] |
+| 0x705ce0 | CCountry ReadMember (vt+0x20; jump table at 0x709cf2 from token 0x3a9a): `pride_of_the_fleet` → handle reader 0x1b2240 into `country+0x250` (0x709d36); `pride_of_the_fleet_date_lost` → the date's persistent base `country+0x268` (0x709d4a) | S-POTF | [POTF/save] |
+| 0x70ba00 | add the leader-bound entries of `country+0x15b8` to a leader's source holders | S-STATS-COUNTRY | [STC/leader] |
+| 0x70c760 | pride of the fleet lost `(country)`: `country+0x260` = now (gamestate+0x468), then 0x6dade0; from the sunk-ship removal 0xd77ff0 and the scuttle 0xd76bd0 | S-POTF | [POTF/sink] |
+| 0x712700 | SetPrideOfTheFleet `(country, ship or null)`: `country+0x250` = handle (null clears), then 0x6dade0; callers: ship dtor 0xc30380 (clear), ship init 0xc34280 (history flag), command Execute 0x1356850 | S-POTF | [POTF/readers] |
+| 0x7191b0 | CCountry::Write (vt+0x10): `pride_of_the_fleet={ id type }` only when `country+0x250` is set (0x7192d4), then `pride_of_the_fleet_date_lost` (0x7192f7) | S-POTF | [POTF/save] |
 | 0x93c1d0 | define loader (only other reference to COMBAT_MIN_DURATION) | S-END | [HOUR/end] |
 | 0xa3b460 | ship reliability getter `[ship+0x328]` | S-CRIT | [HIT/crit] |
+| 0xae2e50 | skill list Get(i): `list[i]` if `1 <= i < count`, else `list[0]` (null object) | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xae50f0 | `common/unit_leader` skill reader: token → list (`leader_skills` db+0xe8, attack +0x160, defense +0x1d8, planning +0x250, logistics +0x2c8, maneuvering +0x340, coordination +0x3b8) → 0xaed2c0 | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xae7d60 / 0xae7fb0 / 0xae80b0 / 0xae7d80 | skill lookup `(db, level, type)` in the attack / defense / maneuvering / coordination list → 0xae2e50 | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xae94a0 | trait → its `night` adjuster (token 0x2ea8; leaf) | S-STATS-COMBAT | [STC/leader] |
+| 0xae94f0 / 0xae9510 / 0xae9530 / 0xae9500 | entry count (null object included) of the attack / defense / maneuvering / coordination list (leaf) | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xae9da0 | skill-level database lookup (level, leader type) → `leader+0xe60`; the overall-skill list db+0xe8, via 0xae2e50 | S-STATS-COUNTRY, S-ADMIRAL-SKILL | [STC/leader], [ADM/skill] |
+| 0xaea5f0 | trait → its adjuster for one terrain | S-STATS-COMBAT | [STC/leader] |
+| 0xaebc20 | unit leader trait parser: `modifier` +0x360, `non_shared_modifier` +0x420, `corps_commander_modifier` +0x4e0, `field_marshal_modifier` +0x5a0; inside `modifier` a terrain or `night` key becomes an adjuster (`+0x768`, 0xaeca3f..), not a modifier; `sub_unit_modifiers` → `+0x780` (0xaed09b) | S-STATS-COUNTRY, S-ADMIRAL-TRAIT | [STC/leader], [ADM/adjust] |
+| 0xaed2c0 | skill block reader: `N = { … }` (integer N ≥ 1), entry +0x1b8 = N, +0x1c0 = type; `list[type]` grown to N + 1 with the null object, `list[type][N] = entry` | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xbb48f0 | country tag handle → country | — | [STC/sum] |
+| 0xbb52f0 | same original tag `(tag*, tag)`: `gamestate+0x340` table entries equal | S-POTF | [POTF/assign] |
+| 0xbb5490 | country tag → country index | — | [STATS/getter] |
 | 0xbb8ae0 | combat manager hourly update: validity, Update, then EndHour on every combat | S-HOUR | [HOUR/chain] |
 | 0xbba1b0 | remove combat | S-HOUR | [HOUR/chain] |
+| 0xbd5d60 | variant dominance `naval_dominance_factor × (1 + (speed − S)/2S + (range − R)/2R + hg_attack × H + carrier_size × C)` | S-DOMINANCE | [DOM] |
 | 0xbf9b90 | level = count of `UNIT_EXP_LEVELS[i] <= xp/maxXP` | S-XP-LEVELS | [XP/levels] |
 | 0xbf9d90 | progress within level (UI only) | S-XP-LEVELS | [XP/levels] |
+| 0xbfbff0 | unit → its combats list `unit+0x1a8` (count +0x1b4; leaf) | S-POTF | [POTF/combat] |
 | 0xc00000 | task force in combat (`tf+0x1b4 > 0`) | S-XP-GAIN | [XP/gain] |
+| 0xc03e00 | CUnit::RemoveCombat `(unit, combat)`: removes the combat from `unit+0x1a8`; callers: naval combat teardown 0x15c2980, leave/join 0x13e3570 / 0x13e3990 (no escape path) | S-POTF | [POTF/combat] |
+| 0xc0dc90 | scoped pointer deref (asserts non-null, `pdx_scopedptr.h`); used on `ship+0x8f8` | S-XP-GAIN | [POTF/xp] |
 | 0xc0f200 | captain XP gain (`gain × LEADER_EXPERIENCE_SCALE`) | S-XP-GAIN | [XP/gain] |
+| 0xc0fb70 | leader: sum trait adjusters (`night` → +0x260, terrains → +0x248, sub-units → +0x128) | S-STATS-COMBAT | [STC/leader] |
+| 0xc0fdb0 | cooldown days `days + int(days × B.reassignment_duration_factor (0x181))` (B only, no country term) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc10a10 | CUnitLeader vt+0x90: group-cap factor (cap vt+0x68 = `leader+0xe74`, n = vt+0x78); 1 when cap ≤ 0 or n ≤ cap | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc10ab0 | CUnitLeader vt+0x88 `(leader, out, useCorpsCap)`: unit-cap factor (cap `CORPS_COMMANDER_DIVISIONS_CAP` or vt+0x60 = `leader+0xe70`, n = vt+0x70); 1 when cap ≤ 0 or n ≤ cap, else `max(0, 1 − min(1, (n − cap)/cap))` | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc11540 | CNavyLeader vt+0xf0: add the four skill levels' `modifier` (`leader+0xf70/+0xf80/+0xf90/+0xfa0`) | S-STATS-COUNTRY | [STC/leader] |
+| 0xc16d10 | CNavyLeader vt+0x70: Σ over the fleet's task forces of `0xd6eeb0(tf)+0xc` (ship count, medium) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc186d0 / 0xc18790 | CUnitLeader vt+0x68 / vt+0x60: `leader+0xe74` / `leader+0xe70` (leaf) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc18780 | `ADMIRAL_TASKFORCE_CAP` getter (leaf, ignores its argument) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc199f0 | overall skill level `[leader+0xe60]+0x1b8` (leaf) | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xc19ba0 | admiral per-sub-unit adjuster record (`leader+0x128` → adjuster list +0x130, via 0x101afc0) | S-STATS-COMBAT, S-ADMIRAL-ADJUST | [STATS/getter], [ADM/subunit] |
+| 0xc19bf0 | admiral per-sub-unit modifier holder (`leader+0x128` → modifier-block list +0x148, via 0x101b5e0); only caller 0xc38760 | S-ADMIRAL-MOD | [ADM/subunit] |
+| 0xc19c40 | admiral `_TerrainAdjusters[terrain+0x88]` (`leader+0x248`, 40-byte records) | S-STATS-COMBAT | [STATS/getter] |
+| 0xc19fa0 | leader size efficiency vt+0x88(false) × vt+0x90 × (navy: task-force cap factor 0xd53880); both vt factors are 1 for a navy leader | S-STATS-COUNTRY, S-ADMIRAL-MOD | [STC/leader], [ADM/eff] |
 | 0xc1aa20 | leader XP (BASE_LEADER_TRAIT_GAIN_XP, FIELD_MARSHAL_XP_RATIO) | S-HOUR | [HOUR/hour] |
+| 0xc1afc0 | navy leader: rebuild (0xc21fc0, vt+0xe0) when `0xd53880(fleet) != leader+0xfc0` | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc1ce70 | common unit leader save writer (`name` … `skill`, `experience`, `script_id`, …, `traits`, `in_progress`, …, `legacy_id`); no fleet assignment | S-ADMIRAL-SAVE | [ADM/save] |
+| 0xc1e650 / 0xc1e7c0 | CNavyLeader vt+0x100 / vt+0x108: add / remove a trait's `attack_skill`, `defense_skill`, `maneuvering_skill`, `coordination_skill` (set level = level + deficit ± add) | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xc1fd60 | start the modifier cooldown `(leader, reason, days, scaleByLeader)`: `+0xe84 = reason`, `+0xe90` start, `+0xea8` end hour (only extends) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc21280 | leader: rebuild trait adjusters (clears +0x270..+0x280, terrain and sub-unit records; → 0xc0fb70); nothing summed during a cooldown (`+0xe84`); scaled by the size efficiency 0xc19fa0 via 0x1016900 | S-STATS-COMBAT, S-ADMIRAL-ADJUST | [STC/leader], [ADM/adjust] |
+| 0xc21570 | leader: combine containers (A +0x358 scaled → +0x418, B +0x298); no country term. `eff = 0xc19fa0 + B.skill_bonus_factor` (≥ 0; 0 in a cooldown), scales A and the sub-unit modifier blocks (depth 2); navy second factor 1.0 | S-STATS-COUNTRY, S-POS, S-ADMIRAL-MOD | [STC/leader], [ADM/eff] |
+| 0xc21d30 | leader caps: `+0xe70 = 0`, `+0xe74 = −1`; corps commander / field marshal divisions and armies caps (+ B 0x15f / 0x160); navy keeps 0 / −1 | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc21fc0 | leader: rebuild source holders from traits, skill levels and leader-bound entries; merges the traits' sub-unit modifier blocks (0x101cc20) | S-STATS-COUNTRY | [STC/leader], [ADM/subunit] |
+| 0xc283f0 | navy leader save writer: 0xc1ce70, then `attack_skill`, `defense_skill`, `maneuvering_skill`, `coordination_skill`, the four `_temp_deficit`s, `naval_headquarter`, `penalty` | S-ADMIRAL-SAVE | [ADM/save] |
+| 0xc24740 / 0xc25580 / 0xc26c50 / 0xc260d0 | CArmyLeader set attack / defense / planning / logistics skill | — | [ADM/map] |
+| 0xc24870 / 0xc256b0 / 0xc26200 / 0xc253b0 | CNavyLeader set attack / defense / maneuvering / coordination skill `(leader, x, rebuild)`: deficit `min(0, x − 1)`, level `max(1, x)`, definition = list[min(level, count − 1)] | S-ADMIRAL-SKILL | [ADM/skill] |
+| 0xc24c70 | leader: set owning character (`+0xf48`) | — | [STC/leader] |
+| 0xc25b30 | leader → fleet `(leader, fleet, startCooldown)`: leaves the old fleet; reason-1 cooldown `UNIT_LEADER_MODIFIER_COOLDOWN_ON_GROUP_CHANGE` if it had another fleet | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc25db0 | leader's fleet set (fleet replaces its admiral): reason-1 cooldown if it had another fleet | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xc271b0 | SetSkillLevel (overall) `(leader, N)`: `+0xe60 = 0xae9da0(N)` if valid, else unchanged (no clamp) | S-ADMIRAL-SKILL | [ADM/skill] |
 | 0xc2ffe8 | ship constructor site: XP cap = NAVY_MAX_XP | S-XP-LEVELS | [XP/levels] |
+| 0xc30380 | CShip destructor body: if the ship is its owner's PotF and gamestate+0xa3a is 0, `0x712700(owner, null)` (0xc304f8) | S-POTF | [POTF/sink] |
+| 0xc30cc0 | CShip scalar deleting destructor (vt+0 of 0x2957f28) → 0xc30380 | S-POTF | [POTF/sink] |
+| 0xc30d00 | ship → `&tf+0x1d8` (owner tag; leaf) | S-POTF | [POTF/readers] |
 | 0xc31030 | merge critical-part candidate into (part, max instances): append with base_damage_instance, or add damage_instance_per_added_module capped at max_damage_instance | S-CRIT-PART | [DMG/part] |
-| 0xc31840 | add ship XP with modifiers (mode 0 = combat) → 0xc3b240 | S-XP-GAIN | [XP/gain] |
+| 0xc31840 | add ship XP `(ship, gain fx5, mode)` (mode 0 combat, 1 mission, 2 training) → 0xc3b240; `xp = min(xp + d, NAVY_MAX_XP)`, dirty; if `d > 0` and mode ≠ 2 the captain record `ship+0x848` gets `d × CAPTAIN_EXPERIENCE_ON_SHIP_MULT × (1 + medals × CAPTAIN_EXPERIENCE_ON_SHIP_PER_MEDAL_MULT)` (feature 0x3a) | S-XP-GAIN | [XP/gain], [POTF/xp] |
+| 0xc327e0 | add `holder+0x10 .Get(id)` into out (+ tooltip line) | — | [STC/sum] |
+| 0xc33240 | ship dominance: variant 0x100ff30(`ship+0x40`) → 0xbd5d60 | S-DOMINANCE | [DOM] |
 | 0xc333e0 | ship stat part by index (0x18 = carrier surface detection) | S-POS-DETECT | [POS/detect] |
 | 0xc338a0 | ship combat XP gain per hour | S-XP-GAIN | [XP/gain], [HOUR/hour] |
 | 0xc339d0 | level progress (UI only) | S-XP-LEVELS | [XP/levels] |
+| 0xc33a50 | CanBecomePrideOfTheFleet: feature 0xf and (sub-unit `capital_ship` or the carrier test of 0xc3af20 inlined) and the government-in-exile tag `ship+0x804` unset, equal to the owner or of the same original tag (0xbb52f0); used by the UI button 0x1bed5f0 and the AI 0x1a68d40 | S-POTF | [POTF/assign] |
+| 0xc34280 | ship init (assigns the handle id; from InitPostRead 0xc3ad50 and the deployment 0xd0fc86): consumes the history flag `ship+0x814`; if feature 0xf, logs "Setting a ship that can't become potf as potf." when the 0xc33a50 tests fail, then sets it anyway via 0x712700 | S-POTF | [POTF/assign] |
 | 0xc34500 | critical part damage `(ship, &str, &org)`; true = part hit, crit mult skipped | S-CRIT-PART | [DMG/part], [HIT/crit] |
-| 0xc34a50 | attack getter `base × (1 + Σ factors)`, ≥ 0 (not fully decoded) | S-DMG | [DMG/dmg] |
+| 0xc34a50 | attack/armor getter `max(0, base × (1 + Σ))`, fully decoded: type-gated factors, night × darkness, naval terrain, admiral adjusters, pride of the fleet, fuel | S-DMG, S-STATS-COMBAT | [DMG/dmg], [STATS/getter], [POTF/combat] |
 | 0xc36390 | ship experience level | S-XP-LEVELS | [XP/levels] |
 | 0xc37000 (body 0xc37006) | ship hit profile | S-HIT-SHIP | [HIT/ship] |
 | 0xc37180 | hit profile tooltip (UI only) | S-HIT-SHIP | [HIT/map] |
 | 0xc37ae0 | manpower ratio `[+0x808]/[+0x80c]`, clamped [0,1] | S-HIT | [HIT/hit] |
 | 0xc37e70 | max org | S-DMG-APPLY | [DMG/apply] |
-| 0xc38760 | ship modifier sum / generic modifier gather (country, location, parts × (1 + 0x1bb)) | S-HIT-MODS, S-DMG, S-CRIT-PART | [HIT/mods], [DMG/dmg], [DMG/part] |
+| 0xc38760 | ship modifier sum `(out, ship, id, admiral)`: country, PotF static, experience, ship+0x8f8 object, task force, naval terrain × sub-unit, weather × factor, province, admiral +0x418 (or fleet admiral), the admiral's sub-unit block 0xc19bf0 (key `ship+0x80+0x58c`), parts × (1 + a separate full 0xc38760 call for 0x1bb with the resolved admiral, 0xc38b58), max building-module term | S-HIT-MODS, S-DMG, S-CRIT-PART, S-STATS-COUNTRY | [HIT/mods], [DMG/dmg], [DMG/part], [STC/sum], [ADM/part], [POTF/static] |
 | 0xc39530 | org ratio `[ship+0x700] / maxOrg` | S-HIT, A-SORTIE | [HIT/hit], [AIR/sortie] |
-| 0xc395a0 | hourly organization regain: members not fighting (state ≠ 2) gain `(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + ship+0x120 + dominance + naval_morale_factor)` up to max organization | S-ORG-REGAIN | [LOG] |
-| 0xc3a470 | ship AA (STAT_NAVY_ANTI_AIR_ATTACK), optional battle context | S-POS, A-TARGET, A-AA-REDUCE | [POS/aa], [AIR/target] |
+| 0xc395a0 | hourly organization regain: members not fighting (state ≠ 2) gain `(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + ship+0x120 + dominance + naval_morale_factor)` up to max organization; dominance = NAVAL_DOMINANCE_ORG_RECOVERY when 0x1003f50 returns 1 for `tf+0x1dc` (else `+0x1d8`) in region `[tf+0x1f0]+0xc8` (0xc398f0..) | S-ORG-REGAIN, S-DOMINANCE | [LOG], [DOM] |
+| 0xc3a470 | ship AA `(anti_air_attack + navy_anti_air_attack) × (1 + navy_anti_air_attack_factor)`; third argument is an admiral (AIR read "battle context"; settled), 0 = own fleet admiral | S-POS, A-TARGET, A-AA-REDUCE | [POS/aa], [AIR/target], [STATS/getter] |
 | 0xc3a520 | armor | S-DMG-PIERCE | [HIT/pierce] |
 | 0xc3a570 | heavy piercing | S-DMG-PIERCE | [HIT/pierce] |
 | 0xc3a580 | heavy attack. **disagrees**: HOUR says light attack (settled: heavy) | S-COOLDOWN, S-DMG | [ACT/cooldown], [TGT/bb], [HIT/map], [HOUR/hour] |
 | 0xc3a5c0 | light piercing | S-DMG-PIERCE | [HIT/pierce] |
 | 0xc3a5d0 | light attack. **disagrees**: HOUR says torpedo attack (settled: light) | S-COOLDOWN, S-DMG | [TGT/bb], [HIT/map], [HOUR/hour] |
-| 0xc3a740 | current max speed incl. modifiers | S-HIT-SHIP, S-RETREAT-SPEED | [HIT/ship], [ACT/speed] |
+| 0xc3a740 | current max speed incl. modifiers `(ship, out, admiral)`: `speed × max(0.1, 1 + naval_speed_factor (sum with the admiral) + terrain sub-unit movement + fuel)`; no admiral adjuster | S-HIT-SHIP, S-RETREAT-SPEED, S-ADMIRAL | [HIT/ship], [ACT/speed], [ADM/speed] |
 | 0xc3a890 | depth-charge attack (HOUR: "an anti-sub stat", unverified) | S-COOLDOWN, S-TARGET-DC | [ACT/cooldown], [TGT/bb], [HOUR/hour] |
 | 0xc3a950 | member sub detection | S-SUB | [HOUR/hour] |
 | 0xc3aa20 | sub visibility (STAT_NAVY_SUB_VISIBILITY) | S-SUB | [ACT/sub], [POS/sub] |
 | 0xc3aae0 | effective surface detection | S-POS-DETECT | [POS/detect] |
+| 0xc3ab80 | surface visibility `ship+0x1c8 × (1 + navy_visibility)` | S-HIT-SHIP | [STATS/getter] |
 | 0xc3ac00 | torpedo attack. **disagrees**: HOUR says heavy attack (settled: torpedo) | S-COOLDOWN, S-DMG | [ACT/cooldown], [TGT/bb], [HOUR/hour] |
 | 0xc3ac60 | HP ratio `[+0x6f8] / max([+0x308], 0.001)` | S-RETREAT, S-TARGET-WEIGHT, S-DMG-APPLY | [ACT/retreat], [TGT/weight], [DMG/apply] |
+| 0xc3acc0 | ship's country: `tf+0x1dc` if > 0, else `tf+0x1d8` (leaf) | S-HIT-MODS, S-CRIT | [STATS/getter] |
+| 0xc3ad50 | CShip InitPostRead (vt+0x40) → 0xc34280 first | S-POTF | [POTF/assign] |
 | 0xc3af10 | is capital (`ship+0x628` bit 6) | S-SCREEN, A-STACK | [TGT/bb], [AIR/stack] |
-| 0xc3af20 | is carrier (bit 22 or 37 + set lookup) | S-SCREEN, S-XP, A-* | [TGT/bb], [XP/effect], [AIR/stack] |
+| 0xc3af20 | is carrier or missile launcher (type bits 22 `carrier` / 37 `missile_launcher` + set lookup) | S-SCREEN, S-XP, A-* | [TGT/bb], [XP/effect], [AIR/stack], [STATS/getter], [POTF/assign] |
+| 0xc3b0e0 | ship.IsPrideOfTheFleet: `{ship+8, +0xc}` == `country(tf+0x1d8)+0x250` (owner tag) | S-POTF | [POTF/readers] |
 | 0xc3b130 | "no parts / convoy-like"? test; part damage skipped (DMG ties it to the +0x738 link) | S-CRIT-PART | [HIT/crit], [DMG/apply] |
 | 0xc3b210 | is screen (bit 8) | S-SCREEN | [TGT/bb] |
 | 0xc3b220 | is submarine (bit 7) | S-TARGET | [TGT/bb] |
-| 0xc3b230 | bit-39 type (support ship?) | S-ACTIVATE, A-STACK | [TGT/bb], [ACT/activate] |
-| 0xc3b240 | XP add with flat (0x35) and factor (0x34) modifiers | S-XP-GAIN | [XP/gain] |
+| 0xc3b230 | type bit 39 = sub-unit type `support_ship` | S-ACTIVATE, A-STACK | [TGT/bb], [ACT/activate], [STATS/getter] |
+| 0xc3b240 | XP add `(ship, out, &g15, mode, tooltip)`: `out = (g15 + fx15(flat)) × fx15(1 + factor) >> 15`; flat 0x35 / factor 0x34 from the operating country `+0x5b8` and the ship's medal holder (`[ship+0x8f8]+0x1b0`), plus static `pride_of_the_fleet` for the owner's PotF; factor + country `[ship+0x66c / +0x668 / +0x664]` by mode; no admiral, no 0xc38760 | S-XP-GAIN | [XP/gain], [POTF/xp] |
 | 0xc3bde0 | per-ship step of the task-force update (XP gain, then 0xc3ce50) | S-XP-GAIN | [XP/gain] |
+| 0xc3c060 | naval accident roll (from the mission update 0xfbcb90, `navalmission.cpp`): chance × ACCIDENTS_CHANCE_BALANCE_FACTOR, × NAVAL_ACCIDENT_CHANCE_REDUCTION_ON_POTF for the PotF; accident crit × NAVAL_ACCIDENT_CRITICAL_HIT_CHANCE_REDUCTION_POTF (not decoded further; not battle) | S-POTF | [POTF/readers] |
+| 0xc3c5a0 | CShip ReadMember (vt+0x20): `pride_of_the_fleet` → `ship+0x814 = 1` (0xc3c8f2, value not read), `government_in_exile_tag` → `ship+0x804` (0xc3c8de) | S-POTF | [POTF/assign] |
 | 0xc3ce50 | recompute ship experience modifiers when `ship+0x800` dirty | S-XP-EFFECT | [XP/effect] |
-| 0xc3d090 | recompute ship stats `(ship, 1)` | S-CRIT-PART | [DMG/part] |
+| 0xc3d090 | recompute ship stats `(ship, 1)`; calls 0x6f70f0 at 0xc3d309 and discards the result | S-CRIT-PART | [DMG/part], [POTF/readers] |
 | 0xc3e0e0 | apply damage `(ship, str, org, flag)`: XP and manpower loss, HP, org | S-DMG-APPLY, S-XP-LOSS, A-DMG | [DMG/apply], [DMG/xp], [XP/loss], [HOUR/order] |
 | 0xc3e4e0 | ship manpower update `(ship, refill)` | S-MANPOWER | [XP/mp] |
 | 0xc3e680 | sunk check (HP ≤ 0, unless +0x738 link) | S-DMG-APPLY | [DMG/apply], [HOUR/order] |
@@ -93,14 +166,29 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xc54980 | port-strike external plane cap | A-EXTERNAL | [AIR/ext] |
 | 0xc579f0 | carrier overcrowding factor chain | A-SORTIE | [AIR/sortie] |
 | 0xc5c5c0 | fuel-related non-flying planes | A-LOSSES | [AIR/losses] |
+| 0xc959b0 | equipment type `naval_dominance_factor` (`type+0x3f0`; leaf) | S-DOMINANCE | [DOM] |
+| 0xc97b90 | equipment type keyword check along the archetype chain (dominance gate) | S-DOMINANCE | [DOM] |
 | 0xcfe7e0 | draw manpower from national pool | S-MANPOWER | [XP/mp] |
 | 0xd1b800 | reads 0x3334d70 (not COMBAT_DAMAGE_RANDOMNESS; who.py false positive) | S-DMG-RANDOM | [DMG/random] |
+| 0xd23780 | targeted-modifier entry → holder +0x130 (leaf) | S-HIT-MODS, S-STATS-COMBAT | [STATS/getter] |
+| 0xd53880 | admiral task-force cap factor `(fleet)`: 1 without a fleet admiral or with cap 0, else `n = 0xd55ed0`, `1 − clamp((n − cap)/cap, 0, 1)` | S-STATS-COUNTRY, S-ADMIRAL-MOD | [STC/leader], [ADM/eff] |
 | 0xd54840 | fleet daily update: vtable +0x98 (DailyUpdate) on each task force (fleet +0xb8, count +0xc4) | S-MANPOWER | [XP/mp] |
+| 0xd55ed0 | fleet's task forces with a non-empty ship list and `tf+0x4b8 == 0` (count) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xd582b0 | fleet member reader: `leader` (0x28b7) → `fleet+0xb0` as written, `home_base`, `automated_homebase`, task forces, … | S-ADMIRAL-SAVE | [ADM/save] |
+| 0xd5a170 | fleet SetAdmiral: old admiral → 0xc25db0(old, 0); `fleet+0xb0 = new`; new → 0xc25b30(new, fleet, 1) | S-ADMIRAL-MOD | [ADM/eff] |
+| 0xd5ebc0 | fleet save writer: id, `leader={ id type=4713 }` when set (`fleet+0xb0`), `name`, `color`, `icon`, `task_force`s, …, `home_base`, `automated_homebase` | S-ADMIRAL-SAVE | [ADM/save] |
+| 0xd64510 | task force's fleet admiral (`tf+0x340` → 0xd50ee0; leaf) | S-STATS-COMBAT | [STC/sum] |
+| 0xd67310 | weather factor `clamp(1 + country navy_weather_penalty, 0, 1)` | S-WEATHER | [STC/sum] |
 | 0xd69090 | CTaskForce::DailyUpdate (vtable slot 19): first calls 0xd7a7e0(tf, false), before and regardless of the in-combat test | S-MANPOWER | [XP/mp] |
+| 0xd6b1b0 / 0xd6b590 | task-force naval-terrain attack / defence fallback when the sub-unit index is < 0 (not decoded) | S-STATS-COMBAT | [STATS/getter] |
+| 0xd6c6f0 | task-force fuel ratio `tf+0x4f8 / tf+0x500`, ≥ 0 (leaf) | S-STATS-COMBAT | [STATS/getter] |
+| 0xd6d0c0 | task force's current naval combat (first combat of type 2) | S-STATS-COMBAT | [STATS/getter] |
 | 0xd6eeb0 | unit ship list | S-POS | [POS/joined] |
 | 0xd6fa50 | task-force modifiers | S-DMG | [DMG/dmg] |
+| 0xd70270 | task force holds its owner's PotF: `resolve(country(tf+0x1d8)+0x250)+0x728 == tf` (UI and AI only) | S-POTF | [POTF/readers] |
 | 0xd705f0 | CTaskForce update (vtable slot 18): per-ship XP | S-XP-GAIN | [XP/gain], [HOUR/hour] |
-| 0xd77ff0 | task force: remove a sunk ship; returns manpower to the pool, then refills the task force `0xd7a7e0(tf, false)` (0xd78b71) | S-XP, S-MANPOWER | [DMG/xp], [LOG] |
+| 0xd76bd0 | scuttle a ship through its task force (from 0xd69090); the PotF counts as lost (0x70c760 at 0xd76c91) | S-POTF | [POTF/sink] |
+| 0xd77ff0 | task force: remove a sunk ship; returns manpower to the pool, then refills the task force `0xd7a7e0(tf, false)` (0xd78b71). PotF (0xd78408): 0x70c760(owner), on_action `on_pride_of_the_fleet_sunk` (ROOT owner, FROM sinker, sinker tag > 0), career stat 0xcd6800; the ship object is deleted at 0xd78a64 (dtor clears `country+0x250`) | S-XP, S-MANPOWER | [DMG/xp], [LOG], [POTF/sink] |
 | 0xd7a7e0 | refill task-force manpower `(tf, force)`: every ship if HasGameStarted() or force | S-MANPOWER | [XP/mp] |
 | 0xdd70ae | CInGameIdler::InitData | S-MANPOWER | [XP/mp] |
 | 0xdd3a50 | "LOADING_MAIN_MENU" / "EXITING_TO_FRONTEND": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
@@ -110,6 +198,8 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xe24530 | air clock: is this an air hour for the region | A-CADENCE | [AIR/cadence] |
 | 0xf185a0 | weather manager reset: cells, region states, seed, +0x348 = 1, +0x34a = 0 | S-WEATHER | [WTH/cmd] |
 | 0xf19660 | province darkness | S-NIGHT | [HOUR/night] |
+| 0xf197d0 | province modifier holder by province id (content not decoded) | S-HIT-MODS | [STC/sum] |
+| 0xf19fd0 | region weather modifier holder by region index | S-WEATHER | [STC/sum], [STC/mod] |
 | 0xf1a000 | region weather state `wm+0x40 + i × 0x160` (null out of range; leaf) | S-WEATHER | [WTH/combat] |
 | 0xf1c6e0 | CWeatherManager::HourlyUpdate; skipped while +0x349 or +0x34a | S-WEATHER | [WTH/cmd] |
 | 0xf1cb90 | rebuild weather cells (+0x10) and region states (+0x40) | S-WEATHER | [WTH/cmd], [WTH/open] |
@@ -120,25 +210,56 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xf60bc0 | naval strike agility per plane | A-AA-PREEMPT | [AIR/conv] |
 | 0xf60f10 | naval attack per plane (`× 0.1 × (1 + Σ)`) | A-DMG | [AIR/conv] |
 | 0xf61280 | naval targeting per plane (`× 0.1 × (1 + Σ)`) | A-HIT | [AIR/conv] |
-| 0xf63100 | fighter-type equipment test (flags & 0x100000c00) | A-INTERCEPT | [AIR/intercept] |
+| 0xf63100 | fighter-type test (flags & 0x100000c00 = fighter, interceptor, heavy_fighter). **disagrees**: AIR says equipment flags; WINGS reads the pool's sub-unit `type` `[[wing+0x38]+0x20]+0x5a8` | A-INTERCEPT, A-WINGS | [AIR/intercept], [WINGS/types] |
 | 0xf77630 | better-agility damage reduction | A-INTERCEPT | [AIR/intercept] |
-| 0xf78160 | wing efficiency (fuel?) | A-DMG, A-LOSSES | [AIR/dmg] |
+| 0xf78160 | wing efficiency (fuel?). **disagrees**: WINGS decodes it as the disruption efficiency `clamp(1 − sqrt(disruption / (planes × (1+def·DDD)(1+atk·DDA)(1+spd·DDS)))/3.162, 0.001, 1)`, 1 without disruption; the source of `airfx+0xc0` | A-DMG, A-LOSSES, A-EXTERNAL | [AIR/dmg], [WINGS/ext] |
 | 0xf7ad60 | better-speed damage increase (top-speed term ?) | A-INTERCEPT | [AIR/intercept] |
 | 0xf7be70 | generic air combat (reads DISRUPTION_FACTOR_CARRIER) | A-INTERCEPT | [AIR/intercept] |
 | 0xf80f60 | per-wing losses and damage (experience; not decoded) | A-LOSSES | [AIR/losses] |
 | 0xf862a0 | generic air combat (reads COMBAT_DAMAGE_SCALE_CARRIER) | A-INTERCEPT | [AIR/intercept] |
+| 0xf88330 | sub-unit `type` keyword → bit: 0 convoy, 6 capital_ship, 7 submarine, 8 screen_ship, 22 carrier, 37 missile_launcher, 39 support_ship (leaf; also in the S-DOCTRINE table); full map incl. 10 fighter, 11 interceptor, 15 naval_bomber, 32 heavy_fighter in [WINGS/types] | S-STATS-COMBAT, S-TARGET, A-WINGS | [STATS/getter], [DOC/effects], [WINGS/types] |
+| 0xf8b070 | `type` keyword → bit, error "incorrect type category" | — | [STATS/getter] |
+| 0xf9f9c0 | character → unit-leader role (`character+0xa8`; leaf) | — | [STC/leader] |
+| 0xfa50b0 | character parser (`unit_medals` → `character+0xd0`) | — | [STC/leader] |
+| 0xfafda0 | a mission's dominance in a region: Σ ship dominance × efficiency × MISSION_DOMINANCE_RATIOS[type] | S-DOMINANCE | [DOM] |
+| 0x1003c50 / 0x1005296 | daily dominance gain / loss (not decoded) | S-DOMINANCE | [DOM] |
+| 0x1003f50 | region control for a country: 0 none, 1 own side (ties included), 2 enemies; needs `own × t/(1 − t)` | S-DOMINANCE, S-ORG-REGAIN | [DOM] |
 | 0x10055a0 | region dominance state | S-POS | [POS/convoy] |
+| 0x10109b0 | equipment list has a type flag `(list, mask)`: an entry `{equipment*, amount}` (list+0x20, count +0x2c) with `equipment+0x408 & mask` and amount > 0 | S-POTF | [POTF/assign] |
+| 0x1016900 | scale an adjuster by f: attack/defence/movement `v > 0 → v × f`, `v < 0 → v × (2 − f)` | S-ADMIRAL-ADJUST | [ADM/adjust] |
+| 0x10169f0 | adjuster reader: `attack` +0x10, `defence` +0x18, `movement` +0x20 | S-ADMIRAL-ADJUST | [ADM/adjust] |
+| 0x1018080 | CSubUnitDefinition constructor: modifier ids `experience_gain_<name>_training_factor` / `_mission_factor` / `_combat_factor` → def+0x5e4 / +0x5e8 / +0x5ec (= ship+0x664 / +0x668 / +0x66c) via 0x1483b40 | S-XP-GAIN | [POTF/xp] |
+| 0x1019140 | CSubUnitModifiers constructor (vtable 0x2955af0; `trait+0x780`, `leader+0x128`) | S-ADMIRAL-TRAIT | [ADM/subunit] |
+| 0x1019270 | sub-unit key of a sub-unit object `[obj+0x58c]` (leaf) | S-ADMIRAL-MOD | [ADM/subunit] |
 | 0x1019290 | critical part constructor: defaults +0x148/+0x150 multipliers 1, +0x158/+0x160 adds 0, +0x168 chance 1, +0x170 base_damage_instance 1, +0x174 per added module 0, +0x178 max −1 | S-CRIT-PART | [DMG/part] |
+| 0x101a0b0 / 0x101a0f0 | CSubUnitModifiers: clear the adjuster list / the modifier-block list | S-ADMIRAL-MOD | [ADM/subunit] |
+| 0x101afc0 / 0x101b5e0 | CSubUnitModifiers: find by sub-unit key in the adjuster list (0x38 records) / modifier-block list (0xd0 records); miss → default +0x38 / +0x60 | S-ADMIRAL-MOD | [ADM/subunit] |
+| 0x101cbf0 / 0x101cc20 | CSubUnitModifiers: merge another one's adjuster list / modifier-block list | S-ADMIRAL-MOD | [ADM/subunit] |
+| 0x101cc90 | CSubUnitModifiers reader (vt+0x18): `<sub-unit> = { units = { … } <modifier> = … }`, key = sub-unit definition +0x58c ("Invalid sub unit definition", "already specified") | S-ADMIRAL-TRAIT | [ADM/subunit] |
+| 0x101e130 | sub-unit definition parser: each `type = { }` keyword OR-ed into sub-unit+0x5a8 via 0xf8b070 | S-STATS-COMBAT, S-TARGET | [STATS/getter] |
 | 0x12a6740 | national navy XP, capped by FIELD_EXPERIENCE_MAX_PER_DAY | S-XP-GAIN | [XP/gain] |
+| 0x1310de0 | AI (CAIInteriorMinister vt+0x70 → 0x1306560): per-ship weight 1.0 for the PotF, 0.5 in its task force (purpose not decoded) | — | [POTF/readers] |
+| 0x134a550 | `set_pride_of_the_fleet_command` constructor (cmd+0x28 ship handle, +0x30 country tag) | S-POTF | [POTF/assign] |
+| 0x1356850 | `set_pride_of_the_fleet_command` Execute: pay PRIDE_OF_THE_FLEET_UNASSIGN_COST if a PotF exists (0xba7380), then 0x712700 | S-POTF | [POTF/assign] |
+| 0x1359420 | `set_pride_of_the_fleet_command` IsValid: `country+0x484 > 0`; political power ≥ cost if a PotF exists; new ≠ current; null valid; ship's owner == command country or same original tag. No type check | S-POTF | [POTF/assign] |
+| 0x1365d60 | delete-ship command: a PotF is first unassigned (command with null ship) | S-POTF | [POTF/assign] |
 | 0x13e05f0 | evidence for combatant+0xd8 (side at combat+0x28) | A-SORTIE | [AIR/conv] |
-| 0x13e1df0 | side.GetOpponent | S-POS | [POS/pos] |
+| 0x13e1df0 | side.GetOpponent: `side+0xd8 ? combat+0x30 : combat+0x28` (leaf) | S-POS | [POS/pos], [ADM/pos] |
 | 0x13e28c0 | CCombat::Update: the eight side virtual calls | S-HOUR, S-ORDER | [HOUR/hour], [POS/recompute] |
 | 0x13e2ba0 | combat validity: checks both sides' country lists | S-HOUR | [HOUR/chain] |
-| 0x143c720 | convoy-escort dominance helper (not fully decoded) | S-POS | [POS/convoy] |
-| 0x15a5560 | combat location modifier container | S-POS | [POS/pos] |
+| 0x143c720 | minimum dominance to control a region: `own value × t / (1 − t)` (t ≥ 1 as 0.99); also the convoy-escort bonus | S-DOMINANCE, S-POS | [DOM], [POS/convoy] |
+| 0x143d340 | naval terrain: per-sub-unit modifier holder (by sub-unit index), added in 0xc38760 | S-STATS-COMBAT | [STC/sum] |
+| 0x143e4a0 | naval terrain: per-sub-unit record {+0x10 attack, +0x18 defence} (map terrain+0x1b8, default +0x168; leaf) | S-STATS-COMBAT | [STATS/getter] |
+| 0x1445e00 | CUnitHistory constructor (`ship+0x8d8`): `+0x20` = medal object from 0xf9e530 | S-XP-GAIN | [POTF/xp] |
+| 0x14463a0 | unit-medals object constructor (0x268 bytes; character+0xd0): holders +0x20 / +0xe0 / +0x1a0, medal list +8; for a ship it is behind `ship+0x8f8`, holder +0x1a0 read by 0xc38760 and 0xc3b240 | — | [STC/leader], [POTF/xp] |
+| 0x1446450 | CUnitHistory destructor (RTTI `.?AVCUnitHistory@@`, vtable 0x29c1868) | — | [POTF/xp] |
+| 0x15a5560 | combat location modifier container: `region+0x30` → the strategic region's naval terrain (+0x88 index, +0xb8 container, +0x1b8 per-sub-unit records) | S-POS, S-STATS-COMBAT | [POS/pos], [STC/mod] |
 | 0x15c28e0 | CNavalCombat::CanRetreat (vt+0x60): `hours >= COMBAT_MIN_DURATION` | S-RETREAT | [ACT/retreat], [README/disagree] |
 | 0x15c28f0 | CNavalCombat constructor area (sets combatant+0xd8; sites 0x15c2913/0x15c2941) | — | [AIR/conv], [POS/top] |
+| 0x15c2980 | CNavalCombat vt+0x38 teardown: 0xc03e00 for every unit of both sides | S-END | [POTF/combat] |
+| 0x15c3010 | side of a combat that holds a country (combat+0x98, else +0xa0) | S-STATS-COMBAT | [STATS/getter] |
 | 0x15c3080 | second modifier holder of the combat (night/darkness) | A-SORTIE, A-HIT | [AIR/conv] |
+| 0x15c31b0 | other side `(combat, side)`: `side == combat+0x98 ? combat+0xa0 : combat+0x98` (leaf) | S-RETREAT | [ADM/pos] |
 | 0x15c3320 | XP gain formula part | S-XP-GAIN | [XP/gain] |
 | 0x15c3600 | CNavalCombat::Update (vt+0x78) | S-HOUR | [HOUR/hour], [POS/recompute] |
 | 0x15c3690 | CNavalCombat::EndHour (vt+0x80): hours++, distance, end check. **disagrees**: ACT says hours++ first, then both combatants update | S-HOUR, S-END | [HOUR/end], [ACT/bg] |
@@ -147,17 +268,17 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x15c55d0 | pair fire-exchange groups | FEX | [HOUR/fex] |
 | 0x15c5820 | refresh environment: weather type (+0xa8) and region weather holder (+0xb0) from 0xf1a000, darkness (+0xb8) | S-HOUR, S-NIGHT, S-WEATHER | [HOUR/hour], [WTH/combat] |
 | 0x15c6250 | per-attacker damage record (kill/assist credit) | S-DMG-APPLY, A-DMG | [DMG/apply], [AIR/dmg] |
-| 0x15c70b0 | `Mod(id; country, location, admiral)` modifier sum | S-POS | [POS/pos], [HOUR/end] |
+| 0x15c70b0 | `Mod(id; country, location, admiral)` = country+0x5b8 + region weather holder + naval terrain +0xb8 + admiral+0x418; a null location or admiral is skipped | S-POS, S-SCREEN | [POS/pos], [HOUR/end], [STC/mod], [ADM/pos] |
 | 0x15c7580 | fleet exempt from side-wide retreat | S-RETREAT, S-END | [ACT/retreat], [HOUR/end] |
 | 0x161a4a0 | naval combatant constructor (positioning = 1.0) | S-POS | [POS/top] |
 | 0x161ab40 | add fleet/ships to a side: state 4, joined penalty, dominance bonus | S-HOUR, S-POS | [HOUR/hour], [POS/joined], [POS/convoy] |
 | 0x161b5f0 | external plane join cap | A-EXTERNAL | [AIR/ext] |
-| 0x161b960 | ComputePositioning `(side, out, tooltip)` | S-POS | [POS/pos] |
-| 0x161ccb0 | screening and carrier screening | S-SCREEN, S-POS-SCREEN | [TGT/screen], [POS/screen] |
+| 0x161b960 | ComputePositioning `(side, out, tooltip)`; `positioning` with the own commanding admiral, 0x5a and the size factor with the enemy's (0x161b9b1) | S-POS | [POS/pos], [ADM/pos] |
+| 0x161ccb0 | screening and carrier screening; `screening_efficiency` with the own commanding admiral, `screening_without_screens` country only (no location, no admiral) | S-SCREEN, S-POS-SCREEN | [TGT/screen], [POS/screen], [ADM/pos] |
 | 0x161e0d0 / 0x161e0fb | side surface-detection sum | S-POS-DETECT | [POS/detect] |
 | 0x161e2c0 | activation count helper → 0x1c6a370 | S-ACTIVATE | [ACT/activate] |
 | 0x161e400 | side vt+0xb0: positioning, screening, fleet AA | S-HOUR, S-POS, A-AA-REDUCE | [HOUR/hour], [POS/recompute], [AIR/reduce] |
-| 0x161e5c0 | commanding admiral (highest skill) | S-POS | [POS/top] |
+| 0x161e5c0 | commanding admiral: the leader of `side+0x118` (count +0x124) with the highest overall skill 0xc199f0, strict (first wins ties); side vt+0xe8, called once from 0x1620940 | S-POS, S-ADMIRAL | [POS/top], [ADM/reads] |
 | 0x161e6d0 | join group (COMBAT_MAX_GROUPS, BEST_CAPITALS_TO_SCREENS_RATIO) | FEX | [HOUR/fex], [XP/gain] |
 | 0x161e9a0 | air stacking factor F | A-STACK | [AIR/stack] |
 | 0x161ebd0 | present-ship count (`state & 0x34 == 0`) | S-POS-SIZE | [POS/size] |
@@ -171,16 +292,18 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x161fb10 | side-wide retreat order (+0x140) | S-END, S-RETREAT | [HOUR/end] |
 | 0x161fbc0 | merge first group into last if > COMBAT_MAX_GROUPS | FEX | [HOUR/fex] |
 | 0x161fcf0 | IsDone(side) | S-END | [HOUR/end] |
-| 0x16205c0 | external planes join (5th arg ?) | A-EXTERNAL | [AIR/ext] |
-| 0x1620940 | side HourPrep: decay joined penalty, cache admiral, → 0x1622360 | S-HOUR, S-POS | [HOUR/hour], [POS/joined] |
+| 0x16205c0 | external planes join `(side, wing, &budget, eff, sub)`; side vt+0xf0, called from 0xf82ca0 with sub = 0 (settled by WINGS) | A-EXTERNAL | [AIR/ext], [WINGS/ext] |
+| 0x1620940 | side HourPrep: decay joined penalty, cache admiral (only while `side+0x130` is null: `+0x130 = +0x138 = vt+0xe8`), → 0x1622360 | S-HOUR, S-POS | [HOUR/hour], [POS/joined], [ADM/reads] |
 | 0x1620fa0 | damage-dealt statistics | S-DMG-APPLY | [DMG/apply] |
 | 0x1621900 | merge a group into another | FEX | [HOUR/hour] |
 | 0x1621a70 | side vt+0x100: per-country ship-type tallies + modifier table (purpose ?) | S-HOUR | [HOUR/hour] |
 | 0x16222e0 | end-of-battle air cleanup, both sides (HOUR). **disagrees**: ACT calls it the combatant update → 0x1c6b560 | S-END | [HOUR/end], [ACT/bg] |
 | 0x1622360 | rebuild groups (called from 0x1620940) | S-POS | [POS/recompute], [HOUR/hour] |
 | 0x1622d40 | warship filter (ships, not convoys) | A-EXTERNAL, A-AA-REDUCE | [AIR/ext], [AIR/reduce] |
+| 0x1622d60 | building-module term: for a navy leader, Σ of four skill objects' +0xe0 containers; max over `tf+0x728` in 0xc38760 | S-STATS-COUNTRY | [STC/sum] |
 | 0x17e4f70 | piercing tooltip (UI only) | S-DMG-PIERCE | [HIT/map] |
 | 0x196f293 / 0x196f2c3 / 0x196f47b / 0x196f6f8 | member constructor sites (charge = 0, +0x12c = −1) | S-COOLDOWN, S-SUB | [ACT/cooldown], [TGT/bb] |
+| 0x196f500 | CFEXMember constructor `(member, ship, state)`: `SCachedInfo` at member+0x18 (+0x28 = 0xc3b0e0 IsPotF at 0x196f607), state +0xe0 | S-POTF | [POTF/readers] |
 | 0x196fa40 | record damage on a surviving target | S-DMG-APPLY, A-DMG | [DMG/apply], [AIR/dmg] |
 | 0x196fca0 | fleet AA damage reduction | A-AA-REDUCE | [AIR/reduce] |
 | 0x196fd60 | piercing tier lookup `(armor, piercing, table)` | S-DMG-PIERCE | [HIT/pierce], [DMG/dmg] |
@@ -194,41 +317,46 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x1971cc0 | PickTarget | S-TARGET | [TGT/target], [HOUR/order] |
 | 0x1971db4 | SubMinBox (chunk in PickTarget, ..0x1971e94) | S-TARGET-SUB | [TGT/sub] |
 | 0x19723b0 | ECombatBox of a member. **disagrees** on 4/5: HIT 4 revealed / 5 hidden; ACT, TGT 4 hidden / 5 revealed | S-TARGET, S-ACTIVATE | [TGT/bb], [ACT/bg], [HIT/map] |
-| 0x1972570 | member modifier getter + screening bonus (`screeningValue`) | S-HIT-MODS, S-RETREAT-SPEED, A-SORTIE | [HIT/map], [TGT/bonus], [AIR/sortie] |
-| 0x1972a70 / 0x1972b60 | weapon cooldown (variant) | S-COOLDOWN | [ACT/cooldown] |
+| 0x1972570 | member modifier getter + screening bonus (`screeningValue`); ship: 0xc38760 with `[side+0x130]`, convoy: 0x15c70b0 | S-HIT-MODS, S-RETREAT-SPEED, A-SORTIE | [HIT/map], [TGT/bonus], [AIR/sortie], [STC/member] |
+| 0x1972900 | a member's attack for a weapon slot (light / torpedo / heavy getter) with the side's commanding admiral (0x197292d) | S-ADMIRAL | [ADM/reads] |
+| 0x1972a70 / 0x1972b60 | weapon cooldown (variant); 0x1972a70 reads the commanding admiral at 0x1972a9d | S-COOLDOWN | [ACT/cooldown], [ADM/reads] |
 | 0x1972c00 | MaxBox (light 0x1972c92, torpedo 0x1972cb7, heavy 0x1972dd4) | S-TARGET-* | [TGT/light], [TGT/heavy], [TGT/torp] |
 | 0x1973470 | member HourUpdate: sub timer, state machine, retreat, fire, escape | S-HOUR, S-ACTIVATE | [HOUR/hour], [ACT/bg] |
-| 0x1973521 | member hourly update (TGT), caller of 0x19740c0 (HIT); relation to 0x1973470 not stated | S-HOUR | [TGT/bb], [HIT/map], [POS/sub] |
+| 0x1973521 | member hourly update (TGT), caller of 0x19740c0 (HIT); a chunk of 0x1973470 (pdata parent, [ADM/reads]); reads the commanding admiral at 0x1973545 for the speed 0xc39140 and sub attack 0xc3a890 | S-HOUR | [TGT/bb], [HIT/map], [POS/sub], [ADM/reads] |
 | 0x1973d30 | is submarine (air target weight) | A-TARGET | [AIR/target] |
 | 0x1973e20 | Fire one weapon slot (timer, PickTarget, shot loop) | S-ORDER, S-COOLDOWN | [HOUR/order], [ACT/cooldown] |
 | 0x1973eea | fire chunk: last-shot record, torpedo-firing reveal | S-XP-GAIN, S-SUB | [XP/gain], [POS/sub] |
 | 0x19740c0 | hit/shot loop: hit, randomness, crit, part, apply; `(shooterMember, targetMember, weapon, shooterShip, …)`, returns 1 when the target sank | S-HIT, S-DMG, S-CRIT | [HIT/map], [DMG/pipe], [HOUR/order], [LOG] |
+| 0x1974d80 | `CFEXMember::SCachedInfo` ReadMember (`pride_of_the_fleet` → +0x28, `sunk_by` +0x90, `equipment_variant` +0x50, `highest_eq_variant` +0xb0) | S-POTF | [POTF/readers] |
 | 0x1975150 | air part damage (CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR) | A-CRIT | [AIR/crit] |
-| 0x1975280 | retreat roll P | S-RETREAT | [ACT/retreat], [HOUR/end] |
+| 0x1975280 | retreat roll P `= CHANCE × (1 + M(0x57)) × (hours > INITIAL ? 1 + M(0x58) : 1) × (1 + enemyAdmiral.B(0x1b9))`, clamp [0, 1], retreat if `U <= P`; a convoy only gets the admiral factor | S-RETREAT | [ACT/retreat], [HOUR/end], [ADM/pos] |
 | 0x1975400 | sub reveal chance | S-SUB | [ACT/sub] |
 | 0x1975480 | kill/assist credit | S-DMG-APPLY | [HOUR/order], [DMG/apply] |
+| 0x1976430 | `CFEXMember::SCachedInfo` Write: `pride_of_the_fleet=yes` when +0x28 (0x1976579) | S-POTF | [POTF/save] |
 | 0x1976630 | new external AirFX | A-EXTERNAL | [AIR/ext] |
 | 0x1976ae0 | air entry owner | S-XP-GAIN | [XP/gain] |
 | 0x1976ca0 | recompute AirFX planes (+0x5c) | A-* | [AIR/graph] |
 | 0x1976db0 | carrier sortie efficiency (no org) | A-SORTIE | [AIR/sortie] |
 | 0x1977000 | sortie efficiency darkness read (+0xb8 → mod 0x23) | S-NIGHT, A-SORTIE | [HOUR/night] |
 | 0x19786c0 | CarrierSortieEfficiency: 0x1976db0 × org ratio | A-SORTIE, S-POS, S-XP-GAIN | [AIR/sortie], [POS/carrier], [XP/gain] |
-| 0x1978e30 | average naval attack, targeting, agility over first nWings | A-DMG | [AIR/dmg] |
+| 0x1978e30 | average naval attack, targeting, agility over first nWings; carrier air factors 0xc9–0xcb from the country container only (0x1979478..0x19794f9) | A-DMG | [AIR/dmg], [ADM/subunit] |
 | 0x1979770 | new external AirFX | A-EXTERNAL | [AIR/ext] |
 | 0x197a1b0 | AirFX cooldown ≤ 0 (feeds a dead list) | A-CADENCE | [AIR/cadence] |
 | 0x197a1c0 | remove plane losses from wings (type 1 intercept, 2 AA, 6 kamikaze) | A-LOSSES | [AIR/losses] |
 | 0x197a6a0 | find external AirFX for an air base | A-EXTERNAL | [AIR/ext] |
 | 0x197a700 | air target pick | A-TARGET | [AIR/target] |
-| 0x197ac80 | air strike: hits, damage, crit | A-HIT, A-DMG, A-CRIT | [AIR/hit], [AIR/dmg], [AIR/crit] |
+| 0x197ac80 | air strike: hits, damage, crit | A-HIT, A-DMG, A-CRIT | [AIR/hit], [AIR/dmg], [AIR/crit], [POTF/air] |
 | 0x197b380 | interception resolve | A-INTERCEPT | [AIR/intercept] |
 | 0x197b890 | main air strike `(airfx, enemyGroup, combat, F)` | A-* | [AIR/graph] |
 | 0x197c8b0 | preemptive AA | A-AA-PREEMPT | [AIR/preempt] |
 | 0x197d4a0 | plane-weighted equipment averages (+0xc8..+0xe8) | A-HIT | [AIR/graph] |
 | 0x197d770 | set carrier cooldown (no effect) | A-CADENCE | [AIR/cadence] |
 | 0x197d990 | AirFX save code | A-CADENCE | [AIR/cadence] |
+| 0x19895d0 | fire-exchange group stat accumulation (cooldowns 0x1972b60 with the side's commanding admiral, attacks × 1/cooldown); called from 0x16223af | FEX | [ADM/reads] |
 | 0x1989c60 | aggressiveness-check strength score (not decoded) | S-RETREAT | [ACT/retreat] |
 | 0x1989fe0 | aggressiveness-check ratio `min(own/max(enemy, 0.1), 10)` | S-RETREAT | [ACT/retreat] |
 | 0x198a080 | update fleet distance (+0x118) | S-HOUR | [HOUR/hour] |
+| 0x1a68d40 | AI: a country without a PotF (feature 0xf) scores every eligible ship (0xc33a50) and assigns one by command | S-POTF | [POTF/assign] |
 | 0x1aa8f60..0x1ab5598 | tooltips/script triggers reading ship level | S-XP-EFFECT | [XP/effect] |
 | 0x1ad7f00 | convoy hit profile | S-HIT-SHIP | [HIT/ship] |
 | 0x1ad7f30 | convoy base air target weight | A-TARGET | [AIR/target] |
@@ -237,6 +365,8 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x1ad81e0 | convoy HP ratio (TGT); non-ship damage path (DMG) | S-TARGET-WEIGHT, S-DMG-APPLY | [TGT/weight], [DMG/apply] |
 | 0x1ad8610 | convoy damage apply (not decoded) | S-DMG-APPLY, A-DMG | [DMG/apply], [AIR/dmg] |
 | 0x1ad8680 | convoy damage path (not decoded) | S-DMG-APPLY | [DMG/apply] |
+| 0x1becfc0 | UI: PotF button click; blocked when a PotF exists and political power < PRIDE_OF_THE_FLEET_UNASSIGN_COST, else the set / replace / unset popup 0x1f083d0 | S-POTF | [POTF/assign] |
+| 0x1bed5f0 | UI: PotF button shown only if 0xc33a50 (frame 3 for the current PotF, 2 otherwise; disabled when another PotF exists and political power < cost) | S-POTF | [POTF/assign] |
 | 0x1c69af0 | fire-exchange group constructor | FEX | [HOUR/fex] |
 | 0x1c69dc0 | carrier's member in a group | A-DMG | [AIR/graph] |
 | 0x1c69e40 | group air sub-detection part | S-SUB | [HOUR/hour] |
@@ -265,6 +395,17 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 
 | RVA | Meaning | Finding |
 |---|---|---|
+| 0x2719610 | CEquipmentGroup vtable (named `common/equipment_groups` group; +0x48 Matches = 0xa0a950) | [MIO/match] |
+| 0x2719668 | CAnonymousEquipmentGroup vtable (`equipment_type`, `limit_to_equipment_type`; +0x48 Matches = 0xa0a600; second vtable 0x27196c0 at +0x68, slot +0x10 = 0xa0ae40) | [MIO/match] |
+| 0x2719790 | CEquipmentGroupDatabase vtable | [MIO/match] |
+| 0x2745dc0 | NIndustrialOrganisation::CUnlockTraitEffect vtable (`complete_mio_trait`; +0x68 Execute = 0x2fbd80) | [MIO/snap] |
+| 0x27aa858 | NIndustrialOrganisation::CHasEquipmentTypeTrigger vtable (`has_mio_equipment_type`; +0xb0 Evaluate = 0x456890) | [MIO/assign] |
+| 0x2955af0 | CSubUnitModifiers vtable (`sub_unit_modifiers`; +0x18 reader 0x101cc90) | [ADM/subunit] |
+| 0x2955b90 | CUnitLeader vtable (RTTI `.?AVCUnitLeader@@`; slot 0xf0 pure) | [STC/leader] |
+| 0x2955ca8 | CArmyLeader vtable (slot 0xf0 = 0xc11470) | [STC/leader] |
+| 0x2955dc0 | CNavyLeader vtable (slot 0x60 = 0xc18790, 0x68 = 0xc186d0, 0x70 = 0xc16d10, 0x78 = 0x120540, 0x88 = 0xc10ab0, 0x90 = 0xc10a10, 0xe0 = 0xc21280, 0xf0 = 0xc11540, 0x100 = 0xc1e650, 0x108 = 0xc1e7c0; second vtable 0x2955ed8) | [STC/leader], [ADM/map] |
+| 0x29530d8 | CUnit vtable (RTTI `.?AVCUnit@@`) | [STC/leader] |
+| 0x2962a18 | CFleet vtable (RTTI `.?AVCFleet@@`; ctor 0xd503d0) | [STC/sum] |
 | 0x2962f70 | CTaskForce vtable (RTTI `.?AVCTaskForce@@`, base CUnit); CArmy 0x295a2b0, CRailwayGun 0x2972228 share slots 18/19 | [XP/mp] |
 | 0x2963000 | CTaskForce vtable slot 18 (= 0xd705f0) | [XP/gain] |
 | 0x2963008 | CTaskForce vtable slot 19, DailyUpdate (= 0xd69090) | [XP/mp] |
@@ -294,7 +435,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | 0xa4fe60 | MIO trait limit_to_equipment_type check |
 | 0xe5f600 / 0xe5f740 | country add idea equipment bonus (instant → existing variants) |
 | 0xe65f30 | country remove idea equipment bonuses |
-| 0x631e70 | equipment bonus applies to type |
+| 0x631e70 | equipment bonus applies to type (tail-calls the key match 0xc97e00, see [DOC/effects]) |
 | 0x13e81b0 | token id → EEquipmentStats |
 | 0x831c0 | static token registration (name → id) |
 | 0xc3d090 | CShip::RefreshStats |
@@ -306,7 +447,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | 0x1019fb0 | ship stat block finalize (not decoded) |
 | 0xd11ae0 | country per-sub-unit stats lookup (`country+0xf70`) |
 | 0xd0e200 | create country sub-unit copy, apply techs |
-| 0x101b1b0 / 0x193d370 / 0x193d2a0 | apply technology sub-unit bonuses (type and categories, × level) |
+| 0x101b1b0 / 0x193d370 / 0x193d2a0 | apply technology sub-unit bonuses (type and categories, × level); then the doctrine bonus sources `[country+0xf70]+0x08` × 1.0 ([DOC/effects]) |
 | 0xee3e70 | technology researched handler (enables sub-units) |
 | 0xc34a50 | combat attack/armor getter (kind 0 light, 1 heavy, 2 sub, 3 torpedo, 4 armor) |
 | 0xc3a5d0 / 0xc3a580 / 0xc3a890 / 0xc3ac00 / 0xc3a520 | light / heavy / sub / torpedo attack, armor |
@@ -327,13 +468,254 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | upgrade `+0x40` | upgrade stat container |
 | bonus `+0x40` (idea) / `+0x48` (named) | bonus stat lists |
 | bonus `+0x70` | instant flag |
-| country `+0x160` | idea equipment bonuses |
-| country `+0xa0` | country variants |
+| country `+0x160` | idea equipment bonuses. **disagrees**: DOC shows the list is `[country+0xf68]+0x160` (equipment manager; 0xbafd23 → 0xe5f600); settled in [README/disagree] |
+| country `+0xa0` | country variants. **disagrees**: DOC reads them at `[country+0xf68]+0xa0` (0xe60110); settled in [README/disagree] |
 | country `+0xf70` | per-country sub-units |
 | ship `+0x120+8s` | ship stat block |
 | ship `+0x6f8` / `+0x700` | current HP / current org |
 | ship `+0x918`/`+0x924` | damaged critical parts {part*, count} |
 | sub-unit stats `+0x60+8s` | sub-unit stat array |
+
+### Doctrines (S-DOCTRINE)
+
+From [S-DOCTRINE-doctrines.md][DOC] (tracks, mastery, rewards, milestones, effect application, doctrine triggers). Sorted by RVA. Struct fields are in §2, define read sites in §3.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x75540 / 0x117b280 | console command `mastery` registration / handler → 0x13cd100 | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x49b830 | `add_equipment_bonus` effect execute → 0xe60110 | S-STATS-BONUS | [DOC/effects] |
+| 0x5297d0 + 0x529000 | `add_mastery` effect execute: tracks matching the filter (0x13cda80), then vtable +0xd0 = `AddMastery(track, amount)` on each (complete and empty tracks too, no bank) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52ba80 | `has_completed_track` evaluate: any track of the type, with a subdoctrine and `IsCompleted` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52bc50 | `has_completed_subdoctrine` evaluate (0xfc8250 over folders) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52bce0 | `has_doctrine` evaluate: active grand doctrine of any folder or subdoctrine slotted in any track; no mastery check | S-DOCTRINE-TRIGGERS | [DOC/trig] |
+| 0x52be70 | `has_mastery_level` evaluate: any track with the subdoctrine and `unlocked >= amount` (int) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52bf90 | `has_subdoctrine_in_track` evaluate | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52c060 | `has_mastery` evaluate: any track of the type with `mastery >= amount` (fx5, cumulative) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x52c240 / 0x52d6d0 / 0x52d900 | readers of `has_doctrine` / `has_mastery_level` / `has_mastery` | S-DOCTRINE-* | [DOC/map] |
+| 0x633010 / 0x632d90 | named equipment bonus entry writer (`name`, `prefix`, bonus, `id`) / bonus block writer (`<key>={ instant … }`) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0x6431d0 | sub-unit (0xac4fa0) or category (0xac4c70) stat block reader, the technology block type | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x6dade0 (call 0x6dba79) | `CCountry::UpdateModifiers`: clears country+0x5b8, adds the doctrine modifiers via 0x13cdc50(cds, country+0x5a8) | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x9cda20 | grand doctrine milestone i: `grand+0x300 + i·0x190` (bounded by the track count) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x9e4da0 | reward cost: `reward+0x1d0`, or DEFAULT_REWARD_MASTERY when 0 (leaf) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x9e5240 | reward reader: activation effects, then `mastery` → `+0x1d0` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x9e5a50 | cumulative reward cost `Σ_{j≤i}` (UI "Unlocked at X Mastery") | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x9e6770 | subdoctrine reader (`rewards`, `track`, `xor`, `mastery`) | S-DOCTRINE-MASTERY | [DOC/map] |
+| 0x9e6b80 | track `active` trigger evaluate (empty = true; medium) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xbe1550 | set variant `+0xd0` idea bonuses / `+0xe8` named handles from lists, filtered by 0x631e70 | S-STATS-BONUS | [DOC/open] |
+| 0xbe3c80 | variant writer (writes its `named_equipment_bonuses` handle list) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xc3ad50 | ship InitPostRead: XP modifiers (0xc3ce50), then 0xc3ba50 | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xc3ba50 | ship refresh after load: `RefreshStats(ship, 1)` (organisation clamped to max), HP / organisation set to max when 0 | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xc97e00 | equipment bonus key match: equipment name = type / archetype (`+0x4d8`) / archetype `+0x4e8`; or type keyword bit vs `type+0x540 \| +0x548`; or 0x22f740 lookup. `+0x4e8` = `family`, 0x22f740 = equipment group database ([MIO/match]) | S-DOCTRINE-EFFECTS, S-STATS-BONUS, S-MIO-POLICY | [DOC/effects], [MIO/match] |
+| 0xd07660 | append a 0x70-byte sub-unit bonus source `{block, source, id, index}` | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0xd0e490 | add a doctrine sub-unit block to `[country+0xf70]` and rebuild the named sub-units | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0xd11bd0 | deployment (`[country+0xf70]`) InitPostRead: create a copy per unlocked sub-unit (0xd0e200), then rebuild every copy from technologies + `unit_modifiers` (0x101b1b0) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xd12330 / 0xd14650 | deployment reader / writer (`unit_modifiers`, `unlocked_subunits`) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xd12d20 / 0xd12b20 | rebuild the country sub-unit copies named in a block (types, categories) → 0x101b1b0 | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0xe60110 | add named equipment bonuses (`[country+0xf68]+0x178`, new handle each); `instant` → every matching variant (0xbd2f30) | S-DOCTRINE-EFFECTS, S-STATS-BONUS | [DOC/effects] |
+| 0xe71cb0 | equipment manager writer: `named_equipment_bonuses`, `available_equipments`, `last_named_equipment_bonus` | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xee0400 | `CTechnologyStatus::InitPostRead`: re-runs the researched handler 0xee3e70 for every completed technology (creates sub-unit copies) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xf88330 | equipment `type` keyword → bit (convoy 0x1, capital_ship 0x40, submarine 0x80, screen_ship 0x100, carrier 0x400000); full map in [WINGS/types] | S-DOCTRINE-EFFECTS | [DOC/effects], [WINGS/types] |
+| 0xfc69e0 | folder: track status by index | S-DOCTRINE-* | [DOC/map] |
+| 0xfc6a20 | `FolderStatus::SetGrandDoctrine`: reset and unassign every track, resize, swap grand doctrine effects (source 3) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc6d90 | `FolderStatus::SetSubdoctrine(folder, i, sub)` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc6eb0 | `FolderStatus::GetDailyMastery`: gain, MIN_MASTERY_GAIN_PER_DAY floor, × MASTERY_BANK_CONVERSION_RATE on complete or empty tracks | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc7d90 | compute the daily gain of every active track → `track+0x48` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc7eb0 | apply the daily gain: AddToBank (complete or empty) or AddMastery | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc8120 / 0xfc8170 / 0xfc81c0 | track i: unlocked count / subdoctrine / track template | S-DOCTRINE-* | [DOC/map] |
+| 0xfc8250 | subdoctrine in the folder's completed list | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc8530 / 0xfc8590 | folder InitPostRead (drops tracks without grand doctrine) / set folder and track back pointers | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xfc85d0 / 0xfc8620 | track i has a subdoctrine and is complete / has a subdoctrine | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc8670 | track filter match `{track, folder, grand doctrine, subdoctrine, index}` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc8730 | track index valid | S-DOCTRINE-* | [DOC/map] |
+| 0xfc87b0 | `FolderStatus::CompleteTrack`: add to `completed_subdoctrines`, apply the milestone of that track index (source 6) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc8ce0 | `FolderStatus::RemoveMilestone` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0xfc9020 | folder status reader (`folder`, `tracks`, `grand_doctrine`, `completed_subdoctrines`) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0xfc99f0 | folder status save writer | S-DOCTRINE-SAVE | [DOC/save] |
+| 0x13c60b0 / 0x13c6600 | country (handle / tag) → country doctrine status | S-DOCTRINE-* | [DOC/map] |
+| 0x13ccee0 / 0x13ccf90 | per country: compute (0xfc7d90) / apply (0xfc7eb0) daily mastery; from the doctrine system update 0xd7ed90 | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x13cd100 | console `mastery` worker: complete or empty track → AddToBank, else AddMastery | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x13cd240 | `ApplyDoctrineEffects(cds, effects, source, name, id, index)`: effect block, modifiers dirty, tactics, sub-unit block (0xd0e490), equipment bonuses (0xe60110); source 3 grand, 4 subdoctrine, 5 reward, 6 milestone | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x13cda80 | collect track statuses matching a filter | S-DOCTRINE-* | [DOC/mastery] |
+| 0x13cdc50 | `AddDoctrineModifiers`: grand doctrine, slotted subdoctrines, unlocked rewards, milestones of complete tracks, weight 1.0 | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x13cde50 | country doctrine status InitPostRead: compaction and missing folders only, no effect application | S-DOCTRINE-SAVE | [DOC/load] |
+| 0x13cee00 | `RemoveDoctrineEffects(cds, effects, source, id, index)` (0xd13280 sub-unit block, 0xe6f170 named bonuses) | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x13cf486 | country doctrine status save writer | S-DOCTRINE-SAVE | [DOC/save] |
+| 0x147bfd0 | `TrackStatus::AddToBank`: `bank = clamp(bank + x, 0, MASTERY_BANK_MAX)` (leaf) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c000 | `TrackStatus::AddMastery`: cumulative mastery, greedy reward unlock in order, CompleteTrack when all unlocked | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c1d0 | mastery needed for the next reward (UI) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c2a0 | `TrackStatus::IsCompleted`: sub set and `unlocked >= rewardCount` (leaf) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c2c0 | track status save reader | S-DOCTRINE-SAVE | [DOC/save] |
+| 0x147c600 | unassign subdoctrine: Reset + remove subdoctrine effects | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c650 | `TrackStatus::Reset`: remove reward effects, zero unlocked / mastery / bank, remove milestone | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147c8a0 | `TrackStatus::SetSubdoctrine`: Reset, swap subdoctrine effects, `AddMastery(old bank)` | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147cb00 | `TrackStatus::UnlockReward(track, reward, i)` (source 5) | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x147cd00 | track status save writer | S-DOCTRINE-SAVE | [DOC/save] |
+| 0x1492ac0 | variant builder: a new variant copies its parent's idea bonuses and named-bonus handles (0xbe1550) | S-STATS-BONUS | [DOC/open] |
+| 0x1529a80 | activation effects reader: `effect`, `modifier`, `equipment_bonus`, `enable_tactic`, sub-unit/category blocks, other keys as modifiers | S-DOCTRINE-EFFECTS | [DOC/effects] |
+| 0x1529f40 / 0x1529a30 | doctrine equipment bonus record writer / reader (`id`, `index`, `equipment_bonus`) | S-DOCTRINE-SAVE | [DOC/load] |
+| 0x197f890 / 0x197fa10 | sub-unit bonus source reader / writer (`subunit_stat_bonus_persistent.cpp`): block, `type` (project 1, effect 2, grand_doctrine 3, sub_doctrine 4, rewards 5, milestones 6), `number`, `id`, `localization_key` | S-DOCTRINE-SAVE | [DOC/load] |
+| 0x1a32f40 / 0x1a33390 / 0x1a33830; 0x1a33240 / 0x1a33ac0 / 0x1a33210 | daily mastery terms called by 0xfc6eb0 (faction sharing?, attaché, theater commander; gain factor modifiers), not decoded | S-DOCTRINE-MASTERY | [DOC/mastery] |
+| 0x24be690 | generic persistent block reader (vtable +0x18): reads the members, then InitPostRead (vtable +0x40) at 0x24beb7b if the parser has no error (0x24c0050) | S-DOCTRINE-SAVE | [DOC/load] |
+
+### MIO include and trait tree (S-MIO-INCLUDE)
+
+From [S-MIO-include-and-tree.md][MIOI] (`industrial_org_template.cpp`, `industrial_org_trait.cpp`, `industrial_organisation.cpp`): the MIO database reader, `include` resolution, the trait merge, positions and the unlock check. Key token ids are in [MIOI]. Sorted by RVA. The bonus sum and equipment matching (0xa4fe60, 0xdb7800) are in S-MIO-equipment-matching.md.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x14b7a0 | MIO trait move constructor (0x3d8 bytes) | S-MIO-INCLUDE | [MIOI/map] |
+| 0x63f3c0 | stat list: add the entries of one kind (1 equipment, 2 production) of another list, summing equal stats | S-MIO-INCLUDE | [MIOI/merge] |
+| 0x640ad0 | stat list: remove the entries of one kind | S-MIO-INCLUDE | [MIOI/merge] |
+| 0x641040 / 0x641090 | stat list has an equipment / production stat | S-MIO-INCLUDE | [MIOI/merge] |
+| 0xa4c3d0 | trait: append a parent group `{traits, needed = 1}` | S-MIO-TREE | [MIOI/read] |
+| 0xa4c640 | trait `position` reader (x, y) | S-MIO-TREE | [MIOI/read] |
+| 0xa4ce80 | `parent` block reader (`traits`, `num_parents_needed`) | S-MIO-TREE | [MIOI/read] |
+| 0xa4d310 | equipment filter copy (`equipment_type`, `limit_to_equipment_type`) | S-MIO-INCLUDE | [MIOI/merge] |
+| 0xa4d500 / 0xa4d510 | token == / token < (leaf) | — | [MIOI/map] |
+| 0xa4e2c0 | trait position: `position`, or relative trait's position (first match in the owner MIO, recursive) + `position`; missing → (0, 0) | S-MIO-TREE | [MIOI/pos] |
+| 0xa4e480 / 0xa4fd50 | initial trait: warn for keys initial traits ignore | S-MIO-INCLUDE | [MIOI/map] |
+| 0xa4f4c0 / 0xa4f710 | trait: `mutually_exclusive` tokens / parent groups (copies) | S-MIO-TREE | [MIOI/unlock] |
+| 0xa4fab0 | trait post-read checks (`num_parents_needed` > count, non-MIO organization modifiers), log only | S-MIO-TREE | [MIOI/read] |
+| 0xa4fcf0 / 0xa4fd20 | trait `available` / `visible` evaluate: own block, else the included trait's (fallback `+0x350` / `+0x358`) | S-MIO-TREE | [MIOI/unlock] |
+| 0xa50000 | trait `ReadMember` (token switch; `any_parent` / `all_parents` / `parent` all append parent groups) | S-MIO-INCLUDE | [MIOI/read] |
+| 0xa507b0 | `MergeTrait(dst, mio, src)`: every key dst leaves empty (and does not list in its `delete_included_values`) is taken from src; lists and parent groups replaced whole; bonuses per kind | S-MIO-INCLUDE | [MIOI/merge] |
+| 0xa50dc0 | trait: take the included value? (own empty and key not in the trait's `delete_included_values`; both → warning, own kept) | S-MIO-INCLUDE | [MIOI/merge] |
+| 0xa51300 / 0xa51450 | trait list: append an empty trait / move a range (erase) | S-MIO-INCLUDE | [MIOI/map] |
+| 0xa519f0 | MIO trait constructor (position −1/−1) | S-MIO-TREE | [MIOI/map] |
+| 0xa51d60 | MIO checks after include: unknown include, empty `allowed`, unmatched `override_trait` (log only); calls the five checks below | S-MIO-INCLUDE | [MIOI/include] |
+| 0xa52080 / 0xa525c0 / 0xa52880 / 0xa52d10 / 0xa52f50 | MIO checks: positions / duplicate tokens / mutual exclusion exists and is reciprocal / parents exist / `remove_trait` (log only) | S-MIO-TREE | [MIOI/map] |
+| 0xa53450 (chunk 0xa53523) | MIO database post-load: for each MIO in list order resolve its include (0xa54150), check (0xa51d60), register trait tokens | S-MIO-INCLUDE | [MIOI/include] |
+| 0xa53be0 | MIO `ReadMember` (token switch; `trait` and `add_trait` share one handler, `override_trait` goes to its own list) | S-MIO-INCLUDE | [MIOI/read] |
+| 0xa54150 | `ResolveInclude(mio, included)`: top-level fields, initial trait, then per included trait: remove_trait → skip, override_trait → move in and merge, own trait with that token → merge into it, else copy | S-MIO-INCLUDE | [MIOI/include] |
+| 0xa54aa0 | MIO: take the included value? (own empty and key not in the MIO's `delete_included_values`) | S-MIO-INCLUDE | [MIOI/include] |
+| 0xdb6020 | country MIO enabled: template `visible` and `available`, `+0x134 > 0` | S-MIO-TREE | [MIOI/unlock] |
+| 0xdba8e0 | trait parents hold: every group needs `needed` of its traits unlocked (AND over groups; no group → true) | S-MIO-TREE | [MIOI/unlock] |
+| 0xdbaac0 | unlocked-trait set contains token | S-MIO-TREE | [MIOI/unlock] |
+| 0xdbb090 | trait excluded: one of its own `mutually_exclusive` tokens is unlocked (one-directional) | S-MIO-TREE | [MIOI/unlock] |
+| 0x13af360 | `CanUnlockTrait`: not unlocked, visible, parents, not excluded, available (+ MIO enabled when asked); tooltips | S-MIO-TREE | [MIOI/unlock] |
+
+### MIO equipment matching and bonus sum (S-MIO-MATCH)
+
+From [S-MIO-equipment-matching.md][MIO]: the equipment-type match shared by `limit_to_equipment_type`, the MIO's `equipment_type`, policy keys and equipment bonus keys; the type set of a variant; the bonus sum; the assignment check; when the bonus is computed. Sorted by RVA. 0xbd3b80, 0xdb7800 and 0xa4fe60 are under Design stats above; the readers 0xa50000 / 0xa53be0 and the merge 0xa507b0 under S-MIO-INCLUDE. 0x63f3c0's mode 3 adds every stat kind (0x640d20).
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x10bae50 | AI design: copy a variant, recompute its MIO bonus (0xbd3b80) | S-MIO-MATCH | [MIO/snap] |
+| 0x13ae4b0 | trigger evaluate `(trigger, scope, tooltip)`; empty trigger (`+0x14 == 0`) → true | S-MIO-MATCH | [MIO/sum] |
+| 0x13e81b0 | token → EEquipmentStats: unknown → sink 0x4e; `naval_weather_penalty_factor` (0x3fcd) → 0x2a | S-STATS-MIO | [MIO/sum] |
+| 0x1491ec0 / 0x14925d0 / 0x1492970 / 0x1492d50 | equipment designer (variant at `+0x1370`): design team change → 0xbd3b80; back to the original MIO restores its saved snapshot (`+0x2218`, count `+0x2238`) unless `+0x2208` | S-MIO-MATCH | [MIO/snap] |
+| 0x152f4a0 | module reader: `add_equipment_type` (0x3b91) → module `+0x78` | S-MIO-MATCH | [MIO/type] |
+| 0x1e1150 | create-variant command: design team (0xbe1c40), then the command's snapshot (0xbe1d00) or 0xbd3b80 | S-MIO-MATCH | [MIO/snap] |
+| 0x1f72870 (chunk 0x1f7291f) | designer opens a variant: copies its bonus and trait count, assigns the MIO, recomputes | S-MIO-MATCH | [MIO/snap] |
+| 0x22f740 | equipment group database lookup by token (robin-hood `+0x48`, slots 0x38, item `+0x10`); the 0xc97e00 third lookup | S-MIO-MATCH, S-STATS-BONUS | [MIO/match] |
+| 0x2fbd80 | `complete_mio_trait` effect execute (CUnlockTraitEffect vtable +0x68) → 0xdbc860 | S-MIO-MATCH | [MIO/snap] |
+| 0x4562a0 | string list contains (hash `+0x20`, then case-sensitive compare) | S-MIO-MATCH | [MIO/match] |
+| 0x456890 | `has_mio_equipment_type` evaluate (CHasEquipmentTypeTrigger vtable +0xb0): literal name in the MIO's `equipment_type` expanded with group names | S-MIO-POLICY | [MIO/assign] |
+| 0x631f10 | equipment group database instance (data 0x332eed0) | S-MIO-MATCH | [MIO/match] |
+| 0x640d20 | stat kind filter: 1 equipment (0x6412d0), 2 production (0x641590), 3 any | S-STATS-MIO | [MIO/sum] |
+| 0x9f8460 | module lookup by token (equipment database `+0xe0`, count `+0xec`); miss → element 0 | S-MIO-MATCH | [MIO/type] |
+| 0x9f86f0 / 0x9f8700 → 0x9e93e0 | equipment lookup by name; miss → element 0, a reserved null entry | S-MIO-MATCH | [MIO/match] |
+| 0xa08fe0 / 0xa09290 | equipment group expansion with / without group names (0xa0b1b0) | S-MIO-MATCH | [MIO/match] |
+| 0xa09e80 | build an equipment group's token cache `+0x70` (sets `+0x88`) | S-MIO-MATCH | [MIO/match] |
+| 0xa0a430 | type vs token list: name of the type / archetype / archetype's family listed, or a listed keyword's bit in `0xc95730(type)` | S-MIO-MATCH | [MIO/match] |
+| 0xa0a550 | the same against a string list (0x4562a0, 0xf882f0) | S-MIO-MATCH | [MIO/match] |
+| 0xa0a600 | `CAnonymousEquipmentGroup::Matches` (vtable +0x48): token cache, else expand + 0xa0a550 | S-MIO-MATCH | [MIO/match] |
+| 0xa0a950 | `CEquipmentGroup::Matches` (named group, vtable +0x48): expand + 0xa0a550 | S-MIO-MATCH | [MIO/match] |
+| 0xa0ada0 | equipment group empty: `+0x5c == 0` (written entries; leaf) | S-MIO-MATCH | [MIO/match] |
+| 0xa0ae40 | equipment group cache rebuild on database reload (listener at `+0x68`, slot +0x10) | S-MIO-MATCH | [MIO/match] |
+| 0xa0b1b0 | expand an equipment group's entries: names of `common/equipment_groups` groups replaced recursively (flag: keep the group name), others added once | S-MIO-MATCH | [MIO/match] |
+| 0xa0c0c0 | fill an equipment group's entry list `+0x50` with the script words as read (no filtering) | S-MIO-MATCH | [MIO/match] |
+| 0xa4a7f0 | policy key match: 0xc97e00, or `same_as_mio` and 0xdb6e90 | S-MIO-POLICY | [MIO/sum] |
+| 0xa4b260 | policy bonus: every matching entry of the policy's one bonus map (equipment + production) added with mode 3 | S-MIO-POLICY | [MIO/sum] |
+| 0xa4bac0 | any policy bonus key matches the type (assignment check) | S-MIO-POLICY | [MIO/assign] |
+| 0xa4be60 / 0xa48e70 | policy reader: `equipment_bonus` and `production_bonus` into one key → stat-list map | S-MIO-POLICY | [MIO/sum] |
+| 0xa51690 | constructor of a trait's `+0x60` group (vtable 0x2719668) | S-MIO-MATCH | [MIO/map] |
+| 0xa53260 | MIO `equipment_type` (template `+0xd0`) Matches(type) | S-MIO-MATCH | [MIO/assign] |
+| 0xa53660 | trait by token in template `+0xb8` (via `mio+0x110` = template + 0x88) | S-MIO-MATCH | [MIO/sum] |
+| 0xa536f0 / 0xa53850 | country MIO `available` / `visible` trigger (via `mio+0x118` = template + 0x218, with the include fallbacks) | S-MIO-MATCH | [MIO/sum] |
+| 0xbd3a50 / 0xbe1960 | variant role mask `+0x408` (installed modules' `add_equipment_type` included; not read by the MIO match; partly decoded), then 0xbe2450 | S-MIO-MATCH, S-DESIGN-TYPE | [MIO/type] |
+| 0xbe1c40 / 0xbe1d00 | set a variant's design team / set its bonus snapshot and trait count from a list | S-MIO-MATCH | [MIO/snap] |
+| 0xbe2450 | validate a variant's design team (0xdb6fd0); on failure clear handle, bonus, `+0x4b0` | S-MIO-MATCH | [MIO/assign] |
+| 0xbe3c80 | variant writer: `design_team`, `design_team_bonus`, `number_of_design_team_traits` | S-MIO-MATCH | [MIO/snap] |
+| 0xa50690 / 0xa51170 | MIO trait reference reader / writer: one key, `trait` (0x2e8e), a string; saved as `unlocked={ trait="…" }` | S-MIO-SAVE | [MIO/save] |
+| 0xc922a0 / 0xc924b0 | equipment type constructors: `+0x10 = 1`, parent and family = self | S-MIO-MATCH | [MIO/type] |
+| 0xc949d0 | equipment type post-load: `+0x548` = OR of the own `default_modules`' `add_equipment_type` | S-MIO-MATCH | [MIO/type] |
+| 0xc95730 | equipment type keyword mask `(+0x540 or archetype's) \| +0x548`, normalized | S-MIO-MATCH | [MIO/type] |
+| 0xc99410 | equipment type reader: `parent` +0x4e0, `archetype` +0x4d8, `is_archetype` +0x555, `family` +0x4e8, `type` +0x540, `default_modules` +0x88 | S-MIO-MATCH | [MIO/type] |
+| 0xdb3c80 | country MIO init: `+0x110` = template + 0x88, `+0x118` = template + 0x218, `+0x120` owner | S-MIO-MATCH | [MIO/map] |
+| 0xdbabe0 | country MIO post-read: "A trait in save file for: X does not exist in database." per unlocked token missing from the trait database | S-MIO-SAVE | [MIO/save] |
+| 0xdbb350 | country MIO member reader: `unlocked` (set `+0x140`, 0xdb38b0), `queued_trait` (`+0x150`), `policy` (token → `+0x188`), `name`, `icon`, `size`, `funds`, `history`, … | S-MIO-SAVE | [MIO/save] |
+| 0xdb6e90 | `same_as_mio`: the MIO's `equipment_type` matches the type | S-MIO-POLICY | [MIO/sum] |
+| 0xdb6fd0 → 0xdb6f40 | can the MIO be on this equipment type: `equipment_type` matches, or a policy key does | S-MIO-MATCH | [MIO/assign] |
+| 0xdbc860 | country MIO UnlockTrait: set insert, trait points `+0x134` − 1 (asserts `_TraitPoints > 0`), `on_complete`, modifiers, history; no variant refresh | S-MIO-MATCH, S-MIO-TREE | [MIO/snap] |
+| 0xdbccc0 | country MIO save writer (key order in [MIO/save]); `policy` only when not 0x4c17 | S-MIO-SAVE | [MIO/save] |
+| 0xe59400 | country `industrial_organisations` reader: MIO looked up by key (unknown: "MIO X is in save but not in DB", skipped), created with 0xdb3c80 and read; `allowed` not checked | S-MIO-SAVE | [MIO/save] |
+| 0xe5d0d0 | policy by id in `[country+0xf68]+0x148` (count `+0x154`) | S-MIO-POLICY | [MIO/sum] |
+| 0xf882f0 / 0xf8b070 | string → type keyword bit / reader variant ("incorrect type category") | S-MIO-MATCH | [MIO/match] |
+| 0xf8b020 | type mask normalization: capital_ship clears convoy/submarine/screen_ship; else submarine clears convoy/screen_ship; else screen_ship clears convoy (only with a bit of 0x80004003c1) | S-MIO-MATCH, S-DOMINANCE | [MIO/type] |
+
+### Air wings, joins and reinforcement (A-WINGS)
+
+From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]: the type keyword bits, which wings strike, land-based joins and the daily air reinforcement. Sorted by RVA. Rows here can repeat an RVA of the main table with the A-WINGS reading.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x6cad9c | country ctor: `country+0xf78` = air CReinforcementStatus (0x15097f0) | A-REINFORCE | [WINGS/reinforce] |
+| 0x6cf8c0 | country → its CStrategicAir (`gamestate+0x690 → +0x30[countryIdx]`) | A-REINFORCE | [WINGS/objects] |
+| 0x6e76a0 (call 0x6e784c) | `country.daily` → `deployment.daily` 0xd0ffc0(country+0xf70, +0xf78, +0xf80, +0xfd0) | A-REINFORCE | [WINGS/reinforce] |
+| 0xbd3a50 | variant type mask `variant+0x408`: (own `type` or archetype's) ∪ modules' `add_equipment_type`, ∩ archetype `allowed_types`, minus module +0x88; a `type_override` slot's module replaces it; writers 0xbdf910, 0xbe1960 | A-WINGS | [WINGS/types] |
+| 0xbdf456 (write 0xbdf58f) | variant allowed missions `variant+0x410` (type + modules `allow_mission_type`, minus mine bits without the stats and DLC-gated 0x4000 / 0x200) | A-WINGS | [WINGS/strike] |
+| 0xc3afb0 | ship has a module with flag `+0x2d0` (mega-carrier wing size); cached at ship+0x801 / +0x802 | A-REINFORCE | [WINGS/reinforce] |
+| 0xc3fcd0 (comparator 0xc40380) | stable sort of wings by reinforcement score, descending; ties lower wing id first | A-REINFORCE | [WINGS/reinforce] |
+| 0xc4f860 | take manpower for planes from the air delivery budget (`+0x188`, or the exile entry); returns what fits | A-REINFORCE | [WINGS/reinforce] |
+| 0xc505f0 | create a wing at a base from an equipment pool; merge flag → existing pool (0xc514f0), else new pool (0xf5a480) | A-WINGS | [WINGS/objects] |
+| 0xc514f0 | find the country's pool at a base for a variant: sub-unit type ∩ variant+0x408 ≠ 0 and the sub-unit needs the variant's type | A-WINGS | [WINGS/objects] |
+| 0xc536b0 | base → the country's pool list (`base+0x30[idx]+0xb8`) | A-WINGS | [WINGS/strike] |
+| 0xc57400 | base has an entry for the country | A-WINGS | [WINGS/strike] |
+| 0xc57d30 | hourly strategic-air update (from 0x1dfda5): for naval combats in an air hour resets both sides' `+0x3e8` (0xc584e4); runs each mission with `executing_mission & 0x1f7fa` through 0xf82110 (0xc58582) | A-EXTERNAL | [WINGS/ext] |
+| 0xc5c0a0 | air Deliver(variant, amount): wings of matching pools, reinforce list (0xf5cc60) then swap list (0xf5d0a0), each sorted by score | A-REINFORCE | [WINGS/reinforce] |
+| 0xc63d90 | end of the daily distribution: return swapped-out planes (0xf66dd0) | A-REINFORCE | [WINGS/reinforce] |
+| 0xc95710 | equipment type's own `type` mask, or the archetype's (`+0x540`; no default-module bits) | A-WINGS | [WINGS/types] |
+| 0xd0ffc0 | `deployment.daily` → 0xd10310 | A-REINFORCE | [WINGS/reinforce] |
+| 0xd10310 | daily equipment distribution: per stockpile variant (`[country+0xf68]+0x200`, sorted 0xbd2420) collect distributables (0xd0d980), sort (0xd0bdd0 / 0xd0c650), offer the whole amount (`vt+0x10`), remove the used part (0xe6eb90) | A-REINFORCE | [WINGS/reinforce] |
+| 0xf59760 / 0xf59c00 / 0xf59f70 / 0xf5a1f0 | CAirWing ctors; reinforce timer `+0xa20` = REINFORCEMENT_DISABLING_DURATION_IN_LAND_CARRIER_TRANSFER; priority `+0x28` = REINFORCEMENT_AIRBASE_PRIORITY_DEFAULT; preference `+0x9cc` = 1 | A-REINFORCE | [WINGS/reinforce] |
+| 0xf5a480 | CAirWingPool ctor (0x48 bytes; vtable 0x297ae38) | A-WINGS | [WINGS/objects] |
+| 0xf5aad0 | wing owner tag: `wing+0x9c4` if set (exile), else `[pool+0x40]+0x90` | A-WINGS | [WINGS/objects] |
+| 0xf5add0 | AddAirplanes(wing, variant, n, xp): equipment pool += n, `wing+0x7c` = pool count ("AddAirplanes - nAdd") | A-REINFORCE | [WINGS/reinforce] |
+| 0xf5cc60 | CanReinforce(wing, variant): below max size, ready, not transferring, timer expired, same allowed missions, `+0xa28 == variant+0x42c`, **not on a carrier whose task force is in combat** (0xf5cda2), preference | A-REINFORCE | [WINGS/reinforce] |
+| 0xf5d0a0 | CanSwap(wing, variant): same missions, needed type, preference, holds a variant that 0xbd7dc0 accepts; no combat check | A-REINFORCE | [WINGS/reinforce] |
+| 0xf5f000 | wing max size: land `land_air_wing_size`, carrier `carrier_air_wing_size` / mega / submarine (0x101b080); sub-unit type bit 33 → base capacity `base+0x78` | A-REINFORCE | [WINGS/reinforce] |
+| 0xf61f70 | reinforcement score `priority × 1000 + (mission type ≠ 0 ? 500 : 0) + missing planes` | A-REINFORCE | [WINGS/reinforce] |
+| 0xf62750 | wing hourly update: ready timer `+0x64 → +0x60`, not-ready wings into `strategicAir+0x70` | A-REINFORCE | [WINGS/reinforce] |
+| 0xf63100 | fighter-type test on the pool's sub-unit `type` (`& 0x100000c00`) | A-INTERCEPT, A-WINGS | [WINGS/types] |
+| 0xf632c0 | reinforcement preference `wing+0x9cc`: 0 obsolete only, 1 any, 2 only current, 3 only same ("unhandled reinforcement setting") | A-REINFORCE | [WINGS/reinforce] |
+| 0xf63fa0 | Reinforce(wing, variant, amount): `n = min(amount, max − planes)`, manpower-limited, AddAirplanes; returns the rest | A-REINFORCE | [WINGS/reinforce] |
+| 0xf64190 | Swap(wing, variant, amount): add `min(amount, planes)` new planes, `wing+0x88 +=` the same | A-REINFORCE | [WINGS/reinforce] |
+| 0xf64af0 | experience for the planes used on a mission | A-EXTERNAL | [WINGS/ext] |
+| 0xf667b0 | available missions `wing+0x30` = equipment missions `+0x2c`, + naval kamikaze for fighter-type sub-units of a kamikaze-capable country, + mines (DLC 0x13), − training, − air supply below MIN_PLANE_COUNT_AIR_SUPPLY | A-WINGS | [WINGS/strike] |
+| 0xf66dd0 | return `wing+0x88` planes to the stockpile (0xe6f910) and recount | A-REINFORCE | [WINGS/reinforce] |
+| 0xf78160 | external efficiency = disruption factor (see the main table) | A-EXTERNAL | [WINGS/ext] |
+| 0xf78360 | mission plane budget: `round(planes × effectiveness)`; carrier × CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance]; missile / kind-2 bases | A-EXTERNAL | [WINGS/ext] |
+| 0xf82110 | mission execution in an air hour: dispatch on `executing_mission` (0x10 / 0x80 naval, 0x8000 patrol, 0x100 port, …); joins targets while budget remains, not for 0x8 / 0x10000 | A-EXTERNAL | [WINGS/ext] |
+| 0xf82ca0 | mission joins one combat target: disruption eff (0xf78160), side `vt+0xf0` = 0x16205c0 with sub = 0 | A-EXTERNAL | [WINGS/ext] |
+| 0xf84d40 / 0xf87820 | air mission reader / writer: `type` +0x10, `executing_mission` +0x14, `period` +0x18, `active` +0x20, `effectiveness` +0xd8, `effective_planes_count` +0xe0 | A-WINGS | [WINGS/objects] |
+| 0xf852a0 | mission enable / disable a mission bit (`type`); clears `executing_mission` when its bit goes | A-WINGS | [WINGS/strike] |
+| 0xf856b0 | mission SetType (`type` = bits) | A-WINGS | [WINGS/strike] |
+| 0xf88330 | type keyword → bit, full map | A-WINGS | [WINGS/types] |
+| 0x101b080 | sub-unit wing size by airbase kind: 0 `land_air_wing_size` +0x600, 1 `carrier_air_wing_size` +0x604, 2 mega +0x608, 3 `submarine_carrier_air_wing_size` +0x60c | A-REINFORCE | [WINGS/reinforce] |
+| 0x15097f0 | air CReinforcementStatus ctor (vtable 0x29d1e48, base CEquipmentDistributable 0x15a7410); `+0x38` country | A-REINFORCE | [WINGS/reinforce] |
+| 0x150d9f0 | air CReinforcementStatus vt+0x08: planes of a variant the wings need (0xc4e8a0) | A-REINFORCE | [WINGS/reinforce] |
+| 0x150e150 | air CReinforcementStatus vt+0x10 Deliver → 0xc5c0a0 | A-REINFORCE | [WINGS/reinforce] |
+| 0x161ff10 | side: add a split wing to the external AirFX of the original wing | A-EXTERNAL | [WINGS/ext] |
+| 0x16205c0 | external join `(side, wing, &budget, eff, sub)` | A-EXTERNAL | [WINGS/ext] |
+| 0x1978e30 (0x1978ec3..0x1978fb5) | strike averages use only strike wings with `executing_mission & (port strike ? 0x100 : 0x90)` | A-DMG | [WINGS/strike] |
+| 0x1979770 | AirFX AddWing(airfx, wing, base, addOffered): all-wing list; strike list if `wing+0x30 & 0x190`; `+0x58 += planes` if addOffered | A-WINGS | [WINGS/strike] |
+| 0x1979aa0 (chunk 0x1979ae6) | AirFX AddPool(airfx, pool): each wing as 0x1979770, `+0x58 +=` planes | A-WINGS | [WINGS/strike] |
+| 0x197a1dc | loss allocation: strike wings with `executing_mission & 0x190`, per wing ≤ min(planes, `airfx+0x58`) | A-LOSSES | [WINGS/strike] |
+| 0x197a6a0 | external AirFX update: `+0x5c` recount, `+0x58 = min(add, +0x5c)`, `+0x70` date, `+0xc0` eff, `+0x80 = 0`. **disagrees**: AIR calls it "find external AirFX for an air base"; the find is the loop in 0x16205c0 over side+0x100 | A-EXTERNAL | [AIR/ext], [WINGS/ext] |
+| 0x1c6a7c0 | group AddMember(group, ship, flag): one AirFX per non-empty wing pool of the ship's base (0xc536b0), unless a submarine; wings get the combat only in normal combats (+0x10c / +0x10d clear) | A-WINGS | [WINGS/strike] |
+| 0x1c6c120 | add a wing to the AirFX holding another wing (split) | A-WINGS | [WINGS/strike] |
+| 0x1c6c1e0 | wing changed base in a group: removed from its AirFX (0x197a5a0), new AirFX if the new base is a carrier member of the group | A-WINGS | [WINGS/strike] |
 
 ## 2. Struct fields
 
@@ -342,19 +724,24 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | Offset | Meaning | Finding |
 |---|---|---|
 | +0x8 / +0xc | handle `{type 51, id}`: the save's ship `id={ id type=51 }` | [LOG] |
+| +0x40 | equipment list (entries `{equipment*, amount}` at +0x20, count +0x2c), tested by 0x10109b0 | [POTF/assign] |
+| +0x88 | sub-unit index (`ship+0x80` sub-unit object +8; < 0 = none): key of the naval terrain records | [STATS/getter] |
 | +0x1b8 | base surface detection | [POS/detect] |
 | +0x1c8 | surface visibility | [HIT/ship] |
 | +0x1d0 | sub visibility | [HIT/ship] |
+| +0x1e8 / +0x1f8 / +0x208 / +0x210 / +0x318 | stats lg_attack / hg_attack / torpedo_attack / sub_attack / armor_value (0x19 / 0x1b / 0x1d / 0x1e / 0x3f), read by 0xc34a50 | [STATS/getter] |
+| +0x218 | anti_air_attack stat (0x1f), read by 0xc3a470 | [STATS/getter] |
 | +0x228 | shooter stat "arg4" gating sub target weight (modifier 0x29; sub detection?) | [TGT/dc] |
 | +0x248 / +0x250 / +0x258 | weapon hit chance factor: light / heavy / torpedo (design stat) | [HIT/mods] |
 | +0x260 | ship torpedo damage reduction (inferred) | [HIT/pierce], [DMG/conv] |
 | +0x268 | ship torpedo enemy crit chance (inferred) | [HIT/crit], [DMG/conv] |
+| +0x270 | stat 0x2a (weather penalty factor?) in the weather term of 0xc38760 | [STC/sum] |
 | +0x308 | max HP (used as `max(·, 0.001)`) | [DMG/conv] |
 | +0x328 | reliability (inferred, medium) | [DMG/conv], [HIT/crit] |
 | +0x550 | sub-unit critical parts | [DMG/part] |
 | +0x568 | `critical_part_damage_chance_mult` (inferred) | [DMG/part], [HIT/crit] |
-| +0x628 | type flag bits: 6 capital, 7 sub, 8 screen, 22 or 37 carrier, 39 ? | [TGT/bb] |
-| +0x66c | country modifier "experience_gain_<type>_combat_factor" | [XP/gain] |
+| +0x628 | sub-unit `type` set (sub-unit+0x5a8): 0 convoy, 6 capital_ship, 7 submarine, 8 screen_ship, 22 carrier, 37 missile_launcher, 39 support_ship | [TGT/bb], [STATS/getter] |
+| +0x664 / +0x668 / +0x66c | modifier ids `experience_gain_<sub-unit>_training_factor` / `_mission_factor` / `_combat_factor` (sub-unit definition +0x5e4 / +0x5e8 / +0x5ec, 0x1018080); 0xc3b240 reads the one for its mode from the country | [XP/gain], [POTF/xp] |
 | +0x678 | per-ship hit profile multiplier ? (presumably 1.0) | [HIT/ship] |
 | +0x6f8 | HP (current strength) | [DMG/conv], [HOUR/order] |
 | +0x700 | org | [DMG/conv] |
@@ -363,10 +750,16 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | +0x728 | → task force / fleet | [TGT/sub], [AIR/conv] |
 | +0x730 | compared to air entry owner (carrier identity ?) | [XP/gain] |
 | +0x738 | linked object handle ? (redirects damage, no parts) | [DMG/apply] |
+| +0x740 | experience modifier holder (container +0x750), added in 0xc38760 | [STC/sum] |
 | +0x750 | experience modifier list | [XP/effect] |
 | +0x800 | experience-modifier dirty flag | [XP/effect] |
+| +0x804 | `government_in_exile_tag` (save key; eligibility test 0xc33a50) | [POTF/assign] |
 | +0x808 / +0x80c | manpower / max manpower (int32) | [DMG/conv], [HIT/hit] |
-| +0x8f8 | captain / leader | [XP/gain] |
+| +0x814 | pending `pride_of_the_fleet = yes` from a history/OOB ship block (consumed by 0xc34280) | [POTF/assign] |
+| +0x848 | the ship's captain (officer) record, gets the captain XP in 0xc31840 (0x13e8e50) | [POTF/xp] |
+| +0x8d8 | CUnitHistory (ctor 0x1445e00, dtor 0x1446450); `+0x20` (= ship+0x8f8) owns the medal object | [POTF/xp] |
+| +0x8f8 | captain / leader (XP). Refined: the CUnitHistory's medal object (0x14463a0 type, deref 0xc0dc90), which the UI shows as the captain; not a unit leader | [XP/gain], [POTF/xp] |
+| +0x8f8 → +0x1a0 | modifier holder of the object at +0x8f8, added in 0xc38760 (the medal object's modifiers, presumably the medals' `ship_modifiers`; also read for 0x34 / 0x35 by 0xc3b240) | [STC/sum], [POTF/xp] |
 | +0x918 | damaged parts list (part, count) | [DMG/part] |
 
 ### Fire-exchange member
@@ -375,6 +768,8 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 |---|---|---|
 | +0x8 | ship handle `{type, id}` (resolved with 0x221f310) | [LOG] |
 | +0x10 | convoy reference (no ship) | [TGT/bb], [DMG/apply] |
+| +0x18 | `CFEXMember::SCachedInfo` (vtable 0x2a20ee8; reader 0x1974d80, writer 0x1976430) | [POTF/readers] |
+| +0x40 | cached `pride_of_the_fleet` flag (SCachedInfo+0x28), set at construction; no reader in the naval combat code | [POTF/readers] |
 | +0xe0 | state: 1 waiting, 2 fighting, 4 joining, 8 retreating, 0x10 escaped (0x19739bd), 0x20 sunk (0x1975bea); mask 0xb = in battle, 0x34 = not present (settled by recheck) | [HOUR/hour], [ACT/bg], [TGT/bb], [POS/top] |
 | +0xe4 | joining countdown (hours) | [HOUR/hour], [POS/top] |
 | +0xe8 | → group | [POS/dmg] |
@@ -404,10 +799,12 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | Offset | Meaning | Finding |
 |---|---|---|
 | +0x48 | country list size | [POS/pos] |
-| +0xd8 | ctor flag: 1 for the side at combat+0x98 / CCombat+0x28; attacker? | [POS/top], [AIR/conv], [ACT/sub] |
+| +0xd8 | ctor flag: 1 for the side at combat+0x98 / CCombat+0x28; attacker? 0x13e1df0 picks the enemy by it (≠ 0 → combat+0x30) | [POS/top], [AIR/conv], [ACT/sub], [ADM/pos] |
+| +0x118 / +0x124 | admirals of the side's task forces / count (0x161e5c0) | [ADM/reads] |
 | +0xe8 / +0xf4 | groups / count | [HOUR/fex] |
 | +0x100 / +0x108 | `screening_bonus` / `capital_screening_bonus` (TGT says combatant; HIT says a struct slot bound at 0x60ed2a) | [TGT/bonus], [HIT/mods] |
-| +0x130 | commanding admiral (POS). **disagrees**: HIT "battle location", AIR "battle context" for AA | [POS/top], [HIT/mods], [AIR/target] |
+| +0x130 | commanding admiral (POS). ~~disagrees~~ settled: a CUnitLeader passed as the admiral to 0xc38760 / 0xc34a50 / 0xc3a470 (HIT "battle location" and AIR "battle context" were wrong) | [POS/top], [HIT/mods], [AIR/target], [STC/sum] |
+| +0x138 | saved copy of the commanding admiral (written with +0x130 by 0x1620940; save writer 0x1622520, reader 0x16209e0) | [ADM/reads] |
 | +0x140 | side-wide retreat flag | [ACT/retreat], [HOUR/end] |
 | +0x148 | screening | [TGT/screen] |
 | +0x150 | carrier screening | [TGT/screen] |
@@ -415,7 +812,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | +0x160 | newly joined penalty | [POS/joined] |
 | +0x168 | convoy-escort dominance bonus | [POS/convoy] |
 | +0x170 | fleet AA | [POS/aa], [AIR/reduce] |
-| +0x3e8 | external planes joined (cumulative) | [AIR/ext] |
+| +0x3e8 | external planes joined (cumulative). **disagrees**: WINGS finds it reset to 0 for both sides at each air hour of the combat's region (0xc584e4), so the join cap is per air hour | [AIR/ext], [WINGS/ext] |
 
 ### Combat (CCombat / CNavalCombat)
 
@@ -437,13 +834,52 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 |---|---|---|
 | +0x8 / +0xc | handle `{type, id}` (task force type 61) | [LOG] |
 | fleet +0xb8 / +0xc4 | task forces / count | [XP/mp], [LOG] |
-| +0x1a8 | combats list ([0] = first) | [XP/gain] |
+| fleet +0xb0 | admiral handle (written by 0xd5a170; 0xd50ee0) | [ADM/eff] |
+| +0x4b8 | ≠ 0: not counted by 0xd55ed0 for the admiral cap (meaning ?) | [ADM/eff] |
+| +0x1a8 | combats list ([0] = first; count +0x1b4); a combat is removed only by 0xc03e00 | [XP/gain], [POTF/combat] |
+| +0x1d8 / +0x1dc | owner tag / operating country tag (used if > 0 by 0xc3acc0 and the targeted lookup) | [STATS/getter] |
+| +0x1e0 | country used to find the task force's combat side (0x15c3010) | [STATS/getter] |
+| +0x1f0 | current province | [STATS/getter] |
 | +0x1b4 | > 0 = in combat | [XP/gain] |
 | +0x348 / +0x354 | ships / count | [XP/gain] |
+| +0x340 | fleet (its admiral: 0xd64510) | [STC/sum] |
 | +0x374 | mission: 3 convoy raiding; 4 convoy escort? | [ACT/retreat], [POS/convoy] |
 | +0x391 | flag: aggressiveness-check value = 0 if set | [ACT/retreat] |
 | +0x394 | aggressiveness (engagement rule) 0..4, save key `navy_engagement_rule` | [ACT/retreat], [TGT/sub] |
 | +0x4ec | carrier stance index | [AIR/conv] |
+| +0x4f8 / +0x500 | fuel / max fuel (0xd6c6f0) | [STATS/getter] |
+| +0x658 | modifier holder added in 0xc38760 (content ?) | [STC/sum] |
+| +0x728 / +0x734 | entries behind the building-module term (entry+0x40 → object with a character handle at +8) | [STC/sum] |
+
+### Unit leader (CUnitLeader / CNavyLeader)
+
+| Offset | Meaning | Finding |
+|---|---|---|
+| +0x120 | owner country tag | [STC/leader] |
+| +0x128 | sub-unit adjusters from traits (0xc19ba0); a CSubUnitModifiers object (vtable 0x2955af0) holding both parts of the traits' `sub_unit_modifiers` | [STC/leader], [ADM/subunit] |
+| +0x130 / +0x13c | `units` adjuster records (0x38 bytes: +0x08 sub-unit key, +0x10 adjuster attack/defence/movement at +0x10/+0x18/+0x20) / count | [ADM/subunit] |
+| +0x148 / +0x154 | sub-unit modifier-block records (0xd0 bytes: +0x08 key, +0x10 holder, container +0x20; scaled by `eff`) / count | [ADM/subunit] |
+| +0x160 / +0x188 | default adjuster / default holder returned on a key miss | [ADM/subunit] |
+| +0x248 / +0x254 | `_TerrainAdjusters` (40-byte records: +0x10 attack, +0x18 defence, +0x20 movement) | [STATS/getter] |
+| +0x260 (+0x270 / +0x278 / +0x280) | traits' `night` adjuster: attack / defence / movement | [STATS/getter] |
+| +0x288 / +0x298 | holder / container B (traits' `modifier` + `non_shared_modifier` + entries' +0x3b8); read for 0x1b9, 0x168, 0x181; never scaled | [STC/leader], [ADM/eff] |
+| +0x348 / +0x358 | holder / container A before the copy (scaled in place by `eff`) | [STC/leader], [ADM/eff] |
+| +0x408 / +0x418 | combat holder / container: A × leader efficiency (traits, skill levels, medals, leader-bound entries; never the country) | [STC/leader], [POS/pos] |
+| +0x598 / +0x658 | holder copies of B / scaled A (readers not traced) | [ADM/fields] |
+| +0x708 / +0x7c8 / +0x888 / +0x948 | source holders B / A / B2 / A2 (land-only pairs +0xa08/+0xac8, +0xb88/+0xc48) | [STC/leader] |
+| +0xd18 | A before scaling (copy) | [ADM/fields] |
+| +0xdc8 / +0xdd4 | traits / count | [STC/leader] |
+| +0xe60 | general skill level definition (`modifier` holder +0x10; level at def+0x1b8, 0xc199f0) | [STC/leader], [ADM/skill] |
+| +0xe70 / +0xe74 | unit cap / group cap of the size factors (navy: 0 / −1, so both factors are 1; 0xc21d30) | [ADM/eff] |
+| +0xe7c | leader type: 2 = navy (0, 1 land; 4 ?) | [STC/leader] |
+| +0xe84 | modifier cooldown reason (0 none, 1 fleet/group change, 4/5 army deploy/withdraw); ≠ 0 → `eff = 0`, no adjusters | [ADM/eff] |
+| +0xe90 / +0xea0 / +0xea8 | cooldown start hour / timer object / end hour | [ADM/eff] |
+| +0xf48 | owning character handle | [STC/leader] |
+| +0xf60 | fleet, for the task-force cap factor | [STC/leader] |
+| +0xf68 / +0xf78 / +0xf88 / +0xf98 | navy attack / defense / maneuvering / coordination level (≥ 1, base + traits' adds) | [ADM/skill] |
+| +0xf70 / +0xf80 / +0xf90 / +0xfa0 | navy skill-level definitions (`modifier` holder +0x10; +0xe0 container read by 0x1622d60) | [STC/leader] |
+| +0xfb0 / +0xfb4 / +0xfb8 / +0xfbc | `min(0, level − 1)` per navy skill (save `<skill>_skill_temp_deficit`) | [ADM/skill] |
+| +0xfc0 | navy: cached size efficiency (0xc21789; compared by 0xc1afc0) | [ADM/eff] |
 
 ### AirFX (air object)
 
@@ -452,13 +888,15 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | +0x08 | group | [AIR/conv] |
 | +0x10 | carrier member | [AIR/conv] |
 | +0x1c | → carrier base | [AIR/conv] |
-| +0x28 / +0x34 | strike wings (mission flags & 0x190: 0x10 naval strike, 0x80 kamikaze, 0x100 port strike) | [AIR/conv] |
+| +0x28 / +0x34 | strike wings (mission flags & 0x190: 0x10 naval strike, 0x80 kamikaze, 0x100 port strike). Refined by WINGS: the flags are the wing's available missions `wing+0x30` (equipment `allow_mission_type`), not the player's mission; averages and losses then filter on `executing_mission` `wing+0xa4` | [AIR/conv], [WINGS/strike] |
 | +0x40 / +0x4c | all wings | [AIR/conv] |
-| +0x5c | total planes, all wings | [AIR/conv], [POS/carrier] |
+| +0x5c | total planes, all wings. **disagrees** on scope: AIR "all wings on the carrier"; WINGS: one AirFX per wing pool (one sub-unit type) on the carrier, so the planes of that pool | [AIR/conv], [POS/carrier], [WINGS/strike] |
 | +0x64 | country | [AIR/conv] |
 | +0x80 | "already struck" byte (read only by a dead list and save code) | [AIR/cadence] |
 | +0x81 | external (land-based) flag | [AIR/conv], [POS/carrier] |
-| +0xc0 | external efficiency (source ?) | [AIR/ext] |
+| +0x58 | offered planes: Σ wing planes when built from a pool (0x1979aa0); external: the planes joined this time (0x197a6a0); caps per-wing losses in 0x197a1dc | [WINGS/ext] |
+| +0x70 | date of the last join (0x197a6a0) | [WINGS/ext] |
+| +0xc0 | external efficiency = 0xf78160 disruption factor of the joining mission (0x197a6da) | [AIR/ext], [WINGS/ext] |
 | +0xc8..+0xe8 | plane-weighted equipment averages; +0xe8 = avg of equipment +0x260, name ? | [AIR/conv], [AIR/hit] |
 | +0xf8 | cooldown hours | [AIR/cadence] |
 
@@ -473,6 +911,11 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | wing | +0x390 + 8×idx | raw equipment stat (idx 0x2f defence?, 0x30 attack?, 0x31 agility, 0x34 naval attack, 0x35 naval targeting) | [AIR/conv] |
 | strategic region | +0x60 | region id? | [AIR/cadence] |
 | strategic region | +0x140 | air phase | [AIR/cadence] |
+| equipment type | +0x3f0 | `naval_dominance_factor` | [DOM] |
+| variant | +0x408 bit 7 | dominance reads stat 0x49 instead of carrier size 0x48 (meaning open) | [DOM] |
+| mission | +0x8 / +0x14 / +0x30 / +0x70 / +0xc8, +0xd4 | task force / type (MISSION_DOMINANCE_RATIOS index; save `mission=1` patrol) / active / region (one type) / regions, count | [DOM] |
+| strategic region | +0xe8 | region dominance | [DOM] |
+| region dominance | +0x40 / +0x4c / +0x78 | entries (stride 0x50: country, +0x20 value, presumably `current`) / count / the region's own value | [DOM] |
 | global | 0x332f260 | gamestate pointer | [LOG] |
 | global | 0x3452520 / 0x3452524 | RNG counter / seed (the save's `multiplayer_random_count` / `multiplayer_random_seed`, observed) | [LOG] |
 | global | 0x3452529 | log every `random_fixed` call (console `randomlog`) | [LOG] |
@@ -481,6 +924,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | country | +0x290 / +0x29c | armies / count | [LOG] |
 | gamestate | +0x468 | date in hours | [AIR/cadence] |
 | gamestate | +0xa39 | HasGameStarted(): 1 in a running game, 0 while loading, resetting or in the menu (named by the assert at 0x1de28e) | [XP/mp] |
+| gamestate | +0xa3a | set while the game state is being cleared (0x1d0e30); the ship dtor then leaves `country+0x250` alone | [POTF/sink] |
 | gamestate | +0x688 | weather manager | [WTH/cmd] |
 | weather manager | +0x10 | weather cells (0x180 bytes each; +0x28 active) | [WTH/cmd] |
 | weather manager | +0x40 / +0x4c | region weather states (0x160 bytes each) / count | [WTH/combat] |
@@ -491,6 +935,25 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | strategic region | +0x58 | index into the weather manager's region states | [WTH/combat] |
 | country | +0x5b8 | modifiers | [POS/pos], [XP/gain] |
 | admiral | +0x418 | modifiers | [POS/pos] |
+| country | +0x250 | pride-of-the-fleet ship handle; written by 0x712700 (also ctor 0x6c9cc0, reset 0x6e2de0, save reader 0x709d36); cleared by the ship dtor; save key `pride_of_the_fleet` | [STATS/getter], [POTF/readers] |
+| country | +0x258 / +0x260 / +0x268 | date the PotF was lost: CDate object, hours at +0x260 (default 0x29c77f8 = 1.1.1.1 = never; written by 0x70c760), persistent base at +0x268 (save key `pride_of_the_fleet_date_lost`) | [POTF/sink], [POTF/save] |
+| country | +0x270 | `pride_of_the_fleet_sunk_temporary` applied (0x6dade0) | [POTF/sink] |
+| country | +0x484 | must be > 0 for the PotF command (meaning ?) | [POTF/assign] |
+| country | +0xf88 | targeted-modifier table by target country index (entry holder +0x130) | [STATS/getter] |
+| country | +0x15b8 / +0x15c4 | leader-bound timed entries, 0x58 bytes (+0 obj, +0x10 leader, +0x18 count, +0x48 expired; obj +0x3b8 / +0x478 holders, +0xa8 start, +0xac duration) | [STC/leader] |
+| province | +0xa4 / +0xc8 / +0x188 | id / strategic region / controller tag (saved as `controller`) | [STATS/getter] |
+| strategic region | +0x30 | naval terrain (via 0x15a5560) | [STC/mod] |
+| naval terrain | +0x88 / +0xb8 / +0x168 / +0x1b8 | terrain index / modifier container / default sub-unit record / per-sub-unit records | [STATS/getter], [STC/mod] |
+| character | +0xa8 / +0xd0 | unit-leader role / `unit_medals` object (holder +0x10) | [STC/leader] |
+| trait | +0x360 / +0x420 / +0x4e0 / +0x5a0 | `modifier` / `non_shared_modifier` / `corps_commander_modifier` / `field_marshal_modifier` | [STC/leader] |
+| trait | +0x768 / +0x774, +0x780 | adjuster list (`night`, terrains) / sub-unit block | [STC/leader] |
+| trait | +0x788 / +0x7a0 | `sub_unit_modifiers`: `units` adjuster list / modifier-block list (CSubUnitModifiers at +0x780) | [ADM/subunit] |
+| trait | +0xa20 / +0xa24 / +0xa34 | `attack_skill` / `defense_skill` / `coordination_skill` (maneuvering via 0x1dbe00) | [ADM/skill] |
+| skill database | +0xe8 / +0x160 / +0x1d8 / +0x250 / +0x2c8 / +0x340 / +0x3b8 | overall / attack / defense / planning / logistics / maneuvering / coordination lists, each per type (stride 0x18; data +0, count +0xc); index = level, [0] = null object | [ADM/skill] |
+| skill level entry | +0x08 / +0x10 / +0xd0 / +0x1b8 / +0x1c0 | valid / `modifier` holder / `building_module_modifier` holder / level / type (2 navy) | [ADM/skill] |
+| sub-unit definition | +0x5a8 | `type` bitmask (copied to ship+0x628) | [STATS/getter] |
+| modifier definitions | global 0x332ed90 | 0x78-byte entries; +0x60 flags read by 0x60fbd0 | [STC/leader] |
+| modifier definition | +0x60 | flags (4th argument of 0x5574d0): bit 0 percentage, bit 1 positive is good, bit 2 neutral, bit 5 boolean (meanings inferred from all 666 definitions); +0x6c id, +0x70 token | [ADM/scale] |
 | convoy | +0x20, +0x18 → +0x2e8 | current / max for the HP ratio (medium) | [TGT/weight] |
 | convoy | +0x208 | "arg4" stat | [TGT/target] |
 | shot profile (0x1970a90) | +0x00 / +0x08 / +0x10 / +0x18 / +0x20 / +0x28 / +0x30 / +0x38 | damage / crit chance / crit mult / hit chance / piercing / target armor / damage-reduction factor (−1 = none) / cooldown | [DMG/pipe] |
@@ -501,6 +964,159 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | critical part | +0x168 | pick weight (`chance`) | [DMG/part] |
 | design / module | slot list +0x60 → module +0xb8 → +0x240 | module `critical_parts` | [DMG/part] |
 | static modifiers | +0xd8 / +0xe0 / +0xe8 / +0xf0 | the four experience blocks (loaded at 0x60ec2b) | [XP/effect] |
+| static modifiers | +0x58 / +0xb0 / +0xb8 / +0xc0 | `night` / `pride_of_the_fleet` / `pride_of_the_fleet_country` / `pride_of_the_fleet_sunk_temporary` (loader 0x60d830); +0xb0 read at 0xc38811, 0xc3b34c, 0xc3b372; +0xb8 at 0x6dbac0; +0xc0 at 0x6dbd39; tooltip 0x1beaba0 | [STC/sum], [POTF/static] |
+| `set_pride_of_the_fleet_command` | +0x28 / +0x30 | ship handle (null = unassign) / country tag | [POTF/assign] |
+
+### Doctrines (S-DOCTRINE)
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| track status (0x60, inline in the folder) | +0x08 | subdoctrine template (null = empty) | [DOC/fields] |
+| track status | +0x10 | int unlocked rewards (save `rewards`) | [DOC/fields] |
+| track status | +0x18 | fx5 mastery, cumulative since the subdoctrine was assigned (save `mastery`) | [DOC/fields] |
+| track status | +0x20 | fx5 banked mastery (save `mastery_bank`) | [DOC/fields] |
+| track status | +0x28 | fx5 base daily gain from units (save `daily_mastery`) | [DOC/fields] |
+| track status | +0x30 / +0x3c | `leaders_daily_mastery` list / count | [DOC/fields] |
+| track status | +0x48 | daily gain computed by 0xfc7d90 (not saved) | [DOC/fields] |
+| track status | +0x50 / +0x58 | country doctrine status / folder status | [DOC/fields] |
+| folder status (0x50) | +0x08 / +0x10 | folder template / active grand doctrine | [DOC/fields] |
+| folder status | +0x18 / +0x20 / +0x24 | track statuses (stride 0x60) / capacity / count | [DOC/fields] |
+| folder status | +0x30 | country doctrine status | [DOC/fields] |
+| folder status | +0x38 / +0x44 | completed subdoctrines / count (never removed) | [DOC/fields] |
+| country doctrine status | +0x08 | country tag | [DOC/fields] |
+| country doctrine status | +0x10 / +0x1c | folder statuses (stride 0x50) / count | [DOC/fields] |
+| country doctrine status | +0x28 / +0x34 | unlocked tactics / count | [DOC/fields] |
+| country doctrine status | +0x58 / +0x64 | timed `add_daily_mastery` / `add_mastery_bonus` sources (stride 0x70: +0x28 filter, +0x58 amount, +0x60 bonus, +0x68 days) | [DOC/fields] |
+| country doctrine status | +0x70 / +0x7c | equipment bonus records (0x18 each: +0x08 doctrine id, +0x0c index, +0x10 named-bonus handle) | [DOC/fields] |
+| grand doctrine template | +0x08 / +0x28 | id / name | [DOC/fields] |
+| grand doctrine template | +0x88 / +0xe0 | activation effects / their modifier block | [DOC/fields] |
+| grand doctrine template | +0x300 | milestones (stride 0x190; effects +0x10, modifiers +0x68) | [DOC/fields] |
+| grand doctrine template | +0x318 / +0x324 | track templates / count | [DOC/fields] |
+| subdoctrine template | +0x08 / +0x28 | id / name | [DOC/fields] |
+| subdoctrine template | +0x88 / +0xe0 | activation effects / their modifier block | [DOC/fields] |
+| subdoctrine template | +0x310 / +0x31c | rewards (stride 0x1d8; effects +0x50, modifiers +0xa8, `mastery` +0x1d0) / count | [DOC/fields] |
+| subdoctrine template | +0x340 | mastery conditions | [DOC/fields] |
+| activation effects | +0x58 (+0x68) | modifier container (`modifier = {}`) (its entry list: top-level modifier keys) | [DOC/fields] |
+| activation effects | +0x118 | sub-unit / category stat block (sub-units +0x08/+0x14, categories +0x20/+0x2c) | [DOC/fields] |
+| activation effects | +0x150 | `enable_tactic` list (stride 0x28) | [DOC/fields] |
+| activation effects | +0x168 / +0x174 | `equipment_bonus` list (stride 0x78) / count | [DOC/fields] |
+| country | +0xf68 | equipment manager: +0xa0/+0xac variants, +0x160 idea bonuses, +0x178 named bonuses (0xc8 each), +0x548 last handle | [DOC/fields] |
+| country | +0xf70 | sub-unit manager (save `deployment`): +0x08/+0x14 extra bonus sources (save `unit_modifiers`; stride 0x70: +0x08 block, +0x40 source type, +0x44 doctrine id, +0x48 index, +0x50 localization key), +0x20/+0x2c country sub-unit copies, +0x38 unlocked sub-units, +0x118 technology status | [DOC/fields] |
+| equipment bonus (0x78) | +0x10 / +0x70 / +0x74 | key string / `instant` / key token | [DOC/fields] |
+| equipment type | +0x4d8 | archetype | [DOC/effects] |
+| equipment type | +0x540 / +0x548 | `type` bit masks (archetype's +0x540 when 0); `+0x548` is the default modules' `add_equipment_type` ([MIO/type]) | [DOC/effects] |
+| trigger `has_doctrine` | +0x58 / +0x60 | subdoctrine / grand doctrine | [DOC/trig] |
+| trigger `has_mastery` | +0x58 / +0x60 | amount (fx5) / track template | [DOC/mastery] |
+| trigger `has_mastery_level` | +0x58 / +0x60 | amount (int) / subdoctrine | [DOC/mastery] |
+| trigger `has_completed_track` | +0x58 | track template | [DOC/mastery] |
+
+### MIO (S-MIO-INCLUDE)
+
+From [S-MIO-include-and-tree.md][MIOI]. "MIO" is the database template (`industrial_org_template.cpp`); "trait" is one tree trait (0x3d8 bytes, `industrial_org_trait.cpp`); "country MIO" is the per-country instance (`industrial_organisation.cpp`).
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| MIO | +0x08 | token | [MIOI/fields] |
+| MIO | +0x10 / +0x14 | `include` token / set | [MIOI/fields] |
+| MIO | +0x18 / +0x24 | `delete_included_values` tokens / count | [MIOI/fields] |
+| MIO | +0x30 / +0x50 / +0x88 | `name` / `icon` / `background` | [MIOI/fields] |
+| MIO | +0x70 / +0x78 | `research_bonus` (fx5) / `task_capacity`; equal to DESIGN_TEAM_RESEARCH_BONUS / DEFAULT_INITIAL_TASK_CAPACITY counts as unset | [MIOI/fields] |
+| MIO | +0xa8 / +0xac | `xp_research_type` (1 army, 2 navy, 3 air) / set | [MIOI/fields] |
+| MIO | +0xb0 | initial trait (owned pointer, token `initial_trait`) | [MIOI/fields] |
+| MIO | +0xb8 / +0xc4 | tree traits (inline, 0x3d8 each; `trait` and `add_trait`, then included ones) / count | [MIOI/fields] |
+| MIO | +0xd0 | `equipment_type` filter (empty when `+0x12c` = 0) | [MIOI/fields] |
+| MIO | +0x1a0 / +0x1ac | `research_categories` / count | [MIOI/fields] |
+| MIO | +0x1b8 / +0x1c4 | `tree_header_text` (0x30 each) / count | [MIOI/fields] |
+| MIO | +0x1d0 / +0x1dc | `remove_trait` tokens / count | [MIOI/fields] |
+| MIO | +0x1e8 / +0x1f4 | `override_trait` traits not yet matched / count | [MIOI/fields] |
+| MIO | +0x218 / +0x270 / +0x2c8 | `allowed` / `available` / `visible` | [MIOI/fields] |
+| MIO | +0x320 / +0x378 / +0x3d0 / +0x428 / +0x480 / +0x4d8 | `on_design_team_assigned_to_tech` / `_to_variant` / `on_industrial_manufacturer_assigned` / `on_tech_research_cancelled` / `_completed` / `on_industrial_manufacturer_unassigned` | [MIOI/fields] |
+| MIO | +0x530 | `ai_will_do` | [MIOI/fields] |
+| MIO | +0x568 / +0x570 / +0x578 / +0x580…+0x5a8 / +0x5b0 | fallbacks to the included MIO's `allowed` / `available` / `visible` / `on_*` / `ai_will_do` | [MIOI/fields] |
+| MIO database | +0x48 / +0x60 (+0x6c) / +0xa0 | token → MIO map / MIO list (count) / trait token map | [MIOI/include] |
+| trait | +0x08 / +0x10 | token / owning MIO (the including MIO after a merge) | [MIOI/fields] |
+| trait | +0x18 / +0x38 / +0x58 | `name` / `icon` / `special_trait_background` | [MIOI/fields] |
+| trait | +0x60 | `limit_to_equipment_type` filter (empty when `+0xbc` = 0) | [MIOI/fields] |
+| trait | +0x130 (+0x138 / +0x144) | stat list of `equipment_bonus` and `production_bonus` together (entries 16 bytes `{stat, fx5}` / count) | [MIOI/fields] |
+| trait | +0x150 (+0x160) | `organization_modifier` holder (container) | [MIOI/fields] |
+| trait | +0x210 / +0x268 / +0x2c0 / +0x318 | `available` / `visible` / `on_complete` / `ai_will_do` | [MIOI/fields] |
+| trait | +0x350 / +0x358 / +0x360 / +0x368 | fallbacks to the included trait's `available` / `visible` / `on_complete` / `ai_will_do` | [MIOI/fields] |
+| trait | +0x370 / +0x37c | parent groups (0x20 each: token list, `needed` at +0x18) / count; `parent`, `any_parent`, `all_parents` | [MIOI/fields] |
+| trait | +0x388 / +0x394 | `mutually_exclusive` tokens / count | [MIOI/fields] |
+| trait | +0x3a0 / +0x3a4 | `position` x / y (−1 = unset) | [MIOI/fields] |
+| trait | +0x3a8 / +0x3ac | `relative_position_id` token / set | [MIOI/fields] |
+| trait | +0x3b0 / +0x3bc | `delete_included_values` tokens / count | [MIOI/fields] |
+| trait | +0x3c8 | script location (error messages; taken from the included trait on merge) | [MIOI/fields] |
+| country MIO | +0x118 / +0x134 / +0x140 | template / int that must be > 0 to unlock (trait points?) / unlocked trait tokens (set). **disagrees** (detail): MIO reads `+0x118` = template + 0x218 (the `allowed`/`available`/`visible` part, 0xdb3e01) and `+0x134` = trait points (0xdbc860 asserts `_TraitPoints > 0`, decrements); settled in [README/disagree] | [MIOI/unlock], [MIO/map] |
+
+### MIO equipment matching (S-MIO-MATCH)
+
+From [S-MIO-equipment-matching.md][MIO]. "Equipment type" is a `common/units/equipment` entry (a hull for ships); a variant's equipment type (`variant+0x3f0`) is always a concrete one.
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| equipment type | +0x08 / +0x10 / +0x18 | name token / valid flag / name string | [MIO/map] |
+| equipment type | +0x88 / +0x94 | `default_modules` pairs `{slot token, module token}` / count | [MIO/type] |
+| equipment type | +0x4e0 | `parent` (defaults to self) | [MIO/type] |
+| equipment type | +0x4e8 | `family` (defaults to self); the key match reads the archetype's | [MIO/match] |
+| equipment type | +0x548 | OR of the own `default_modules`' `add_equipment_type` (0xc949d0) | [MIO/type] |
+| equipment type | +0x555 | `is_archetype` | [MIO/type] |
+| module | +0x78 | `add_equipment_type` keyword mask | [MIO/type] |
+| equipment group (`CEquipmentGroup` / `CAnonymousEquipmentGroup`) | +0x50 / +0x5c | entries as written (0x28 bytes, hash at +0x20) / count | [MIO/match] |
+| equipment group | +0x68 | reload listener (second vtable 0x27196c0) | [MIO/match] |
+| equipment group | +0x70 (+0x88) / +0x90 (+0xa8) / +0xb0 (+0xc8) | caches: expanded tokens / expanded names / expanded names with group names (valid flags) | [MIO/match] |
+| equipment database (0x22fa10, data 0x332eec0) | +0x68 / element 0 | name index / reserved null entry returned on a miss | [MIO/match] |
+| equipment database | +0xe0 / +0xec | modules / count | [MIO/type] |
+| country MIO | +0x110 | template + 0x88 (initial trait at its +0x28, traits at +0x30, `equipment_type` at +0x48) | [MIO/map] |
+| country MIO | +0x148 | size of the unlocked-trait set (copied to the variant's `number_of_design_team_traits`) | [MIO/snap] |
+| country MIO | +0x188 | attached policy id | [MIO/sum] |
+| policy (status) | +0x08 / +0x38 | id / template (its bonus map: equipment and production keys together) | [MIO/sum] |
+| equipment manager `[country+0xf68]` | +0x148 / +0x154 | MIO policies / count | [MIO/sum] |
+| variant | +0x408 | own role mask with installed modules (0xbd3a50); not used by the MIO match | [MIO/type] |
+| variant | +0x490 (+0x498 list, +0x4a4 count) | design team bonus snapshot (save `design_team_bonus`) | [MIO/snap] |
+| variant | +0x4b0 | trait count when the snapshot was taken (save `number_of_design_team_traits`) | [MIO/snap] |
+
+### Air wings, pools, bases and air missions (A-WINGS)
+
+From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]. A wing handle resolves to `wing+0x10`.
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| wing | +0x1c | id (sort tie-break) | [WINGS/reinforce] |
+| wing | +0x28 | replacement priority 0 / 1 / 2 (low / medium / high) | [WINGS/reinforce] |
+| wing | +0x2c | equipment allowed missions (= `variant+0x410` of its planes) | [WINGS/strike] |
+| wing | +0x30 | available missions (0xf667b0); AirFX strike list if `& 0x190` | [WINGS/strike] |
+| wing | +0x38 | pool (CAirWingPool) | [WINGS/objects] |
+| wing | +0x48 | transfer target base handle (null = not transferring) | [WINGS/reinforce] |
+| wing | +0x60 / +0x64 | ready timer: hours needed / elapsed (meaning ?) | [WINGS/reinforce] |
+| wing | +0x79 | blocks reinforcement (meaning ?) | [WINGS/reinforce] |
+| wing | +0x7c | planes (equipment pool count) | [WINGS/reinforce] |
+| wing | +0x88 | planes to return to the stockpile after a swap | [WINGS/reinforce] |
+| wing | +0x90 | air mission object (`+0xa0` = its `type`, `+0xa4` = its `executing_mission`) | [WINGS/objects] |
+| wing | +0x1c0 / +0x1cc | combats the wing is in | [WINGS/strike] |
+| wing | +0x1d8 (+0x1f8 / +0x204) | equipment pool (entries {variant, amount}) | [WINGS/reinforce] |
+| wing | +0x9c4 | owner tag override (exile) | [WINGS/objects] |
+| wing | +0x9cc | reinforcement preference (0 obsolete only, 1 any (default), 2 only current, 3 only same) | [WINGS/reinforce] |
+| wing | +0xa20 | reinforcement timer (REINFORCEMENT_DISABLING_DURATION_IN_LAND_CARRIER_TRANSFER) | [WINGS/reinforce] |
+| wing | +0xa28 | must equal `variant+0x42c` to reinforce (meaning ?) | [WINGS/reinforce] |
+| wing pool | +0x18 / +0x20 / +0x28, +0x34 / +0x40 | base handle / sub-unit definition / wings, count / country CStrategicAir | [WINGS/objects] |
+| air base | +0x30[countryIdx] → +0xb8 / +0xc4 | that country's pools at the base / count | [WINGS/objects] |
+| air base | +0x7c | base kind (1 missiles, 2 ?; else airfield or carrier) | [WINGS/ext] |
+| CStrategicAir | +0x58 / +0x64, +0x70, +0x90, +0x188 | pools / count, not-ready wings, country tag, manpower budget of one delivery | [WINGS/objects] |
+| air mission | +0x10 / +0x14 / +0x18 / +0x20 / +0x28 | `type` / `executing_mission` / `period` / `active` / owning wing | [WINGS/objects] |
+| air mission | +0xa8 | disruption taken (not saved; inferred from the DISRUPTION_DEFENCE_* use) | [WINGS/ext] |
+| air mission | +0xd8 / +0xe0 | `effectiveness` / `effective_planes_count` | [WINGS/ext] |
+| variant | +0x408 | type keyword mask (0xbd3a50) | [WINGS/types] |
+| variant | +0x410 | allowed missions (0xbdf456) | [WINGS/strike] |
+| variant | +0x420 | manpower per plane (0xbda170) | [WINGS/reinforce] |
+| variant | +0x424 / +0x42c | obsolete flag ? / matched with `wing+0xa28` | [WINGS/reinforce] |
+| equipment type | +0x408 | `allowed_types` mask (read on the archetype) | [WINGS/types] |
+| equipment type | +0x3c4 | level compared by the reinforcement preference (year ?) | [WINGS/reinforce] |
+| module | +0x78 / +0x88 | `add_equipment_type` / a removed-types mask (probably `forbid_equipment_type`) | [WINGS/types] |
+| sub-unit definition | +0x310 | `need` map (equipment → amount) | [WINGS/reinforce] |
+| sub-unit definition | +0x600 / +0x604 / +0x608 / +0x60c | `land_air_wing_size` / `carrier_air_wing_size` / mega carrier / `submarine_carrier_air_wing_size` | [WINGS/reinforce] |
+| country | +0xf78 | air CReinforcementStatus | [WINGS/reinforce] |
+| naval combatant | +0x100 / +0x10c | external AirFX / count | [WINGS/ext] |
 
 ## 3. Modifier ids and read sites
 
@@ -512,49 +1128,63 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 |---|---|---|---|
 | 0x15 | NAVAL_STRIKE (weather `naval_strike`) | 0x197b890 targeting mult | [AIR/conv], [AIR/hit] |
 | 0x16 / 0x17 / 0x18 | NAVAL_STRIKE_ATTACK / TARGETTING / AGILITY_FACTOR | plane stat getters | [AIR/conv] |
+| 0x19 | `naval_coordination` | no read through the modifier getters in combat code | [STC/names] |
 | 0x22 | CARRIER_TRAFFIC | 0x1976db0 | [AIR/sortie] |
 | 0x23 | CARRIER_NIGHT_TRAFFIC | 0x1976db0, 0x1977000 | [AIR/sortie], [HOUR/night] |
-| 0x24 | `sortie_efficiency` (not in table; from use) | 0x1976db0 via 0x1972570 | [AIR/conv] |
+| 0x24 | `sortie_efficiency` (registered, loc key CARRIER_SORTIE_EFFICIENCY_FACTOR) | 0x1976db0 via 0x1972570 | [AIR/conv], [STC/names] |
 | 0x28 | NAVAL_HIT_CHANCE | 0x1970b48 via 0x1972570 | [HIT/mods] |
 | 0x29 | NAVAL_SPEED_FACTOR (HIT). **disagrees**: TGT uses it as the "arg4" sub-weight stat | 0x1971cc0 | [HIT/map], [TGT/target] |
-| 0x2a | surface detection stat modifier (name ?) | 0xc3aae0 | [POS/detect] |
-| 0x34 / 0x35 | experience_gain_navy_unit_factor / _unit? (low-medium) | 0xc3b240 | [XP/gain] |
+| 0x2a | `naval_detection` | 0xc3aae0, 0xc3a950 | [POS/detect], [STC/names] |
+| 0x34 / 0x35 | `experience_gain_navy_unit_factor` / `experience_gain_navy_unit` (confirmed; tokens 0x323e / 0x323d, flags 3 / 2; sources: operating country, ship medals, PotF block; no admiral) | 0xc3b240 | [XP/gain], [STC/names], [POTF/xp] |
+| 0x38 | `submarine_attack`: flat add to the base attack of submarines (kinds 0–3) | 0xc34b66 | [STATS/getter] |
 | 0x46 / 0x47 | NAVY_ORG / NAVY_ORG_FACTOR | 0xc3d4a3 | [LOG] |
-| 0x57 | naval_retreat_chance? (medium; HOUR: unresolved) | 0x1975280 | [ACT/retreat], [HOUR/end] |
-| 0x58 | naval_retreat_chance_after_initial_combat? (medium) | 0x1975280 (0x1975325) | [ACT/retreat], [HOUR/end] |
-| 0x59 | naval_retreat_speed_after_initial_combat (medium) | 0x196fe80 | [ACT/speed] |
-| 0x5a | naval_enemy_positioning_in_initial_attack? (medium). Gate **disagrees**: POS `side+0xd8 == 0`, HOUR "side not in all-retreat" | 0x161b960 (0x161bbb5) | [POS/pos], [HOUR/end] |
+| 0x57 | `naval_retreat_chance` (confirmed) | 0x1975280 | [ACT/retreat], [HOUR/end], [STC/names] |
+| 0x58 | `naval_retreat_chance_after_initial_combat` (confirmed) | 0x1975280 (0x1975325) | [ACT/retreat], [HOUR/end], [STC/names] |
+| 0x59 | `naval_retreat_speed_after_initial_combat` (confirmed) | 0x196fe80 | [ACT/speed], [STC/names] |
+| 0x5a | `naval_enemy_positioning_in_initial_attack` (confirmed, [STC/names]). Gate **disagrees**: POS `side+0xd8 == 0`, HOUR "side not in all-retreat". ADM: read as own country + location + the **enemy** commanding admiral; with `+0xd8` = attacker it applies to the defender, `hours < COMBAT_INITIAL_DURATION` | 0x161b960 (0x161bbb5) | [POS/pos], [HOUR/end], [ADM/pos] |
 | 0x5b | naval_retreat_speed (confirmed in-game: TFB `smoke_generator`'s country value, +0.2/day) | 0x196fe80 via 0x1972570 | [ACT/speed], [LOG] |
-| 0x5c | sub_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
-| 0x5d | convoy_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
+| 0x5c | `sub_retreat_speed` (confirmed) | 0x196fe80 | [ACT/speed], [STC/names] |
+| 0x5d | `convoy_retreat_speed` (confirmed) | 0x196fe80 | [ACT/speed], [STC/names] |
 | 0x7e / 0x7f | NAVAL_MORALE / NAVAL_MORALE_FACTOR | 0xc395a0 (organization regain) | [LOG] |
-| 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg] |
+| 0x88 / 0x89 | `navy_anti_air_attack` / `navy_anti_air_attack_factor` | 0xc3a470 only (per-ship AA) | [STATS/getter], [STC/names] |
+| 0xc2 / 0xc3 | `navy_submarine_attack_factor` / `navy_submarine_defence_factor` (type bit 7) | 0xc34a50 | [STATS/getter] |
+| 0xc4 / 0xc5 | `navy_capital_ship_attack_factor` / `navy_capital_ship_defence_factor` (type bit 6) | 0xc34a50 | [STATS/getter] |
+| 0xc6 / 0xc7 | `navy_screen_attack_factor` / `navy_screen_defence_factor` (type bit 8) | 0xc34a50 | [STATS/getter] |
+| 0xc8 | `navy_submarine_detection_factor` | 0xc3a950 | [STC/names] |
+| 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR; in 0x1978e30 read from the country container only (an admiral's value has no effect) | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg], [ADM/subunit] |
+| 0x107 | `naval_night_attack` × darkness of the task force's province (the former "—" row; HOUR/DMG disagreement settled: read) | 0xc34de4 | [STATS/getter], [HOUR/night], [DMG/dmg] |
 | 0x10c | CARRIER_CAPACITY_PENALTY_REDUCTION | 0xc579f0 chain | [AIR/sortie] |
-| 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR (script `critical_receive_chance`; confirmed in-game: TFB damage_control × 0.8) | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit], [LOG] |
-| 0x19f | NAVAL_VISIBILITY_FACTOR | 0xc37006; sub reveal (ACT). **disagrees**: POS names 0x1ba/0x1bc for the reveal | [HIT/ship], [ACT/sub], [POS/sub] |
-| 0x1a0 | NAVAL_CASUALTY_ON_HIT_FACTOR (DMG; XP: unresolved) | 0xc3e0e0 | [DMG/xp], [XP/loss] |
+| 0x168 | `skill_bonus_factor` (unit leader); B only (country values have no effect); the only read in the executable | leader efficiency, `leader+0x298` (0xc2179e) | [STC/leader], [ADM/eff] |
+| 0x181 | `reassignment_duration_factor` (flags 1); B only | 0xc0fdb0 (cooldown days) | [ADM/eff] |
+| 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR (script `critical_receive_chance`; confirmed in-game: TFB damage_control × 0.8) | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit], [LOG], [POTF/air] |
+| 0x19f | script key `navy_visibility` (loc NAVAL_VISIBILITY_FACTOR) | 0xc37006; sub visibility 0xc3aa20; surface visibility 0xc3ab80. ~~disagrees~~ settled: POS's 0x1ba/0x1bc are not in the ordinary reveal | [HIT/ship], [ACT/sub], [POS/sub], [STC/names] |
+| 0x1a0 | script key `navy_casualty_on_hit` (loc NAVAL_CASUALTY_ON_HIT_FACTOR; confirmed) | 0xc3e0e0 (0xc3e305) | [DMG/xp], [XP/loss], [STC/names] |
 | 0x1a1 | NAVAL_CASUALTY_ON_SINK_FACTOR (script `navy_casualty_on_sink`; static modifier `water_modifier_shark_infested` +0.6) | 0xd77ff0 | [DMG/xp] |
-| 0x1b1 | screening_efficiency? (medium) | 0x161ccb0 | [TGT/screen], [POS/screen] |
-| 0x1b2 | positioning? (medium) | 0x161b960 (0x161bb4c) | [POS/pos] |
-| 0x1b3 | screening_without_screens? (medium) | 0x161ccb0 | [TGT/screen] |
+| 0x1b1 | `screening_efficiency` (confirmed; country + location + admiral) | 0x161ccb0 | [TGT/screen], [POS/screen], [STC/mod] |
+| 0x1b2 | `positioning` (confirmed; country + location + admiral) | 0x161b960 (0x161bb4c) | [POS/pos], [STC/mod] |
+| 0x1b3 | `screening_without_screens` (confirmed); country only: 0x15c70b0 called with no location and no admiral (0x161d2d6), so an admiral's value has no effect | 0x161ccb0 | [TGT/screen], [STC/mod], [ADM/pos] |
 | 0x1b6 | CARRIER_FIGHTER_SORTIE_EFFICIENCY_FACTOR | 0x1976db0 | [AIR/sortie] |
 | 0x1b7 | NAVAL_DAMAGE_FACTOR | 0x19740c0 and 0xc34a50 (counted twice?) | [DMG/dmg], [POS/dmg] |
 | 0x1b8 | NAVAL_DEFENSE_FACTOR | 0x19740c0 | [DMG/dmg] |
-| 0x1b9 | naval_enemy_retreat_chance (rdata order) | 0x1975280 | [ACT/retreat] |
+| 0x1b9 | `naval_enemy_retreat_chance` (confirmed); read from the enemy commanding admiral's `+0x298` only | 0x1975280 (0x1975378) | [ACT/retreat], [STC/leader] |
 | 0x1ba | NAVAL_CRITICAL_SCORE_CHANCE_FACTOR | 0x19740c0 | [HIT/crit], [DMG/conv] |
-| 0x1bb | NAVAL_CRITICAL_EFFECT_FACTOR (scales part effects) | 0xc38760 | [DMG/part] |
-| 0x1bc | naval_torpedo_reveal_chance_factor | torpedo-firing reveal (0x1973f87..) | [ACT/sub], [POS/sub] |
-| 0x1bd | naval_torpedo_screen_penetration_factor? | 0x1972c00 torpedo MaxBox | [TGT/torp] |
+| 0x1bb | NAVAL_CRITICAL_EFFECT_FACTOR (scales part effects); `k = 1 +` a full separate 0xc38760 sum (admiral A and sub-unit block included) | 0xc38760 (0xc38b58) | [DMG/part], [ADM/part] |
+| 0x1bc | `naval_torpedo_reveal_chance_factor` (confirmed) | torpedo-firing reveal only (0x1973ff7) | [ACT/sub], [POS/sub], [STC/names] |
+| 0x1bd | `naval_torpedo_screen_penetration_factor` (confirmed) | 0x1972c00 torpedo MaxBox (0x1972cff) | [TGT/torp], [STC/names] |
 | 0x1be | naval_torpedo_cooldown_factor | 0x1972a70 | [ACT/cooldown] |
 | 0x1bf / 0x1c0 / 0x1c1 | NAVAL_TORPEDO / LIGHT_GUN / HEAVY_GUN _HIT_CHANCE_FACTOR (read via 0x1972570: TFB's `screening_bonus` entries confirmed in-game) | 0x1970b48 via 0x1972570 | [HIT/mods], [LOG] |
 | 0x1c2 | NAVAL_TORPEDO_ENEMY_CRITICAL_CHANCE_FACTOR | 0x1970b48 | [HIT/crit] |
 | 0x1c3 | NAVAL_TORPEDO_DAMAGE_REDUCTION_FACTOR | 0x1970b48 (0x1971338..) | [HIT/pierce] |
 | 0x1c7 | NAVAL_HIT_CHANCE_AGAINST_A_COUNTRY | 0x1970b48 | [HIT/mods] |
+| 0x1c8 / 0x1c9 | `navy_capital_ship_attack_factor_against` / `_defence_factor_against`: indexed by the province controller | 0xc34c29 | [STATS/getter] |
+| 0x1ca / 0x1cb | `navy_screen_attack_factor_against` / `_defence_factor_against` (same lookup) | 0xc34c97 | [STATS/getter] |
+| 0x1cc / 0x1cd | `navy_submarine_attack_factor_against` / `_defence_factor_against` (same lookup) | 0xc34bbb | [STATS/getter] |
 | 0x1cf | CARRIER_SORTIE_HOURS_DELAY | 0x197d770 | [AIR/cadence] |
-| 0x1d0 | naval_enemy_fleet_size_ratio_penalty_factor? (enemy admiral only) | 0x161b960 (0x161bfdc) | [POS/size] |
-| 0x1d1 | admiral and pride-of-the-fleet attack terms (name not given) | 0xc34a50 | [DMG/dmg] |
+| 0x1d0 | `naval_enemy_fleet_size_ratio_penalty_factor` (confirmed; enemy admiral `+0x418` only, so country sources have no effect) | 0x161b960 (0x161bfdc) | [POS/size], [STC/leader] |
+| 0x1d1 / 0x1d2 | `naval_has_potf_in_combat_attack` / `_defense`: own commanding admiral's `+0x418` only, when the owner country's PotF is afloat and its task force's combat is the same (any member state; ends when it sinks); tokens 0x3b59 / 0x3b5a, flags 3 | 0xc34a50 (0xc351b5) | [DMG/dmg], [STATS/getter], [POTF/combat] |
 | 0x1d3 | NAVAL_CRITICAL_SCORE_CHANCE_FACTOR_AGAINST_A_COUNTRY | 0x19740c0 | [HIT/crit] |
-| — | `naval_night_attack` (registered at 0x1092f3; HOUR: no read mapped. **disagrees**: DMG lists NAVAL_NIGHT_ATTACK × night factor in 0xc34a50) | 0xc34a50? | [HOUR/night], [DMG/dmg] |
+| 0x248 | `navy_weather_penalty` (country only) | 0xd67310 | [STC/sum] |
+| `[ship+0x664 / +0x668 / +0x66c]` | dynamic `experience_gain_<sub-unit>_training_factor` / `_mission_factor` / `_combat_factor` | 0xc3b240 (country container only) | [POTF/xp] |
 
 ### Static modifiers
 
@@ -563,6 +1193,9 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | `screening_bonus` | bound 0x60ed2a; read 0x1972570 | `+screening × value` for boxes 2, 3, every key (vanilla naval_hit_chance 0.4, naval_retreat_speed 0.2, convoy_retreat_speed 0.2; TFB adds heavy/light gun hit chance factors 1 / 0.3, confirmed in-game) | [TGT/bonus], [HIT/mods], [LOG] |
 | `capital_screening_bonus` | bound 0x60ed5d; read 0x1972570 | box 3: `+0x161ece0 value × value` (naval_retreat_speed 0.2, sortie_efficiency 0.1) | [TGT/bonus], [AIR/sortie] |
 | `ship_experience_bonus_max`, `_malus_min`, `carrier_experience_bonus_max`, `_malus_min` | loaded 0x60ec2b / 0x60ec5e; applied 0xc3ce50 | level effect × `s` | [XP/effect] |
+| `pride_of_the_fleet` | 0x60d830 → +0xb0; added in 0xc38760 when the ship is its owner's PotF (0xc387e2), any state; read again by 0xc3b240 for 0x35 / 0x34 | vanilla `experience_gain_navy_unit_factor` 0.25, `critical_receive_chance` −0.5 on the PotF itself | [STC/sum], [POTF/static] |
+| `pride_of_the_fleet_country` | 0x60d830 → +0xb8; added to the country by 0x6dade0 while a PotF is assigned | vanilla/TFB `war_support_factor` 0.05 | [POTF/sink] |
+| `pride_of_the_fleet_sunk_temporary` | 0x60d830 → +0xc0; added to the country by 0x6dade0 for PRIDE_OF_THE_FLEET_LOST_TEMP_MODIFIER_DURATION days after losing it | vanilla/TFB `war_support_factor` −0.10 | [POTF/sink] |
 | `night` (× darkness), `weather_*` | generic gather 0xc38760 (mod 0x28); night holder 0x15c3080 for carrier_traffic | hit chance, carrier traffic | [HIT/mods], [AIR/sortie], [README/disagree] |
 
 ### Define read sites
@@ -577,6 +1210,11 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | POSITIONING_PENALTY_HOURLY_DECAY_FOR_NEWLY_JOINED_SHIPS | 0x1620940 | joined penalty decay | [POS/joined] |
 | POSITIONING_PENALTY_FOR_SHIPS_JOINED_COMBAT_AFTER_IT_STARTS, MAX_POSITIONING_PENALTY_FOR_NEWLY_JOINED_SHIPS | 0x161ab40 (0x161b2ec..) | joined penalty increase, cap | [POS/joined] |
 | DOMINANCE_CONTROLLED_THRESHOLD_RATIO, DOMINANCE_EFFECT_ON_POSITIONING_FOR_CONVOY_ESCORT(_MAX_RATIO) | 0x161ab40 (0x161ad00..) | convoy-escort bonus | [POS/convoy] |
+| DOMINANCE_PER_SHIP_PER_SPEED_NEUTRAL / _RANGE_NEUTRAL / _HEAVY_GUN_ATTACK / _CARRIER_SIZE | 0xbd5d60 (0xbd5d8d, 0xbd5e10, 0xbd5e79, 0xbd5e94); 0x1783xxx tooltip | ship dominance | [DOM] |
+| MISSION_DOMINANCE_RATIOS | 0xfafde3 | mission multiplier | [DOM] |
+| DOMINANCE_CONTROLLED_THRESHOLD_RATIO | 0x1003ff9 (also 0x1003690.., 0x161ab40) | control minimum `t/(1 − t)` × own value | [DOM], [POS/convoy] |
+| NAVAL_DOMINANCE_ORG_RECOVERY | 0xc39943 | regain factor of the controlling side | [DOM], [LOG] |
+| DOMINANCE_DAILY_GAIN_FACTOR / _LOSS_FACTOR | 0x1003cf1 / 0x1005301 | daily update (not decoded; [CAL] in the finding) | [DOM] |
 | BASE_POSITIONING | 0x161b99b | positioning base | [POS/pos] |
 | RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR, MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION | 0x161b960 | detection bonus (who.py misses) | [POS/detect] |
 | MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY, HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR, MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO | 0x161b960 (0x161bf69..) | ship-ratio penalty | [POS/size] |
@@ -627,8 +1265,15 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | COMBAT_DAMAGE_TO_STR_FACTOR, COMBAT_DAMAGE_TO_ORG_FACTOR | 0x19740c0 (ORG at 0x1974453) | split | [DMG/apply] |
 | EXPERIENCE_LOSS_FACTOR, MANPOWER_LOSS_RATIO_ON_STR_LOSS (0xc3e3d3), MIN_MANPOWER_RATIO_TO_DROP (0xc3e390) | 0xc3e0e0 | XP and manpower loss | [DMG/xp], [XP/loss] |
 | MANPOWER_LOSS_RATIO_ON_SUNK | 0xd77ff0 | sunk manpower | [DMG/xp] |
-| OUT_OF_FUEL_ATTACK_FACTOR, OUT_OF_FUEL_TORPEDO_FACTOR | 0xc34a50 | attack penalty | [DMG/dmg] |
+| OUT_OF_FUEL_ATTACK_FACTOR, OUT_OF_FUEL_TORPEDO_FACTOR | 0xc34a50 (0xc35212 / 0xc351f7: torpedo for kind 3) | attack penalty `(1 − fuel) × factor` | [DMG/dmg], [STATS/getter] |
+| ADMIRAL_TASKFORCE_CAP | 0xd53880 (0xd5388f), 0xc18780, 0xd55f40, 0xd56740 | 0 disables the admiral cap factor; vanilla 10, TFB 5 | [STC/leader], [ADM/eff] |
+| NMilitary.UNIT_LEADER_MODIFIER_COOLDOWN_ON_GROUP_CHANGE | 0xc25b30 (0xc25c6b), 0xc25db0 (0xc25ded), 0xc2698f; 0x1ac446b, 0x1ed8804 (UI) | days of the reason-1 modifier cooldown (`eff = 0`, no adjusters) | [ADM/eff] |
+| NMilitary.CORPS_COMMANDER_DIVISIONS_CAP, CORPS_COMMANDER_ARMIES_CAP, FIELD_MARSHAL_DIVISIONS_CAP, FIELD_MARSHAL_ARMIES_CAP | 0xc21d30, 0xc10ab0 (0xc10aca) | army leader caps of the size factors; not used for a navy leader | [ADM/eff] |
 | NAVY_MAX_XP | 0xc2ffe8 | XP cap | [XP/levels] |
+| NMilitary.CAPTAIN_EXPERIENCE_ON_SHIP_MULT (0x3337a98), CAPTAIN_EXPERIENCE_ON_SHIP_PER_MEDAL_MULT (0x3337b48) | 0xc318c9, 0xc31916 | captain XP from ship XP | [POTF/xp] |
+| NNavy.PRIDE_OF_THE_FLEET_UNASSIGN_COST (0x3332110) | 0x1359473, 0x1356891; UI 0x1bed049, 0x1bed754 | political power to replace or unassign | [POTF/assign] |
+| NNavy.PRIDE_OF_THE_FLEET_LOST_TEMP_MODIFIER_DURATION (0x33321a8) | 0x6dbb59, 0x6dbcfe | days of `pride_of_the_fleet_sunk_temporary` | [POTF/sink] |
+| NNavy.NAVAL_ACCIDENT_CHANCE_REDUCTION_ON_POTF (0x3332b18), NAVAL_ACCIDENT_CRITICAL_HIT_CHANCE_REDUCTION_POTF (0x3332bc0) | 0xc3c2d2, 0xc3c342 | accident factors for the PotF (missions, not battle) | [POTF/readers] |
 | NMilitary.UNIT_EXP_LEVELS | 0xbf9b90 (data 0x3339500, count 0x333950c) | ship levels | [XP/levels] |
 | NMilitary.ARMY_EXP_BASE_LEVEL | 0xc3ce75 | level effect base | [XP/effect] |
 | UNIT_EXPERIENCE_PER_COMBAT_HOUR, UNIT_EXPERIENCE_SCALE, EXPERIENCE_FACTOR_CONVOY_ATTACK / _NON_CARRIER_GAIN / _CARRIER_GAIN | 0xc338a0, 0x15c3320 (factors fx15 via 0x2072200) | XP gain | [XP/gain] |
@@ -654,6 +1299,21 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY | 0xf60bc0 | agility | [AIR/conv] |
 | AIR_NAVAL_KAMIKAZE_DAMAGE_MULT | 0xf60f10 | kamikaze attack | [AIR/conv] |
 | PORT_STRIKE_DAMAGE_FACTOR | port-strike branch (not decoded) | port damage | [AIR/open] |
+| NDoctrines.DEFAULT_REWARD_MASTERY (global 0x3333e60) | 0x9e4dac | reward cost when the reward's `mastery` is 0 | [DOC/defines] |
+| NDoctrines.MASTERY_BANK_CONVERSION_RATE (0x3334480) | 0xfc7890; UI 0xfc790c, 0x1f35e37 | × daily gain of complete or empty tracks | [DOC/defines] |
+| NDoctrines.MASTERY_BANK_MAX (0x3334558) | 0x147bfe6 (leaf 0x147bfd0); UI 0x1f35e54 | bank cap | [DOC/defines] |
+| NDoctrines.MIN_MASTERY_GAIN_PER_DAY (0x33341f0) | 0xfc774b | floor of a positive daily gain | [DOC/defines] |
+| NDoctrines.MAX_MONTHLY_MASTERY_GAIN (0x3334110), BASE_MASTERY_GAIN_TARGET_MANPOWER (0x3333f48) | 0x1a328f0, 0x1a32ad0, 0x1a32cb0; UI 0x1f3744e | unit gain cap and diminishing returns (not decoded) | [DOC/defines] |
+| NDoctrines.TRAINING_MASTERY_GAIN_FACTOR (0x3334028), NAVAL_MISSION_MASTERY_GAIN_FACTORS (0x3338668) | 0x9e39ea, 0x9e39cf | mission factors (not decoded) | [DOC/defines] |
+| NDoctrines.MILITARY_ATTACHE_MASTERY_TRANSFER_FACTOR (0x3334640), THEATER_COMMANDER_UNITS_MASTERY_GAIN_FACTOR_PER_SKILL (0x3334708) | 0x11212ee, 0x1a33466; 0x1184558 | other gain sources (not decoded) | [DOC/defines] |
+| NIndustrialOrganisation.DESIGN_TEAM_RESEARCH_BONUS (0x3334630), DEFAULT_INITIAL_TASK_CAPACITY (0x333476c) | 0xa541e0, 0xa54208 | an including MIO whose `research_bonus` / `task_capacity` equals the define takes the included value | [MIOI/defines] |
+| NAir.REINFORCEMENT_DISABLING_DURATION_IN_LAND_CARRIER_TRANSFER | 0xf599d9, 0xf59e0c, 0xf5a169, 0xf5a3b9 (wing ctors) | wing reinforcement timer | [WINGS/reinforce] |
+| NCountry.REINFORCEMENT_AIRBASE_PRIORITY_DEFAULT (global 0x3337624) | 0xf597c2 | wing replacement priority default | [WINGS/reinforce] |
+| NAir.MIN_PLANE_COUNT_AIR_SUPPLY | 0xf6686c | air supply removed from the available missions | [WINGS/strike] |
+| NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO | 0xf78476 | carrier wings' mission plane budget | [WINGS/ext] |
+| NAir.MISSILE_LAUNCHER_SLOTS | 0xc54e73 | missile base budget | [WINGS/ext] |
+| NAir.DISRUPTION_DEFENCE_ATTACK_FACTOR / _DEFENCE_FACTOR / _SPEED_FACTOR | 0xf781f1 / 0xf781f9 / 0xf78278 | external efficiency (disruption) | [WINGS/ext] |
+| NAir.GIE_EXILE_AIR_START_EXPERIENCE | 0xf6410b | experience of planes added to an exile wing | [WINGS/reinforce] |
 
 ## 4. Helpers and conventions
 
@@ -674,6 +1334,8 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | weighted draw | 0x24f08a0 | air target pick | [AIR/target] |
 | chance checks | — | ACT: `roll <= chance`; hit: `100·U < hc`; crit: `U <= p`; part: `U < p` | [ACT], [HIT/crit], [DMG/rng] |
 | RNG line tags | — | naval_fire_exchange_member.cpp 0x587 hit, 0x593 randomness, 0x59f crit; ship.cpp 0x2f4 part chance, 0x78f part pick; target 0x37b, torpedo reach 0x3d9; air 0x212, 0x21c, 0x43f, 0x45d | [DMG/rng], [TGT/target], [AIR/preempt] |
+| persistent vtable | — | +0x10 Write, +0x18 Read block (0x24be690), +0x20 ReadMember (token switch), +0x40 InitPostRead (runs at the end of the object's own block, so objects later in the file are not loaded yet) | [DOC/load] |
+| script token ids | 0x831c0 | each keyword's id is the rdata dword loaded by the `mov edx, dword ptr [rip+X]` before its `lea r8, name`; rebuilding name ↔ id decodes token switches and save jump tables (doctrine keys 0x4182–0x41a7, e.g. `rewards` 0x4182, `mastery` 0x418c, `mastery_bank` 0x419c) | [DOC] |
 | tooling caveat | — | `who.py`/`uses.json` miss reads (decode from p−12, lose alignment; leaf functions without unwind entries) | [README], [POS/top], [XP/top] |
 
 ## 5. Open / UNRESOLVED
@@ -681,30 +1343,39 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 Cross-file disagreements are flagged "**disagrees**" in the tables above; the three settled ones are in [findings/README.md][README/disagree].
 
 - Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
-- Darkness value computation (with weather on; it is 0 with weather off [LOG]); whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
+- Darkness value computation (with weather on; it is 0 with weather off [LOG]). (`naval_night_attack` is read: [STATS/getter].) [HOUR/night], [HIT/mods]
 - How the design's slot list is ordered (calibrated: slot names in first-appearance order of the equipment files). [DMG/part], [LOG]
 - The fixed-point rounding of `0xc3ac60` and the weight products (calibrated: quotient rounded half up, products truncated; 120,090 logged picks). [TGT/weight], [LOG]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
 - Whether light guns and depth charges both fire in one slot-2 call. [ACT/open]
-- Ship-type flag bit 39 (support ship?). [ACT/open], [TGT/bb]
+- ~~Ship-type flag bit 39~~ settled: sub-unit type `support_ship`. [ACT/open], [TGT/bb], [STATS/getter]
 - Combatant +0xd8, combat +0x10c/+0x10d meanings; convoy-only branch of the retreat check. [ACT/open]
 - Convoy-type combat end path (EndHour returns false). [HOUR/end]
 - Purpose of side vt+0x100 `0x1621a70`. [HOUR/hour]
-- Modifier names by index: 0x57/0x58/0x5a (and other positioning/retreat modifiers), 0x1b1/0x1b3/0x1bd, 0x1b2/0x1d0, 0x34/0x35. [HOUR/end], [TGT/screen], [POS/pos], [XP/open]
+- ~~Modifier names by index~~ settled from the registration + static token table. [STC/names]
+- Slot 0 of the targeted-modifier table (`country+0xf88`): whether the attack/defence `_against` factors ever apply at sea. [STATS/getter]
+- ~~Which modifier definitions 0x60fbd0 scales by leader efficiency; CNavyLeader vt+0x88/+0x90 and the cap 0xc18780~~ settled: the registration flags and the per-flag rule ([ADM/scale]); both size factors are 1 for a navy leader ([ADM/eff]). [STC/leader]
+- Admiral: `tf+0x4b8`; the readers of `leader+0x598`/`+0x658`/`+0xd18`/`+0xfc0`; the child containers scaled at depth 2; when the cooldown ends (vt+0xc8 0xc12470) and whether `reassigned` is given on a fleet change; the use of the speed and sub attack read in 0x1973521; mid-battle level-up rebuilds. [ADM/open]
+- `ship+0x8f8` object, `tf+0x658`, 0xd6fa50, province holder 0xf197d0, the `tf+0x728` building-module entries, the identity of the `country+0x15b8` entries; any `naval_coordination` reader. [STC]
 - Ship `+0x678` hit profile mult, `+0x568`, `0xc3b130`. [HIT/ship], [HIT/crit]
 - ~~NAVAL_DAMAGE_FACTOR counted twice (attack getter and hit multiplier)?~~ Yes: observed in logged hits (the experience malus applies in the shot profile and again per hit). [DMG/open], [LOG]
 - Ship `+0x738` link; damage to non-ship targets (`0x1ad8610`). [DMG/open]
 - Experience-level damage bonus location (DMG: not in the hit path; XP: only through `naval_damage_factor`/`naval_defense_factor` modifiers). [DMG/open], [XP/effect]
 - Refresh frequency of the enemy count snapshot (0x161f810) vs the firing loop. [TGT/bb]
-- Convoy-escort dominance helper 0x143c720 and the mission enum. [POS/convoy]
+- ~~Convoy-escort dominance helper 0x143c720~~ decoded (`own × t/(1 − t)`); the mission efficiency functions, the daily dominance update and where MISSION_DOMINANCE_RATIOS enters the saved target. [POS/convoy], [DOM]
 - Order of the task-force update 0xd705f0 vs the combat hour (this hour's shots or last hour's). [XP/open]
 - `combat+0x120` setter; `region+0x60` = region id? [AIR/open]
 - `airfx+0xe8` name (equipment +0x260). [AIR/open]
 - Top-speed term in 0xf7ad60; plane stat indices 0x2f/0x30. [AIR/open]
-- `0xf78160` (fuel?); `airfx+0xc0` source; caller and 5th argument of 0x16205c0. [AIR/open]
+- ~~`0xf78160` (fuel?); `airfx+0xc0` source; caller and 5th argument of 0x16205c0~~ settled: disruption efficiency, caller 0xf82ca0 with 0 ([WINGS/ext]). [AIR/open]
+- Who sets `executing_mission` (`wing+0xa4`) of carrier wings; whether two pools of one sub-unit can sit on a carrier; bit 23 of the type map (token id 0); `variant+0x42c` / `wing+0xa28`; the two wing stats in the disruption formula (0xf5e890); priority among distributables (0xd0bdd0 / 0xd0c650) and stockpile order (0xbd2420); the variant test 0xbd7dc0 of the swap path. [WINGS/open]
 - Port-strike branch (`combat+0x10c`, PORT_STRIKE_DAMAGE_FACTOR). [AIR/open]
 - `0xf80f60` per-wing losses/experience. [AIR/losses]
 - Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
+- How a non-instant equipment bonus first reaches a variant (new variants copy the parent's, 0x1492ac0); the documented `modifiers = {}` block; ~~key match `+0x4e8` and 0x22f740~~ settled: `family` and the equipment group database ([MIO/match]); the unit mastery gain (`track+0x28`) and the attaché, leader and gain-factor terms; effect re-application on save load; the idea slot reader (spirit slots are from the scripts, [DOC/spirit]); on load, whether country modifiers exist before the ships' InitPostRead and whether `deployment` may be moved before `units` ([DOC/load]). [DOC/open]
+- ~~Country MIO `+0x134`~~ settled: trait points ([MIO/map]); the other arguments of `CanUnlockTrait` 0x13af360; chained includes (one pass in database order; no script uses one); ~~whether a `limit_to_equipment_type` naming only unknown equipment counts as empty~~ settled: not empty, it matches nothing ([MIO/match]). [MIOI/open]
+- MIO matching: 0xbd3a50 in full (variant role mask); the roster's use of `allowed`/`visible`/`available`; when the create-variant command carries its own snapshot; production mode 0xdb7a30 consumers; the policy template base shift (map read at `+0x40`, written at `+0x50`); 0x9f8570. [MIO/open]
+- Pride of the fleet: whether any order moves a task force out of a running naval combat (the escaped case assumes not); bit 37 in the eligibility test; which medal holder is `ship_modifiers`; `country+0x484`; the AI weight in 0x1310de0. [POTF/open]
 
 [README]: findings/README.md
 [LOG]: findings/LOG-ingame-logging.md
@@ -795,3 +1466,78 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [WTH/cmd]: findings/S-WEATHER-weather-toggle.md#console-commands
 [WTH/combat]: findings/S-WEATHER-weather-toggle.md#what-a-battle-reads
 [WTH/open]: findings/S-WEATHER-weather-toggle.md#unresolved
+[STATS]: findings/S-STATS-design-stats.md
+[STATS/getter]: findings/S-STATS-design-stats.md#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded
+[STC]: findings/S-STATS-COUNTRY-modifier-sources.md
+[STC/names]: findings/S-STATS-COUNTRY-modifier-sources.md#modifier-names
+[STC/sum]: findings/S-STATS-COUNTRY-modifier-sources.md#the-ship-modifier-sum-0xc38760
+[STC/mod]: findings/S-STATS-COUNTRY-modifier-sources.md#modid-country-location-admiral-0x15c70b0
+[STC/member]: findings/S-STATS-COUNTRY-modifier-sources.md#member-getter-0x1972570
+[STC/leader]: findings/S-STATS-COUNTRY-modifier-sources.md#the-admirals-containers
+[DOM]: findings/S-DOMINANCE-naval-dominance.md
+[DOC]: findings/S-DOCTRINE-doctrines.md
+[DOC/map]: findings/S-DOCTRINE-doctrines.md#function-map
+[DOC/fields]: findings/S-DOCTRINE-doctrines.md#struct-fields
+[DOC/mastery]: findings/S-DOCTRINE-doctrines.md#s-doctrine-mastery
+[DOC/save]: findings/S-DOCTRINE-doctrines.md#s-doctrine-save
+[DOC/load]: findings/S-DOCTRINE-doctrines.md#loading
+[DOC/effects]: findings/S-DOCTRINE-doctrines.md#s-doctrine-effects
+[DOC/trig]: findings/S-DOCTRINE-doctrines.md#s-doctrine-triggers-has_doctrine
+[DOC/spirit]: findings/S-DOCTRINE-doctrines.md#s-spirit-slots-from-the-scripts
+[DOC/defines]: findings/S-DOCTRINE-doctrines.md#defines-and-constants-involved
+[DOC/open]: findings/S-DOCTRINE-doctrines.md#unresolved
+[MIOI]: findings/S-MIO-include-and-tree.md
+[MIOI/answers]: findings/S-MIO-include-and-tree.md#answers
+[MIOI/read]: findings/S-MIO-include-and-tree.md#readers
+[MIOI/include]: findings/S-MIO-include-and-tree.md#include-resolution
+[MIOI/merge]: findings/S-MIO-include-and-tree.md#trait-merge
+[MIOI/pos]: findings/S-MIO-include-and-tree.md#positions
+[MIOI/unlock]: findings/S-MIO-include-and-tree.md#unlocking-parents-and-mutual-exclusion
+[MIOI/fields]: findings/S-MIO-include-and-tree.md#struct-fields
+[MIOI/map]: findings/S-MIO-include-and-tree.md#function-map
+[MIOI/defines]: findings/S-MIO-include-and-tree.md#defines-and-constants-involved
+[MIOI/open]: findings/S-MIO-include-and-tree.md#unresolved
+[MIO]: findings/S-MIO-equipment-matching.md
+[MIO/map]: findings/S-MIO-equipment-matching.md#function-map-rvas
+[MIO/match]: findings/S-MIO-equipment-matching.md#the-match-one-resolver-for-trait-limits-the-mios-equipment_type-and-policy-keys
+[MIO/type]: findings/S-MIO-equipment-matching.md#the-type-the-bonus-is-computed-for-the-hull-not-the-design
+[MIO/sum]: findings/S-MIO-equipment-matching.md#the-bonus-sum-0xdb7800-mode-1-for-a-variant
+[MIO/assign]: findings/S-MIO-equipment-matching.md#which-mios-a-design-can-have
+[MIO/snap]: findings/S-MIO-equipment-matching.md#when-the-bonus-is-computed-a-snapshot-per-variant
+[MIO/save]: findings/S-MIO-equipment-matching.md#save-format-s-mio-save
+[MIO/open]: findings/S-MIO-equipment-matching.md#unresolved
+[ADM]: findings/S-ADMIRAL-leader-combat.md
+[ADM/sum]: findings/S-ADMIRAL-leader-combat.md#summary-one-admiral-commanding-one-task-force
+[ADM/map]: findings/S-ADMIRAL-leader-combat.md#function-map
+[ADM/fields]: findings/S-ADMIRAL-leader-combat.md#struct-fields
+[ADM/eff]: findings/S-ADMIRAL-leader-combat.md#1-leader-efficiency
+[ADM/scale]: findings/S-ADMIRAL-leader-combat.md#2-the-scaling-0x60fbd0-and-the-modifier-flags
+[ADM/skill]: findings/S-ADMIRAL-leader-combat.md#3-skill-levels
+[ADM/subunit]: findings/S-ADMIRAL-leader-combat.md#4-per-sub-unit-blocks
+[ADM/adjust]: findings/S-ADMIRAL-leader-combat.md#5-terrain-and-night-adjusters
+[ADM/speed]: findings/S-ADMIRAL-leader-combat.md#6-combat-speed
+[ADM/pos]: findings/S-ADMIRAL-leader-combat.md#7-positioning-screening-and-the-retreat-roll
+[ADM/reads]: findings/S-ADMIRAL-leader-combat.md#8-other-reads-of-the-commanding-admiral
+[ADM/part]: findings/S-ADMIRAL-leader-combat.md#9-the-damaged-part-effect-factor
+[ADM/defines]: findings/S-ADMIRAL-leader-combat.md#defines-and-constants-involved
+[ADM/save]: findings/S-ADMIRAL-leader-combat.md#save-format-s-admiral-save
+[ADM/open]: findings/S-ADMIRAL-leader-combat.md#unresolved
+[POTF]: findings/S-POTF-pride-of-the-fleet.md
+[POTF/sum]: findings/S-POTF-pride-of-the-fleet.md#summary-what-the-simulator-must-do
+[POTF/readers]: findings/S-POTF-pride-of-the-fleet.md#1-readers-of-the-pride-of-the-fleet
+[POTF/combat]: findings/S-POTF-pride-of-the-fleet.md#2-in-the-same-combat
+[POTF/static]: findings/S-POTF-pride-of-the-fleet.md#3-the-static-block-and-experience-gain
+[POTF/xp]: findings/S-POTF-pride-of-the-fleet.md#the-experience-add-0xc3b240-and-its-caller-0xc31840
+[POTF/air]: findings/S-POTF-pride-of-the-fleet.md#4-air-crit-sign
+[POTF/assign]: findings/S-POTF-pride-of-the-fleet.md#5-who-can-be-the-pride-of-the-fleet
+[POTF/sink]: findings/S-POTF-pride-of-the-fleet.md#6-losing-the-pride-of-the-fleet
+[POTF/save]: findings/S-POTF-pride-of-the-fleet.md#7-save-format
+[POTF/open]: findings/S-POTF-pride-of-the-fleet.md#unresolved
+[WINGS]: findings/A-WINGS-carrier-wings-and-reinforcement.md
+[WINGS/objects]: findings/A-WINGS-carrier-wings-and-reinforcement.md#objects
+[WINGS/types]: findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-types-type-keyword-bits-the-fighter-tests-read-the-sub-unit-type
+[WINGS/strike]: findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-strike-which-carrier-wings-strike
+[WINGS/ext]: findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-ext-land-based-planes-joining-a-naval-battle
+[WINGS/reinforce]: findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-reinforce-planes-from-the-stockpile
+[WINGS/defines]: findings/A-WINGS-carrier-wings-and-reinforcement.md#defines-and-constants-involved
+[WINGS/open]: findings/A-WINGS-carrier-wings-and-reinforcement.md#unresolved

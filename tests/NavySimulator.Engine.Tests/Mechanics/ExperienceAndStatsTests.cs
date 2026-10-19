@@ -126,4 +126,15 @@ public class ExperienceAndStatsTests
         Assert.Equal(0.05, ExperienceRules.HourlyOrganizationRegain(ship, defines), 9);
         Assert.Equal(ship.GetFinalStats().Organization, ship.CurrentOrganization, 9);
     }
+
+    [Fact]
+    public void OrganizationRegain_WithNavalDominance_AddsItToTheFactor()
+    {
+        // S-ORG-REGAIN [LOG]: 0.22 an hour on the side with naval dominance.
+        var ship = TestEntityFactory.Screen("dd");
+        ship.CurrentOrganization = 10;
+        ship.CurrentStatus = ShipStatus.Retreating;
+
+        Assert.Equal(0.22, ExperienceRules.HourlyOrganizationRegain(ship, defines, defines.NNavy.NAVAL_DOMINANCE_ORG_RECOVERY), 9);
+    }
 }

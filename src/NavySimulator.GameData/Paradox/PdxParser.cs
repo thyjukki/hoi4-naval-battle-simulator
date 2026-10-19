@@ -5,20 +5,25 @@ namespace NavySimulator.GameData.Paradox;
 /// </summary>
 public static class PdxParser
 {
-    public static PdxBlock Parse(string source, string? sourceName = null)
+    /// <summary>
+    /// Parses <paramref name="source"/>. With <paramref name="recovered"/>, blocks still open at the end of the file are
+    /// closed there and the problem is added to it, as the game reads such files [PDX: TFB's submarine doctrines lack
+    /// their last closing brace and work in the game]; without it, that is an error.
+    /// </summary>
+    public static PdxBlock Parse(string source, string? sourceName = null, List<string>? recovered = null)
     {
         var tokens = PdxTokenizer.Tokenize(source, sourceName);
         var position = 0;
-        var root = ParseEntries(tokens, ref position, isRoot: true, sourceName);
+        var root = ParseEntries(tokens, ref position, isRoot: true, sourceName, recovered);
         return root;
     }
 
-    public static PdxBlock ParseFile(string path)
+    public static PdxBlock ParseFile(string path, List<string>? recovered = null)
     {
-        return Parse(File.ReadAllText(path), path);
+        return Parse(File.ReadAllText(path), path, recovered);
     }
 
-    private static PdxBlock ParseEntries(List<PdxToken> tokens, ref int position, bool isRoot, string? sourceName)
+    private static PdxBlock ParseEntries(List<PdxToken> tokens, ref int position, bool isRoot, string? sourceName, List<string>? recovered)
     {
         var entries = new List<PdxEntry>();
 
@@ -30,7 +35,17 @@ public static class PdxParser
             {
                 if (!isRoot)
                 {
-                    throw new PdxParseException("Missing closing brace", token.Line, sourceName);
+                    var message = $"line {token.Line}: missing closing brace; the open blocks are closed at the end of the file";
+
+                    if (recovered is null)
+                    {
+                        throw new PdxParseException("Missing closing brace", token.Line, sourceName);
+                    }
+
+                    if (!recovered.Contains(message))
+                    {
+                        recovered.Add(message);
+                    }
                 }
 
                 return new PdxBlock(entries);
@@ -57,17 +72,17 @@ public static class PdxParser
             if (token.Kind != PdxTokenKind.OpenBrace && next.Kind == PdxTokenKind.Operator)
             {
                 position += 2;
-                var value = ParseValue(tokens, ref position, sourceName);
+                var value = ParseValue(tokens, ref position, sourceName, recovered);
                 entries.Add(new PdxEntry(token.Text, next.Text, value, token.Line));
                 continue;
             }
 
-            var bareValue = ParseValue(tokens, ref position, sourceName);
+            var bareValue = ParseValue(tokens, ref position, sourceName, recovered);
             entries.Add(new PdxEntry(null, null, bareValue, token.Line));
         }
     }
 
-    private static PdxValue ParseValue(List<PdxToken> tokens, ref int position, string? sourceName)
+    private static PdxValue ParseValue(List<PdxToken> tokens, ref int position, string? sourceName, List<string>? recovered)
     {
         var token = tokens[position];
 
@@ -75,7 +90,7 @@ public static class PdxParser
         {
             case PdxTokenKind.OpenBrace:
                 position++;
-                return PdxValue.FromBlock(ParseEntries(tokens, ref position, isRoot: false, sourceName));
+                return PdxValue.FromBlock(ParseEntries(tokens, ref position, isRoot: false, sourceName, recovered));
             case PdxTokenKind.Word:
                 position++;
                 return PdxValue.FromScalar(token.Text);

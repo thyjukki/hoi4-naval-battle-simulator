@@ -8,6 +8,8 @@ public class BattleRulesDto
     public string? DamageRandomness { get; set; }
     public bool? NightEnabled { get; set; }
     public bool? WeatherEnabled { get; set; }
+    public bool? NavalDominanceEnabled { get; set; }
+    public bool? CarrierWingsExecuteNavalStrike { get; set; }
     public int? StartHourOfDay { get; set; }
     public int? AirRegionPhase { get; set; }
 }

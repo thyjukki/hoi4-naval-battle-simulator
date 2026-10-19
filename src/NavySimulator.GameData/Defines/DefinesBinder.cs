@@ -16,7 +16,8 @@ public static class DefinesBinder
         {
             ["NNavy"] = defines.NNavy,
             ["NAir"] = defines.NAir,
-            ["NMilitary"] = defines.NMilitary
+            ["NMilitary"] = defines.NMilitary,
+            ["NDoctrines"] = defines.NDoctrines
         };
 
         foreach (var category in table.Categories)

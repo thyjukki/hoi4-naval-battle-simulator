@@ -173,7 +173,8 @@ public class BattleEngineTests
     }
 
     private static PlaneEquipment NavalBomber() =>
-        new("naval_bomber", new PlaneStats(AirDefense: 10, AirAttack: 5, NavalAttack: 20, Speed: 400, Agility: 40, NavalTargeting: 10, Reliability: 0.8));
+        new("naval_bomber", new PlaneStats(AirDefense: 10, AirAttack: 5, NavalAttack: 20, Speed: 400, Agility: 40, NavalTargeting: 10, Reliability: 0.8),
+            ["naval_bomber"], ["naval_bomber", "port_strike"], carrierCapable: true);
 
     private static BattleScenario AirScenario(BattleParticipant attacker, IEnumerable<Ship> defenderShips, BattleRules rules)
     {
@@ -187,9 +188,9 @@ public class BattleEngineTests
         var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 4 });
         var wings = new Dictionary<string, List<CarrierAirwingAssignment>>
         {
-            [carrier.Design.ID] = [new CarrierAirwingAssignment("naval_bomber", AirwingType.Bomber, 4, 10)]
+            [carrier.ID] = [new CarrierAirwingAssignment("naval_bomber", 4, 10)]
         };
-        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [carrier], wings), string.Empty, string.Empty, 0, [], []);
+        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [carrier], wings), null, [], []);
         var rules = new BattleRules { MaxHours = 48, StartHourOfDay = 12, AirRegionPhase = 4, NightEnabled = false };
 
         var result = new BattleEngine().Simulate(AirScenario(attacker, [TestEntityFactory.Capital("bb")], rules), 9);
@@ -202,13 +203,13 @@ public class BattleEngineTests
     [Fact]
     public void Simulate_LandBasedPlanesDoDamageWithoutCarriers()
     {
-        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [TestEntityFactory.Screen("dd", lightAttack: 0)]), string.Empty, string.Empty,
-            100, [], [], externalPlaneId: "naval_bomber");
+        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [TestEntityFactory.Screen("dd", lightAttack: 0)]), null,
+            [], [], landBasedAirwings: [new LandBasedAirwing("naval_bomber", 100)]);
         var rules = new BattleRules { MaxHours = 48, NightEnabled = false };
 
         var result = new BattleEngine().Simulate(AirScenario(attacker, [TestEntityFactory.Capital("bb")], rules), 4);
 
-        Assert.Contains(result.AirStrikes, strike => strike.Source == "land-based" && strike.HpDamage > 0);
+        Assert.Contains(result.AirStrikes, strike => strike.Source == "land-based naval_bomber" && strike.HpDamage > 0);
     }
 
     [Fact]
@@ -217,9 +218,9 @@ public class BattleEngineTests
         var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 4 });
         var wings = new Dictionary<string, List<CarrierAirwingAssignment>>
         {
-            [carrier.Design.ID] = [new CarrierAirwingAssignment("naval_bomber", AirwingType.Bomber, 4, 10)]
+            [carrier.ID] = [new CarrierAirwingAssignment("naval_bomber", 4, 10)]
         };
-        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [carrier], wings), string.Empty, string.Empty, 0, [], []);
+        var attacker = new BattleParticipant(new Fleet("attacker_fleet", [carrier], wings), null, [], []);
         var rules = new BattleRules { MaxHours = 200, NightEnabled = false, RetreatEnabled = false };
 
         var result = new BattleEngine().Simulate(AirScenario(attacker, Sharpshooters("d", 2), rules), 1);
@@ -233,7 +234,7 @@ public class BattleEngineTests
     public void Simulate_RejectsSharedFleetInstance()
     {
         var fleet = new Fleet("shared", Screens("s", 2));
-        var participant = new BattleParticipant(fleet, string.Empty, string.Empty, 0, [], []);
+        var participant = new BattleParticipant(fleet, null, [], []);
         var scenario = new BattleScenario("t", "ocean", "clear", 1, null, participant, participant,
             new Dictionary<string, PlaneEquipment>(), Defines.GameDefines.Vanilla(), new BattleRules());
 

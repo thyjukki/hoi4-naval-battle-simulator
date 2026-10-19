@@ -9,6 +9,7 @@ public sealed class GameDefines
     public NNavyDefines NNavy { get; init; } = new();
     public NAirDefines NAir { get; init; } = new();
     public NMilitaryDefines NMilitary { get; init; } = new();
+    public NDoctrinesDefines NDoctrines { get; init; } = new();
 
     /// <summary>
     /// Values the combat model needs that are not in any defines file (hard-coded in the executable, or not yet located).

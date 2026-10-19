@@ -15,6 +15,9 @@ public sealed class StaticModifiers
     public const string CarrierExperienceMalusMin = "carrier_experience_malus_min";
     public const string Night = "night";
 
+    /// <summary>S-POTF: the block the pride of the fleet ship itself carries in every modifier read.</summary>
+    public const string PrideOfTheFleet = "pride_of_the_fleet";
+
     public const string NavalHitChance = "naval_hit_chance";
     public const string NavalRetreatSpeed = "naval_retreat_speed";
     public const string NavalRetreatSpeedAfterInitialCombat = "naval_retreat_speed_after_initial_combat";
@@ -25,6 +28,31 @@ public sealed class StaticModifiers
     public const string NavalDefenseFactor = "naval_defense_factor";
     public const string FighterSortieEfficiency = "fighter_sortie_efficiency";
     public const string CarrierTraffic = "carrier_traffic";
+    public const string CarrierNightTraffic = "carrier_night_traffic";
+    public const string Positioning = "positioning";
+    public const string ScreeningEfficiency = "screening_efficiency";
+    public const string ScreeningWithoutScreens = "screening_without_screens";
+    public const string NavalTorpedoScreenPenetrationFactor = "naval_torpedo_screen_penetration_factor";
+    public const string NavalTorpedoRevealChanceFactor = "naval_torpedo_reveal_chance_factor";
+    public const string NavalTorpedoCooldownFactor = "naval_torpedo_cooldown_factor";
+    public const string SubmarineAttack = "submarine_attack";
+    public const string NavySubmarineAttackFactor = "navy_submarine_attack_factor";
+    public const string NavySubmarineDefenceFactor = "navy_submarine_defence_factor";
+    public const string NavyCapitalShipAttackFactor = "navy_capital_ship_attack_factor";
+    public const string NavyCapitalShipDefenceFactor = "navy_capital_ship_defence_factor";
+    public const string NavyScreenAttackFactor = "navy_screen_attack_factor";
+    public const string NavyScreenDefenceFactor = "navy_screen_defence_factor";
+    public const string NavalNightAttack = "naval_night_attack";
+    public const string NavyAntiAirAttack = "navy_anti_air_attack";
+    public const string NavyAntiAirAttackFactor = "navy_anti_air_attack_factor";
+    public const string NavyVisibility = "navy_visibility";
+    public const string NavyCasualtyOnHit = "navy_casualty_on_hit";
+    public const string NavalStrikeAttackFactor = "naval_strike_attack_factor";
+    public const string NavalStrikeTargettingFactor = "naval_strike_targetting_factor";
+    public const string NavalStrikeAgilityFactor = "naval_strike_agility_factor";
+    public const string NavyCarrierAirAttackFactor = "navy_carrier_air_attack_factor";
+    public const string NavyCarrierAirTargettingFactor = "navy_carrier_air_targetting_factor";
+    public const string NavyCarrierAirAgilityFactor = "navy_carrier_air_agility_factor";
     public const string NavalLightGunHitChanceFactor = "naval_light_gun_hit_chance_factor";
     public const string NavalHeavyGunHitChanceFactor = "naval_heavy_gun_hit_chance_factor";
     public const string NavalTorpedoHitChanceFactor = "naval_torpedo_hit_chance_factor";
@@ -38,11 +66,17 @@ public sealed class StaticModifiers
     public const string NavalMoraleFactor = "naval_morale_factor";
     public const string NavalRetreatChance = "naval_retreat_chance";
     public const string NavalRetreatChanceAfterInitialCombat = "naval_retreat_chance_after_initial_combat";
+    public const string NavalEnemyRetreatChance = "naval_enemy_retreat_chance";
+    public const string NavalEnemyFleetSizeRatioPenaltyFactor = "naval_enemy_fleet_size_ratio_penalty_factor";
+    public const string NavalHasPotfInCombatAttack = "naval_has_potf_in_combat_attack";
+    public const string NavalHasPotfInCombatDefense = "naval_has_potf_in_combat_defense";
+    public const string ExperienceGainNavyUnitFactor = "experience_gain_navy_unit_factor";
+    public const string ExperienceGainNavyUnit = "experience_gain_navy_unit";
 
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [
         ScreeningBonus, CapitalScreeningBonus, ShipExperienceBonusMax, ShipExperienceMalusMin,
-        CarrierExperienceBonusMax, CarrierExperienceMalusMin, Night
+        CarrierExperienceBonusMax, CarrierExperienceMalusMin, Night, PrideOfTheFleet
     ];
 
     public Dictionary<string, Dictionary<string, double>> Blocks { get; } = new(StringComparer.Ordinal)
@@ -53,7 +87,8 @@ public sealed class StaticModifiers
         [ShipExperienceMalusMin] = new(StringComparer.Ordinal) { [NavalDamageFactor] = -0.1, [NavalDefenseFactor] = -0.1 },
         [CarrierExperienceBonusMax] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = 0.2 },
         [CarrierExperienceMalusMin] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = -0.1 },
-        [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1, [CarrierTraffic] = -1.0 }
+        [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1, [CarrierTraffic] = -1.0 },
+        [PrideOfTheFleet] = new(StringComparer.Ordinal) { [ExperienceGainNavyUnitFactor] = 0.25, [CriticalReceiveChance] = -0.5 }
     };
 
     public double Get(string block, string modifier)

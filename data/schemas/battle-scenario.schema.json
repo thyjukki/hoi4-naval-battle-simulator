@@ -74,6 +74,10 @@
               "type": "boolean",
               "description": "False turns weather off, as the console command disable_weather does in game (default true)."
             },
+            "navalDominanceEnabled": {
+              "type": "boolean",
+              "description": "True gives the side with more naval dominance at the start (from its ships, as if both patrolled the region) the naval dominance organization regain bonus for the whole battle (S-DOMINANCE; default false)."
+            },
             "startHourOfDay": {
               "type": "integer",
               "minimum": 0,
@@ -82,6 +86,10 @@
             "airRegionPhase": {
               "type": "integer",
               "description": "Strategic region id (or its value mod 8). Air strikes happen when hour of day mod 8 equals this mod 8."
+            },
+            "carrierWingsExecuteNavalStrike": {
+              "type": "boolean",
+              "description": "A-WINGS-STRIKE [ASSUMED]: carrier strike wings execute naval strike (default true); false: carriers do no damage."
             }
           },
           "additionalProperties": false
@@ -100,28 +108,97 @@
     "participant": {
       "type": "object",
       "required": [
-        "fleetID",
-        "commander",
-        "doctrine"
+        "fleetID"
       ],
       "properties": {
         "fleetID": {
           "$ref": "common.schema.json#/$defs/id"
         },
-        "commander": {
-          "type": "string"
+        "admiral": {
+          "$ref": "common.schema.json#/$defs/admiral",
+          "description": "S-ADMIRAL: the admiral commanding the side's fleet (picked from admirals/ and edited, or made up); absent: none."
         },
-        "doctrine": {
-          "type": "string"
+        "prideOfTheFleet": {
+          "type": "string",
+          "description": "S-POTF: a ship design of the side's fleet; its first ship is the country's pride of the fleet (a capital ship in the game). Absent: none."
+        },
+        "doctrines": {
+          "type": "object",
+          "description": "S-DOCTRINE: the side's doctrines by folder ID (naval, air). Air doctrines are recorded but not simulated yet.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "grandDoctrine"
+            ],
+            "properties": {
+              "grandDoctrine": {
+                "type": "string",
+                "description": "A grand doctrine ID of that folder (doctrines/<folder>.json)."
+              },
+              "tracks": {
+                "type": "object",
+                "description": "By track ID: the slotted subdoctrine and the track's mastery (rewards unlock at their cumulative mastery).",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "subdoctrine"
+                  ],
+                  "properties": {
+                    "subdoctrine": {
+                      "type": "string"
+                    },
+                    "mastery": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "country": {
+          "type": "string",
+          "description": "S-MIO-COUNTRY: the country tag the side plays (countries/), e.g. USA; it decides which MIOs the side can have."
+        },
+        "designMios": {
+          "type": "object",
+          "description": "S-MIO: the MIO the side assigns to a design of its fleet, by design ID, instead of the design's own mioID; an empty string assigns none.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "mios": {
+          "type": "object",
+          "description": "S-MIO: the side's MIOs by MIO ID (mios/): the unlocked traits and the attached policy. A design's MIO left out gives its initial trait only.",
+          "propertyNames": {
+            "$ref": "common.schema.json#/$defs/mioId"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "traits": {
+                "type": "array",
+                "description": "Unlocked trait IDs; the initial trait is always unlocked.",
+                "items": {
+                  "type": "string"
+                },
+                "uniqueItems": true
+              },
+              "policy": {
+                "type": "string",
+                "description": "A policy ID from mio-policies/."
+              }
+            },
+            "additionalProperties": false
+          }
         },
         "shipExperienceLevel": {
           "type": "integer",
           "minimum": 0,
           "maximum": 4
-        },
-        "externalNavalStrikePlanes": {
-          "type": "integer",
-          "minimum": 0
         },
         "researchIDs": {
           "type": "array",
@@ -156,14 +233,44 @@
           ],
           "description": "Task force repair priority (default High): when it goes home for repairs. Recorded with the setup; not used in combat."
         },
-        "externalPlaneID": {
-          "type": "string",
-          "description": "Plane type of the land-based naval strike planes."
+        "landBasedAirwings": {
+          "type": "array",
+          "description": "A-EXTERNAL: land-based planes, one entry per air base, in the order they join the battle.",
+          "items": {
+            "type": "object",
+            "required": [
+              "planeID",
+              "planes"
+            ],
+            "properties": {
+              "planeID": {
+                "$ref": "common.schema.json#/$defs/id"
+              },
+              "planes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "missionEfficiency": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The air mission's efficiency: scales the planes offered to the join cap (default 1)."
+              },
+              "disruptionFactor": {
+                "type": "number",
+                "minimum": 0,
+                "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors)."
+              }
+            },
+            "additionalProperties": false
+          }
         },
-        "externalMissionEfficiency": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Air mission efficiency of the land-based planes (multiplies their attack)."
+        "planeStockpile": {
+          "type": "object",
+          "description": "A-REINFORCE: planes in the side's stockpile by plane ID; they refill its air wings during the battle.",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
         },
         "carrierStanceIndex": {
           "type": "integer",
@@ -172,7 +279,7 @@
         },
         "carrierNightTraffic": {
           "type": "number",
-          "description": "Sum of the country's carrier_night_traffic modifiers (doctrines, spirits), e.g. 0.15. Added to the night sortie factor while dark."
+          "description": "Extra carrier_night_traffic, e.g. 0.15, on top of the side's doctrines and spirits. Added to the night sortie factor while dark."
         }
       },
       "additionalProperties": false

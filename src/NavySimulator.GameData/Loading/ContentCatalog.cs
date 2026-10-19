@@ -22,12 +22,34 @@ public sealed class ContentCatalog
     public List<ModuleDto> Modules { get; } = [];
     public List<ShipTypeDto> ShipTypes { get; } = [];
     public List<CriticalPartDto> CriticalParts { get; } = [];
-    public List<MioBonusDto> Mios { get; } = [];
+    /// <summary>S-MIO: the MIOs of <c>mios/</c> (imported by <c>NavySimulator import-mios</c>).</summary>
+    public List<MioDto> Mios { get; } = [];
+
+    /// <summary>S-MIO-POLICY: the MIO policies of <c>mio-policies/</c>, empty when the folder does not exist.</summary>
+    public List<MioPolicyDto> MioPolicies { get; } = [];
+
+    /// <summary>S-MIO-MATCH: the equipment groups of <c>equipment-groups/</c>, empty when the folder does not exist.</summary>
+    public List<EquipmentGroupDto> EquipmentGroups { get; } = [];
+
+    /// <summary>S-MIO-COUNTRY: the country tags of <c>countries/</c>, empty when the folder does not exist.</summary>
+    public List<CountryDto> Countries { get; } = [];
     public List<ShipDesignDto> ShipDesigns { get; } = [];
     public List<ResearchDto> Researches { get; } = [];
     public List<SpiritDto> Spirits { get; } = [];
     public List<PlaneDto> Planes { get; } = [];
     public List<FleetDto> Fleets { get; } = [];
+
+    /// <summary>S-ADMIRAL: the admirals of <c>admirals/</c> (imported by <c>NavySimulator import-leaders</c>), empty when the folder does not exist.</summary>
+    public List<AdmiralDto> Admirals { get; } = [];
+
+    /// <summary>S-ADMIRAL-TRAIT: the leader traits of <c>leader-traits/</c>, empty when the folder does not exist.</summary>
+    public List<LeaderTraitDto> LeaderTraits { get; } = [];
+
+    /// <summary>S-ADMIRAL-SKILL: the navy skill levels of <c>leader-skills/</c>, empty when the folder does not exist.</summary>
+    public List<LeaderSkillDto> LeaderSkills { get; } = [];
+
+    /// <summary>S-DOCTRINE: the doctrine folders of <c>doctrines/</c> (imported), empty when the folder does not exist.</summary>
+    public List<DoctrineFolderDto> DoctrineFolders { get; } = [];
 
     /// <summary>Problems reading the files (missing folders, invalid JSON). They fail every scenario build.</summary>
     public List<string> ReadErrors { get; } = [];

@@ -1,0 +1,2428 @@
+{
+  "$schema": "../schemas/doctrines.schema.json",
+  "id": "naval",
+  "name": "Naval Doctrine",
+  "tracks": [
+    {
+      "id": "submarines",
+      "name": "Submarines"
+    },
+    {
+      "id": "screens",
+      "name": "Screens"
+    },
+    {
+      "id": "carriers",
+      "name": "Carriers"
+    },
+    {
+      "id": "capital_ships",
+      "name": "Capital Ships"
+    }
+  ],
+  "grandDoctrines": [
+    {
+      "id": "new_fleet_in_being",
+      "name": "Fleet in Being",
+      "tracks": [
+        "submarines",
+        "screens",
+        "carriers",
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_capital_ship_defence_factor": 0.05
+        },
+        "unitBonuses": {
+          "battleship": {
+            "max_organisation": 7.5
+          },
+          "sh_battleship": {
+            "max_organisation": 7.5
+          }
+        }
+      },
+      "milestones": {
+        "submarines": {
+          "countryModifiers": {
+            "naval_torpedo_reveal_chance_factor": -0.05,
+            "strike_force_movement_org_loss": -0.1
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "screens": {
+          "countryModifiers": {
+            "navy_anti_air_attack_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "carriers": {
+          "countryModifiers": {
+            "mines_planting_by_fleets_factor": 0.1,
+            "convoy_escort_efficiency": 0.075
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "capital_ships": {
+          "countryModifiers": {
+            "navy_capital_ship_attack_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "new_convoy_raiding",
+      "name": "Trade Interdiction",
+      "tracks": [
+        "submarines",
+        "screens",
+        "carriers",
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "convoy_raiding_efficiency_factor": 0.075
+        },
+        "unitBonuses": {
+          "submarine": {
+            "max_organisation": 5,
+            "surface_detection": 0.05
+          }
+        }
+      },
+      "milestones": {
+        "submarines": {
+          "countryModifiers": {
+            "navy_submarine_attack_factor": 0.05,
+            "naval_torpedo_reveal_chance_factor": -0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "screens": {
+          "countryModifiers": {
+            "convoy_escort_efficiency": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "carriers": {
+          "countryModifiers": {
+            "sortie_efficiency": 0.15,
+            "naval_strike_targetting_factor": 0.05,
+            "convoy_raiding_efficiency_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "capital_ships": {
+          "countryModifiers": {
+            "strike_force_movement_org_loss": -0.075,
+            "naval_detection": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    },
+    {
+      "id": "new_base_strike",
+      "name": "Base Strike",
+      "tracks": [
+        "submarines",
+        "screens",
+        "carriers",
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "port_strike": 0.2
+        },
+        "unitBonuses": {
+          "carrier": {
+            "max_organisation": 10
+          },
+          "sh_carrier": {
+            "max_organisation": 10
+          }
+        }
+      },
+      "milestones": {
+        "submarines": {
+          "countryModifiers": {
+            "naval_strike_targetting_factor": 0.05,
+            "naval_torpedo_reveal_chance_factor": -0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "screens": {
+          "countryModifiers": {
+            "carrier_capacity_penalty_reduction": -0.05,
+            "naval_detection": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "carriers": {
+          "countryModifiers": {
+            "sortie_efficiency": 0.15,
+            "naval_strike_targetting_factor": 0.05,
+            "navy_carrier_air_agility_factor": 0.05
+          },
+          "scripted": [
+            "effect"
+          ]
+        },
+        "capital_ships": {
+          "countryModifiers": {
+            "convoy_escort_efficiency": 0.075
+          },
+          "scripted": [
+            "effect"
+          ]
+        }
+      }
+    }
+  ],
+  "subdoctrines": [
+    {
+      "id": "line_of_battle",
+      "name": "Line of Battle",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_fuel_consumption_factor": -0.05,
+          "naval_has_potf_in_combat_attack": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "flagships",
+          "name": "Flagship Coordination",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "max_organisation": 5
+              },
+              "battleship": {
+                "max_organisation": 2.5
+              },
+              "heavy_cruiser": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        },
+        {
+          "id": "ordnance_handling_training",
+          "name": "Ordnance Handling Training",
+          "effects": {
+            "unitBonuses": {
+              "battleship": {
+                "hg_attack": 0.05,
+                "lg_attack": 0.05,
+                "hg_armor_piercing": 0.05
+              },
+              "sh_battleship": {
+                "hg_attack": 0.05,
+                "lg_attack": 0.05,
+                "hg_armor_piercing": 0.05
+              },
+              "heavy_cruiser": {
+                "hg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "blue_water_logistics",
+          "name": "Blue Water Logistics",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "supply_consumption": -0.05
+              },
+              "battleship": {
+                "supply_consumption": -0.05
+              },
+              "battle_cruiser": {
+                "supply_consumption": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "bulkhead_drills",
+          "name": "Enhanced Counterflooding Techniques",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "naval_torpedo_damage_reduction_factor": 0.05
+              },
+              "battleship": {
+                "naval_torpedo_damage_reduction_factor": 0.05
+              },
+              "heavy_cruiser": {
+                "naval_torpedo_damage_reduction_factor": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "modernized_line_of_battle",
+          "name": "Updated Signals Protocols",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "max_organisation": 2.5
+              },
+              "battleship": {
+                "max_organisation": 2.5
+              },
+              "heavy_cruiser": {
+                "max_organisation": 2.5
+              },
+              "battle_cruiser": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "battlecruiser_supremacy",
+      "name": "Fast Battleships",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_supply_consumption_factor": -0.05,
+          "naval_critical_score_chance_factor": 0.03
+        }
+      },
+      "rewards": [
+        {
+          "id": "ship_of_the_line",
+          "name": "Ships of the Line",
+          "effects": {
+            "unitBonuses": {
+              "battle_cruiser": {
+                "max_organisation": 2.5
+              },
+              "heavy_cruiser": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        },
+        {
+          "id": "coordinated_strike_protocol",
+          "name": "Rapid Fire Training",
+          "effects": {
+            "unitBonuses": {
+              "battle_cruiser": {
+                "hg_attack": 0.05,
+                "lg_attack": 0.05
+              },
+              "battleship": {
+                "lg_attack": 0.05
+              },
+              "sh_battleship": {
+                "lg_attack": 0.05
+              },
+              "heavy_cruiser": {
+                "lg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "open_water_patrolling",
+          "name": "High Seas Patrol Patterns",
+          "effects": {
+            "unitBonuses": {
+              "battle_cruiser": {
+                "surface_detection": 0.05
+              },
+              "heavy_cruiser": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "planning_at_speed",
+          "name": "Planning at Speed",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "naval_speed": 0.05
+              },
+              "battleship": {
+                "naval_speed": 0.05
+              },
+              "battle_cruiser": {
+                "naval_speed": 0.05
+              },
+              "heavy_cruiser": {
+                "naval_speed": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "capital_drills",
+          "name": "Fast Division Principle",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "max_organisation": 2.5
+              },
+              "battleship": {
+                "max_organisation": 2.5
+              },
+              "battle_cruiser": {
+                "max_organisation": 2.5
+              },
+              "heavy_cruiser": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "armored_raiders",
+      "name": "Armored Raiders",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_supply_consumption_factor": -0.05,
+          "screening_without_screens": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "expert_reconnaissance",
+          "name": "Expert Spotting",
+          "effects": {
+            "unitBonuses": {
+              "battle_cruiser": {
+                "surface_detection": 0.05
+              },
+              "battleship": {
+                "surface_detection": 0.05
+              },
+              "sh_battleship": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "speed_trials",
+          "name": "Efficient Cruising Speed",
+          "effects": {
+            "equipmentBonuses": {
+              "capital_ship": {
+                "naval_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "modernized_officer_education",
+          "name": "Modernized Search Protocols",
+          "effects": {
+            "unitBonuses": {
+              "battle_cruiser": {
+                "max_organisation": 2.5
+              },
+              "battleship": {
+                "max_organisation": 2.5
+              },
+              "sh_battleship": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        },
+        {
+          "id": "capital_raiders",
+          "name": "Hit & Run",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "max_organisation": 2.5,
+                "convoy_raiding_coordination": 0.125,
+                "surface_detection": 0.05
+              },
+              "battleship": {
+                "max_organisation": 2.5,
+                "convoy_raiding_coordination": 0.125,
+                "surface_detection": 0.05
+              },
+              "battle_cruiser": {
+                "max_organisation": 2.5,
+                "convoy_raiding_coordination": 0.075,
+                "surface_detection": 0.075
+              },
+              "heavy_cruiser": {
+                "max_organisation": 2.5
+              }
+            }
+          }
+        },
+        {
+          "id": "crisis_management",
+          "name": "Disaster Management",
+          "effects": {
+            "countryModifiers": {
+              "navy_casualty_on_hit": -0.2,
+              "navy_casualty_on_sink": -0.1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "coastal_defence_fleet",
+      "name": "Coastal Defense Fleet",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_supply_consumption_factor": -0.075,
+          "navy_max_range_factor": -0.05
+        },
+        "scripted": [
+          "effect"
+        ]
+      },
+      "rewards": [
+        {
+          "id": "aging_navy",
+          "name": "Modernization Drive",
+          "effects": {
+            "countryModifiers": {
+              "refit_speed": 0.075
+            }
+          }
+        },
+        {
+          "id": "casemate_upgrades",
+          "name": "Secondary Armament Modernization",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "anti_air_attack": 0.075,
+                "lg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "escort_duties",
+          "name": "Maritime Trade Security",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "sub_detection": 0.075
+              },
+              "light_cruiser": {
+                "sub_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "hail_of_fire",
+          "name": "Hail of Fire",
+          "effects": {
+            "countryModifiers": {
+              "naval_light_gun_hit_chance_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "spare_part_logistics",
+          "name": "Tried & Tested Design Principles",
+          "effects": {
+            "countryModifiers": {
+              "refit_ic_cost": -0.075
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "naval_gunfire_support",
+      "name": "Naval Gunfire Support",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "shore_bombardment_bonus": 0.125,
+          "navy_fuel_consumption_factor": -0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "landing_lane_clearance",
+          "name": "Landing Lane Clearance",
+          "effects": {
+            "countryModifiers": {
+              "naval_mine_hit_chance": -0.05,
+              "mines_sweeping_by_fleets_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "inshore_aa_screen",
+          "name": "Inshore AA Screen",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "anti_air_attack": 0.075
+              },
+              "sh_battleship": {
+                "anti_air_attack": 0.075
+              },
+              "battleship": {
+                "anti_air_attack": 0.075
+              },
+              "battle_cruiser": {
+                "anti_air_attack": 0.075
+              }
+            }
+          }
+        },
+        {
+          "id": "joint_operations",
+          "name": "Joint Operations",
+          "effects": {
+            "countryModifiers": {
+              "naval_invasion_prep_days": -5,
+              "naval_repair_support_value_factor": 0.05,
+              "naval_general_support_value_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "floating_base",
+          "name": "Floating Base",
+          "effects": {
+            "countryModifiers": {
+              "navy_casualty_on_hit": -0.1,
+              "navy_casualty_on_sink": -0.05,
+              "floating_harbor_supply": 0.125
+            }
+          }
+        },
+        {
+          "id": "green_water_operations",
+          "name": "Green Water Operations",
+          "effects": {
+            "countryModifiers": {
+              "naval_coordination": 0.05,
+              "refit_speed": 0.1
+            },
+            "unitBonuses": {
+              "sh_battleship": {
+                "surface_visibility": -0.05
+              },
+              "battleship": {
+                "surface_visibility": -0.05
+              },
+              "battle_cruiser": {
+                "surface_visibility": -0.05
+              },
+              "heavy_cruiser": {
+                "surface_visibility": -0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "battleship_antiair_screen",
+      "name": "Anti-Aircraft Battleships",
+      "tracks": [
+        "capital_ships"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_anti_air_attack_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "all_seas_anti_aircraft",
+          "name": "High Seas AA",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "anti_air_attack": 0.05
+              },
+              "battleship": {
+                "anti_air_attack": 0.05
+              },
+              "battle_cruiser": {
+                "anti_air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "efficient_navigation",
+          "name": "Efficient Navigation",
+          "effects": {
+            "unitBonuses": {
+              "battleship": {
+                "fuel_consumption": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "broad_air_cover",
+          "name": "Air Strike Detection Priority",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "max_organisation": 7.5,
+                "surface_detection": 0.05
+              },
+              "battleship": {
+                "max_organisation": 7.5,
+                "surface_detection": 0.05
+              },
+              "battle_cruiser": {
+                "max_organisation": 7.5,
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "inaccessible_skies",
+          "name": "Inaccessible Skies",
+          "effects": {
+            "unitBonuses": {
+              "sh_battleship": {
+                "anti_air_attack": 0.075,
+                "lg_attack": 0.05
+              },
+              "battleship": {
+                "anti_air_attack": 0.075,
+                "lg_attack": 0.05
+              },
+              "battle_cruiser": {
+                "anti_air_attack": 0.075,
+                "lg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "capital_screens",
+          "name": "Capital Screens",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_heavy": {
+                "armor_value": 0.075,
+                "max_strength": 0.05,
+                "lg_attack": 0.05
+              },
+              "ship_hull_super_heavy": {
+                "armor_value": 0.075,
+                "max_strength": 0.05,
+                "lg_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "carrier_battlegroups",
+      "name": "Carrier Battlegroups",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "port_strike": 0.1
+        }
+      },
+      "rewards": [
+        {
+          "id": "long_distance_logistics",
+          "name": "Forward Logistics",
+          "effects": {
+            "countryModifiers": {
+              "navy_max_range_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "long_range_target_acquisition",
+          "name": "Air Strike Target Acquisition",
+          "effects": {
+            "countryModifiers": {
+              "navy_carrier_air_targetting_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "personnel_management",
+          "name": "Personnel Management",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "max_organisation": 30
+              },
+              "sh_carrier": {
+                "max_organisation": 30
+              }
+            }
+          }
+        },
+        {
+          "id": "dedicated_record_keeping",
+          "name": "Meticulous Record Keeping",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "carrier_surface_detection": 0.1
+              },
+              "sh_carrier": {
+                "carrier_surface_detection": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "floating_fortresses",
+          "name": "Massed Anti-Aircraft Fire",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "anti_air_attack": 0.175
+              },
+              "sh_carrier": {
+                "anti_air_attack": 0.175
+              },
+              "battleship": {
+                "anti_air_attack": 0.05
+              },
+              "sh_battleship": {
+                "anti_air_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "floating_airfields",
+      "name": "Floating Airfields",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "sortie_efficiency": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "traffic_control_systems",
+          "name": "Air Traffic Coordination",
+          "effects": {
+            "countryModifiers": {
+              "carrier_capacity_penalty_reduction": -0.1
+            }
+          }
+        },
+        {
+          "id": "floating_city",
+          "name": "Staff Operations Management",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "max_organisation": 20
+              },
+              "sh_carrier": {
+                "max_organisation": 20
+              }
+            }
+          }
+        },
+        {
+          "id": "veteran_pilots",
+          "name": "Air Group Attack Planning",
+          "effects": {
+            "countryModifiers": {
+              "navy_carrier_air_attack_factor": 0.075
+            }
+          }
+        },
+        {
+          "id": "night_fighting_expertise",
+          "name": "Night Operations Training",
+          "effects": {
+            "countryModifiers": {
+              "air_carrier_night_penalty_reduction_factor": 0.075
+            }
+          }
+        },
+        {
+          "id": "rough_weather_procedures",
+          "name": "Rough Weather Procedures",
+          "effects": {
+            "equipmentBonuses": {
+              "carrier": {
+                "naval_weather_penalty_factor": -0.125
+              },
+              "sh_carrier": {
+                "naval_weather_penalty_factor": -0.125
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "escort_carrier_support",
+      "name": "Escort Carrier Support",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "convoy_escort_efficiency": 0.25
+        }
+      },
+      "rewards": [
+        {
+          "id": "evasive_convoy_maneuvers",
+          "name": "Evasive Convoy Maneuvers",
+          "effects": {
+            "countryModifiers": {
+              "convoy_retreat_speed": 0.25
+            }
+          }
+        },
+        {
+          "id": "anti_submarine_escorts",
+          "name": "Anti-Submarine Escorts",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "sub_detection": 0.1
+              },
+              "sh_carrier": {
+                "sub_detection": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "civilian_hull_shapes",
+          "name": "Civilian Hull Shapes",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_escort_carrier": {
+                "surface_visibility": -0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "integrated_convoy_escorts",
+          "name": "Roving Escorts",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "max_organisation": 10
+              },
+              "sh_carrier": {
+                "max_organisation": 10
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_escort_carrier": {
+                "sub_detection": 0.075
+              },
+              "convoy": {
+                "naval_speed": 0.125
+              }
+            }
+          }
+        },
+        {
+          "id": "convoy_carrier_support_groups",
+          "name": "Convoy-Carrier Support Groups",
+          "effects": {
+            "unitBonuses": {
+              "repair_ship": {
+                "reliability": 0.1
+              },
+              "support_ship": {
+                "reliability": 0.1
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_escort_carrier": {
+                "build_cost_ic": -0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "broad_naval_support",
+      "name": "Generalized Support",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "critical_receive_chance": -0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "carrier_maneuvering",
+          "name": "Carrier Maneuvering",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "naval_speed": 0.05
+              },
+              "sh_carrier": {
+                "naval_speed": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "task_force_concentration",
+          "name": "Task Force Concentration",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "naval_speed": 0.05,
+                "surface_visibility": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "organized_support_protocols",
+          "name": "Organized Support Protocols",
+          "effects": {
+            "countryModifiers": {
+              "naval_repair_support_value_factor": 0.125,
+              "naval_general_support_value_factor": 0.125
+            }
+          }
+        },
+        {
+          "id": "escorts_in_battle",
+          "name": "Escort Carrier Self-Sufficiency",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_escort_carrier": {
+                "lg_attack": 0.075,
+                "anti_air_attack": 0.05,
+                "lg_armor_piercing": 0.075
+              }
+            }
+          }
+        },
+        {
+          "id": "support_rotation",
+          "name": "Support Rotation",
+          "effects": {
+            "countryModifiers": {
+              "naval_repair_support_factor": 0.125,
+              "naval_general_support_factor": 0.125
+            },
+            "unitBonuses": {
+              "repair_ship": {
+                "max_organisation": 10
+              },
+              "support_ship": {
+                "max_organisation": 10
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "massed_carrier_fleet",
+      "name": "Massed Carrier Fleet",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_morale_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "deep_operative_support",
+          "name": "Carrier Force Projection",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "reliability": 0.05,
+                "naval_range": 0.1
+              },
+              "sh_carrier": {
+                "reliability": 0.05,
+                "naval_range": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "carrier_independence",
+          "name": "Carrier Independence",
+          "effects": {
+            "countryModifiers": {
+              "screening_without_screens": 0.15
+            }
+          }
+        },
+        {
+          "id": "crew_shifts",
+          "name": "Crew Shifts",
+          "effects": {
+            "countryModifiers": {
+              "sortie_efficiency": 0.15,
+              "carrier_sortie_hours_delay": -2
+            }
+          }
+        },
+        {
+          "id": "efficient_rearming",
+          "name": "Efficient Re-arming",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "supply_consumption": -0.1,
+                "fuel_consumption": -0.05
+              },
+              "sh_carrier": {
+                "supply_consumption": -0.1,
+                "fuel_consumption": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "unceasing_airpower",
+          "name": "Unceasing Airpower",
+          "effects": {
+            "countryModifiers": {
+              "carrier_traffic": 0.15,
+              "carrier_night_traffic": 0.15
+            },
+            "unitBonuses": {
+              "carrier": {
+                "anti_air_attack": 0.1
+              },
+              "sh_carrier": {
+                "anti_air_attack": 0.1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "light_task_forces",
+      "name": "Light Task Forces",
+      "tracks": [
+        "carriers"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_speed_after_initial_combat": 0.1
+        }
+      },
+      "rewards": [
+        {
+          "id": "direct_fire_avoidance",
+          "name": "Direct Fire Avoidance",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "naval_speed": 0.05,
+                "surface_visibility": -0.05
+              },
+              "sh_carrier": {
+                "naval_speed": 0.05,
+                "surface_visibility": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "surface_fleets",
+          "name": "Littoral Operations",
+          "effects": {
+            "unitBonuses": {
+              "sh_carrier": {
+                "surface_visibility": -0.1
+              },
+              "carrier": {
+                "surface_visibility": -0.1
+              },
+              "destroyer": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "screen_raiders",
+          "name": "Screen Raiders",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "lg_attack": 0.02,
+                "max_organisation": 2
+              }
+            }
+          }
+        },
+        {
+          "id": "evasive_engagements_focus",
+          "name": "Effective Surface Screening",
+          "effects": {
+            "unitBonuses": {
+              "sh_carrier": {
+                "max_organisation": 15,
+                "naval_speed": 0.05
+              },
+              "carrier": {
+                "max_organisation": 15,
+                "naval_speed": 0.05
+              },
+              "destroyer": {
+                "patrol_coordination": 0.05,
+                "surface_detection": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "localized_sea_power",
+          "name": "Localized Sea Power",
+          "effects": {
+            "countryModifiers": {
+              "strike_force_movement_org_loss": -0.15,
+              "naval_enemy_fleet_size_ratio_penalty_factor": 0.1
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "convoy_escort",
+      "name": "Convoy Escort",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "convoy_escort_efficiency": 0.05,
+          "convoy_retreat_speed": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "anti_submarine_sweep_training",
+          "name": "Pre-Emptive Submarine Detection",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "sub_detection": 0.02
+              },
+              "light_cruiser": {
+                "sub_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "escort_reclassification",
+          "name": "Tenacious Convoy Defense",
+          "effects": {
+            "countryModifiers": {
+              "convoy_escort_efficiency": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "max_organisation": 5
+              },
+              "light_cruiser": {
+                "sub_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "sweeping_duty",
+          "name": "Lane Clearance Maps",
+          "effects": {
+            "countryModifiers": {
+              "mines_sweeping_by_fleets_factor": 0.075
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "naval_speed": 0.05
+              },
+              "light_cruiser": {
+                "naval_speed": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "creeping_attack",
+          "name": "Creeping Attack Patterns",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "sub_detection": 0.03,
+                "sub_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "as_below_so_above",
+          "name": "Dual-Purpose Gun Experience",
+          "effects": {
+            "countryModifiers": {
+              "convoy_escort_efficiency": 0.05,
+              "convoy_retreat_speed": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "anti_air_attack": 0.075,
+                "lg_attack": 0.05
+              },
+              "light_cruiser": {
+                "anti_air_attack": 0.1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "support_integrated_operations",
+      "name": "Integrated Operations",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "screening_efficiency": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "first_line_of_defense",
+          "name": "First Line of Defense",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "max_organisation": 5,
+                "naval_light_gun_hit_chance_factor": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "first_line_of_attack",
+          "name": "First Line of Attack",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "max_organisation": 5,
+                "naval_light_gun_hit_chance_factor": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "blue_water_training",
+          "name": "Blue Water Training",
+          "effects": {
+            "countryModifiers": {
+              "screening_efficiency": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "naval_speed": 0.07
+              },
+              "light_cruiser": {
+                "naval_speed": 0.05
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_cruiser": {
+                "naval_weather_penalty_factor": -0.125
+              }
+            }
+          }
+        },
+        {
+          "id": "early_warning",
+          "name": "Early Warning Patrols",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "surface_detection": 0.05
+              },
+              "light_cruiser": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "fleet_coordination",
+          "name": "Cohesive Fleet Coordination",
+          "effects": {
+            "countryModifiers": {
+              "screening_efficiency": 0.05
+            },
+            "unitBonuses": {
+              "battleship": {
+                "surface_visibility": -0.05,
+                "max_organisation": 5,
+                "naval_heavy_gun_hit_chance_factor": 0.07
+              },
+              "sh_battleship": {
+                "max_organisation": 5,
+                "naval_heavy_gun_hit_chance_factor": 0.07
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "hunter_killers",
+      "name": "Hunter Killer Groups",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_coordination": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "search_and_destroy",
+          "name": "Search and Destroy",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "sub_detection": 0.05,
+                "sub_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "flotilla_leader",
+          "name": "Flotilla Central Control",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "carrier_sub_detection": 0.075,
+                "sub_detection": 0.05
+              },
+              "sh_carrier": {
+                "carrier_sub_detection": 0.075,
+                "sub_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "group_operations",
+          "name": "Delegated Group Operations",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "naval_speed": 0.05,
+                "sub_detection": 0.05,
+                "sub_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "combat_readiness",
+          "name": "High Operational Tempo",
+          "effects": {
+            "unitBonuses": {
+              "carrier": {
+                "naval_speed": 0.05,
+                "max_organisation": 7.5,
+                "sub_detection": 0.1
+              },
+              "sh_carrier": {
+                "naval_speed": 0.05,
+                "max_organisation": 7.5,
+                "sub_detection": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "escort_group_patrols",
+          "name": "Combined Air/Surface Patrols",
+          "effects": {
+            "unitBonuses": {
+              "sh_carrier": {
+                "patrol_coordination": 0.15
+              },
+              "carrier": {
+                "patrol_coordination": 0.15
+              },
+              "destroyer": {
+                "patrol_coordination": 0.15
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "torpedo_primacy",
+      "name": "Torpedo Primacy",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_night_attack": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "modern_broadsides",
+          "name": "Modern Broadsides",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "torpedo_attack": 0.05
+              },
+              "light_cruiser": {
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "coordinated_fire_patterns",
+          "name": "Audacious Attacks",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "max_organisation": 10,
+                "naval_speed": 0.02
+              },
+              "light_cruiser": {
+                "max_organisation": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "dedicated_torpedo_task_forces",
+          "name": "Flotilla Leaders",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "torpedo_attack": 0.05
+              },
+              "destroyer": {
+                "torpedo_attack": 0.05
+              },
+              "heavy_cruiser": {
+                "naval_speed": 0.02,
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "improved_escort_role",
+          "name": "Periscope Spotting",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "surface_detection": 0.05
+              },
+              "light_cruiser": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "task_force_integration",
+          "name": "Task Force Integration",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "max_organisation": 5,
+                "naval_speed": 0.02
+              },
+              "heavy_cruiser": {
+                "max_organisation": 10,
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "anti_aircraft_cruisers",
+      "name": "Anti-Aircraft Cruisers",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_anti_air_attack_factor": 0.1
+        }
+      },
+      "rewards": [
+        {
+          "id": "calibrated_deck_guns",
+          "name": "Rapid Target Tracking",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "anti_air_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "priority_air_targets",
+          "name": "Skillful Range Finding",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "anti_air_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "evasion_techniques",
+          "name": "Evasive Action Techniques",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "naval_speed": 0.075,
+                "max_organisation": 7.5
+              },
+              "light_cruiser": {
+                "surface_visibility": -0.05,
+                "max_organisation": 7.5
+              }
+            }
+          }
+        },
+        {
+          "id": "air_interdiction_screening",
+          "name": "Air Interdiction Screening",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "anti_air_attack": 0.1,
+                "lg_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "sustained_engagements",
+          "name": "Sustained Engagements",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "armor_value": 0.05
+              },
+              "destroyer": {
+                "max_strength": 0.05,
+                "max_organisation": 10
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "screen_support_focus",
+      "name": "Screen Support Focus",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "navy_max_range_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "close_support_integration",
+          "name": "Close Support Integration",
+          "effects": {
+            "countryModifiers": {
+              "naval_general_support_value_factor": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "max_organisation": 15
+              }
+            }
+          }
+        },
+        {
+          "id": "sustainable_task_forces",
+          "name": "Self-Sustaining Task Forces",
+          "effects": {
+            "countryModifiers": {
+              "naval_general_support_factor": 0.05
+            },
+            "unitBonuses": {
+              "light_cruiser": {
+                "naval_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "maintenance_routines",
+          "name": "Naval Forward Replenishment",
+          "effects": {
+            "unitBonuses": {
+              "support_ship": {
+                "max_organisation": 10,
+                "max_strength": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "protected_naval_expansion",
+          "name": "Protected Naval Expansion",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "naval_range": 0.05
+              },
+              "heavy_cruiser": {
+                "hg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "patrol_pattern_improvements",
+          "name": "Patrol Pattern Improvements",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "patrol_coordination": 0.1
+              },
+              "light_cruiser": {
+                "patrol_coordination": 0.1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "jeune_ecole",
+      "name": "The New School",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "convoy_raiding_efficiency_factor": 0.15
+        }
+      },
+      "rewards": [
+        {
+          "id": "commerce_raiding_priority",
+          "name": "Commerce Raiding Priority",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "convoy_raiding_coordination": 0.025,
+                "lg_attack": 0.05
+              },
+              "destroyer": {
+                "convoy_raiding_coordination": 0.025
+              }
+            }
+          }
+        },
+        {
+          "id": "large_torpedo_boats",
+          "name": "Large Torpedo Boats",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "max_organisation": 10
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_torpedo_cruiser": {
+                "torpedo_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "total_economic_warfare",
+          "name": "Total Economic Warfare",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "convoy_raiding_coordination": 0.025,
+                "max_organisation": 10,
+                "naval_range": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "sea_scabs",
+          "name": "Sea Scabs",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "lg_attack": 0.08,
+                "naval_speed": 0.05,
+                "lg_armor_piercing": 0.02
+              }
+            }
+          }
+        },
+        {
+          "id": "autonomous_cruisers",
+          "name": "Autonomous Cruisers",
+          "effects": {
+            "countryModifiers": {
+              "navy_anti_air_attack_factor": 0.03
+            },
+            "unitBonuses": {
+              "battle_cruiser": {
+                "hg_attack": 0.05,
+                "naval_range": 0.05,
+                "naval_speed": 0.05,
+                "convoy_raiding_coordination": 0.05
+              },
+              "light_cruiser": {
+                "naval_speed": 0.02,
+                "naval_range": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "patrol_boats",
+      "name": "Patrol Boats",
+      "tracks": [
+        "screens"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_chance_after_initial_combat": 0.125,
+          "navy_max_range_factor": -0.05
+        },
+        "unitBonuses": {
+          "destroyer": {
+            "naval_speed": 0.05,
+            "fuel_consumption": -0.125,
+            "supply_consumption": -0.01
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "hit_and_run",
+          "name": "Fire & Disengage",
+          "effects": {
+            "countryModifiers": {
+              "naval_retreat_speed": 0.1
+            }
+          }
+        },
+        {
+          "id": "small_craft_harassment",
+          "name": "Small Craft Harassment",
+          "effects": {
+            "countryModifiers": {
+              "amphibious_invasion_defence": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "torpedo_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "lie_in_wait",
+          "name": "Lie in Wait",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "surface_visibility": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "fast_sortie_turnaround",
+          "name": "Fast Sortie Turnaround",
+          "effects": {
+            "countryModifiers": {
+              "naval_morale_factor": 0.05
+            },
+            "unitBonuses": {
+              "destroyer": {
+                "max_organisation": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "home_waters_defense",
+          "name": "Home Waters Defense",
+          "effects": {
+            "unitBonuses": {
+              "heavy_cruiser": {
+                "lg_attack": 0.05,
+                "max_organisation": 5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "wolfpacks",
+      "name": "Wolfpacks",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_retreat_speed_after_initial_combat": 0.075
+        },
+        "unitBonuses": {
+          "submarine": {
+            "max_organisation": 5
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "predictive_expertise",
+          "name": "Rapid Approach",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "naval_torpedo_hit_chance_factor": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "pack_search_patterns",
+          "name": "Pack Search Patterns",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "surface_detection": 0.075,
+                "convoy_raiding_coordination": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "improvisation",
+          "name": "Improvisation Culture",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "max_strength": 0.1,
+                "max_organisation": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "rough_weather_procedure",
+          "name": "Rough Weather Procedure",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_submarine": {
+                "naval_weather_penalty_factor": -0.075
+              }
+            }
+          }
+        },
+        {
+          "id": "wolfpack_coordination",
+          "name": "Centralized Callsign Identification",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "surface_detection": 0.075,
+                "convoy_raiding_coordination": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "submarine_fleet_operations",
+      "name": "Fleet Operations",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_torpedo_screen_penetration_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "long_range_patrol_schedule",
+          "name": "Long-Range Patrol Schedule",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "surface_detection": 0.15,
+                "naval_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "sustained_operations",
+          "name": "Sustained Operations",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "max_organisation": 7.5
+              }
+            }
+          }
+        },
+        {
+          "id": "ambush_tactics",
+          "name": "Ambush Tactics",
+          "effects": {
+            "countryModifiers": {
+              "navy_submarine_attack_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "predictive_search_patterns",
+          "name": "Predictive Search Patterns",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "surface_detection": 0.1,
+                "convoy_raiding_coordination": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "diverse_operations",
+          "name": "Diverse Operations",
+          "effects": {
+            "unitBonuses": {
+              "light_cruiser": {
+                "surface_detection": 0.1,
+                "naval_speed": 0.05
+              },
+              "heavy_cruiser": {
+                "surface_detection": 0.1,
+                "naval_speed": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "capital_hunters",
+      "name": "Capital Hunters",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_torpedo_reveal_chance_factor": -0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "fire_protocol_drills",
+          "name": "Fire Protocol Drills",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "naval_torpedo_hit_chance_factor": 0.075
+              }
+            }
+          }
+        },
+        {
+          "id": "battle_line_priority",
+          "name": "Battle Line Priority",
+          "effects": {
+            "countryModifiers": {
+              "naval_torpedo_screen_penetration_factor": 0.05
+            }
+          }
+        },
+        {
+          "id": "quick_reload_procedures",
+          "name": "Rapid Reloading Drills",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "battleship_chase",
+          "name": "Battleship Chase",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "fuel_consumption": -0.05,
+                "naval_range": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "escape_when_empty",
+          "name": "Escape When Empty",
+          "effects": {
+            "countryModifiers": {
+              "sub_retreat_speed": 0.05
+            },
+            "unitBonuses": {
+              "submarine": {
+                "sub_visibility": -0.05,
+                "naval_speed": 0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "submarine_coastal_defense",
+      "name": "Coastal Defense",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "unitBonuses": {
+          "submarine": {
+            "supply_consumption": -0.02
+          }
+        }
+      },
+      "rewards": [
+        {
+          "id": "optimized_compartments",
+          "name": "Miniaturized Systems",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_midget_submarine": {
+                "reliability": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "patrol_vigilance",
+          "name": "Patrol Vigilance",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "max_organisation": 10,
+                "surface_detection": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "maneuever_fire",
+          "name": "Too Close To Miss",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_midget_submarine": {
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "locals_knowledge",
+          "name": "Knowledge From Locals",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "sub_visibility": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "counter_submarine_operations",
+          "name": "Escort Avoidance",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "torpedo_attack": 0.05
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_midget_submarine": {
+                "sub_visibility": -0.05
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "coastal_minelaying",
+      "name": "Coastal Minelaying",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_mines_effect_reduction": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "covert_buildup",
+          "name": "Covert Build-up",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "naval_speed": 0.05,
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "placement_for_effect",
+          "name": "Placement For Effect",
+          "effects": {
+            "countryModifiers": {
+              "naval_mines_damage_factor": 0.125
+            }
+          }
+        },
+        {
+          "id": "minefield_patrols",
+          "name": "Minefield Patrols",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "mines_planting": 0.125,
+                "lg_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "overhead_protection",
+          "name": "Anti-Aircraft Crew Drills",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "anti_air_attack": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "clearing_procedures",
+          "name": "Clearing Procedures",
+          "effects": {
+            "unitBonuses": {
+              "destroyer": {
+                "mines_sweeping": 0.15
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "long_range_submarines",
+      "name": "Long Range Submarines",
+      "tracks": [
+        "submarines"
+      ],
+      "effects": {
+        "countryModifiers": {
+          "naval_torpedo_hit_chance_factor": 0.05
+        }
+      },
+      "rewards": [
+        {
+          "id": "ocean_patrols",
+          "name": "Marathon Patrols",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "max_organisation": 5
+              }
+            },
+            "equipmentBonuses": {
+              "ship_hull_fleet_submarine": {
+                "surface_detection": 0.05
+              },
+              "ship_hull_cruiser_submarine": {
+                "surface_detection": 0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "improved_dive_protocols",
+          "name": "Crash Dive Drills",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_fleet_submarine": {
+                "surface_visibility": -0.05
+              },
+              "ship_hull_cruiser_submarine": {
+                "surface_visibility": -0.05
+              }
+            }
+          }
+        },
+        {
+          "id": "support_the_surface",
+          "name": "Battlefleet Support Tactics",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_fleet_submarine": {
+                "naval_speed": 0.05,
+                "torpedo_attack": 0.1
+              },
+              "ship_hull_cruiser_submarine": {
+                "naval_speed": 0.05,
+                "torpedo_attack": 0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "stowage_efficiency",
+          "name": "Stowage Efficiency",
+          "effects": {
+            "equipmentBonuses": {
+              "ship_hull_fleet_submarine": {
+                "fuel_consumption": -0.1
+              },
+              "ship_hull_cruiser_submarine": {
+                "fuel_consumption": -0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "deep_water_supremacy",
+          "name": "Deep Sea Supremacy",
+          "effects": {
+            "unitBonuses": {
+              "submarine": {
+                "sub_detection": 0.1,
+                "torpedo_attack": 0.05
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

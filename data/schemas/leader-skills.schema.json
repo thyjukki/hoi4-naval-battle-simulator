@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "leader-skills.schema.json",
+  "title": "NavySimulator navy leader skills",
+  "description": "The navy levels of the leader skills (common/unit_leader/00_*skills.txt), written by NavySimulator import-leaders (S-ADMIRAL-SKILL).",
+  "type": "object",
+  "required": [
+    "skills"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "attack_skill",
+              "defense_skill",
+              "maneuvering_skill",
+              "coordination_skill"
+            ]
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "level"
+              ],
+              "properties": {
+                "level": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "modifiers": {
+                  "type": "object",
+                  "description": "The level's modifier block: what the fleet under the admiral gets.",
+                  "additionalProperties": {
+                    "type": "number"
+                  }
+                },
+                "buildingModuleModifiers": {
+                  "type": "object",
+                  "description": "building_module_modifier: what the admiral gives from a naval headquarters (not simulated).",
+                  "additionalProperties": {
+                    "type": "number"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

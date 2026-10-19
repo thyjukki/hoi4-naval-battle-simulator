@@ -1,0 +1,207 @@
+{
+  "$schema": "../schemas/mio-policies.schema.json",
+  "policies": [
+    {
+      "id": "mio_policy_general_ruthless_contracts",
+      "name": "Ruthless Contracts",
+      "organizationModifiers": {
+        "military_industrial_organization_funds_gain": 0.2
+      },
+      "conditions": [
+        "allowed = { always = yes }",
+        "available = { has_mio_size > 2 }"
+      ]
+    },
+    {
+      "id": "mio_policy_general_vertical_integration",
+      "name": "Vertical Integration",
+      "productionBonus": {
+        "same_as_mio": {
+          "production_resource_need_factor": -0.075,
+          "production_resource_penalty_factor": 0.075
+        }
+      },
+      "conditions": [
+        "allowed = { always = yes }",
+        "available = { has_mio_size > 5 }"
+      ]
+    },
+    {
+      "id": "mio_policy_general_mechanical_genius",
+      "name": "Mechanical Genius",
+      "equipmentBonus": {
+        "same_as_mio": {
+          "reliability": 0.1
+        }
+      },
+      "conditions": [
+        "allowed = { always = yes }",
+        "available = { has_mio_size > 4 }"
+      ]
+    },
+    {
+      "id": "mio_policy_general_experimental_development_teams",
+      "name": "Experimental Development Teams",
+      "organizationModifiers": {
+        "military_industrial_organization_research_bonus": 0.25
+      },
+      "conditions": [
+        "allowed = { always = yes }",
+        "available = { has_mio_size > 2 }"
+      ]
+    },
+    {
+      "id": "mio_policy_NOR_general_permanent_industrial_revolution",
+      "name": "Permanent Industrial Revolution",
+      "productionBonus": {
+        "same_as_mio": {
+          "production_resource_need_factor": -0.1
+        }
+      },
+      "organizationModifiers": {
+        "military_industrial_organization_research_bonus": 0.1
+      },
+      "conditions": [
+        "allowed = { owner = { NOR_AAT = yes } }",
+        "available = { has_mio_size > 5 owner = { has_completed_focus = NOR_norwegian_engineering } }"
+      ]
+    },
+    {
+      "id": "mio_policy_RAJ_general_ordnance_factory_board",
+      "name": "Ordnance Factory Board",
+      "productionBonus": {
+        "same_as_mio": {
+          "production_efficiency_cap_factor": 0.075,
+          "production_efficiency_gain_factor": 0.075,
+          "reliability": -0.1
+        }
+      },
+      "conditions": [
+        "allowed = { owner = { is_raj_or_raj_inheritor = yes } }",
+        "available = { has_mio_size > 5 owner = { has_completed_focus = RAJ_the_ordnance_factories_board } }"
+      ]
+    },
+    {
+      "id": "mio_policy_navy_welding_specialists",
+      "name": "Welding Specialists",
+      "allowedEquipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "ship_hull_submarine",
+        "carrier",
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer",
+        "mio_cat_eq_all_battleship"
+      ],
+      "productionBonus": {
+        "same_as_mio": {
+          "production_cost_factor": -0.05
+        }
+      },
+      "conditions": [
+        "allowed = { OR = { has_mio_equipment_type = capital_ship has_mio_equipment_type = screen_ship has_mio_equipment_type = ship_hull_submarine has_mio_equipment_type = carrier has_mio_equipment_type = mio_cat_eq_all_carrier has_mio_equipment_type = mio_cat_eq_all_cruiser has_mio_equipment_type = mio_cat_eq_all_destroyer has_mio_equipment_type = mio_cat_eq_all_battleship } }",
+        "available = { has_mio_size > 5 }"
+      ]
+    },
+    {
+      "id": "mio_policy_navy_space_efficient_design",
+      "name": "Space Efficient Design",
+      "allowedEquipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "ship_hull_submarine",
+        "carrier",
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer",
+        "mio_cat_eq_all_battleship"
+      ],
+      "equipmentBonus": {
+        "ship_hull_carrier": {
+          "carrier_size": 1
+        },
+        "ship_hull_carrier_super": {
+          "carrier_size": 2
+        },
+        "same_as_mio": {
+          "naval_range": 0.25
+        }
+      },
+      "conditions": [
+        "allowed = { OR = { has_mio_equipment_type = capital_ship has_mio_equipment_type = screen_ship has_mio_equipment_type = ship_hull_submarine has_mio_equipment_type = carrier has_mio_equipment_type = mio_cat_eq_all_carrier has_mio_equipment_type = mio_cat_eq_all_cruiser has_mio_equipment_type = mio_cat_eq_all_destroyer has_mio_equipment_type = mio_cat_eq_all_battleship } }",
+        "available = { has_mio_size > 5 }"
+      ]
+    },
+    {
+      "id": "mio_policy_navy_stable_platforms",
+      "name": "Stable Gunnery Platforms",
+      "allowedEquipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "carrier",
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer",
+        "mio_cat_eq_all_battleship"
+      ],
+      "equipmentBonus": {
+        "same_as_mio": {
+          "naval_light_gun_hit_chance_factor": 0.1,
+          "naval_heavy_gun_hit_chance_factor": 0.1
+        }
+      },
+      "conditions": [
+        "allowed = { OR = { has_mio_equipment_type = capital_ship has_mio_equipment_type = screen_ship has_mio_equipment_type = carrier has_mio_equipment_type = mio_cat_eq_all_carrier has_mio_equipment_type = mio_cat_eq_all_cruiser has_mio_equipment_type = mio_cat_eq_all_destroyer has_mio_equipment_type = mio_cat_eq_all_battleship } }",
+        "available = { has_mio_size > 5 }"
+      ]
+    },
+    {
+      "id": "mio_policy_navy_great_sea_keeping",
+      "name": "Great Sea Keeping",
+      "allowedEquipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "ship_hull_submarine",
+        "carrier",
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer",
+        "mio_cat_eq_all_battleship"
+      ],
+      "equipmentBonus": {
+        "same_as_mio": {
+          "naval_weather_penalty_factor": -0.2
+        }
+      },
+      "conditions": [
+        "allowed = { OR = { has_mio_equipment_type = capital_ship has_mio_equipment_type = screen_ship has_mio_equipment_type = ship_hull_submarine has_mio_equipment_type = carrier has_mio_equipment_type = mio_cat_eq_all_carrier has_mio_equipment_type = mio_cat_eq_all_cruiser has_mio_equipment_type = mio_cat_eq_all_destroyer has_mio_equipment_type = mio_cat_eq_all_battleship } }",
+        "available = { has_mio_size > 5 }"
+      ]
+    },
+    {
+      "id": "mio_policy_navy_coastal_battlefleet",
+      "name": "Coastal Battlefleet",
+      "allowedEquipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "ship_hull_submarine",
+        "carrier",
+        "mio_cat_eq_all_carrier",
+        "mio_cat_eq_all_cruiser",
+        "mio_cat_eq_all_destroyer",
+        "mio_cat_eq_all_battleship"
+      ],
+      "equipmentBonus": {
+        "same_as_mio": {
+          "build_cost_ic": -0.1,
+          "naval_range": -0.25
+        }
+      },
+      "conditions": [
+        "allowed = { OR = { has_mio_equipment_type = capital_ship has_mio_equipment_type = screen_ship has_mio_equipment_type = ship_hull_submarine has_mio_equipment_type = carrier has_mio_equipment_type = mio_cat_eq_all_carrier has_mio_equipment_type = mio_cat_eq_all_cruiser has_mio_equipment_type = mio_cat_eq_all_destroyer has_mio_equipment_type = mio_cat_eq_all_battleship } }",
+        "available = { has_mio_size > 5 }"
+      ]
+    }
+  ]
+}

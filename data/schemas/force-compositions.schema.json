@@ -33,24 +33,32 @@
           },
           "carrierAirwings": {
             "type": "object",
+            "description": "Air wings per carrier, by design ID: one loadout per ship of the design, in ship order (the first is ship 001). Carriers without a loadout have no planes.",
             "additionalProperties": {
               "type": "array",
               "items": {
                 "type": "object",
-                "required": ["planeID", "type", "airwings"],
                 "properties": {
-                  "planeID": { "$ref": "common.schema.json#/$defs/id" },
-                  "type": {
-                    "type": "string",
-                    "enum": ["fighter", "figheter", "bomber"]
-                  },
-                  "airwings": {
-                    "type": "integer",
-                    "minimum": 1
-                  },
-                  "planeCount": {
-                    "type": "integer",
-                    "minimum": 0
+                  "wings": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["planeID"],
+                      "properties": {
+                        "planeID": { "$ref": "common.schema.json#/$defs/id" },
+                        "airwings": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "description": "Number of wings (default 1)."
+                        },
+                        "planeCount": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Planes per wing; 0 or missing means 10."
+                        }
+                      },
+                      "additionalProperties": false
+                    }
                   }
                 },
                 "additionalProperties": false

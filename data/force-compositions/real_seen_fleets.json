@@ -5,14 +5,76 @@
       "id": "Jukki_bb_fleet_usa",
       "shipDesigns": {
         "shbb_4battery_2aa": 6,
-        "39_battleship_pure_la": 8,
-        "39lc_la": 27
+        "39_battleship_pure_la": 10,
+        "36lc_a3_la3": 27,
+        "39lc_la": 10,
+        "39_carrier": 4
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          }
+        ]
       }
     },
     {
       "id": "japan_bc_dd_shbb",
       "shipDesigns": {
-        "shbb_4battery_2aa": 5,
+        "shbb_4battery_2aa": 6,
         "39_battlecruiser_pure_la": 12,
         "dd_3_la": 54
       }

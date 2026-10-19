@@ -53,6 +53,11 @@
             "type": "integer",
             "minimum": 1
           },
+          "navalDominanceFactor": {
+            "description": "The hull equipment's naval_dominance_factor (S-DOMINANCE).",
+            "type": "number",
+            "minimum": 0
+          },
           "baseStats": {
             "$ref": "common.schema.json#/$defs/shipStats"
           },

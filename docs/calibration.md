@@ -11,6 +11,7 @@ Aim for controlled, repeatable fights rather than battles from a real campaign.
 - Both fleets: ship designs (hull and every module), counts, experience level, and the task force's aggressiveness (engagement rule) and repair priority. Plain-text saves record them in the task force as `navy_engagement_rule` inside `mission` (0 Do Not Engage to 4 Always Engage) and `repair_mode` (presumably 0 Never repair to 3 High, the order of the game's repair priority tooltips). Set them in the scenario as `aggressiveness` and `repairPriority`.
 - Researches, doctrines, national spirits and MIOs on both sides. No admirals, or record their skills and traits.
 - Sea region, weather, and the in-game time when the battle starts. Night and weather matter (S-HIT-MODS, A-CADENCE). Weather is not modelled yet, so prefer battles fought with weather off: run the console command `disable_weather` (or `weather`, which toggles it) before the battle, check that the sea region shows no weather, and set `"rules": { "weatherEnabled": false }` in the scenario (S-WEATHER).
+- The task forces' missions and the region's naval dominance: the side that controls the region regains organization 10 % faster (S-ORG-REGAIN, S-DOMINANCE). With both fleets patrolling the battle's region, set `"rules": { "navalDominanceEnabled": true }`; `make_save.py` writes the region's dominance from the scenario's ships so the game starts the same way. Plain-text saves keep it under `region={ <id>={ dominance={ ... } } }`.
 - Who attacked whom.
 
 **Record the result** from the battle screen and the ship list:

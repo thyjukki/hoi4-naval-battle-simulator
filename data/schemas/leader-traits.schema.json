@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "leader-traits.schema.json",
+  "title": "NavySimulator admiral traits",
+  "description": "Unit leader traits of type navy or all (common/unit_leader), written by NavySimulator import-leaders (S-ADMIRAL-TRAIT).",
+  "type": "object",
+  "required": [
+    "traits"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "traits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "The game's name (localisation)."
+          },
+          "traitType": {
+            "type": "string",
+            "description": "The script's trait_type (personality_trait, basic_trait, status_trait, assignable_trait, basic_terrain_trait, assignable_terrain_trait); absent when it gives none."
+          },
+          "modifiers": {
+            "type": "object",
+            "description": "The modifier block's numbers.",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "nonSharedModifiers": {
+            "type": "object",
+            "description": "The non_shared_modifier block.",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "adjusters": {
+            "type": "object",
+            "description": "The modifier block's blocks: naval terrain (water_deep_ocean, ...) and night adjusters.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "attack": {
+                  "type": "number"
+                },
+                "defence": {
+                  "type": "number"
+                },
+                "movement": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "subUnitModifiers": {
+            "type": "object",
+            "description": "sub_unit_modifiers by sub-unit (destroyer, cv_cas, ...).",
+            "additionalProperties": {
+              "type": "object",
+              "description": "Modifiers by the game's key, e.g. naval_damage_factor = 0.05.",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "subUnitAdjusters": {
+            "type": "object",
+            "description": "The units = { } adjusters of sub_unit_modifiers, by sub-unit.",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "attack": {
+                  "type": "number"
+                },
+                "defence": {
+                  "type": "number"
+                },
+                "movement": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "skills": {
+            "type": "object",
+            "description": "Skill levels the trait adds, by the game's key (attack_skill, ...).",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "parents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "traits": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "needed": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "mutuallyExclusive": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scripted": {
+            "type": "array",
+            "description": "Scripted effects the simulator does not run (on_add, enable_ability, ...).",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

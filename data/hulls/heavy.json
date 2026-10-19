@@ -9,6 +9,7 @@
       "equipmentType": "capital_ship",
       "year": 1905,
       "manpower": 3200,
+      "navalDominanceFactor": 240,
       "baseStats": {
         "speed": 18,
         "reliability": 0.65,
@@ -18,7 +19,8 @@
         "subDetection": 1,
         "armor": 26,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2600
+        "productionCost": 2600,
+        "navalRange": 2250
       },
       "slots": [
         {
@@ -137,6 +139,7 @@
       "equipmentType": "capital_ship",
       "year": 1922,
       "manpower": 4000,
+      "navalDominanceFactor": 300,
       "baseStats": {
         "speed": 30,
         "reliability": 0.8,
@@ -146,7 +149,8 @@
         "subDetection": 1,
         "armor": 28,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 2800
+        "productionCost": 2800,
+        "navalRange": 3000
       },
       "slots": [
         {
@@ -274,6 +278,7 @@
       "equipmentType": "capital_ship",
       "year": 1936,
       "manpower": 5200,
+      "navalDominanceFactor": 350,
       "baseStats": {
         "speed": 30,
         "reliability": 0.85,
@@ -283,7 +288,8 @@
         "subDetection": 1,
         "armor": 30,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 3000
+        "productionCost": 3000,
+        "navalRange": 3500
       },
       "slots": [
         {
@@ -425,6 +431,7 @@
       "equipmentType": "capital_ship",
       "year": 1940,
       "manpower": 6000,
+      "navalDominanceFactor": 375,
       "baseStats": {
         "speed": 30,
         "reliability": 0.9,
@@ -434,7 +441,8 @@
         "subDetection": 1,
         "armor": 34,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 3200
+        "productionCost": 3200,
+        "navalRange": 4000
       },
       "slots": [
         {
@@ -584,6 +592,7 @@
       "equipmentType": "capital_ship",
       "year": 1944,
       "manpower": 6000,
+      "navalDominanceFactor": 400,
       "baseStats": {
         "speed": 30,
         "reliability": 0.95,
@@ -593,7 +602,8 @@
         "subDetection": 1,
         "armor": 40,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 3400
+        "productionCost": 3400,
+        "navalRange": 4500
       },
       "slots": [
         {
@@ -756,6 +766,7 @@
       "equipmentType": "capital_ship",
       "year": 1954,
       "manpower": 6000,
+      "navalDominanceFactor": 450,
       "baseStats": {
         "speed": 30,
         "reliability": 0.95,
@@ -765,7 +776,8 @@
         "subDetection": 1,
         "armor": 46,
         "navalWeatherPenaltyFactor": 1,
-        "productionCost": 4000
+        "productionCost": 4000,
+        "navalRange": 5000
       },
       "slots": [
         {

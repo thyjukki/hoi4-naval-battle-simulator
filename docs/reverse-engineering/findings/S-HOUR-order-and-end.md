@@ -189,6 +189,12 @@ to a read, so whether it applies anywhere is UNRESOLVED; nothing in the surface 
 **Verdict: DIFFERS.** The engine applies an [ASSUMED] -25% hit chance from 20:00 to 06:00. The game has **no night effect on
 surface fire**. Night only affects carrier air (and it uses a real darkness value, not a clock window). Confidence: medium-high.
 
+**Update (2026-10-19).** `naval_night_attack` is modifier id 0x107. It is read in the attack getter 0xc34a50 (0xc34de4) and
+multiplied by the darkness of the shooter task force's province, which that getter fetches itself from `0xf19660`
+(0xc34dc7, and 0xc34fec for the admiral's trait `night` adjuster). So naval code does call `0xf19660` outside 0x15c5820,
+and darkness does reach surface attack values through these modifiers (zero unless a country, admiral or ship has them;
+darkness is 0 with weather off). See [S-STATS-COMBAT-GETTER](S-STATS-design-stats.md#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded).
+
 ## Recommended engine changes
 
 1. **S-ORDER**: make `AttackerFirst` the default and fix it:

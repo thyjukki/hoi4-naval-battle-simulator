@@ -17,7 +17,8 @@ public static class DamageRules
     /// chance (<see cref="CriticalChanceFactor"/>); the game applies it in the shot loop, after the logged profile.
     /// </summary>
     public static ShotProfile Profile(Ship shooter, Ship target, WeaponSlot slot, double shooterPositioning, GameDefines defines,
-        double criticalChanceFactor = 1.0)
+        double criticalChanceFactor = 1.0, double darkness = 0, ScreeningSummary shooterScreening = default,
+        ScreeningSummary targetScreening = default)
     {
         var navy = defines.NNavy;
         var shooterStats = shooter.GetFinalStats();
@@ -34,7 +35,7 @@ public static class DamageRules
 
         if (slot == WeaponSlot.Torpedo)
         {
-            attack = shooterStats.TorpedoAttack;
+            attack = CombatStatRules.CombatValue(shooter, shooterStats.TorpedoAttack, false, darkness, defines);
             torpedoFactor = 1.0 - targetStats.TorpedoDamageReductionFactor;
             criticalChance = navy.COMBAT_TORPEDO_CRITICAL_CHANCE * Math.Max(0, 1.0 + targetStats.TorpedoEnemyCriticalChanceFactor);
             criticalMultiplier = navy.COMBAT_TORPEDO_CRITICAL_DAMAGE_MULT;
@@ -46,10 +47,12 @@ public static class DamageRules
             var piercing = slot == WeaponSlot.Heavy ? shooterStats.HeavyPiercing : shooterStats.LightPiercing;
             attack = slot switch
             {
-                WeaponSlot.Heavy => againstSubmarine ? 0 : shooterStats.HeavyAttack,
-                _ => againstSubmarine ? shooterStats.DepthChargeAttack * navy.DEPTH_CHARGES_DAMAGE_MULT : shooterStats.LightAttack
+                WeaponSlot.Heavy => againstSubmarine ? 0 : CombatStatRules.CombatValue(shooter, shooterStats.HeavyAttack, false, darkness, defines),
+                _ => againstSubmarine
+                    ? CombatStatRules.CombatValue(shooter, shooterStats.DepthChargeAttack, false, darkness, defines) * navy.DEPTH_CHARGES_DAMAGE_MULT
+                    : CombatStatRules.CombatValue(shooter, shooterStats.LightAttack, false, darkness, defines)
             };
-            tier = PiercingTier(piercing, CombatArmor(target, targetStats, defines), defines);
+            tier = PiercingTier(piercing, CombatArmor(target, targetStats, defines, darkness), defines);
             piercingFactor = TierValue(navy.NAVY_PIERCING_THRESHOLD_DAMAGE_VALUES, tier);
             criticalChance = navy.COMBAT_BASE_CRITICAL_CHANCE * (1.0 - reliability) * TierValue(navy.NAVY_PIERCING_THRESHOLD_CRITICAL_VALUES, tier);
             criticalMultiplier = 1.0 + (1.0 - reliability) * navy.COMBAT_CRITICAL_DAMAGE_MULT;
@@ -57,8 +60,8 @@ public static class DamageRules
         }
 
         criticalChance *= criticalChanceFactor;
-        var baseDamage = Math.Max(0, attack * AttackFactor(shooter, defines) * piercingFactor *
-                                     DamageMultiplier(shooter, target, shooterPositioning, defines));
+        var baseDamage = Math.Max(0, attack * piercingFactor *
+                                     DamageMultiplier(shooter, target, shooterPositioning, defines, darkness, shooterScreening, targetScreening));
         return new ShotProfile(baseDamage, tier, piercingFactor, criticalChance, criticalMultiplier, torpedoFactor,
             slot == WeaponSlot.Light && againstSubmarine);
     }
@@ -77,30 +80,27 @@ public static class DamageRules
     }
 
     /// <summary>
-    /// S-STATS-COMBAT [RE + CAL] 0xc34a50: the combat attack getter's factor, max(0, 1 + naval_damage_factor). Only the
-    /// experience term is modelled. The hit multiplier adds naval_damage_factor again (logged in-game hits:
-    /// docs/reverse-engineering/findings/LOG-ingame-logging.md).
+    /// S-STATS-COMBAT [RE] 0xc34a50 kind 4: the combat armor the piercing tier is read against (CombatStatRules.CombatValue):
+    /// defence factors by type and naval_defense_factor, no night term.
     /// </summary>
-    public static double AttackFactor(Ship shooter, GameDefines defines)
+    public static double CombatArmor(Ship target, ShipStats targetStats, GameDefines defines, double darkness = 0)
     {
-        return Math.Max(0, 1.0 + ExperienceRules.NavalDamageFactor(shooter, defines));
+        return CombatStatRules.CombatValue(target, targetStats.Armor, true, darkness, defines);
     }
 
     /// <summary>
-    /// S-STATS-COMBAT [RE] 0xc34a50 kind 4: armor x max(0, 1 + naval_defense_factor), the armor the piercing tier is read
-    /// against. Only the experience term is modelled.
+    /// [RE + CAL] max(0, 1 - positioning penalty + shooter naval_damage_factor - target naval_defense_factor), both read
+    /// through the member getter (experience level, country, screening bonuses). The combat attack and armor already
+    /// contain them, so each counts twice (logged in-game hits: docs/reverse-engineering/findings/LOG-ingame-logging.md).
     /// </summary>
-    public static double CombatArmor(Ship target, ShipStats targetStats, GameDefines defines)
-    {
-        return targetStats.Armor * Math.Max(0, 1.0 + ExperienceRules.NavalDefenseFactor(target, defines));
-    }
-
-    /// <summary>[RE] max(0, 1 - positioning penalty + shooter naval_damage_factor - target naval_defense_factor).</summary>
-    public static double DamageMultiplier(Ship shooter, Ship target, double shooterPositioning, GameDefines defines)
+    public static double DamageMultiplier(Ship shooter, Ship target, double shooterPositioning, GameDefines defines, double darkness = 0,
+        ScreeningSummary shooterScreening = default, ScreeningSummary targetScreening = default)
     {
         var multiplier = 1.0 - PositioningRules.DamagePenalty(shooterPositioning, defines) +
-                         ExperienceRules.NavalDamageFactor(shooter, defines) -
-                         ExperienceRules.NavalDefenseFactor(target, defines);
+                         ExperienceRules.NavalDamageFactor(shooter, defines) +
+                         MemberModifierRules.Get(shooter, StaticModifiers.NavalDamageFactor, shooterScreening, darkness, defines) -
+                         ExperienceRules.NavalDefenseFactor(target, defines) -
+                         MemberModifierRules.Get(target, StaticModifiers.NavalDefenseFactor, targetScreening, darkness, defines);
         return Math.Max(0, multiplier);
     }
 

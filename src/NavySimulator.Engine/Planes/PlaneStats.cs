@@ -9,5 +9,5 @@ public record PlaneStats(
     double AirSuperiority = 0,
     double NavalTargeting = 0,
     double Reliability = 0,
-    double ProductionCost = 0);
-
+    double ProductionCost = 0,
+    double Range = 0);

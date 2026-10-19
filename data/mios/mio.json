@@ -1,0 +1,296 @@
+{
+  "$schema": "../schemas/mios.schema.json",
+  "mios": [
+    {
+      "id": "my_mio_with_include",
+      "archetypeOnly": true,
+      "include": "my_custom_mio",
+      "equipmentTypes": [
+        "infantry_equipment",
+        "armor",
+        "cas",
+        "submarine"
+      ],
+      "initialTrait": {
+        "id": "",
+        "x": 0,
+        "y": 0,
+        "limitToEquipmentTypes": [
+          "infantry_equipment"
+        ],
+        "equipmentBonus": {
+          "hard_attack": 0.1
+        },
+        "productionBonus": {
+          "production_cost_factor": -0.1
+        },
+        "organizationModifiers": {
+          "military_industrial_organization_research_bonus": 0.1
+        }
+      },
+      "traits": [
+        {
+          "id": "custom_14",
+          "x": 2,
+          "y": 1,
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_1",
+          "x": 0,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "infantry_equipment"
+          ],
+          "equipmentBonus": {
+            "soft_attack": 0.3
+          },
+          "productionBonus": {
+            "production_efficiency_cap_factor": 0.1
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          },
+          "conditions": [
+            "available = { owner = { has_political_power > 10 } }"
+          ]
+        },
+        {
+          "id": "custom_2",
+          "x": 4,
+          "y": 0,
+          "productionBonus": {
+            "production_cost_factor": -0.2
+          }
+        },
+        {
+          "id": "custom_3",
+          "x": 8,
+          "y": 0,
+          "limitToEquipmentTypes": [
+            "light_tank_chassis"
+          ],
+          "equipmentBonus": {
+            "hard_attack": 0.3
+          }
+        },
+        {
+          "id": "custom_4",
+          "x": 7,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "custom_3"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "custom_5"
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_5",
+          "x": 9,
+          "y": 1,
+          "parents": [
+            {
+              "traits": [
+                "custom_3"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "custom_4"
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_6",
+          "x": 0,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "custom_1"
+              ],
+              "needed": 1
+            }
+          ],
+          "equipmentBonus": {
+            "hard_attack": 0.1
+          },
+          "productionBonus": {
+            "production_cost_factor": -0.1
+          }
+        },
+        {
+          "id": "custom_7",
+          "x": 4,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "custom_2"
+              ],
+              "needed": 1
+            }
+          ],
+          "limitToEquipmentTypes": [
+            "infantry_equipment",
+            "light_tank_chassis"
+          ],
+          "equipmentBonus": {
+            "soft_attack": 0.3
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_8",
+          "x": 8,
+          "y": 2,
+          "parents": [
+            {
+              "traits": [
+                "custom_4",
+                "custom_5"
+              ],
+              "needed": 1
+            }
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_10",
+          "x": 6,
+          "y": 3,
+          "parents": [
+            {
+              "traits": [
+                "custom_7",
+                "custom_8"
+              ],
+              "needed": 2
+            }
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_11",
+          "x": 0,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "custom_6"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "custom_12",
+            "custom_13"
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_12",
+          "x": 4,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "custom_7"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "custom_11",
+            "custom_13"
+          ],
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        },
+        {
+          "id": "custom_13",
+          "x": 7,
+          "y": 4,
+          "parents": [
+            {
+              "traits": [
+                "custom_8"
+              ],
+              "needed": 1
+            }
+          ],
+          "mutuallyExclusive": [
+            "custom_11",
+            "custom_12"
+          ],
+          "productionBonus": {
+            "production_cost_factor": -0.3
+          },
+          "organizationModifiers": {
+            "military_industrial_organization_funds_gain": 0.5
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { always = no }"
+      ]
+    },
+    {
+      "id": "my_capital_ship_mio",
+      "archetypeOnly": true,
+      "equipmentTypes": [
+        "capital_ship",
+        "screen_ship",
+        "submarine"
+      ],
+      "initialTrait": {
+        "id": "",
+        "x": 0,
+        "y": 0,
+        "equipmentBonus": {
+          "hg_attack": 0.1,
+          "armor_value": 0.2,
+          "lg_attack": 0.3
+        }
+      },
+      "traits": [
+        {
+          "id": "custom_1",
+          "x": 0,
+          "y": 0,
+          "equipmentBonus": {
+            "hg_attack": 0.1,
+            "armor_value": 0.2,
+            "lg_attack": 0.3
+          }
+        }
+      ],
+      "conditions": [
+        "allowed = { always = no }"
+      ]
+    }
+  ]
+}

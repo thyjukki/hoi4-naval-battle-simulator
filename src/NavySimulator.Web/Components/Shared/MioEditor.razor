@@ -1,0 +1,169 @@
+@* Editor for a side's state of one MIO (S-MIO): its trait tree laid out as in the game (click a trait to unlock or lock it) and the attached policy. Edits Side.Mios in place. *@
+@using NavySimulator.Web.Services
+@inject Workspace Workspace
+
+<details class="mio" open="@Open">
+    <summary class="row tight">
+        <strong>@MioInfo.Label(Mio)</strong>
+        <span class="small muted">@unlocked / @states.Count traits@(setup?.Policy is { } policy ? $" · {PolicyName(policy)}" : string.Empty)</span>
+        @if (Designs.Count > 0)
+        {
+            <span class="small faint">· @string.Join(", ", Designs)</span>
+        }
+        @if (broken > 0)
+        {
+            <span class="badge escaped" title="Unlocked traits the game would not allow; they are simulated anyway">@broken not allowed</span>
+        }
+    </summary>
+    <div class="stack" style="margin-top: 6px; gap: 6px">
+        @if (Mio.InitialTrait is { } initial)
+        {
+            <div class="small"><span class="muted">Initial trait:</span> @(initial.Name ?? "initial") · @Effect(MioInfo.Summarize(initial))</div>
+        }
+        <div class="mio-tree" style="grid-template-columns: repeat(@columns, minmax(104px, 1fr))">
+            @foreach (var state in states.Where(IsPlaced))
+            {
+                var trait = state;
+                <button class="mio-trait @Css(trait)" style="grid-column: @(Column(trait)); grid-row: @(Row(trait))" title="@Tooltip(trait)" @onclick="() => Toggle(trait)">
+                    <span class="name">@(trait.Unlocked ? "✓ " : string.Empty)@(trait.Trait.Name ?? trait.Trait.ID)</span>
+                    <span class="effect">@(MioInfo.Summarize(trait.Trait.EquipmentBonus) is { Length: > 0 } effect ? effect : "no effect in battle")</span>
+                </button>
+            }
+        </div>
+        @if (states.Any(state => !IsPlaced(state)))
+        {
+            <div class="small muted">Not on the tree grid (no <code>position</code> in the script):</div>
+            <div class="mio-tree" style="grid-template-columns: repeat(auto-fill, minmax(104px, 1fr))">
+                @foreach (var state in states.Where(state => !IsPlaced(state)))
+                {
+                    var trait = state;
+                    <button class="mio-trait @Css(trait)" title="@Tooltip(trait)" @onclick="() => Toggle(trait)">
+                        <span class="name">@(trait.Unlocked ? "✓ " : string.Empty)@(trait.Trait.Name ?? trait.Trait.ID)</span>
+                        <span class="effect">@(MioInfo.Summarize(trait.Trait.EquipmentBonus) is { Length: > 0 } effect ? effect : "no effect in battle")</span>
+                    </button>
+                }
+            </div>
+        }
+        <div class="row tight">
+            <label class="small muted" for="@($"policy-{Mio.ID}")">Policy</label>
+            <select id="@($"policy-{Mio.ID}")" @bind:get="setup?.Policy ?? string.Empty" @bind:set="SetPolicy">
+                <option value="">(none)</option>
+                @foreach (var candidate in policies)
+                {
+                    <option value="@candidate.ID">@(candidate.Name ?? candidate.ID)</option>
+                }
+                @if (setup?.Policy is { } current && policies.All(candidate => candidate.ID != current))
+                {
+                    <option value="@current">@current (not allowed for this MIO)</option>
+                }
+            </select>
+            @if (setup?.Policy is { } attached && Workspace.Catalog.MioPolicies.FirstOrDefault(candidate => candidate.ID == attached) is { } dto)
+            {
+                <span class="small muted">@MioInfo.Summarize(dto)</span>
+            }
+            <button class="small ghost right" @onclick="Clear" disabled="@(setup is null)">Reset</button>
+        </div>
+    </div>
+</details>
+
+@code {
+    private MioSetupDto? setup;
+    private IReadOnlyList<MioTraitState> states = [];
+    private IReadOnlyList<MioPolicyDto> policies = [];
+    private int unlocked;
+    private int broken;
+    private double minX;
+    private double minY;
+    private int columns = 1;
+
+    [Parameter, EditorRequired] public MioDto Mio { get; set; } = null!;
+    [Parameter, EditorRequired] public BattleParticipantDto Side { get; set; } = null!;
+
+    /// <summary>The side's designs assigned to this MIO.</summary>
+    [Parameter] public IReadOnlyList<string> Designs { get; set; } = [];
+
+    [Parameter] public bool Open { get; set; }
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        setup = Side.Mios.GetValueOrDefault(Mio.ID);
+        states = MioInfo.Traits(Mio, setup);
+        policies = Workspace.PoliciesFor(Mio);
+        unlocked = states.Count(state => state.Unlocked);
+        broken = states.Count(state => state.Broken);
+        var placed = states.Where(IsPlaced).Select(state => state.Trait).ToList();
+        minX = placed.Count == 0 ? 0 : placed.Min(trait => trait.X);
+        minY = placed.Count == 0 ? 0 : placed.Min(trait => trait.Y);
+        columns = placed.Count == 0 ? 1 : (int)Math.Round(placed.Max(trait => trait.X) - minX) + 1;
+    }
+
+    // [RE] (−1, −1) is the game's unset position ("position is not set").
+    private static bool IsPlaced(MioTraitState state) => state.Trait.X != -1 || state.Trait.Y != -1;
+
+    private int Column(MioTraitState state) => (int)Math.Round(state.Trait.X - minX) + 1;
+
+    private int Row(MioTraitState state) => (int)Math.Round(state.Trait.Y - minY) + 1;
+
+    private static string Css(MioTraitState state)
+    {
+        return state.Broken ? "broken" : state.Unlocked ? "on" : state.Available ? "ready" : "locked";
+    }
+
+    private static string Effect(string summary) => summary.Length == 0 ? "–" : summary;
+
+    private string Tooltip(MioTraitState state)
+    {
+        var lines = new List<string> { state.Trait.ID, MioInfo.Summarize(state.Trait) };
+        var names = (Mio.Traits ?? []).ToDictionary(trait => trait.ID, trait => trait.Name ?? trait.ID);
+        string Name(string id) => names.GetValueOrDefault(id) ?? id;
+
+        foreach (var parent in state.Trait.Parents ?? [])
+        {
+            var which = parent.Needed == parent.Traits.Count && parent.Needed > 1 ? "all of" : parent.Needed == 1 ? "one of" : $"{parent.Needed} of";
+            lines.Add($"Needs {which}: {string.Join(", ", parent.Traits.Select(Name))}");
+        }
+
+        if ((state.Trait.MutuallyExclusive ?? []).Count > 0)
+        {
+            lines.Add($"Excludes: {string.Join(", ", state.Trait.MutuallyExclusive!.Select(Name))}");
+        }
+
+        if ((state.Trait.LimitToEquipmentTypes ?? []).Count > 0)
+        {
+            lines.Add($"Only for: {string.Join(", ", state.Trait.LimitToEquipmentTypes!)}");
+        }
+
+        lines.AddRange(state.Trait.Conditions ?? []);
+
+        if (state.Broken)
+        {
+            lines.Add(state.Conflicts.Count > 0 ? $"Not allowed: {Name(state.Conflicts[0])} is unlocked" : "Not allowed: its parents are not unlocked");
+        }
+
+        return string.Join("\n", lines);
+    }
+
+    private string PolicyName(string id)
+    {
+        return Workspace.Catalog.MioPolicies.FirstOrDefault(policy => policy.ID == id)?.Name ?? id;
+    }
+
+    private async Task Toggle(MioTraitState state)
+    {
+        MioInfo.SetTrait(Side, Mio.ID, state.Trait.ID, !state.Unlocked);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetPolicy(string value)
+    {
+        MioInfo.SetPolicy(Side, Mio.ID, value);
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task Clear()
+    {
+        Side.Mios.Remove(Mio.ID);
+        await OnChanged.InvokeAsync();
+    }
+}
