@@ -62,7 +62,7 @@ public class SetupLoaderTests
             File.WriteAllText(Path.Combine(dataDirectory, "researches", "country.json"), """
                 {
                   "researches": [
-                    { "id": "test_doctrine", "countryModifiers": { "naval_retreat_speed": 0.1, "naval_speed_factor": 0.05 } }
+                    { "id": "test_doctrine", "countryModifiers": { "naval_retreat_speed": 0.1, "naval_mines_damage_factor": 0.05 } }
                   ]
                 }
                 """);
@@ -71,7 +71,7 @@ public class SetupLoaderTests
             var research = ContentLibrary.From(catalog).Researches["test_doctrine"];
 
             Assert.Equal(0.1, research.CountryModifiers.Get("naval_retreat_speed"), 9);
-            Assert.Contains("researches/country.json 'test_doctrine': country modifier 'naval_speed_factor' is not simulated yet and is ignored.", catalog.Warnings);
+            Assert.Contains("researches/country.json 'test_doctrine': country modifier 'naval_mines_damage_factor' is not simulated yet and is ignored.", catalog.Warnings);
             Assert.DoesNotContain(catalog.Warnings, warning => warning.Contains("'naval_retreat_speed'"));
         }
         finally

@@ -10,6 +10,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "hp": 5,
         "heavyAttack": 10,
@@ -31,6 +34,9 @@
       "categoryName": "Medium Battery",
       "addEquipmentTypes": [
         "capital_ship"
+      ],
+      "criticalParts": [
+        "damaged_heavy_guns"
       ],
       "statModifiers": {
         "hp": 10,
@@ -54,6 +60,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "hp": 15,
         "heavyAttack": 18,
@@ -76,6 +85,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "hp": 20,
         "heavyAttack": 22,
@@ -95,6 +107,9 @@
       "shortName": "Light Cruiser Battery I",
       "category": "ship_light_medium_battery",
       "categoryName": "Light Medium Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 3,
         "productionCost": 400
@@ -112,6 +127,9 @@
       "shortName": "Light Cruiser Battery II",
       "category": "ship_light_medium_battery",
       "categoryName": "Light Medium Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 6,
         "productionCost": 450
@@ -129,6 +147,9 @@
       "shortName": "Light Cruiser Battery III",
       "category": "ship_light_medium_battery",
       "categoryName": "Light Medium Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 9,
         "productionCost": 500
@@ -146,6 +167,9 @@
       "shortName": "Light Cruiser Battery Auto-loading",
       "category": "ship_light_medium_battery",
       "categoryName": "Light Medium Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 12,
         "productionCost": 550
@@ -163,6 +187,9 @@
       "shortName": "Light Cruiser Battery IV",
       "category": "ship_light_medium_battery",
       "categoryName": "Light Medium Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 8,
         "antiAir": 6,

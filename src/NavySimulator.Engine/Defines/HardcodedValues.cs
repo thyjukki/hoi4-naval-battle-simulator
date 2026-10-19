@@ -37,6 +37,12 @@ public sealed class HardcodedValues
     // [RE] S-SUB: lower bound of (SUBMARINE_BASE_STEALTH_VALUE - visibility) in the reveal chance.
     public double MinSubmarineStealthDivider { get; set; } = 0.1;
 
+    // [RE] S-STATS-COMBAT 0xc3a740: lower bound of the combat speed factor 1 + naval_speed_factor.
+    public double MinCombatSpeedFactor { get; set; } = 0.1;
+
+    // [RE] S-STATS-COMBAT 0xc3d4a3: lower bound of the maximum organization.
+    public double MinMaxOrganization { get; set; } = 0.001;
+
     // [ASSUMED] S-NIGHT: province darkness is 1 from NightStartHour to NightEndHour and 0 otherwise. The game computes
     // darkness per province from the day/night terminator; that model is not decoded.
     public int NightStartHour { get; set; } = 20;

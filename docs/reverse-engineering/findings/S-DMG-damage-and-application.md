@@ -127,21 +127,34 @@ Chance (0x1974511..0x19745f1), evaluated on each crit:
 - A counter at stats +0x124 counts crits.
 
 Part damage `0xc34500(ship, &strDmg, &orgDmg)`:
-- Candidates: the ship's sub-unit `critical_parts` (ship +0x550), plus the `critical_parts` of every module in every design slot (slot list +0x60 → module → +0xb8 → +0x240). `0xc31030` merges each candidate into (part, max instances).
-- A candidate is dropped if it is already damaged `count >= maxInstances` times (the damaged list is ship +0x918; -1 means unlimited). By the file's comments, max instances come from `base_damage_instance` and `damage_instance_per_added_module`, capped at `max_damage_instance`. I did not trace that aggregation in `0xc31030`.
+- Candidates: the ship's sub-unit `critical_parts` (ship +0x550), plus the `critical_parts` of every module in every design slot (slot list +0x60 → module → +0xb8 → +0x240). `0xc31030` merges each candidate into a list of 16-byte entries `{part*, int maxInstances}`:
+
+```
+merge(list, part):                                  // 0xc31030
+    for entry in list:                              // 0xc31052 loop
+        if entry.part == part:                      // found (0xc31125)
+            if entry.max > -1:
+                entry.max += part.damage_instance_per_added_module   // +0x174
+                if part.max_damage_instance > -1:                    // +0x178
+                    entry.max = min(entry.max, part.max_damage_instance)
+            return
+    list.append({part, part.base_damage_instance})  // +0x170 (0xc31064)
+```
+
+  So a part listed by several modules is one candidate (one weight in the pick), not one per module. [CAL] Only the merged list fits the logged picks: with one entry per module the heavy-gun share of a 4-battery SHBB would be several times larger.
+- Slot order [CAL]: the slot list +0x60 is walked in the order of the slot **names'** first appearance in `common/units/equipment/*.txt` (files in load order; the names are interned when the files are read), not in the hull's own slot order. For TFB over vanilla: `fixed_ship_anti_air_slot`, `fixed_ship_radar_slot`, `fixed_ship_engine_slot`, `fixed_ship_secondaries_slot`, `front_1`, `mid_1`, `mid_2`, `rear_1`, `mid_3`, `rear_2`, `fixed_ship_armor_slot`, `front_2`, `fixed_ship_battery_slot`, `fixed_ship_fire_control_system_slot`, `fixed_ship_torpedo_slot` (`_custom_slot` left out). All 26 part picks of 18 logged TFB battles fit this order; the hull order gave two wrong picks (an SHBB's heavy guns at 5709, a light cruiser's secondaries at 5657). The walk itself was not traced.
+- Part defaults (constructor `0x1019290`, from `0xac3130`): +0x148 str_damage_multiplier 1, +0x150 org_damage_multiplier 1, +0x158 str_damage 0, +0x160 org_damage 0, +0x168 chance 1 (all fx5), +0x170 base_damage_instance 1, +0x174 damage_instance_per_added_module 0, +0x178 max_damage_instance −1.
+- A candidate is dropped if it is already damaged `count >= maxInstances` times (the damaged list is ship +0x918; -1 means unlimited).
 - Weighted pick: `r = trunc(U × Σ chance)` (roll tagged ship.cpp 0x78f). Walk the candidates in order with `r −= chance` and pick the first that takes `r` below 0 (falls back to the last candidate). `chance` is the part's weight field, +0x168.
 - Damage: `strDmg = trunc(strDmg × str_damage_multiplier) + str_damage`, and `orgDmg = trunc(orgDmg × org_damage_multiplier) + org_damage` (part fields +0x148/+0x158 and +0x150/+0x160). This **replaces** the crit multiplier: the caller skips the crit multiplier when `0xc34500` returns true (0x197461f).
 - The part is added to (or its count incremented in) ship +0x918. `0xc3d090(ship, 1)` then recomputes the ship stats, and the task-force refresh is called.
 - If there are no candidates, the function returns false and the normal crit multiplier applies.
-- Part effects come from data (`common/units/critical_parts/00_critical_parts.txt`): `stat_penalties` are factors on the ship's stats, summed over instances; `modifier` adds to the ship's modifiers. In the modifier sum `0xc38760` (0xc38b21..0xc38be2), each damaged part contributes `modifierValue × count × (1 + NAVAL_CRITICAL_EFFECT_FACTOR)`. That is the only place NAVAL_CRITICAL_EFFECT_FACTOR is used here: it scales part effects, not crit damage.
+- Part effects come from data (`common/units/critical_parts/00_critical_parts.txt`): `stat_penalties` are factors on the ship's stats, `stat × max(0, 1 + count × penalty)` (0xc3d340); `modifier` adds to the ship's modifiers. [CAL] In the logged battles the penalties showed in the attacks only (heavy ×0.5, secondaries' light ×0.75); a short-circuited radar's `surface_detection`, `sub_detection` and hit chance penalties changed neither positioning's detection sum (110 of 110 side-hours) nor any logged hit chance, so the readers of those stats do not read the recomputed values. Which reader reads which copy is not traced. In the modifier sum `0xc38760` (0xc38b21..0xc38be2), each damaged part contributes `modifierValue × count × (1 + NAVAL_CRITICAL_EFFECT_FACTOR)`. That is the only place NAVAL_CRITICAL_EFFECT_FACTOR is used here: it scales part effects, not crit damage.
 - Vanilla parts. Hulls (DD, CL, CA, BB, BC) have `rudder_jammed, destroyed_ammo_storage, broken_propeller, on_fire`. Carriers have `damaged_flight_deck` instead of `rudder_jammed`. Submarines add `ballast_tanks_inoperable, leaking_pressure_hull, battery_leak`. Gun, torpedo, radar and similar modules add `damaged_light_guns`, `damaged_heavy_guns`, `damaged_secondaries`, `damaged_torpedoes`, `jammed_torpedo`, `shortcircuited_radar_N`, `fire_direction_breakdown`, `coolant_loss`, `broken_diesel`, `leaking_*` and others. Examples: `destroyed_ammo_storage` (chance 0.1, ×10 str and org, −70% hg/lg/torpedo attack); `on_fire` (org ×2 +5, navy_org_factor −0.5, naval_morale_factor −0.8); `broken_propeller` (chance 0.5, ×0.5, speed −90%); `rudder_jammed` (chance 0.25, ×0.25, retreat chance −90%, speed −50%).
 
-**Verdict.** **DIFFERS / NEW**:
-- The engine uses `CHANCE / max(rel, 0.01)` with a roll every time and a clamp at 1. The game multiplies by `critical_part_damage_chance_mult`, skips the roll when `p >= 1` or `rel <= 0`, and its "damaged" condition is `U < p`.
-- A part hit replaces the crit multiplier with the part's own multipliers and additive damage.
-- Part effects persist on the ship (stat penalties and modifiers scaled by NAVAL_CRITICAL_EFFECT_FACTOR).
+**Verdict.** **MATCHES** (since 2026-10-19; `CriticalPartRules`, `ShipDesign.CriticalPartCandidates`, `Ship.DamagePart`): the chance with `critical_part_damage_chance_mult` and the skipped roll, the merged candidates in the game's slot order, the weighted pick, the replaced crit multiplier, the stat penalties on the attacks and the part modifiers × (1 + NAVAL_CRITICAL_EFFECT_FACTOR). The replayed `jukki_usa_vs_bc_japan` battle matches all 10,257 shots ([LOG](LOG-ingame-logging.md)).
 
-**Confidence.** High for control flow and the multiplier replacement. Medium for the field-to-key mapping (+0x148 to +0x168 matched to the file keys by role and defaults) and for the instance counting.
+**Confidence.** High for control flow, the multiplier replacement, the defaults and the merge. Medium for the field-to-key mapping (+0x148 to +0x168 matched to the file keys by role and defaults, then confirmed by the logged damage). The slot order and the stats the penalties reach are calibrated, not traced.
 
 ## S-XP: manpower and experience loss on damage (`0xc3e0e0`, flag = 0)
 

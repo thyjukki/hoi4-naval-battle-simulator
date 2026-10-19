@@ -11,6 +11,7 @@ Map each schema to these patterns:
 - `hulls.schema.json` -> `data/hulls/*.json`
 - `modules.schema.json` -> `data/modules/*.json`
 - `ship-types.schema.json` -> `data/ship-types/*.json`
+- `critical-parts.schema.json` -> `data/critical-parts/*.json`
 - `mios.schema.json` -> `data/mios/*.json`
 - `ship-designs.schema.json` -> `data/ship-designs/*.json`
 - `researches.schema.json` -> `data/researches/*.json`
@@ -19,7 +20,7 @@ Map each schema to these patterns:
 ## Notes
 
 - `common.schema.json` holds shared definitions (roles + stat blocks).
-- `hulls/`, `modules/` and `ship-types/` are written by `NavySimulator import-ship-data` with the game's IDs; designs, researches, MIOs and spirits reference those IDs.
+- `hulls/`, `modules/`, `ship-types/` and `critical-parts/` are written by `NavySimulator import-ship-data` with the game's IDs; designs, researches, MIOs and spirits reference those IDs.
 - Stat blocks allow additional numeric properties to support imported/experimental keys present in current JSONs.
 - `mios`, `researches`, and `spirits` currently accept both `statMultiplier` and `statMultipliers` because current files use both styles.
 

@@ -57,7 +57,7 @@
 - GUI: keep logic in `src/NavySimulator.Web/Services/` (plain classes, tested in `tests/NavySimulator.Web.Tests`) and Razor components thin. Read battle state only through `BattleRunner.View`, which copies it under the stepping lock. Document user-visible GUI changes in `docs/gui.md`.
 - Define values: never hand-copy numbers into code. Add a property to the defines class with the exact game key and vanilla default; see `docs/mechanics/defines.md`.
 - Add regression tests in `tests/NavySimulator.Engine.Tests/Mechanics/` (rule-level, use `ScriptedRandomSource` for exact rolls) or `Battles/` (engine-level).
-- Hull, module and ship type data: never hand-edit `data/hulls/`, `data/modules/` or `data/ship-types/`; re-import them with `dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "<HOI4 dir>" --mod "<mod dir>"` (the user's data is TFB's: the local dev checkout over vanilla). IDs and names are the game's.
+- Hull, module, ship type and critical part data: never hand-edit `data/hulls/`, `data/modules/`, `data/ship-types/` or `data/critical-parts/`; re-import them with `dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "<HOI4 dir>" --mod "<mod dir>"` (the user's data is TFB's: the local dev checkout over vanilla). IDs and names are the game's.
 - Reverse-engineering: check `docs/reverse-engineering/index.md` before decoding anything in hoi4.exe; add every newly decoded function and field to it, with pseudocode in a findings file.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 

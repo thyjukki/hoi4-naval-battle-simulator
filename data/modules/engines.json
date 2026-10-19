@@ -59,6 +59,9 @@
       "shortName": "Submarine Engine I",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statModifiers": {
         "productionCost": 90
       },
@@ -72,6 +75,9 @@
       "shortName": "Submarine Engine II",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statModifiers": {
         "productionCost": 120
       },
@@ -85,6 +91,9 @@
       "shortName": "Submarine Engine III",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statModifiers": {
         "productionCost": 150
       },
@@ -99,6 +108,9 @@
       "shortName": "Submarine Engine IV",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statModifiers": {
         "productionCost": 170
       },
@@ -112,6 +124,9 @@
       "name": "Air-Independent Propulsion",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statMultipliers": {
         "speed": 0.15,
         "subVisibility": -0.05,
@@ -123,6 +138,9 @@
       "name": "AIP-Diesel Combination Engine",
       "category": "sub_ship_engine",
       "categoryName": "Submarine Engines",
+      "criticalParts": [
+        "broken_diesel"
+      ],
       "statMultipliers": {
         "speed": 0.15,
         "subVisibility": -0.1,
@@ -146,6 +164,9 @@
       "shortName": "Submarine Reactor",
       "category": "sub_ship_nuclear_engine",
       "categoryName": "Submarine Nuclear Engines",
+      "criticalParts": [
+        "coolant_loss"
+      ],
       "statMultipliers": {
         "speed": 0.1,
         "productionCost": 0.25
@@ -261,6 +282,9 @@
       "shortName": "Heavy Ship Reactor",
       "category": "heavy_ship_nuclear_engine",
       "categoryName": "Heavy Ship Nuclear Engines",
+      "criticalParts": [
+        "coolant_loss"
+      ],
       "statMultipliers": {
         "speed": 0.6,
         "productionCost": 0.25
@@ -324,6 +348,9 @@
       "shortName": "Carrier Reactor",
       "category": "carrier_ship_nuclear_engine",
       "categoryName": "Carrier Nuclear Engines",
+      "criticalParts": [
+        "coolant_loss"
+      ],
       "statMultipliers": {
         "speed": 0.6,
         "productionCost": 0.25

@@ -42,7 +42,7 @@ public static class HitChanceRules
 
         var stats = target.GetFinalStats();
         var visibility = Math.Max(0, target.Role == ShipRole.Submarine ? stats.SubVisibility : stats.SurfaceVisibility);
-        var speedTerm = Math.Max(stats.Speed * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
+        var speedTerm = Math.Max(CombatStatRules.CombatSpeed(target, defines) * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
         return visibility * navy.HIT_PROFILE_MULT / (speedTerm + navy.HIT_PROFILE_SPEED_BASE);
     }
 
@@ -59,7 +59,7 @@ public static class HitChanceRules
     {
         var navy = defines.NNavy;
         var stats = shooter.GetFinalStats();
-        var orgRatio = stats.Organization > 0 ? Math.Clamp(shooter.CurrentOrganization / stats.Organization, 0, 1) : 1;
+        var orgRatio = Math.Clamp(shooter.CurrentOrganization / CombatStatRules.MaxOrganization(shooter, defines), 0, 1);
         var manpowerRatio = shooter.MaxManpower > 0 ? Math.Clamp(shooter.CurrentManpower / (double)shooter.MaxManpower, 0, 1) : 1;
         return Math.Max(0, 1.0 + navy.COMBAT_LOW_ORG_HIT_CHANCE_PENALTY * (1.0 - orgRatio) +
                            navy.COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY * (1.0 - manpowerRatio));

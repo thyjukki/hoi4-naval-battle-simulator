@@ -64,6 +64,7 @@ public sealed class ShipDataImporterTests : IDisposable
                 ship_light_battery_1 = {
                     category = ship_light_battery
                     add_stats = { lg_attack = 1 build_cost_ic = 90 }
+                    critical_parts = { damaged_light_guns }
                 }
                 ship_medium_battery_1 = {
                     category = ship_medium_battery
@@ -88,7 +89,16 @@ public sealed class ShipDataImporterTests : IDisposable
                     need = { ship_hull_cruiser = 1 }
                     need_equipment_modules = { any = { ship_armor_cruiser_1 = 1 } }
                     max_organisation = 40
+                    critical_parts = { on_fire }
+                    critical_part_damage_chance_mult = 0.5
                 }
+            }
+            """);
+        Write(game, "common/units/critical_parts/00_critical_parts.txt", """
+            critical_parts = {
+                damaged_light_guns = { stat_penalties = { lg_attack = -0.5 } damage_instance_per_added_module = 1 }
+                on_fire = { org_damage_multiplier = 2 org_damage = 5 modifier = { navy_org_factor = -0.5 } }
+                unused_part = { chance = 0.3 }
             }
             """);
         Write(game, "common/units/infantry.txt", "sub_units = { infantry = { type = { infantry } need = { infantry_equipment = 100 } } }");
@@ -205,6 +215,41 @@ public sealed class ShipDataImporterTests : IDisposable
     }
 
     [Fact]
+    public void CriticalParts_ComeFromTheirFolder_OnlyThoseInUse_WithTheGamesDefaults()
+    {
+        var import = ShipDataImporter.Read(new GameFileSystem(game));
+        var guns = import.CriticalParts.Single(part => part.ID == "damaged_light_guns");
+        var fire = import.CriticalParts.Single(part => part.ID == "on_fire");
+        var shipType = Assert.Single(import.ShipTypes);
+
+        Assert.Equal(["damaged_light_guns", "on_fire"], import.CriticalParts.Select(part => part.ID).Order(StringComparer.Ordinal));
+        Assert.Equal(-0.5, guns.StatPenalties.LightAttack);
+        Assert.Equal(1, guns.DamageInstancePerAddedModule);
+        Assert.Equal((1, 1, -1), (guns.Chance, guns.BaseDamageInstance, guns.MaxDamageInstance));
+        Assert.Equal((2, 5), (fire.OrgDamageMultiplier, fire.OrgDamage));
+        Assert.Equal(-0.5, fire.Modifiers["navy_org_factor"]);
+        Assert.Equal(["damaged_light_guns"], import.Modules.Single(module => module.ID == "ship_light_battery_1").CriticalParts);
+        Assert.Equal(["on_fire"], shipType.CriticalParts);
+        Assert.Equal(0.5, shipType.CriticalPartDamageChanceMult);
+    }
+
+    [Fact]
+    public void Slots_GetTheGamesOrder_TheFirstAppearanceOfTheirNameInTheEquipmentFiles()
+    {
+        var import = ShipDataImporter.Read(new GameFileSystem(game));
+        var expected = new Dictionary<string, int?>
+        {
+            ["fixed_ship_battery_slot"] = 0,
+            ["fixed_ship_armor_slot"] = 1,
+            ["mid_1_custom_slot"] = 2,
+            ["mid_2_custom_slot"] = 3,
+            ["front_1_custom_slot"] = 4
+        };
+
+        Assert.All(import.Hulls.SelectMany(hull => hull.Slots), slot => Assert.Equal(expected[slot.ID], slot.GameOrder));
+    }
+
+    [Fact]
     public void Names_ComeFromTheLocalisation()
     {
         var import = ShipDataImporter.Read(new GameFileSystem(game));
@@ -243,11 +288,13 @@ public sealed class ShipDataImporterTests : IDisposable
         var files = ShipDataWriter.Write(data, import);
         var catalog = new SetupLoader().ReadCatalog(data);
 
-        Assert.Equal(["hulls/cruiser.json", "modules/armor.json", "modules/light-guns.json", "modules/medium-guns.json", "ship-types/ship-types.json"], files);
+        Assert.Equal(["critical-parts/critical-parts.json", "hulls/cruiser.json", "modules/armor.json", "modules/light-guns.json", "modules/medium-guns.json", "ship-types/ship-types.json"], files);
         Assert.Equal(["ship_hull_cruiser_1", "ship_hull_cruiser_2"], catalog.Hulls.Select(hull => hull.ID));
         Assert.Equal(4, catalog.Hulls[0].Slots.Count);
         Assert.Equal(-0.05, catalog.Modules.Single(module => module.ID == "ship_armor_cruiser_1").StatMultipliers.Speed);
         Assert.Equal("light_cruiser", Assert.Single(catalog.ShipTypes).ID);
+        Assert.Equal(2, catalog.CriticalParts.Count);
+        Assert.Equal(4, catalog.Hulls[1].Slots.Single(slot => slot.ID == "front_1_custom_slot").GameOrder);
         Assert.DoesNotContain("\"required\": false", File.ReadAllText(Path.Combine(data, "hulls", "cruiser.json")));
     }
 

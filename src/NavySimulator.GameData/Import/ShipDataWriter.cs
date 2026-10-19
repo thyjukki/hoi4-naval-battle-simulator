@@ -7,14 +7,15 @@ namespace NavySimulator.GameData.Import;
 
 /// <summary>
 /// Writes a <see cref="ShipDataImport"/> to a data directory: <c>hulls/</c> (one file per archetype), <c>modules/</c>
-/// (one file per kind of module) and <c>ship-types/ship-types.json</c>. These folders belong to the import: their old
-/// JSON files are deleted first. Zero stats and empty lists are left out.
+/// (one file per kind of module), <c>ship-types/ship-types.json</c> and <c>critical-parts/critical-parts.json</c>. These
+/// folders belong to the import: their old JSON files are deleted first. Zero stats and empty lists are left out.
 /// </summary>
 public static class ShipDataWriter
 {
     public const string HullsFolder = "hulls";
     public const string ModulesFolder = "modules";
     public const string ShipTypesFolder = "ship-types";
+    public const string CriticalPartsFolder = "critical-parts";
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -55,7 +56,12 @@ public static class ShipDataWriter
             Add($"{ShipTypesFolder}/ship-types.json", "../schemas/ship-types.schema.json", "shipTypes", ShipType(shipType));
         }
 
-        foreach (var folder in new[] { HullsFolder, ModulesFolder, ShipTypesFolder })
+        foreach (var part in import.CriticalParts)
+        {
+            Add($"{CriticalPartsFolder}/critical-parts.json", "../schemas/critical-parts.schema.json", "criticalParts", CriticalPart(part));
+        }
+
+        foreach (var folder in new[] { HullsFolder, ModulesFolder, ShipTypesFolder, CriticalPartsFolder })
         {
             var directory = Path.Combine(dataDirectory, folder);
             Directory.CreateDirectory(directory);
@@ -122,6 +128,12 @@ public static class ShipDataWriter
             }
 
             slotNode["allowedCategories"] = Words(slot.AllowedCategories);
+
+            if (slot.GameOrder is { } order)
+            {
+                slotNode["gameOrder"] = order;
+            }
+
             return (JsonNode)slotNode;
         }).ToArray());
 
@@ -162,6 +174,7 @@ public static class ShipDataWriter
         AddText(node, "categoryName", module.CategoryName);
         AddWords(node, "addEquipmentTypes", module.AddEquipmentTypes);
         AddWords(node, "forbiddenCategories", module.ForbiddenCategories);
+        AddWords(node, "criticalParts", module.CriticalParts);
         AddStats(node, "statModifiers", module.StatModifiers);
         AddStats(node, "statAverages", module.StatAverages);
         AddStats(node, "statMultipliers", module.StatMultipliers);
@@ -178,7 +191,46 @@ public static class ShipDataWriter
         node["hulls"] = Words(shipType.Hulls);
         AddWords(node, "requiredModules", shipType.RequiredModules);
         node["organization"] = shipType.Organization;
+        AddWords(node, "criticalParts", shipType.CriticalParts);
+        AddNumber(node, "criticalPartDamageChanceMult", shipType.CriticalPartDamageChanceMult, 1);
         return node;
+    }
+
+    private static JsonObject CriticalPart(CriticalPartDto part)
+    {
+        var node = new JsonObject { ["id"] = part.ID };
+        AddText(node, "name", part.Name);
+        AddNumber(node, "chance", part.Chance, 1);
+        AddNumber(node, "strDamageMultiplier", part.StrDamageMultiplier, 1);
+        AddNumber(node, "orgDamageMultiplier", part.OrgDamageMultiplier, 1);
+        AddNumber(node, "strDamage", part.StrDamage, 0);
+        AddNumber(node, "orgDamage", part.OrgDamage, 0);
+        AddNumber(node, "baseDamageInstance", part.BaseDamageInstance, 1);
+        AddNumber(node, "damageInstancePerAddedModule", part.DamageInstancePerAddedModule, 0);
+        AddNumber(node, "maxDamageInstance", part.MaxDamageInstance, -1);
+        AddStats(node, "statPenalties", part.StatPenalties);
+
+        if (part.Modifiers.Count > 0)
+        {
+            var modifiers = new JsonObject();
+
+            foreach (var (key, value) in part.Modifiers)
+            {
+                modifiers[key] = Math.Round(value, 10);
+            }
+
+            node["modifiers"] = modifiers;
+        }
+
+        return node;
+    }
+
+    private static void AddNumber(JsonObject node, string name, double value, double defaultValue)
+    {
+        if (value != defaultValue)
+        {
+            node[name] = Math.Round(value, 10);
+        }
     }
 
     private static JsonObject Stats(ShipStatsDto stats)

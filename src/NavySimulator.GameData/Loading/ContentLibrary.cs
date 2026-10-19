@@ -40,6 +40,7 @@ public sealed class ContentLibrary
     public static ContentLibrary From(ContentCatalog catalog)
     {
         var hulls = new Dictionary<string, Hull>();
+        var parts = new Dictionary<string, CriticalPart>();
         var modules = new Dictionary<string, StatModule>();
         var shipTypes = new Dictionary<string, ShipType>();
         var mios = new Dictionary<string, MioBonus>();
@@ -55,11 +56,31 @@ public sealed class ContentLibrary
                 hull.EquipmentType,
                 hull.Manpower,
                 hull.BaseStats.ToDomain(),
-                (hull.Slots ?? []).Select(slot => new ModuleSlot(slot.ID, slot.Required, slot.AllowedCategories ?? [])).ToList(),
+                (hull.Slots ?? []).Select((slot, index) => new ModuleSlot(slot.ID, slot.Required, slot.AllowedCategories ?? [], slot.GameOrder ?? index)).ToList(),
                 (hull.ModuleCountLimits ?? [])
                     .Select(limit => new ModuleCountLimit(limit.Modules ?? [], limit.Categories ?? [], limit.Operator, limit.Count))
                     .ToList()));
         }
+
+        foreach (var part in catalog.CriticalParts.Where(part => !string.IsNullOrWhiteSpace(part.ID)))
+        {
+            parts.TryAdd(part.ID, new CriticalPart(
+                part.ID,
+                part.Chance,
+                part.StrDamageMultiplier,
+                part.OrgDamageMultiplier,
+                part.StrDamage,
+                part.OrgDamage,
+                part.BaseDamageInstance,
+                part.DamageInstancePerAddedModule,
+                part.MaxDamageInstance,
+                part.StatPenalties.ToDomain(),
+                new ModifierSet(part.Modifiers ?? [])));
+        }
+
+        // Unknown part IDs are left out (the loader warns about them).
+        List<CriticalPart> Parts(IEnumerable<string>? ids) =>
+            (ids ?? []).Where(parts.ContainsKey).Select(id => parts[id]).ToList();
 
         foreach (var module in catalog.Modules.Where(module => !string.IsNullOrWhiteSpace(module.ID)))
         {
@@ -70,7 +91,8 @@ public sealed class ContentLibrary
                 module.StatAverages.ToDomain(),
                 module.Category,
                 module.AddEquipmentTypes ?? [],
-                module.ForbiddenCategories ?? []));
+                module.ForbiddenCategories ?? [],
+                Parts(module.CriticalParts)));
         }
 
         foreach (var shipType in catalog.ShipTypes.Where(shipType => !string.IsNullOrWhiteSpace(shipType.ID)))
@@ -84,7 +106,9 @@ public sealed class ContentLibrary
                     shipType.Priority,
                     shipType.Hulls ?? [],
                     shipType.RequiredModules ?? [],
-                    shipType.Organization));
+                    shipType.Organization,
+                    Parts(shipType.CriticalParts),
+                    shipType.CriticalPartDamageChanceMult));
             }
         }
 
@@ -150,7 +174,8 @@ public sealed class ContentLibrary
             problems?.Add($"hull '{hull.ID}' has no slot '{slotId}'");
         }
 
-        var modules = hull.Slots.Where(slot => modulesBySlot.ContainsKey(slot.ID)).Select(slot => modulesBySlot[slot.ID]).ToList();
+        // In the game's slot order: stats do not depend on it, the critical part pick does (S-CRIT-PART).
+        var modules = hull.Slots.Where(slot => modulesBySlot.ContainsKey(slot.ID)).OrderBy(slot => slot.GameOrder).Select(slot => modulesBySlot[slot.ID]).ToList();
         var (shipType, _) = DesignRules.ResolveShipType(hull, modules, ShipTypes.Values);
 
         if (shipType is null)

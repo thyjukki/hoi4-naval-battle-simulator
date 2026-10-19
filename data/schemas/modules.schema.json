@@ -50,6 +50,13 @@
             },
             "uniqueItems": true
           },
+          "criticalParts": {
+            "description": "critical_parts: parts the module adds to the ship's candidates (S-CRIT-PART), IDs of critical-parts/.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "statModifiers": {
             "$ref": "common.schema.json#/$defs/shipStats"
           },

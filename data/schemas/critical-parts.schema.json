@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "critical-parts.schema.json",
+  "title": "NavySimulator Critical Parts",
+  "description": "Parts of common/units/critical_parts that critical hits can damage (S-CRIT-PART), written by 'NavySimulator import-ship-data'. Keys left out take the game's defaults.",
+  "type": "object",
+  "required": [
+    "criticalParts"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "criticalParts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "chance": {
+            "description": "Weight among the ship's candidates (default 1).",
+            "type": "number"
+          },
+          "strDamageMultiplier": {
+            "description": "Replaces the critical multiplier on the hit's HP damage (default 1).",
+            "type": "number"
+          },
+          "orgDamageMultiplier": {
+            "description": "Replaces the critical multiplier on the hit's organization damage (default 1).",
+            "type": "number"
+          },
+          "strDamage": {
+            "description": "HP damage added to the hit (default 0).",
+            "type": "number"
+          },
+          "orgDamage": {
+            "description": "Organization damage added to the hit (default 0).",
+            "type": "number"
+          },
+          "baseDamageInstance": {
+            "description": "Times it can be damaged once a sub-unit or module brings it; -1 any (default 1).",
+            "type": "integer"
+          },
+          "damageInstancePerAddedModule": {
+            "description": "More times for each further module with it (default 0).",
+            "type": "integer"
+          },
+          "maxDamageInstance": {
+            "description": "Cap on the times; -1 none (default -1).",
+            "type": "integer"
+          },
+          "statPenalties": {
+            "description": "Factor penalties: stat x max(0, 1 + count x penalty) (S-STATS-PARTS).",
+            "$ref": "common.schema.json#/$defs/shipStats"
+          },
+          "modifiers": {
+            "description": "Modifiers by game key, x count x (1 + naval_critical_effect_factor).",
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -101,7 +101,7 @@ public sealed class BatchAndHelperTests : IDisposable
 
         Assert.Equal("Fleet speed while retreating +20%", ModifierInfo.SummarizeResearch(smokeGenerator));
         Assert.Equal("Naval Hit Chance +5%", ModifierInfo.Summarize(new Dictionary<string, double> { ["naval_hit_chance"] = 0.05 }));
-        Assert.Equal("naval_speed_factor +5% (not simulated)", ModifierInfo.Summarize(new Dictionary<string, double> { ["naval_speed_factor"] = 0.05 }));
+        Assert.Equal("naval_mines_damage_factor +5% (not simulated)", ModifierInfo.Summarize(new Dictionary<string, double> { ["naval_mines_damage_factor"] = 0.05 }));
     }
 
     [Fact]

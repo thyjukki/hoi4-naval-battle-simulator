@@ -157,6 +157,17 @@ public class DamageRulesTests
     }
 
     [Fact]
+    public void Apply_ManpowerLossUsesTheHpRatioTruncatedToFx5()
+    {
+        // A logged TFB hit: 9000 × 0.04833 × 0.5 = 217.49 → 217; the exact ratio would give 217.52 → 218.
+        var target = TestEntityFactory.CreateShip("target", ShipRole.Capital, TestEntityFactory.CapitalStats() with { Hp = 770 }, manpower: 9000);
+
+        DamageRules.Apply(target, 37.2205, 0, defines);
+
+        Assert.Equal(9000 - 217, target.CurrentManpower);
+    }
+
+    [Fact]
     public void Apply_ManpowerNeverDropsBelowTheFloor()
     {
         var target = TestEntityFactory.CreateShip("target", ShipRole.Screen, TestEntityFactory.ScreenStats() with { Hp = 100 });

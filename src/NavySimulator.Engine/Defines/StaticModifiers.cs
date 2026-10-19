@@ -30,6 +30,14 @@ public sealed class StaticModifiers
     public const string NavalTorpedoHitChanceFactor = "naval_torpedo_hit_chance_factor";
     public const string NavalCriticalScoreChanceFactor = "naval_critical_score_chance_factor";
     public const string CriticalReceiveChance = "critical_receive_chance";
+    public const string NavalCriticalEffectFactor = "naval_critical_effect_factor";
+    public const string NavalSpeedFactor = "naval_speed_factor";
+    public const string NavyOrg = "navy_org";
+    public const string NavyOrgFactor = "navy_org_factor";
+    public const string NavalMorale = "naval_morale";
+    public const string NavalMoraleFactor = "naval_morale_factor";
+    public const string NavalRetreatChance = "naval_retreat_chance";
+    public const string NavalRetreatChanceAfterInitialCombat = "naval_retreat_chance_after_initial_combat";
 
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [

@@ -106,7 +106,8 @@ public static class DamageRules
 
     /// <summary>
     /// Damage of one hit against the target's current state. RNG order (as in the game): damage randomness, crit roll
-    /// (only when the crit chance and the damage are positive), part-damage roll (only on a crit).
+    /// (only when the crit chance and the damage are positive), part-damage roll and part pick (only on a crit). A
+    /// damaged part is recorded on the target at once (S-CRIT-PART).
     /// </summary>
     public static ShotDamage RollHit(Ship target, ShotProfile profile, GameDefines defines, BattleRules rules, IRandomSource random)
     {
@@ -134,13 +135,25 @@ public static class DamageRules
 
         if (critical)
         {
-            partHit = RollPartDamage(target, defines, random);
+            // S-CRIT-PART [RE + CAL]: a damaged part replaces the critical multiplier with its own multipliers and
+            // additions; with no candidate left (or no part data) the regular multiplier applies.
+            var part = CriticalPartRules.RollPartDamage(target, defines, random)
+                ? CriticalPartRules.DamageRandomPart(target, defines, random)
+                : null;
 
-            // S-CRIT-PART: a damaged part replaces the critical multiplier with the part's own damage multipliers.
-            // No part data is loaded yet, so the game's "no part candidates" path applies: the regular multiplier.
-            multiplier = profile.CriticalMultiplier;
-            strDamage *= multiplier;
-            orgDamage *= multiplier;
+            if (part is not null)
+            {
+                partHit = true;
+                multiplier = part.StrDamageMultiplier;
+                strDamage = strDamage * part.StrDamageMultiplier + part.StrDamage;
+                orgDamage = orgDamage * part.OrgDamageMultiplier + part.OrgDamage;
+            }
+            else
+            {
+                multiplier = profile.CriticalMultiplier;
+                strDamage *= multiplier;
+                orgDamage *= multiplier;
+            }
         }
 
         return new ShotDamage(damage, strDamage, orgDamage, profile.PiercingTier, profile.PiercingDamageFactor, critical,
@@ -176,27 +189,6 @@ public static class DamageRules
         return model == DamageRandomnessModel.Game ? 1.0 + randomness * (random.NextDouble(RollKind.DamageRandomness) - 0.05) : 1.0;
     }
 
-    // S-CRIT-PART [RE]: chance CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT / reliability (critical_part_damage_chance_mult = 1);
-    // no roll when that is >= 1 or reliability is 0.
-    private static bool RollPartDamage(Ship target, GameDefines defines, IRandomSource random)
-    {
-        if (target.Role == ShipRole.Convoy)
-        {
-            return false;
-        }
-
-        var reliability = Math.Min(target.GetFinalStats().Reliability, 1);
-        var chance = defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT;
-
-        if (reliability <= 0)
-        {
-            return true;
-        }
-
-        chance /= reliability;
-        return chance >= 1 || random.NextDouble(RollKind.PartDamage) < chance;
-    }
-
     /// <summary>
     /// [RE] 0xc3e0e0: experience and manpower losses first (from the unclamped HP damage), then HP and organization are
     /// reduced and clamped at 0.
@@ -208,7 +200,7 @@ public static class DamageRules
         var manpowerLost = ExperienceRules.ApplyDamageLosses(target, strDamage, defines);
 
         target.CurrentHP = Math.Clamp(hpBefore - strDamage, 0, target.GetFinalStats().Hp);
-        target.CurrentOrganization = Math.Clamp(orgBefore - orgDamage, 0, target.GetFinalStats().Organization);
+        target.CurrentOrganization = Math.Clamp(orgBefore - orgDamage, 0, CombatStatRules.MaxOrganization(target, defines));
 
         return new AppliedDamage(hpBefore - target.CurrentHP, orgBefore - target.CurrentOrganization, manpowerLost,
             target.IsSunk && hpBefore > 0);

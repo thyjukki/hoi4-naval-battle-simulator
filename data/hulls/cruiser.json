@@ -30,14 +30,16 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -46,7 +48,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -54,7 +57,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -62,7 +66,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -71,7 +76,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -80,7 +86,8 @@
           "allowedCategories": [
             "ship_cruiser_armor",
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "mid_1_custom_slot",
@@ -93,7 +100,8 @@
             "ship_airplane_launcher",
             "ship_depth_charge",
             "ship_mine_layer"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -106,7 +114,8 @@
             "ship_airplane_launcher",
             "ship_depth_charge",
             "ship_mine_layer"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -118,7 +127,8 @@
             "ship_airplane_launcher",
             "ship_mine_layer",
             "ship_depth_charge"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -172,14 +182,16 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -188,7 +200,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -196,7 +209,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -204,7 +218,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -213,7 +228,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -222,7 +238,8 @@
           "allowedCategories": [
             "ship_cruiser_armor",
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -234,7 +251,8 @@
             "ship_airplane_launcher",
             "ship_depth_charge",
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -247,7 +265,8 @@
             "dp_light_battery",
             "ship_airplane_launcher",
             "ship_mine_layer"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -260,7 +279,8 @@
             "dp_light_battery",
             "ship_airplane_launcher",
             "ship_mine_layer"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -272,7 +292,8 @@
             "ship_depth_charge",
             "ship_light_battery",
             "dp_light_battery"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -326,14 +347,16 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -342,7 +365,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -350,7 +374,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -358,7 +383,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -367,7 +393,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -376,7 +403,8 @@
           "allowedCategories": [
             "ship_cruiser_armor",
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -388,7 +416,8 @@
             "ship_airplane_launcher",
             "ship_depth_charge",
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -401,7 +430,8 @@
             "ship_airplane_launcher",
             "ship_mine_layer",
             "ship_depth_charge"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -414,7 +444,8 @@
             "ship_airplane_launcher",
             "ship_mine_layer",
             "ship_depth_charge"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -426,7 +457,8 @@
             "ship_depth_charge",
             "ship_light_battery",
             "dp_light_battery"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -438,7 +470,8 @@
             "ship_depth_charge",
             "ship_light_battery",
             "dp_light_battery"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
@@ -492,14 +525,16 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -508,7 +543,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -516,7 +552,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -524,7 +561,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -533,7 +571,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -542,7 +581,8 @@
           "allowedCategories": [
             "ship_cruiser_armor",
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -556,7 +596,8 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -569,7 +610,8 @@
             "dp_light_battery",
             "ship_mine_layer",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -582,7 +624,8 @@
             "dp_light_battery",
             "ship_mine_layer",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "mid_3_custom_slot",
@@ -595,7 +638,8 @@
             "dp_light_battery",
             "ship_mine_layer",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 10
         },
         {
           "id": "rear_1_custom_slot",
@@ -607,7 +651,8 @@
             "ship_depth_charge",
             "ship_light_battery",
             "dp_light_battery"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -619,7 +664,8 @@
             "ship_depth_charge",
             "ship_light_battery",
             "dp_light_battery"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
@@ -670,14 +716,16 @@
           "required": true,
           "allowedCategories": [
             "ship_heavy_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -686,7 +734,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -694,7 +743,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -702,7 +752,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -711,7 +762,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -719,7 +771,8 @@
           "required": true,
           "allowedCategories": [
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -727,7 +780,8 @@
           "allowedCategories": [
             "ship_anti_air",
             "ship_heavy_battery"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -737,7 +791,8 @@
             "ship_anti_air",
             "ship_airplane_launcher",
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -747,7 +802,8 @@
             "ship_anti_air",
             "ship_airplane_launcher",
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -758,7 +814,8 @@
             "ship_airplane_launcher",
             "ship_torpedo",
             "ship_light_battery"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -828,14 +885,16 @@
             "ship_heavy_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -844,7 +903,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -852,7 +912,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -860,7 +921,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -869,7 +931,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -877,7 +940,8 @@
           "required": true,
           "allowedCategories": [
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -887,7 +951,8 @@
             "ship_light_battery",
             "ship_medium_battery",
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -897,7 +962,8 @@
             "ship_light_battery",
             "ship_anti_air",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -907,7 +973,8 @@
             "ship_light_battery",
             "ship_anti_air",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -918,7 +985,8 @@
             "ship_light_battery",
             "ship_torpedo",
             "ship_mine_layer"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -968,14 +1036,16 @@
           "required": true,
           "allowedCategories": [
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -984,7 +1054,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -992,7 +1063,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -1000,7 +1072,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -1009,7 +1082,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -1017,7 +1091,8 @@
           "required": true,
           "allowedCategories": [
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -1025,21 +1100,24 @@
           "allowedCategories": [
             "ship_torpedo",
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
           "name": "Mid 1 Custom",
           "allowedCategories": [
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
           "name": "Mid 2 Custom",
           "allowedCategories": [
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -1047,7 +1125,8 @@
           "allowedCategories": [
             "ship_airplane_launcher",
             "ship_torpedo"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -1055,7 +1134,8 @@
           "allowedCategories": [
             "ship_anti_air",
             "ship_depth_charge"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
@@ -1115,14 +1195,16 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -1131,7 +1213,8 @@
           "allowedCategories": [
             "ship_fire_control_system",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
@@ -1139,7 +1222,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sonar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -1147,7 +1231,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -1156,7 +1241,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -1165,7 +1251,8 @@
           "allowedCategories": [
             "ship_cruiser_armor",
             "ship_heavy_cruiser_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -1176,7 +1263,8 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -1191,7 +1279,8 @@
             "ship_secondaries",
             "ship_dp_secondaries",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -1206,7 +1295,8 @@
             "ship_secondaries",
             "ship_dp_secondaries",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -1220,7 +1310,8 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -1234,7 +1325,8 @@
             "dp_light_battery",
             "ship_light_medium_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [

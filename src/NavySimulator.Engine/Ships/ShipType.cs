@@ -11,7 +11,9 @@ public class ShipType(
     int priority,
     IReadOnlyList<string> hulls,
     IReadOnlyList<string> requiredModules,
-    double organization)
+    double organization,
+    IReadOnlyList<CriticalPart>? criticalParts = null,
+    double criticalPartDamageChanceMult = 1)
 {
     public string ID { get; } = id;
     public ShipRole Role { get; } = role;
@@ -29,6 +31,12 @@ public class ShipType(
 
     /// <summary><c>max_organisation</c>.</summary>
     public double Organization { get; } = organization;
+
+    /// <summary><c>critical_parts</c>: parts every ship of the type can have damaged, first among the candidates (S-CRIT-PART).</summary>
+    public IReadOnlyList<CriticalPart> CriticalParts { get; } = criticalParts ?? [];
+
+    /// <summary><c>critical_part_damage_chance_mult</c>: multiplies the chance that a critical hit damages a part.</summary>
+    public double CriticalPartDamageChanceMult { get; } = criticalPartDamageChanceMult;
 
     public bool Needs(Hull hull)
     {

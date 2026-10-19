@@ -17,7 +17,13 @@
         "ship_armor_bc_2",
         "ship_armor_bc_3"
       ],
-      "organization": 50
+      "organization": 50,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     },
     {
       "id": "battleship",
@@ -35,7 +41,13 @@
         "ship_armor_bb_2",
         "ship_armor_bb_3"
       ],
-      "organization": 50
+      "organization": 50,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     },
     {
       "id": "carrier",
@@ -48,7 +60,13 @@
       "hulls": [
         "ship_hull_carrier"
       ],
-      "organization": 40
+      "organization": 40,
+      "criticalParts": [
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire",
+        "damaged_flight_deck"
+      ]
     },
     {
       "id": "destroyer",
@@ -61,7 +79,13 @@
       "hulls": [
         "ship_hull_light"
       ],
-      "organization": 35
+      "organization": 35,
+      "criticalParts": [
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire",
+        "rudder_jammed"
+      ]
     },
     {
       "id": "heavy_cruiser",
@@ -80,7 +104,13 @@
         "ship_armor_cruiser_heavy_3",
         "ship_armor_cruiser_heavy_4"
       ],
-      "organization": 40
+      "organization": 40,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     },
     {
       "id": "light_cruiser",
@@ -99,7 +129,13 @@
         "ship_armor_cruiser_3",
         "ship_armor_cruiser_4"
       ],
-      "organization": 40
+      "organization": 40,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     },
     {
       "id": "submarine",
@@ -112,7 +148,16 @@
       "hulls": [
         "ship_hull_submarine"
       ],
-      "organization": 30
+      "organization": 30,
+      "criticalParts": [
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire",
+        "rudder_jammed",
+        "ballast_tanks_inoperable",
+        "leaking_pressure_hull",
+        "battery_leak"
+      ]
     },
     {
       "id": "sh_battleship",
@@ -125,7 +170,13 @@
       "hulls": [
         "ship_hull_super_heavy"
       ],
-      "organization": 50
+      "organization": 50,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     },
     {
       "id": "sh_carrier",
@@ -138,7 +189,13 @@
       "hulls": [
         "ship_hull_carrier_super"
       ],
-      "organization": 40
+      "organization": 40,
+      "criticalParts": [
+        "rudder_jammed",
+        "destroyed_ammo_storage",
+        "broken_propeller",
+        "on_fire"
+      ]
     }
   ]
 }

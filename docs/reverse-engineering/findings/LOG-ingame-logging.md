@@ -227,7 +227,9 @@ The first replay of `jukki_usa_vs_bc_japan` seed 1 (174 hours, 10,257 shots) fou
   already seen by later shots in the same hour. The code: the sink handler `0x1975480` calls `0xd77ff0`, which ends with
   the task-force refill `0xd7a7e0(tf, false)`.
 - **Organization regain** (S-ORG-REGAIN): retreating and escaped ships regain 0.2 an hour (0.22 for the side with
-  naval dominance: BUL until about hour 125, then ROM); fighting ships none.
+  naval dominance: BUL until about hour 125, then ROM); fighting ships none. The code (`0xc395a0`, reading
+  `SHIP_MORALE_TO_ORG_REGAIN_BASE` at 0xc39621): every member not in state 2 regains `(BASE + naval_morale (0x7e)) ×
+  max(0, 1 + ship+0x120 + dominance + naval_morale_factor (0x7f))` up to its maximum organization (0xc3d4a3).
 - The battle's first engine hour is the game hour after the save's (daily refill after engine hour 11 with the save at
   12:00), so the scenario's `startHourOfDay` is 13.
 
@@ -242,4 +244,30 @@ Free-running, 200 simulator seeds against 18 game runs: 190.5 h against 185.4, B
 (per design within 0.5), ROM dealt 11,724 HP against 11,726; BUL dealt 3,768 against 3,384. About 170 HP of that is
 BUL's dice in the game runs (5.1 hits a run short of their logged odds) and about 85 HP the part effects; the rest,
 about 125 HP, is 1.4 standard errors.
+
+### Critical parts (2026-10-19)
+
+With the parts imported (`data/critical-parts/`) and modelled (S-CRIT-PART), the replay of seed 1 matches **all
+10,257 shots** and both sides' HP damage to the decimal (BUL 3,298.2, ROM 11,749.1). Three findings came out of it:
+- **Pick order**: with the candidates merged per part and the slots walked in the hull's order, an SHBB's heavy guns
+  and a light cruiser's secondaries came up on the wrong rolls. Walking the slots in the order of their names' first
+  appearance in the equipment files fits every pick in the 18 runs (26 part picks with their rolls in the shots).
+- **Stat penalties reach the attacks only**: after `shortcircuited_radar_N` (surface detection −5 to −18, hit chance
+  factors −0.025 to −0.1), the logged hit chances kept the undamaged factors (the replay compares them to 2e-5), and
+  positioning's detection sum kept the undamaged detection in 110 of 110 side-hours. Heavy guns ×0.5 and secondaries'
+  light attack ×0.75 show in every later shot profile.
+- **Manpower loss**: the 17 manpower values off by one were the loss ratio. `round(maxMp × strDamage / maxHp × 0.5)`
+  misses 48 of 22,087 logged losses over all runs (fractions just above .5 that the game rounds down); truncating
+  `strDamage / maxHp` to fx5 first misses none.
+
+End-of-hour differences left: organization (naval dominance, 0.02 an hour on the dominant side) and, in the battle's
+last hour, 4 organization values and 1 experience value: the game skips the end-of-hour regain and experience once
+the battle has ended.
+
+Free-running with parts, 200 seeds against the 17 distinct game runs (seed 1 was logged twice): 190.7 h against 185.4;
+ROM dealt 11,725 HP against 11,726; BUL dealt 3,795 against 3,390. The game's dice explain about half: over all runs
+BUL hit 97 times fewer than its logged hit chances (z −2.3) and ROM 215 more (z +1.9), with uniform hit rolls (mean
+0.50, every band below 0.5 within 2 SE). A regression of the simulator's BUL damage on both sides' hit luck predicts
+3,600 at the game runs' luck, leaving −211 ± 87 HP (2.4 SE). The CL3 battle still matches (339 h, BUL 7,101 and ROM
+2,805 HP left against the game's 336 h, 7,075 and 2,802).
 

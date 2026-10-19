@@ -7,7 +7,8 @@ public class BattleParticipant
 {
     /// <summary>
     /// S-STATS-COUNTRY: the country modifiers the combat rules read so far (the retreat speeds of S-RETREAT-SPEED, the hit
-    /// chance terms of S-HIT-MODS, the critical chance terms of S-CRIT). The loader warns about any other key.
+    /// chance terms of S-HIT-MODS, the critical chance terms of S-CRIT, the part effect factor of S-CRIT-PART, and the
+    /// combat speed, organization, regain and retreat chance terms of S-STATS-COMBAT). The loader warns about any other key.
     /// </summary>
     public static IReadOnlySet<string> ModelledCountryModifiers { get; } = new HashSet<string>(
     [
@@ -15,7 +16,10 @@ public class BattleParticipant
         StaticModifiers.SubRetreatSpeed, StaticModifiers.ConvoyRetreatSpeed,
         StaticModifiers.NavalHitChance, StaticModifiers.NavalLightGunHitChanceFactor,
         StaticModifiers.NavalHeavyGunHitChanceFactor, StaticModifiers.NavalTorpedoHitChanceFactor,
-        StaticModifiers.NavalCriticalScoreChanceFactor, StaticModifiers.CriticalReceiveChance
+        StaticModifiers.NavalCriticalScoreChanceFactor, StaticModifiers.CriticalReceiveChance,
+        StaticModifiers.NavalCriticalEffectFactor, StaticModifiers.NavalSpeedFactor, StaticModifiers.NavyOrg,
+        StaticModifiers.NavyOrgFactor, StaticModifiers.NavalMorale, StaticModifiers.NavalMoraleFactor,
+        StaticModifiers.NavalRetreatChance, StaticModifiers.NavalRetreatChanceAfterInitialCombat
     ], StringComparer.Ordinal);
 
     public readonly Fleet Fleet;

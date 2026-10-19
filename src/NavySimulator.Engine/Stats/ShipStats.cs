@@ -123,6 +123,27 @@ public record ShipStats(
             DepthChargeHitChanceFactor: DepthChargeHitChanceFactor);
     }
 
+    /// <summary>
+    /// S-STATS-PARTS [RE] 0xc3d340: these stats as a critical part's penalties, damaged <paramref name="count"/> times,
+    /// turned into <see cref="Scale"/> bonuses: the stat is multiplied by <c>max(0, 1 + count × penalty)</c>.
+    /// [CAL] Only the attacks: heavy ×0.5 and secondaries' light ×0.75 fit every logged shot, while radar short circuits
+    /// changed neither positioning's detection (110 of 110 side-hours) nor hit chances. Sub visibility is kept
+    /// [ASSUMED]: no submarine battle is logged yet.
+    /// </summary>
+    public ShipStats PartPenaltyBonus(int count)
+    {
+        double F(double penalty) => Math.Max(0, 1 + count * penalty) - 1;
+
+        return new ShipStats
+        {
+            SubVisibility = F(SubVisibility),
+            LightAttack = F(LightAttack),
+            HeavyAttack = F(HeavyAttack),
+            TorpedoAttack = F(TorpedoAttack),
+            DepthChargeAttack = F(DepthChargeAttack)
+        };
+    }
+
     public ShipStats WithoutHitChanceFactors()
     {
         return this with { LightHitChanceFactor = 0, HeavyHitChanceFactor = 0, TorpedoHitChanceFactor = 0, DepthChargeHitChanceFactor = 0 };

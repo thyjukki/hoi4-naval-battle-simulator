@@ -1,0 +1,208 @@
+{
+  "$schema": "../schemas/critical-parts.schema.json",
+  "criticalParts": [
+    {
+      "id": "damaged_heavy_guns",
+      "name": "Main Battery Turret Disabled",
+      "damageInstancePerAddedModule": 1,
+      "statPenalties": {
+        "heavyAttack": -0.5
+      }
+    },
+    {
+      "id": "damaged_light_guns",
+      "name": "Light Battery Mount Disabled",
+      "damageInstancePerAddedModule": 1,
+      "statPenalties": {
+        "lightAttack": -0.5
+      }
+    },
+    {
+      "id": "damaged_secondaries",
+      "name": "Secondaries Knocked Out",
+      "damageInstancePerAddedModule": 1,
+      "statPenalties": {
+        "lightAttack": -0.25
+      }
+    },
+    {
+      "id": "damaged_torpedoes",
+      "name": "Torpedo Tubes Disabled",
+      "strDamageMultiplier": 1.25,
+      "orgDamageMultiplier": 1.25,
+      "damageInstancePerAddedModule": 1,
+      "statPenalties": {
+        "torpedoAttack": -0.5
+      }
+    },
+    {
+      "id": "destroyed_ammo_storage",
+      "name": "Magazine Hit",
+      "chance": 0.1,
+      "strDamageMultiplier": 10,
+      "orgDamageMultiplier": 10,
+      "statPenalties": {
+        "lightAttack": -0.7,
+        "heavyAttack": -0.7,
+        "torpedoAttack": -0.7
+      }
+    },
+    {
+      "id": "on_fire",
+      "name": "Heavy Fires",
+      "orgDamageMultiplier": 2,
+      "orgDamage": 5,
+      "modifiers": {
+        "navy_org_factor": -0.5,
+        "naval_morale_factor": -0.8
+      }
+    },
+    {
+      "id": "broken_propeller",
+      "name": "Broken Propeller",
+      "chance": 0.5,
+      "strDamageMultiplier": 0.5,
+      "orgDamageMultiplier": 0.5,
+      "modifiers": {
+        "naval_speed_factor": -0.9
+      }
+    },
+    {
+      "id": "rudder_jammed",
+      "name": "Rudder Jammed",
+      "chance": 0.25,
+      "strDamageMultiplier": 0.25,
+      "orgDamageMultiplier": 0.25,
+      "modifiers": {
+        "naval_retreat_chance": -0.9,
+        "naval_speed_factor": -0.5
+      }
+    },
+    {
+      "id": "ballast_tanks_inoperable",
+      "name": "Ballast Tanks Inoperable",
+      "strDamageMultiplier": 0.25,
+      "orgDamageMultiplier": 0.25,
+      "statPenalties": {
+        "subVisibility": 0.66
+      }
+    },
+    {
+      "id": "leaking_pressure_hull",
+      "name": "Leaking Pressure Hull",
+      "strDamageMultiplier": 0.25,
+      "orgDamageMultiplier": 0.25,
+      "statPenalties": {
+        "subVisibility": 0.66
+      },
+      "modifiers": {
+        "naval_retreat_chance": -0.4
+      }
+    },
+    {
+      "id": "battery_leak",
+      "name": "Leaking Battery",
+      "orgDamageMultiplier": 2,
+      "orgDamage": 5,
+      "statPenalties": {
+        "subVisibility": 0.33
+      },
+      "modifiers": {
+        "naval_retreat_chance": -0.4
+      }
+    },
+    {
+      "id": "jammed_torpedo",
+      "name": "Jammed Torpedo Tube",
+      "damageInstancePerAddedModule": 1,
+      "statPenalties": {
+        "torpedoAttack": -0.5
+      }
+    },
+    {
+      "id": "broken_diesel",
+      "name": "Broken Diesel Engines",
+      "strDamageMultiplier": 0.5,
+      "orgDamageMultiplier": 0.5,
+      "modifiers": {
+        "naval_speed_factor": -0.6
+      }
+    },
+    {
+      "id": "damaged_flight_deck",
+      "strDamageMultiplier": 0.5,
+      "orgDamageMultiplier": 0.5,
+      "modifiers": {
+        "sortie_efficiency": -0.5
+      }
+    },
+    {
+      "id": "shortcircuited_radar_1",
+      "name": "Shortcircuited Radar",
+      "statPenalties": {
+        "surfaceDetection": -5
+      }
+    },
+    {
+      "id": "shortcircuited_radar_2",
+      "name": "Shortcircuited Radar",
+      "statPenalties": {
+        "surfaceDetection": -7,
+        "subDetection": -2,
+        "lightHitChanceFactor": -0.025,
+        "heavyHitChanceFactor": -0.025
+      }
+    },
+    {
+      "id": "shortcircuited_radar_3",
+      "name": "Shortcircuited Radar",
+      "statPenalties": {
+        "surfaceDetection": -12,
+        "subDetection": -6,
+        "lightHitChanceFactor": -0.05,
+        "heavyHitChanceFactor": -0.05
+      }
+    },
+    {
+      "id": "shortcircuited_radar_4",
+      "name": "Shortcircuited Radar",
+      "statPenalties": {
+        "surfaceDetection": -18,
+        "subDetection": -14,
+        "lightHitChanceFactor": -0.1,
+        "heavyHitChanceFactor": -0.1
+      }
+    },
+    {
+      "id": "leaking_snorkel_1",
+      "statPenalties": {
+        "subVisibility": 0.07
+      }
+    },
+    {
+      "id": "leaking_snorkel_2",
+      "statPenalties": {
+        "subVisibility": 0.13
+      }
+    },
+    {
+      "id": "leaking_fuel_tanks",
+      "name": "Leaking Fuel Tanks",
+      "strDamageMultiplier": 0.25,
+      "orgDamageMultiplier": 0.25,
+      "statPenalties": {
+        "subVisibility": 0.66
+      }
+    },
+    {
+      "id": "coolant_loss",
+      "name": "Reactor Coolant Loss",
+      "chance": 0.1,
+      "strDamageMultiplier": 3,
+      "orgDamageMultiplier": 5,
+      "modifiers": {
+        "naval_speed_factor": -0.8
+      }
+    }
+  ]
+}

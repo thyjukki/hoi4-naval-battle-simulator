@@ -42,7 +42,7 @@ public static class RetreatRules
             return false;
         }
 
-        if (random.NextDouble(RollKind.RetreatDecision) > Math.Clamp(navy.COMBAT_RETREAT_DECISION_CHANCE, 0, 1))
+        if (random.NextDouble(RollKind.RetreatDecision) > RetreatDecisionChance(ship, tick, defines))
         {
             return false;
         }
@@ -51,6 +51,24 @@ public static class RetreatRules
         ship.AttemptedRetreat = true;
         ship.RetreatProgress = 0;
         return true;
+    }
+
+    /// <summary>
+    /// [RE] 0x1975280: COMBAT_RETREAT_DECISION_CHANCE × (1 + naval_retreat_chance) × (1 +
+    /// naval_retreat_chance_after_initial_combat, after COMBAT_INITIAL_DURATION), clamped to [0, 1]; a jammed rudder
+    /// (S-CRIT-PART) lowers it. The enemy's naval_enemy_retreat_chance is not modelled.
+    /// </summary>
+    public static double RetreatDecisionChance(Ship ship, int tick, GameDefines defines)
+    {
+        var navy = defines.NNavy;
+        var chance = navy.COMBAT_RETREAT_DECISION_CHANCE * (1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChance, 0, defines));
+
+        if (tick > navy.COMBAT_INITIAL_DURATION)
+        {
+            chance *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChanceAfterInitialCombat, 0, defines);
+        }
+
+        return Math.Clamp(chance, 0, 1);
     }
 
     /// <summary>
@@ -77,7 +95,7 @@ public static class RetreatRules
             speed += MemberModifierRules.Get(ship, StaticModifiers.NavalRetreatSpeedAfterInitialCombat, ownScreening, darkness, defines);
         }
 
-        speed += ship.GetFinalStats().Speed * navy.SPEED_TO_ESCAPE_SPEED / 100.0;
+        speed += CombatStatRules.CombatSpeed(ship, defines) * navy.SPEED_TO_ESCAPE_SPEED / 100.0;
 
         if (ship.Role == ShipRole.Submarine)
         {

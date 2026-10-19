@@ -26,7 +26,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -34,21 +35,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -56,7 +60,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -65,7 +70,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -75,7 +81,8 @@
             "ship_carrier_armor",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 6
         }
       ],
       "moduleCountLimits": [
@@ -116,7 +123,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -124,21 +132,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -146,7 +157,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -155,7 +167,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -164,7 +177,8 @@
             "ship_anti_air",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -174,7 +188,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         }
       ],
       "moduleCountLimits": [
@@ -215,7 +230,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -223,21 +239,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -245,7 +264,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -254,7 +274,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -263,7 +284,8 @@
             "ship_anti_air",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -273,7 +295,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -283,7 +306,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 8
         }
       ],
       "moduleCountLimits": [
@@ -324,7 +348,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -332,21 +357,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -355,7 +383,8 @@
           "allowedCategories": [
             "carrier_ship_nuclear_engine",
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -364,7 +393,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -373,7 +403,8 @@
             "ship_anti_air",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -383,7 +414,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -393,7 +425,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "rear_1_custom_slot",
@@ -403,7 +436,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -444,7 +478,8 @@
           "required": true,
           "allowedCategories": [
             "big_ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -452,21 +487,24 @@
           "allowedCategories": [
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -474,7 +512,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -483,7 +522,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -492,7 +532,8 @@
             "ship_anti_air",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -502,7 +543,8 @@
             "ship_dp_secondaries",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -512,7 +554,8 @@
             "ship_dp_secondaries",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "mid_3_custom_slot",
@@ -522,7 +565,8 @@
             "ship_dp_secondaries",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 10
         },
         {
           "id": "rear_1_custom_slot",
@@ -532,7 +576,8 @@
             "ship_dp_secondaries",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -542,7 +587,8 @@
             "ship_dp_secondaries",
             "big_ship_deck_space",
             "ship_ice_carrier_armor"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
@@ -583,7 +629,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -591,21 +638,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -613,7 +663,8 @@
           "required": true,
           "allowedCategories": [
             "heavy_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -622,7 +673,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "mid_1_custom_slot",
@@ -632,7 +684,8 @@
             "ship_dp_secondaries",
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         }
       ],
       "moduleCountLimits": [
@@ -673,7 +726,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -681,21 +735,24 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -703,7 +760,8 @@
           "required": true,
           "allowedCategories": [
             "cruiser_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -712,7 +770,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         }
       ],
       "moduleCountLimits": [
@@ -753,7 +812,8 @@
           "required": true,
           "allowedCategories": [
             "ship_escort_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -761,21 +821,24 @@
           "allowedCategories": [
             "ship_escort_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -783,7 +846,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -792,7 +856,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "front_1_custom_slot",
@@ -801,7 +866,8 @@
             "ship_anti_air",
             "ship_escort_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -811,7 +877,8 @@
             "ship_dp_secondaries",
             "ship_escort_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 7
         }
       ],
       "moduleCountLimits": [

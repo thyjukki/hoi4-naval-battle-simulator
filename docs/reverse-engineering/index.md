@@ -47,7 +47,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xc0f200 | captain XP gain (`gain × LEADER_EXPERIENCE_SCALE`) | S-XP-GAIN | [XP/gain] |
 | 0xc1aa20 | leader XP (BASE_LEADER_TRAIT_GAIN_XP, FIELD_MARSHAL_XP_RATIO) | S-HOUR | [HOUR/hour] |
 | 0xc2ffe8 | ship constructor site: XP cap = NAVY_MAX_XP | S-XP-LEVELS | [XP/levels] |
-| 0xc31030 | merge critical-part candidate into (part, max instances); aggregation ? | S-CRIT-PART | [DMG/part] |
+| 0xc31030 | merge critical-part candidate into (part, max instances): append with base_damage_instance, or add damage_instance_per_added_module capped at max_damage_instance | S-CRIT-PART | [DMG/part] |
 | 0xc31840 | add ship XP with modifiers (mode 0 = combat) → 0xc3b240 | S-XP-GAIN | [XP/gain] |
 | 0xc333e0 | ship stat part by index (0x18 = carrier surface detection) | S-POS-DETECT | [POS/detect] |
 | 0xc338a0 | ship combat XP gain per hour | S-XP-GAIN | [XP/gain], [HOUR/hour] |
@@ -61,6 +61,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xc37e70 | max org | S-DMG-APPLY | [DMG/apply] |
 | 0xc38760 | ship modifier sum / generic modifier gather (country, location, parts × (1 + 0x1bb)) | S-HIT-MODS, S-DMG, S-CRIT-PART | [HIT/mods], [DMG/dmg], [DMG/part] |
 | 0xc39530 | org ratio `[ship+0x700] / maxOrg` | S-HIT, A-SORTIE | [HIT/hit], [AIR/sortie] |
+| 0xc395a0 | hourly organization regain: members not fighting (state ≠ 2) gain `(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + ship+0x120 + dominance + naval_morale_factor)` up to max organization | S-ORG-REGAIN | [LOG] |
 | 0xc3a470 | ship AA (STAT_NAVY_ANTI_AIR_ATTACK), optional battle context | S-POS, A-TARGET, A-AA-REDUCE | [POS/aa], [AIR/target] |
 | 0xc3a520 | armor | S-DMG-PIERCE | [HIT/pierce] |
 | 0xc3a570 | heavy piercing | S-DMG-PIERCE | [HIT/pierce] |
@@ -127,6 +128,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xf80f60 | per-wing losses and damage (experience; not decoded) | A-LOSSES | [AIR/losses] |
 | 0xf862a0 | generic air combat (reads COMBAT_DAMAGE_SCALE_CARRIER) | A-INTERCEPT | [AIR/intercept] |
 | 0x10055a0 | region dominance state | S-POS | [POS/convoy] |
+| 0x1019290 | critical part constructor: defaults +0x148/+0x150 multipliers 1, +0x158/+0x160 adds 0, +0x168 chance 1, +0x170 base_damage_instance 1, +0x174 per added module 0, +0x178 max −1 | S-CRIT-PART | [DMG/part] |
 | 0x12a6740 | national navy XP, capped by FIELD_EXPERIENCE_MAX_PER_DAY | S-XP-GAIN | [XP/gain] |
 | 0x13e05f0 | evidence for combatant+0xd8 (side at combat+0x28) | A-SORTIE | [AIR/conv] |
 | 0x13e1df0 | side.GetOpponent | S-POS | [POS/pos] |
@@ -296,6 +298,8 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | 0x13e81b0 | token id → EEquipmentStats |
 | 0x831c0 | static token registration (name → id) |
 | 0xc3d090 | CShip::RefreshStats |
+| 0xc3d340 | part stat penalties in the refresh: `stat × max(0, 1 + count × penalty)` per damaged part (in-game: only the attacks show it) |
+| 0xc3d4a3 | max organization `max(0.001, (max_organisation + navy_org) × (1 + navy_org_factor))`, current organization clamped to it |
 | 0x1019e50 / 0x1429cb0 / 0x142b5f0 | add variant stats to ship × (1 + sub-unit stat) |
 | 0x1019ea0 / 0x1429d30 | add sub-unit stat set (direct or base path) + clamps |
 | 0x1429580 | sub-unit additive stat list |
@@ -515,6 +519,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x29 | NAVAL_SPEED_FACTOR (HIT). **disagrees**: TGT uses it as the "arg4" sub-weight stat | 0x1971cc0 | [HIT/map], [TGT/target] |
 | 0x2a | surface detection stat modifier (name ?) | 0xc3aae0 | [POS/detect] |
 | 0x34 / 0x35 | experience_gain_navy_unit_factor / _unit? (low-medium) | 0xc3b240 | [XP/gain] |
+| 0x46 / 0x47 | NAVY_ORG / NAVY_ORG_FACTOR | 0xc3d4a3 | [LOG] |
 | 0x57 | naval_retreat_chance? (medium; HOUR: unresolved) | 0x1975280 | [ACT/retreat], [HOUR/end] |
 | 0x58 | naval_retreat_chance_after_initial_combat? (medium) | 0x1975280 (0x1975325) | [ACT/retreat], [HOUR/end] |
 | 0x59 | naval_retreat_speed_after_initial_combat (medium) | 0x196fe80 | [ACT/speed] |
@@ -522,6 +527,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x5b | naval_retreat_speed (confirmed in-game: TFB `smoke_generator`'s country value, +0.2/day) | 0x196fe80 via 0x1972570 | [ACT/speed], [LOG] |
 | 0x5c | sub_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
 | 0x5d | convoy_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
+| 0x7e / 0x7f | NAVAL_MORALE / NAVAL_MORALE_FACTOR | 0xc395a0 (organization regain) | [LOG] |
 | 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg] |
 | 0x10c | CARRIER_CAPACITY_PENALTY_REDUCTION | 0xc579f0 chain | [AIR/sortie] |
 | 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR (script `critical_receive_chance`; confirmed in-game: TFB damage_control × 0.8) | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit], [LOG] |
@@ -676,7 +682,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 
 - Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
 - Darkness value computation (with weather on; it is 0 with weather off [LOG]); whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
-- `0xc31030` part instance aggregation. [DMG/open]
+- How the design's slot list is ordered (calibrated: slot names in first-appearance order of the equipment files) and which stat readers see part penalties (calibrated: the attacks only). [DMG/part], [LOG]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
 - Whether light guns and depth charges both fire in one slot-2 call. [ACT/open]
 - Ship-type flag bit 39 (support ship?). [ACT/open], [TGT/bb]

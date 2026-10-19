@@ -12,16 +12,25 @@ namespace NavySimulator.Engine.Battles.Replay;
 /// </summary>
 public static class BattleReplay
 {
-    /// <summary>Logged rolls the engine does not make: part picks (no part data) and the bookkeeping rolls of a sinking.</summary>
-    public static IReadOnlySet<RollKind> SkippedKinds { get; } = new HashSet<RollKind> { RollKind.PartPick, RollKind.Sinking };
+    /// <summary>
+    /// Logged rolls the engine does not make: the bookkeeping rolls of a sinking, and part picks when the data has no
+    /// critical parts (the engine then makes none).
+    /// </summary>
+    public static IReadOnlySet<RollKind> SkippedKinds { get; } = new HashSet<RollKind> { RollKind.Sinking };
+
+    private static readonly IReadOnlySet<RollKind> SkippedWithoutParts = new HashSet<RollKind> { RollKind.Sinking, RollKind.PartPick };
 
     private const double DamageTolerance = 0.01;
+
+    // The game's hit chance is fixed point (1e-5 of a percent point); allow its truncations.
+    private const double HitChanceTolerance = 2e-5;
     private const double StateTolerance = 0.02;
     private const double FractionTolerance = 1e-4;
 
     public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours)
     {
-        var random = new ReplayRandomSource(SkippedKinds);
+        var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
+        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts);
         var session = new BattleSession(scenario, random);
         var shipsById = session.Ships.ToDictionary(ship => ship.ID, StringComparer.Ordinal);
         var reports = new List<ReplayHourReport>();
@@ -121,6 +130,11 @@ public static class BattleReplay
         if (game.Hit != engine.Hit)
         {
             return "hit";
+        }
+
+        if (!double.IsNaN(game.HitChance) && Math.Abs(game.HitChance - engine.HitChance) > HitChanceTolerance)
+        {
+            return "hit chance";
         }
 
         if (Math.Abs(game.HpDamage - engine.HpDamage) > DamageTolerance)

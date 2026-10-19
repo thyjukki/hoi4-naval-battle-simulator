@@ -240,9 +240,12 @@ public sealed class GameBattleLog
                 _ => WeaponType.Light
             };
 
-            var critChance = loop.GetProperty("profile").ValueKind == JsonValueKind.Object
-                ? loop.GetProperty("profile").GetProperty("critChance").GetInt64()
-                : 0;
+            var profile = loop.GetProperty("profile");
+            var critChance = profile.ValueKind == JsonValueKind.Object ? profile.GetProperty("critChance").GetInt64() : 0;
+            // The profile stores the hit chance × 100.
+            var hitChance = profile.ValueKind == JsonValueKind.Object && profile.TryGetProperty("hitChance", out var logged)
+                ? logged.GetInt64() / Fx / 100
+                : double.NaN;
 
             foreach (var shot in loop.GetProperty("shots").EnumerateArray())
             {
@@ -257,7 +260,7 @@ public sealed class GameBattleLog
 
                 if (hits.GetArrayLength() == 0)
                 {
-                    shots.Add(new ReplayShot(shooter, target, weapon, false, 0, 0));
+                    shots.Add(new ReplayShot(shooter, target, weapon, false, 0, 0, HitChance: hitChance));
                     continue;
                 }
 
@@ -266,7 +269,7 @@ public sealed class GameBattleLog
                 shots.Add(new ReplayShot(shooter, target, weapon, true,
                     (before.GetProperty("hp").GetInt64() - after.GetProperty("hp").GetInt64()) / Fx,
                     (before.GetProperty("org").GetInt64() - after.GetProperty("org").GetInt64()) / Fx,
-                    critical, partRolled, partDamaged));
+                    critical, partRolled, partDamaged, hitChance));
             }
         }
 

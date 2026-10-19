@@ -45,10 +45,9 @@ public static class AirRules
 
         var baseEfficiency = (hour < navy.SELECTED_SORTIE_INITIAL_TIME ? ratio : navy.BASE_CARRIER_SORTIE_EFFICIENCY) + sortieEfficiencyModifier;
 
-        // capital_screening_bonus.sortie_efficiency for the carrier line (screening_bonus has none in vanilla).
-        baseEfficiency += ownScreening.ScreeningEfficiency * modifiers.Get(StaticModifiers.ScreeningBonus, StaticModifiers.SortieEfficiency);
-        baseEfficiency += ScreeningRules.CombinedCarrierScreening(ownScreening) *
-                          modifiers.Get(StaticModifiers.CapitalScreeningBonus, StaticModifiers.SortieEfficiency);
+        // [RE] sortie_efficiency through the member getter: capital_screening_bonus for the carrier line (screening_bonus
+        // has none in vanilla), country modifiers and damaged parts (damaged_flight_deck, S-CRIT-PART).
+        baseEfficiency += MemberModifierRules.Get(carrier, StaticModifiers.SortieEfficiency, ownScreening, darkness, defines);
 
         if (group.Wings.Count > 0 && group.Wings[0].IsFighter)
         {
@@ -59,8 +58,7 @@ public static class AirRules
         var night = Math.Clamp(1.0 + darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic) +
                                (darkness > 0 ? carrierNightTraffic : 0), 0, 1);
         var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, group.Planes, defines) * night);
-        var stats = carrier.GetFinalStats();
-        var orgRatio = stats.Organization > 0 ? carrier.CurrentOrganization / stats.Organization : 0;
+        var orgRatio = carrier.CurrentOrganization / CombatStatRules.MaxOrganization(carrier, defines);
         return Math.Max(0, sortie * orgRatio);
     }
 

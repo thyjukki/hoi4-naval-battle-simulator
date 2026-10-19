@@ -22,6 +22,9 @@ public class ModuleDto
     /// <summary><c>forbid_module_categories</c> (S-DESIGN-FORBID).</summary>
     public List<string> ForbiddenCategories { get; set; } = [];
 
+    /// <summary><c>critical_parts</c>: the parts the module adds to the ship's candidates (S-CRIT-PART).</summary>
+    public List<string> CriticalParts { get; set; } = [];
+
     public ShipStatsDto StatModifiers { get; set; } = new();
     public ShipStatsDto StatAverages { get; set; } = new();
     public ShipStatsDto StatMultipliers { get; set; } = new();

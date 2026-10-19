@@ -26,7 +26,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -34,14 +35,16 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "rear_1_custom_slot",
           "name": "Rear 1 Custom",
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -82,7 +85,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -90,7 +94,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "rear_1_custom_slot",
@@ -98,7 +103,8 @@
           "allowedCategories": [
             "ship_torpedo_sub",
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -139,7 +145,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -147,14 +154,16 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
           "name": "Front 1 Custom",
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -163,14 +172,16 @@
             "ship_radar",
             "ship_sub_snorkel",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
           "name": "Rear 1 Custom",
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -211,7 +222,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -219,14 +231,16 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
           "name": "Front 1 Custom",
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -235,14 +249,16 @@
             "ship_radar",
             "ship_sub_snorkel",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
           "name": "Rear 1 Custom",
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -283,7 +299,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -291,7 +308,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
@@ -301,7 +319,8 @@
             "ship_airplane_launcher",
             "ship_extra_fuel_tank",
             "ship_light_battery_sub"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -310,7 +329,8 @@
             "ship_radar",
             "ship_sub_snorkel",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
@@ -319,7 +339,8 @@
             "ship_torpedo_sub",
             "ship_airplane_launcher",
             "ship_extra_fuel_tank"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -360,7 +381,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -368,7 +390,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
@@ -377,7 +400,8 @@
             "ship_torpedo_sub",
             "ship_airplane_launcher",
             "ship_extra_fuel_tank"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -386,7 +410,8 @@
             "ship_radar",
             "ship_sub_snorkel",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
@@ -396,7 +421,8 @@
             "ship_airplane_launcher",
             "ship_extra_fuel_tank",
             "ship_rocket"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [
@@ -437,7 +463,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -445,7 +472,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         }
       ],
       "moduleCountLimits": [
@@ -487,7 +515,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -495,7 +524,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_nuclear_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
@@ -504,7 +534,8 @@
             "ship_torpedo_sub",
             "ship_airplane_launcher",
             "ship_extra_fuel_tank"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -512,7 +543,8 @@
           "allowedCategories": [
             "ship_radar",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
@@ -521,7 +553,8 @@
             "ship_airplane_launcher",
             "ship_nuclear_rocket",
             "ship_rocket"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -529,7 +562,8 @@
           "allowedCategories": [
             "ship_torpedo_sub",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
@@ -570,7 +604,8 @@
           "required": true,
           "allowedCategories": [
             "ship_torpedo_sub"
-          ]
+          ],
+          "gameOrder": 16
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -578,7 +613,8 @@
           "required": true,
           "allowedCategories": [
             "sub_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "front_1_custom_slot",
@@ -587,7 +623,8 @@
             "ship_torpedo_sub",
             "ship_mine_layer_sub",
             "ship_extra_fuel_tank"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "mid_1_custom_slot",
@@ -596,7 +633,8 @@
             "ship_radar",
             "ship_sub_snorkel",
             "ship_sub_coating"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "rear_1_custom_slot",
@@ -604,7 +642,8 @@
           "required": true,
           "allowedCategories": [
             "ship_submarine_deck_space"
-          ]
+          ],
+          "gameOrder": 9
         }
       ],
       "moduleCountLimits": [

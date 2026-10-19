@@ -22,7 +22,16 @@ public class ShipDesign
             .Where(type => !string.IsNullOrEmpty(type))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
+        CriticalPartCandidates = MergeCriticalParts(shipType, modules);
     }
+
+    /// <summary>
+    /// S-CRIT-PART [RE + CAL] 0xc31030: the parts a critical hit can damage on the design's ships, in pick order: the
+    /// ship type's, then each module's in <see cref="Modules"/> order (the game's slot order, ModuleSlot.GameOrder). The first time a part comes up it can be damaged
+    /// <c>base_damage_instance</c> times; each further module with it adds <c>damage_instance_per_added_module</c>, up to
+    /// <c>max_damage_instance</c> (-1 stays unlimited).
+    /// </summary>
+    public IReadOnlyList<CriticalPartCandidate> CriticalPartCandidates { get; }
 
     /// <summary>S-DESIGN-TYPE: the combat role comes from the ship type, not the hull.</summary>
     public ShipRole Role => ShipType.Role;
@@ -61,5 +70,39 @@ public class ShipDesign
             CarrierSize = Math.Floor(add.CarrierSize + multiplier.CarrierSize),
             Organization = scaled.Organization + ShipType.Organization
         };
+    }
+
+    private static List<CriticalPartCandidate> MergeCriticalParts(ShipType shipType, IEnumerable<StatModule> modules)
+    {
+        var candidates = new List<CriticalPartCandidate>();
+
+        foreach (var part in shipType.CriticalParts.Concat(modules.SelectMany(module => module.CriticalParts)))
+        {
+            var index = candidates.FindIndex(candidate => candidate.Part == part);
+
+            if (index < 0)
+            {
+                candidates.Add(new CriticalPartCandidate(part, part.BaseDamageInstance));
+                continue;
+            }
+
+            var max = candidates[index].MaxInstances;
+
+            if (max <= -1)
+            {
+                continue;
+            }
+
+            max += part.DamageInstancePerAddedModule;
+
+            if (part.MaxDamageInstance > -1 && max > part.MaxDamageInstance)
+            {
+                max = part.MaxDamageInstance;
+            }
+
+            candidates[index] = candidates[index] with { MaxInstances = max };
+        }
+
+        return candidates;
     }
 }

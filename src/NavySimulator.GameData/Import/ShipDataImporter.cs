@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using NavySimulator.Engine;
 using NavySimulator.GameData.Contracts;
 using NavySimulator.GameData.Paradox;
@@ -50,6 +51,13 @@ public static class ShipDataImporter
             import.Hulls.Add(ReadHull(item, archetype, slots, resolver, localisation, import));
         }
 
+        var gameOrder = SlotNameOrder(files, import.Hulls.SelectMany(hull => hull.Slots).Select(slot => slot.ID).ToHashSet(StringComparer.Ordinal));
+
+        foreach (var slot in import.Hulls.SelectMany(hull => hull.Slots))
+        {
+            slot.GameOrder = gameOrder.TryGetValue(slot.ID, out var order) ? order : null;
+        }
+
         var categories = import.Hulls.SelectMany(hull => hull.Slots).SelectMany(slot => slot.AllowedCategories).ToHashSet(StringComparer.Ordinal);
 
         foreach (var item in ReadEntries(files, "common/units/equipment/modules", "equipment_modules", import).Values)
@@ -72,6 +80,20 @@ public static class ShipDataImporter
             {
                 import.ShipTypes.Add(shipType);
             }
+        }
+
+        var usedParts = import.Modules.SelectMany(module => module.CriticalParts)
+            .Concat(import.ShipTypes.SelectMany(shipType => shipType.CriticalParts))
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var item in ReadEntries(files, "common/units/critical_parts", "critical_parts", import).Values.Where(item => usedParts.Contains(item.ID)))
+        {
+            import.CriticalParts.Add(ReadCriticalPart(item, localisation, import));
+        }
+
+        foreach (var missing in usedParts.Where(id => import.CriticalParts.All(part => part.ID != id)).Order(StringComparer.Ordinal))
+        {
+            import.Warnings.Add($"critical part '{missing}' is used by a module or sub-unit but not defined.");
         }
 
         return import;
@@ -132,7 +154,8 @@ public static class ShipDataImporter
             Category = category,
             CategoryName = localisation.Get($"EQ_MOD_CAT_{category}_TITLE"),
             AddEquipmentTypes = Words(item.Block.GetAll("add_equipment_type")),
-            ForbiddenCategories = Words(item.Block.GetAll("forbid_module_categories"))
+            ForbiddenCategories = Words(item.Block.GetAll("forbid_module_categories")),
+            CriticalParts = Words(item.Block.GetAll("critical_parts"))
         };
 
         foreach (var blockName in ModuleStatBlocks)
@@ -213,8 +236,70 @@ public static class ShipDataImporter
             Priority = (int)(item.Block.GetDouble("priority") ?? 0),
             Hulls = hulls,
             RequiredModules = requiredModules,
-            Organization = item.Block.GetDouble("max_organisation") ?? 0
+            Organization = item.Block.GetDouble("max_organisation") ?? 0,
+            CriticalParts = Words(item.Block.GetAll("critical_parts")),
+            CriticalPartDamageChanceMult = item.Block.GetDouble("critical_part_damage_chance_mult") ?? 1
         };
+    }
+
+    // S-CRIT-PART [CAL]: the game walks a design's slots in the order their names first appear in the equipment files,
+    // files in load order (interned names); in 18 logged TFB battles every part pick fits it, the hulls' own order not.
+    private static Dictionary<string, int> SlotNameOrder(GameFileSystem files, HashSet<string> slotIds)
+    {
+        var order = new Dictionary<string, int>(StringComparer.Ordinal);
+
+        foreach (var path in files.GetFiles("common/units/equipment", "*.txt"))
+        {
+            var text = Regex.Replace(File.ReadAllText(path), @"#[^\n]*", string.Empty);
+
+            foreach (Match token in Regex.Matches(text, "[A-Za-z0-9_]+"))
+            {
+                if (slotIds.Contains(token.Value))
+                {
+                    order.TryAdd(token.Value, order.Count);
+                }
+            }
+        }
+
+        return order;
+    }
+
+    // S-CRIT-PART [PDX + RE]: keys a part leaves out take the game's defaults (constructor 0x1019290): multipliers and
+    // chance 1, extra damage 0, base_damage_instance 1, damage_instance_per_added_module 0, max_damage_instance -1.
+    private static CriticalPartDto ReadCriticalPart(Entry item, LocalisationTable localisation, ShipDataImport import)
+    {
+        var block = item.Block;
+        var part = new CriticalPartDto
+        {
+            ID = item.ID,
+            Name = localisation.Get(item.ID),
+            Chance = block.GetDouble("chance") ?? 1,
+            StrDamageMultiplier = block.GetDouble("str_damage_multiplier") ?? 1,
+            OrgDamageMultiplier = block.GetDouble("org_damage_multiplier") ?? 1,
+            StrDamage = block.GetDouble("str_damage") ?? 0,
+            OrgDamage = block.GetDouble("org_damage") ?? 0,
+            BaseDamageInstance = (int)(block.GetDouble("base_damage_instance") ?? 1),
+            DamageInstancePerAddedModule = (int)(block.GetDouble("damage_instance_per_added_module") ?? 0),
+            MaxDamageInstance = (int)(block.GetDouble("max_damage_instance") ?? -1)
+        };
+
+        foreach (var entry in block.GetAll("stat_penalties").Where(value => value.Block is not null).SelectMany(value => value.Block!.KeyedEntries))
+        {
+            if (entry.Value.TryGetDouble(out var value) && !ShipStatKeys.TryAdd(part.StatPenalties, entry.Key!, value))
+            {
+                import.Ignore(entry.Key!, item.ID);
+            }
+        }
+
+        foreach (var entry in block.GetAll("modifier").Where(value => value.Block is not null).SelectMany(value => value.Block!.KeyedEntries))
+        {
+            if (entry.Value.TryGetDouble(out var value))
+            {
+                part.Modifiers[entry.Key!] = part.Modifiers.GetValueOrDefault(entry.Key!) + value;
+            }
+        }
+
+        return part;
     }
 
     private static ShipRole RoleOf(List<string> unitTypes)

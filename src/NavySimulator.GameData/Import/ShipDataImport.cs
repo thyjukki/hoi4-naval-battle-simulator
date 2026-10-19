@@ -2,12 +2,13 @@ using NavySimulator.GameData.Contracts;
 
 namespace NavySimulator.GameData.Import;
 
-/// <summary>Hulls, modules and ship types read from the game's files by <see cref="ShipDataImporter"/>.</summary>
+/// <summary>Hulls, modules, ship types and critical parts read from the game's files by <see cref="ShipDataImporter"/>.</summary>
 public sealed class ShipDataImport
 {
     public List<HullDto> Hulls { get; } = [];
     public List<ModuleDto> Modules { get; } = [];
     public List<ShipTypeDto> ShipTypes { get; } = [];
+    public List<CriticalPartDto> CriticalParts { get; } = [];
 
     /// <summary>Script problems: unreadable files, duplicate definitions, slots that cannot be inherited.</summary>
     public List<string> Warnings { get; } = [];

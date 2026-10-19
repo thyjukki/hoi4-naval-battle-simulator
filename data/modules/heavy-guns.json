@@ -10,6 +10,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "heavyAttack": 12,
         "productionCost": 1200
@@ -29,6 +32,9 @@
       "categoryName": "Heavy Battery",
       "addEquipmentTypes": [
         "capital_ship"
+      ],
+      "criticalParts": [
+        "damaged_heavy_guns"
       ],
       "statModifiers": {
         "heavyAttack": 16,
@@ -50,6 +56,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "heavyAttack": 20,
         "productionCost": 1400
@@ -70,6 +79,9 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "criticalParts": [
+        "damaged_heavy_guns"
+      ],
       "statModifiers": {
         "heavyAttack": 24,
         "productionCost": 1500
@@ -89,6 +101,9 @@
       "categoryName": "Super Heavy Battery",
       "addEquipmentTypes": [
         "capital_ship"
+      ],
+      "criticalParts": [
+        "damaged_heavy_guns"
       ],
       "statModifiers": {
         "heavyAttack": 28,

@@ -27,7 +27,8 @@
           "required": true,
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 0
         },
         {
           "id": "fixed_ship_deck_slot_2",
@@ -35,7 +36,8 @@
           "allowedCategories": [
             "ship_deck_space",
             "ship_carrier_armor"
-          ]
+          ],
+          "gameOrder": 1
         },
         {
           "id": "fixed_ship_anti_air_slot",
@@ -43,7 +45,8 @@
           "allowedCategories": [
             "ship_secondaries",
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -51,14 +54,16 @@
           "allowedCategories": [
             "ship_secondaries",
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -66,7 +71,8 @@
           "required": true,
           "allowedCategories": [
             "carrier_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -74,42 +80,48 @@
           "required": true,
           "allowedCategories": [
             "ship_super_heavy_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
           "name": "Front 1 Custom",
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "front_2_custom_slot",
           "name": "Front 2 Custom",
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 13
         },
         {
           "id": "mid_1_custom_slot",
           "name": "Mid 1 Custom",
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
           "name": "Mid 2 Custom",
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "mid_3_custom_slot",
           "name": "Mid 3 Custom",
           "allowedCategories": [
             "ship_deck_space"
-          ]
+          ],
+          "gameOrder": 10
         },
         {
           "id": "rear_1_custom_slot",
@@ -117,7 +129,8 @@
           "allowedCategories": [
             "ship_light_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -125,7 +138,8 @@
           "allowedCategories": [
             "ship_light_battery",
             "ship_medium_battery"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [

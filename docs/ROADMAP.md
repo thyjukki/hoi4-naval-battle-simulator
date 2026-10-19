@@ -14,11 +14,13 @@ The aim is a simulator that reproduces HOI4 naval combat as closely as possible,
 
 **Replay** (2026-10-19): the logger records every roll of the combat update and every ship's start-of-hour state; `NavySimulator replay` fights each logged hour with the game's own dice from the game's state and compares every shot (S-REPLAY). Its first run found and fixed four rules: the target's `critical_receive_chance` (TFB damage control, crit chance × 0.8), the experience level taken at the start of the hour, the task-force manpower refill on every sinking (confirmed in the code: sink handler → `0xd77ff0` → `0xd7a7e0`), and organization regain of retreating and escaped ships (0.2 an hour). Now the engine makes exactly the game's rolls in all 174 hours and 10,249 of 10,257 shots match; the rest are damaged critical parts. Free-running against 18 game runs, the USA side still deals more in the simulator (3,768 against 3,384 HP); dice (≈ 170 HP), parts (≈ 85) and 1.4 standard errors of noise account for it.
 
+**Critical parts** (2026-10-19): parts are imported from `common/units/critical_parts` (`data/critical-parts/`, with each module's and ship type's `critical_parts` and each slot's game order) and modelled (S-CRIT-PART, S-STATS-PARTS, S-STATS-COMBAT): the part chance, the merged candidates in the game's slot order, the weighted pick, the part's damage replacing the crit multiplier, the attack penalties, and the part modifiers (speed, maximum organization, organization regain, retreat chance) scaled by `naval_critical_effect_factor`. Manpower losses now truncate the HP ratio to fx5 as the game does. The replayed battle matches all 10,257 shots and both sides' HP damage exactly; only naval dominance's organization regain differs. Free-running, 200 seeds against the 17 distinct game runs: Japan dealt 11,725 against 11,726 HP, the USA 3,795 against 3,390; with the game runs' hit luck (USA z −2.3, Japan z +1.9) the simulator predicts 3,600, leaving 211 ± 87 HP (2.4 standard errors). The CL3 battle still matches (339 h, 7,101 and 2,805 HP left against 336 h, 7,075 and 2,802).
+
 **Gaps, by impact:**
-1. Combat-time modifier layer: country modifiers other than the retreat speeds and hit chance terms (researches carry `countryModifiers` and the engine reads `naval_retreat_speed`, `naval_retreat_speed_after_initial_combat`, `sub_retreat_speed`, `convoy_retreat_speed`, `naval_hit_chance` and the three `naval_*_hit_chance_factor`s; other keys get a loader warning), doctrines, admiral skills/traits, spirits, `naval_*_factor` attack/armor/speed (formulas decoded in S-STATS-COMBAT). Of the attack, armor and speed terms only the experience ones are modelled. `data/spirits` is ignored with loader warnings until then.
+1. Combat-time modifier layer: country modifiers other than the ones the engine reads (`BattleParticipant.ModelledCountryModifiers`: retreat speeds, hit chance terms, crit terms, `naval_speed_factor`, `navy_org`/`navy_org_factor`, `naval_morale`/`naval_morale_factor`, retreat chances; other keys get a loader warning), doctrines, admiral skills/traits, spirits, `naval_*_factor` attack/armor/speed (formulas decoded in S-STATS-COMBAT). Of the attack, armor and speed terms only the experience ones are modelled. `data/spirits` is ignored with loader warnings until then.
 2. Weather (hit chance, carrier traffic, naval strike targeting). `rules.weatherEnabled = false` matches the game with `disable_weather`, including no night (S-WEATHER, S-NIGHT).
 3. Darkness per sea region; with weather on it is [ASSUMED] full dark 20:00 to 06:00.
-4. Critical part damage and lasting penalties (S-CRIT-PART, S-STATS-PARTS): the only per-shot difference the replay still finds (8 of 10,257 shots, 2.3 % of the USA damage in the replayed battle). Also naval dominance's +10 % organization regain.
+4. Naval dominance's +10 % organization regain (S-ORG-REGAIN; a region-wide value), the USA damage left over in the mixed-fleet case (2.4 standard errors after luck; more replayed battles would show whether it is a rule), part penalties on sub visibility [ASSUMED] and parts from air crits.
 5. Late-joining ships, the aggressiveness check (strength retreat), task-force retreat; air: kamikaze, port strikes, the top-speed interception term, plane experience, loss split across wings.
 6. Nine unsettled cross-finding disagreements ([findings README](reverse-engineering/findings/README.md)); none changes current results.
 7. Calibration setups: `tools/ingame/make_save.py` writes a scenario into a template save (2026-10-19), but research IDs are mapped to game technologies by hand (`GAME_TECHS`) until technologies are imported, and spirits, doctrines, commanders and MIOs are not written.
@@ -56,13 +58,13 @@ Possible next steps: edit researches, A/B batches of two scenarios, a calibratio
 ## Milestone 3: surface completeness
 
 - Submarines: hide/reveal, escape (done), air sub detection (S-SUB).
-- Critical part damage with lasting effects (S-CRIT-PART); needs module categories on designs.
+- Critical part damage with lasting effects (S-CRIT-PART): done 2026-10-19 (surface crits; air crits do not damage parts yet).
 - Weather, sea region and night as data-driven modifiers; admiral skills and traits; doctrines and spirits as battle modifiers (`data/spirits` uses keys such as positioning, hitChance and retreatDecisionChance that the stat model cannot express; the loader warns about them).
 - Late-joining ships, task-force-level retreat.
 
 ## Milestone 4: import everything from game files
 
-Replace the hand-written JSON with data parsed from the game and mods using `PdxParser`. Done (2026-10-19): hulls and modules (`common/units/equipment/`), ship types (`common/units/`) and their localised names, by `NavySimulator import-ship-data` (`GameData/Import/`); ship designs reference the game's IDs and slots. Left: technologies, MIOs, doctrines, experience levels, critical parts.
+Replace the hand-written JSON with data parsed from the game and mods using `PdxParser`. Done (2026-10-19): hulls and modules (`common/units/equipment/`), ship types (`common/units/`) and their localised names, by `NavySimulator import-ship-data` (`GameData/Import/`); ship designs reference the game's IDs and slots. Critical parts too (2026-10-19). Left: technologies, MIOs, doctrines, experience levels.
 
 ## Milestone 5: calibration harness
 

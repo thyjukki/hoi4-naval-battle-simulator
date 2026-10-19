@@ -167,7 +167,7 @@ public static class ReplayCommand
             if (report.FirstShotMismatch is { } shot)
             {
                 Console.WriteLine($"  shot {shot.Index} differs in {shot.Difference}:");
-                Console.WriteLine($"    game   {(shot.Game is { } g ? $"{g.ShooterId} {g.Weapon} -> {g.TargetId} hit {g.Hit} HP {g.HpDamage:F3} org {g.OrganizationDamage:F3} crit {g.Critical} part rolled {g.PartRolled} damaged {g.PartDamaged}" : "-")}");
+                Console.WriteLine($"    game   {(shot.Game is { } g ? $"{g.ShooterId} {g.Weapon} -> {g.TargetId} hit {g.Hit} HP {g.HpDamage:F3} org {g.OrganizationDamage:F3} crit {g.Critical} part rolled {g.PartRolled} damaged {g.PartDamaged} (hit chance {g.HitChance:F5})" : "-")}");
                 Console.WriteLine($"    engine {(shot.Engine is { } e ? $"{e.ShooterId} {e.Weapon} -> {e.TargetId} hit {e.Hit} HP {e.HpDamage:F3} org {e.OrganizationDamage:F3} crit {e.Critical} part {e.PartHit} (hit chance {e.HitChance:F5})" : "-")}");
             }
 

@@ -124,7 +124,10 @@ public static class ExperienceRules
             return 0;
         }
 
-        var loss = RoundHalfAway(ship.MaxManpower * (strDamage / maxHp) * navy.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
+        // [CAL] The game keeps strDamage / maxHp in fx5, truncated: rounding the exact ratio misses 48 of 22087 logged
+        // losses (fractions just above .5 that the game rounds down), the truncated ratio none.
+        var ratio = Math.Floor(strDamage / maxHp * 100000 + 1e-9) / 100000;
+        var loss = RoundHalfAway(ship.MaxManpower * ratio * navy.MANPOWER_LOSS_RATIO_ON_STR_LOSS);
         var applied = Math.Min(loss, ship.CurrentManpower - floor);
         ship.CurrentManpower -= applied;
         return applied;
@@ -161,19 +164,23 @@ public static class ExperienceRules
     }
 
     /// <summary>
-    /// S-ORG-REGAIN [CAL]: retreating and escaped ships regain <c>SHIP_MORALE_TO_ORG_REGAIN_BASE</c> organization an hour,
-    /// up to the maximum; fighting and waiting ships regain none. Not modelled: the +10 % of the side with naval
-    /// dominance in the region (NAVAL_DOMINANCE_ORG_RECOVERY; 0.22 an hour in the logged battle).
+    /// S-ORG-REGAIN [RE + CAL] 0xc395a0: every ship that is not fighting regains
+    /// <c>(SHIP_MORALE_TO_ORG_REGAIN_BASE + naval_morale) × max(0, 1 + naval_morale_factor)</c> organization an hour, up to
+    /// its maximum (a fire, S-CRIT-PART, has naval_morale_factor −0.8). Not modelled: the +0.1 in that factor for the
+    /// side with naval dominance in the region (NAVAL_DOMINANCE_ORG_RECOVERY; 0.22 an hour in the logged battle) and a
+    /// ship value at +0x120.
     /// </summary>
     public static double HourlyOrganizationRegain(Ship ship, GameDefines defines)
     {
-        if (ship.IsSunk || ship.CurrentStatus is not (ShipStatus.Retreating or ShipStatus.Retreated))
+        if (ship.IsSunk || ship.CurrentStatus == ShipStatus.Active)
         {
             return 0;
         }
 
-        var maximum = ship.GetFinalStats().Organization;
-        var gain = Math.Max(0, Math.Min(defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE, maximum - ship.CurrentOrganization));
+        var maximum = CombatStatRules.MaxOrganization(ship, defines);
+        var regain = (defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMorale, 0, defines)) *
+                     Math.Max(0, 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMoraleFactor, 0, defines));
+        var gain = Math.Max(0, Math.Min(regain, maximum - ship.CurrentOrganization));
         ship.CurrentOrganization += gain;
         return gain;
     }

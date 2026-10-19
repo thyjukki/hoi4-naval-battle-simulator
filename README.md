@@ -47,7 +47,7 @@ dotnet run --project src/NavySimulator.Cli -- --defines "C:\Program Files (x86)\
 
 ### Importing hulls, modules and ship types
 
-`data/hulls/`, `data/modules/` and `data/ship-types/` are read from the game, with mods applied over it as the launcher loads them:
+`data/hulls/`, `data/modules/`, `data/ship-types/` and `data/critical-parts/` are read from the game, with mods applied over it as the launcher loads them:
 
 ```powershell
 dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV" --mod "<mod folder>"
@@ -85,7 +85,7 @@ Everything lives in `data/`:
 | Folder / file | Content |
 |---|---|
 | `battle-scenario.json` | The battle: fleets per side, researches, spirits, `defines` sources, `rules` variants |
-| `hulls/`, `modules/`, `ship-types/` | Hulls with their module slots, modules, and ship types (naval sub-units), imported from the game with its IDs and names (below) |
+| `hulls/`, `modules/`, `ship-types/`, `critical-parts/` | Hulls with their module slots, modules, ship types (naval sub-units) and the critical parts crits can damage, imported from the game with its IDs and names (below) |
 | `mios/`, `ship-designs/` | MIOs; designs: a hull and one module per slot (`"modules": { "<slot>": "<module>" }`) |
 | `researches/`, `spirits/`, `planes/`, `force-compositions/` | Modifiers, planes, fleets |
 | `defines/tfb-legacy.lua` | The previous simulator's TFB-mod values as an optional defines profile |

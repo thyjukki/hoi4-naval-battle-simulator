@@ -7,6 +7,9 @@
       "shortName": "Secondary Battery I",
       "category": "ship_secondaries",
       "categoryName": "Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 2,
         "productionCost": 200
@@ -24,6 +27,9 @@
       "shortName": "Secondary Battery II",
       "category": "ship_secondaries",
       "categoryName": "Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 4,
         "productionCost": 230
@@ -41,6 +47,9 @@
       "shortName": "Secondary Battery III",
       "category": "ship_secondaries",
       "categoryName": "Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 6,
         "productionCost": 260
@@ -58,6 +67,9 @@
       "shortName": "Secondary Battery IV",
       "category": "ship_secondaries",
       "categoryName": "Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 9,
         "productionCost": 300
@@ -75,6 +87,9 @@
       "shortName": "Dual-Purpose Secondary Battery I",
       "category": "ship_dp_secondaries",
       "categoryName": "Dual-Purpose Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 2,
         "antiAir": 1.5,
@@ -93,6 +108,9 @@
       "shortName": "Dual-Purpose Secondary Battery II",
       "category": "ship_dp_secondaries",
       "categoryName": "Dual-Purpose Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 3,
         "antiAir": 3,
@@ -111,6 +129,9 @@
       "shortName": "Dual-Purpose Secondary Battery III",
       "category": "ship_dp_secondaries",
       "categoryName": "Dual-Purpose Secondary Battery",
+      "criticalParts": [
+        "damaged_secondaries"
+      ],
       "statModifiers": {
         "lightAttack": 4,
         "antiAir": 4.5,

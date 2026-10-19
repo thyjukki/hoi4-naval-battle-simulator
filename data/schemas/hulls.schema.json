@@ -75,6 +75,10 @@
                 "required": {
                   "type": "boolean"
                 },
+                "gameOrder": {
+                  "description": "The game's iteration order of design slots (first appearance of the slot name in the equipment files); critical parts are picked in this order (S-CRIT-PART).",
+                  "type": "integer"
+                },
                 "allowedCategories": {
                   "type": "array",
                   "items": {

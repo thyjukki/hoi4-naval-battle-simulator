@@ -64,6 +64,9 @@
       "shortName": "Radar I",
       "category": "ship_radar",
       "categoryName": "Radar",
+      "criticalParts": [
+        "shortcircuited_radar_1"
+      ],
       "statModifiers": {
         "surfaceDetection": 3,
         "productionCost": 100
@@ -75,6 +78,9 @@
       "shortName": "Radar II",
       "category": "ship_radar",
       "categoryName": "Radar",
+      "criticalParts": [
+        "shortcircuited_radar_2"
+      ],
       "statModifiers": {
         "surfaceDetection": 5,
         "subDetection": 2,
@@ -92,6 +98,9 @@
       "shortName": "Radar III",
       "category": "ship_radar",
       "categoryName": "Radar",
+      "criticalParts": [
+        "shortcircuited_radar_3"
+      ],
       "statModifiers": {
         "surfaceDetection": 7,
         "subDetection": 6,
@@ -109,6 +118,9 @@
       "shortName": "Radar IV",
       "category": "ship_radar",
       "categoryName": "Radar",
+      "criticalParts": [
+        "shortcircuited_radar_4"
+      ],
       "statModifiers": {
         "surfaceDetection": 9,
         "subDetection": 14,

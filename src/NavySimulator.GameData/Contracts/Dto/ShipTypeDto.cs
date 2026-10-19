@@ -23,4 +23,10 @@ public class ShipTypeDto
 
     /// <summary><c>max_organisation</c>.</summary>
     public double Organization { get; set; }
+
+    /// <summary><c>critical_parts</c>: the parts a critical hit can damage on any ship of the type (S-CRIT-PART).</summary>
+    public List<string> CriticalParts { get; set; } = [];
+
+    /// <summary><c>critical_part_damage_chance_mult</c>: multiplies the chance that a critical hit damages a part.</summary>
+    public double CriticalPartDamageChanceMult { get; set; } = 1;
 }

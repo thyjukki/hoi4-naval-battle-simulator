@@ -56,6 +56,17 @@
           },
           "organization": {
             "type": "number"
+          },
+          "criticalParts": {
+            "description": "critical_parts: parts a critical hit can damage on any ship of the type (S-CRIT-PART), IDs of critical-parts/.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "criticalPartDamageChanceMult": {
+            "description": "critical_part_damage_chance_mult (default 1).",
+            "type": "number"
           }
         },
         "additionalProperties": false

@@ -9,7 +9,8 @@ public class StatModule(
     ShipStats? statAverages = null,
     string category = "",
     IReadOnlyList<string>? addedEquipmentTypes = null,
-    IReadOnlyList<string>? forbiddenCategories = null)
+    IReadOnlyList<string>? forbiddenCategories = null,
+    IReadOnlyList<CriticalPart>? criticalParts = null)
 {
     public string ID { get; } = id;
     public ShipStats StatModifiers { get; } = statModifiers;
@@ -24,4 +25,7 @@ public class StatModule(
 
     /// <summary><c>forbid_module_categories</c>: categories no other slot of the design may hold (S-DESIGN-FORBID).</summary>
     public IReadOnlyList<string> ForbiddenCategories { get; } = forbiddenCategories ?? [];
+
+    /// <summary><c>critical_parts</c>: parts the module adds to the ship's candidates (S-CRIT-PART).</summary>
+    public IReadOnlyList<CriticalPart> CriticalParts { get; } = criticalParts ?? [];
 }

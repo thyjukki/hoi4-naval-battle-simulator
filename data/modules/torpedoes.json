@@ -7,6 +7,10 @@
       "shortName": "Torpedo Launcher I",
       "category": "ship_torpedo",
       "categoryName": "Torpedo Launchers",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 18,
         "productionCost": 90
@@ -21,6 +25,10 @@
       "shortName": "Torpedo Launcher II",
       "category": "ship_torpedo",
       "categoryName": "Torpedo Launchers",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 25,
         "torpedoHitChanceFactor": 0.01,
@@ -36,6 +44,10 @@
       "shortName": "Torpedo Launcher III",
       "category": "ship_torpedo",
       "categoryName": "Torpedo Launchers",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 34,
         "torpedoHitChanceFactor": 0.015,
@@ -51,6 +63,10 @@
       "shortName": "Torpedo Launcher IV",
       "category": "ship_torpedo",
       "categoryName": "Torpedo Launchers",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 44,
         "torpedoHitChanceFactor": 0.02,
@@ -66,6 +82,10 @@
       "shortName": "Torpedo Tubes I",
       "category": "ship_torpedo_sub",
       "categoryName": "Torpedo Room",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 16,
         "productionCost": 80
@@ -80,6 +100,10 @@
       "shortName": "Torpedo Tubes II",
       "category": "ship_torpedo_sub",
       "categoryName": "Torpedo Room",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 20,
         "torpedoHitChanceFactor": 0.005,
@@ -95,6 +119,10 @@
       "shortName": "Torpedo Tubes III",
       "category": "ship_torpedo_sub",
       "categoryName": "Torpedo Room",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 26,
         "torpedoHitChanceFactor": 0.01,
@@ -110,6 +138,10 @@
       "shortName": "Torpedo Tubes IV",
       "category": "ship_torpedo_sub",
       "categoryName": "Torpedo Room",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "torpedoAttack": 32,
         "torpedoHitChanceFactor": 0.015,
@@ -124,6 +156,10 @@
       "name": "Nuclear Torpedo",
       "category": "ship_torpedo_sub",
       "categoryName": "Torpedo Room",
+      "criticalParts": [
+        "damaged_torpedoes",
+        "jammed_torpedo"
+      ],
       "statModifiers": {
         "reliability": -0.15,
         "torpedoAttack": 44,

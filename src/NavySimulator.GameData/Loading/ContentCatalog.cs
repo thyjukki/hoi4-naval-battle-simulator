@@ -21,6 +21,7 @@ public sealed class ContentCatalog
     public List<HullDto> Hulls { get; } = [];
     public List<ModuleDto> Modules { get; } = [];
     public List<ShipTypeDto> ShipTypes { get; } = [];
+    public List<CriticalPartDto> CriticalParts { get; } = [];
     public List<MioBonusDto> Mios { get; } = [];
     public List<ShipDesignDto> ShipDesigns { get; } = [];
     public List<ResearchDto> Researches { get; } = [];

@@ -6,6 +6,9 @@
       "name": "Basic Schnorkel",
       "category": "ship_sub_snorkel",
       "categoryName": "Snorkel",
+      "criticalParts": [
+        "leaking_snorkel_1"
+      ],
       "statModifiers": {
         "productionCost": 100
       },
@@ -18,6 +21,9 @@
       "name": "Improved Schnorkel",
       "category": "ship_sub_snorkel",
       "categoryName": "Snorkel",
+      "criticalParts": [
+        "leaking_snorkel_2"
+      ],
       "statModifiers": {
         "productionCost": 140
       },
@@ -72,6 +78,9 @@
       "name": "Extra Fuel Tanks",
       "category": "ship_extra_fuel_tank",
       "categoryName": "Fuel Tank",
+      "criticalParts": [
+        "leaking_fuel_tanks"
+      ],
       "statMultipliers": {
         "productionCost": 0.05
       }

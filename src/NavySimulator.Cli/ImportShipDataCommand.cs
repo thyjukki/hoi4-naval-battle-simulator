@@ -2,7 +2,7 @@ using NavySimulator.GameData.Import;
 
 namespace NavySimulator.Cli;
 
-/// <summary><c>NavySimulator import-ship-data</c>: reads hulls, modules and ship types from the game (and mods) into a data directory.</summary>
+/// <summary><c>NavySimulator import-ship-data</c>: reads hulls, modules, ship types and critical parts from the game (and mods) into a data directory.</summary>
 public static class ImportShipDataCommand
 {
     public const string Name = "import-ship-data";
@@ -12,8 +12,8 @@ public static class ImportShipDataCommand
 
           --game <dir>        HOI4 install folder
           --mod <dir>         Mod folder applied over the game, as the launcher loads it (repeatable, in load order)
-          --data <dir>        Data directory to write (default: ./data). Replaces every file in hulls/, modules/
-                              and ship-types/.
+          --data <dir>        Data directory to write (default: ./data). Replaces every file in hulls/, modules/,
+                              ship-types/ and critical-parts/.
           --language <name>   Localisation language for names (default: english)
         """;
 
@@ -91,7 +91,8 @@ public static class ImportShipDataCommand
         }
 
         var files = ShipDataWriter.Write(data, import);
-        Console.WriteLine($"Imported {import.Hulls.Count} hulls, {import.Modules.Count} modules and {import.ShipTypes.Count} ship types into {Path.GetFullPath(data)}:");
+        Console.WriteLine($"Imported {import.Hulls.Count} hulls, {import.Modules.Count} modules, {import.ShipTypes.Count} ship types and " +
+                          $"{import.CriticalParts.Count} critical parts into {Path.GetFullPath(data)}:");
         files.ToList().ForEach(file => Console.WriteLine($"  {file}"));
 
         if (import.SkippedEquipment.Count > 0)

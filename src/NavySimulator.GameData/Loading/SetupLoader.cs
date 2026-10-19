@@ -25,6 +25,7 @@ public class SetupLoader
         ("hulls", "hulls.json"),
         ("modules", "modules.json"),
         ("ship-types", "ship-types.json"),
+        ("critical-parts", "critical-parts.json"),
         ("mios", "mios.json"),
         ("ship-designs", "ship-designs.json"),
         ("researches", "researches.json"),
@@ -70,6 +71,13 @@ public class SetupLoader
         catalog.Hulls.AddRange(ReadCollectionFromFolderOrFile<HullDto>(catalog, "hulls", "hulls.json", "hulls"));
         catalog.Modules.AddRange(ReadCollectionFromFolderOrFile<ModuleDto>(catalog, "modules", "modules.json", "modules"));
         catalog.ShipTypes.AddRange(ReadCollectionFromFolderOrFile<ShipTypeDto>(catalog, "ship-types", "ship-types.json", "shipTypes"));
+
+        // Optional: data imported before critical parts existed has none (crits then use their own multiplier, S-CRIT-PART).
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, "critical-parts")) || File.Exists(Path.Combine(dataDirectoryPath, "critical-parts.json")))
+        {
+            catalog.CriticalParts.AddRange(ReadCollectionFromFolderOrFile<CriticalPartDto>(catalog, "critical-parts", "critical-parts.json", "criticalParts"));
+        }
+
         catalog.Mios.AddRange(ReadCollectionFromFolderOrFile<MioBonusDto>(catalog, "mios", "mios.json", "mios"));
         catalog.ShipDesigns.AddRange(ReadCollectionFromFolderOrFile<ShipDesignDto>(catalog, "ship-designs", "ship-designs.json", "shipDesigns"));
         catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
@@ -78,6 +86,7 @@ public class SetupLoader
         catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
         ValidateCountryModifierWarnings(catalog);
         ValidateDesignRuleWarnings(catalog);
+        ValidateCriticalPartWarnings(catalog);
         return catalog;
     }
 
@@ -594,6 +603,24 @@ public class SetupLoader
     }
 
     // S-DESIGN: designs that break the designer's module restrictions are still simulated, unless they override them.
+    // S-CRIT-PART: parts named by modules and ship types must be defined, or crits on those ships cannot damage them.
+    private static void ValidateCriticalPartWarnings(ContentCatalog catalog)
+    {
+        if (catalog.CriticalParts.Count == 0)
+        {
+            return;
+        }
+
+        var known = catalog.CriticalParts.Select(part => part.ID).ToHashSet(StringComparer.Ordinal);
+        var users = catalog.Modules.SelectMany(module => (module.CriticalParts ?? []).Select(part => (Item: $"module '{module.ID}'", Part: part)))
+            .Concat(catalog.ShipTypes.SelectMany(type => (type.CriticalParts ?? []).Select(part => (Item: $"ship type '{type.ID}'", Part: part))));
+
+        foreach (var (item, part) in users.Where(user => !known.Contains(user.Part)))
+        {
+            catalog.Warnings.Add($"{item}: critical part '{part}' is not defined in critical-parts/ and is ignored.");
+        }
+    }
+
     private static void ValidateDesignRuleWarnings(ContentCatalog catalog)
     {
         var library = ContentLibrary.From(catalog);

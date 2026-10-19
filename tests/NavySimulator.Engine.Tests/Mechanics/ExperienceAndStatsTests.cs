@@ -107,12 +107,16 @@ public class ExperienceAndStatsTests
     }
 
     [Fact]
-    public void OrganizationRegain_OnlyForRetreatingAndEscapedShips_UpToTheMaximum()
+    public void OrganizationRegain_ForEveryShipThatIsNotFighting_UpToTheMaximum()
     {
         var ship = TestEntityFactory.Screen("dd");
         ship.CurrentOrganization = 10;
+        ship.CurrentStatus = ShipStatus.Active;
 
         Assert.Equal(0, ExperienceRules.HourlyOrganizationRegain(ship, defines));
+
+        ship.CurrentStatus = ShipStatus.Waiting;
+        Assert.Equal(0.2, ExperienceRules.HourlyOrganizationRegain(ship, defines), 9);
 
         ship.CurrentStatus = ShipStatus.Retreating;
         Assert.Equal(0.2, ExperienceRules.HourlyOrganizationRegain(ship, defines), 9);

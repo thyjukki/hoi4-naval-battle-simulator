@@ -7,6 +7,9 @@
       "shortName": "Light Battery I",
       "category": "ship_light_battery",
       "categoryName": "Rapid Fire Guns",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 1,
         "lightPiercing": 0.1,
@@ -25,6 +28,9 @@
       "shortName": "Light Battery II",
       "category": "ship_light_battery",
       "categoryName": "Rapid Fire Guns",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 2,
         "lightPiercing": 0.15,
@@ -43,6 +49,9 @@
       "shortName": "Light Battery III",
       "category": "ship_light_battery",
       "categoryName": "Rapid Fire Guns",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 3,
         "lightPiercing": 0.2,
@@ -61,6 +70,9 @@
       "shortName": "Light Battery IV",
       "category": "ship_light_battery",
       "categoryName": "Rapid Fire Guns",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 4,
         "lightPiercing": 0.25,
@@ -79,6 +91,9 @@
       "shortName": "Dual-Purpose Main Battery I",
       "category": "dp_light_battery",
       "categoryName": "Dual-Purpose Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 0.5,
         "antiAir": 1,
@@ -97,6 +112,9 @@
       "shortName": "Dual-Purpose Main Battery II",
       "category": "dp_light_battery",
       "categoryName": "Dual-Purpose Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 1,
         "antiAir": 2,
@@ -115,6 +133,9 @@
       "shortName": "Dual-Purpose Main Battery III",
       "category": "dp_light_battery",
       "categoryName": "Dual-Purpose Battery",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "lightAttack": 1.5,
         "antiAir": 3,
@@ -132,6 +153,9 @@
       "name": "200mm Battery",
       "category": "ship_light_battery_sub",
       "categoryName": "Deck Guns",
+      "criticalParts": [
+        "damaged_light_guns"
+      ],
       "statModifiers": {
         "productionCost": 110
       },

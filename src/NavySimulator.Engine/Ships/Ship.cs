@@ -11,6 +11,8 @@ public class Ship
     public string ID;
     public ShipDesign Design;
     public double InitialExperience;
+    private readonly List<DamagedPart> damagedParts = [];
+    private ShipStats undamagedStats;
     private ShipStats stats;
 
     public Ship(string id, ShipDesign design, double experience = 0)
@@ -19,7 +21,8 @@ public class Ship
         Design = design;
         InitialExperience = experience;
         MaxManpower = Math.Max(0, design.Hull.Manpower);
-        stats = design.GetFinalStats();
+        undamagedStats = design.GetFinalStats();
+        stats = undamagedStats;
         ResetCombatState();
     }
 
@@ -52,10 +55,48 @@ public class Ship
     public bool IsInBattle => !IsSunk && CurrentStatus != ShipStatus.Retreated;
     public bool IsVisible => RevealTimer != 0;
 
-    /// <summary>Stats from hull, modules, MIO, researches and spirits. Experience and battle modifiers are applied by the combat rules.</summary>
+    /// <summary>S-CRIT-PART: parts damaged by critical hits this battle, in the order they were first damaged.</summary>
+    public IReadOnlyList<DamagedPart> DamagedParts => damagedParts;
+
+    /// <summary>
+    /// Stats from hull, modules, MIO, researches and spirits, with the penalties of damaged parts (S-STATS-PARTS).
+    /// Experience and battle modifiers are applied by the combat rules.
+    /// </summary>
     public ShipStats GetFinalStats()
     {
         return stats;
+    }
+
+    /// <summary>Times <paramref name="part"/> has been damaged on this ship.</summary>
+    public int DamageCount(CriticalPart part)
+    {
+        return damagedParts.FirstOrDefault(damaged => damaged.Part == part)?.Count ?? 0;
+    }
+
+    /// <summary>
+    /// S-CRIT-PART [RE] 0xc31170, 0xc3d090: records one more damage of <paramref name="part"/> and recomputes the stats:
+    /// each penalized stat × max(0, 1 + count × penalty) over the damaged parts (S-STATS-PARTS).
+    /// </summary>
+    public void DamagePart(CriticalPart part)
+    {
+        var damaged = damagedParts.FirstOrDefault(entry => entry.Part == part);
+
+        if (damaged is null)
+        {
+            damagedParts.Add(new DamagedPart(part));
+        }
+        else
+        {
+            damaged.Count++;
+        }
+
+        stats = damagedParts.Aggregate(undamagedStats, (current, entry) => current.Scale(entry.Part.StatPenalties.PartPenaltyBonus(entry.Count)));
+    }
+
+    /// <summary>Σ over damaged parts of the part's modifier × its count; the rules scale it by 1 + naval_critical_effect_factor.</summary>
+    public double PartModifier(string key)
+    {
+        return damagedParts.Sum(entry => entry.Part.Modifiers.Get(key) * entry.Count);
     }
 
     /// <summary>
@@ -75,7 +116,7 @@ public class Ship
         updated = updated.Add(spiritModifiers).Add(spiritAverages).Scale(spiritMultipliers);
 
         // S-STATS-CLAMP [RE] 0x142a217.
-        stats = updated with
+        undamagedStats = updated with
         {
             Reliability = Math.Max(0, updated.Reliability),
             ProductionCost = Math.Max(0.1, updated.ProductionCost)
@@ -83,9 +124,11 @@ public class Ship
         ResetCombatState();
     }
 
-    /// <summary>Restores full HP, organization, manpower and starting experience so a scenario can be re-run.</summary>
+    /// <summary>Restores full HP, organization, manpower, starting experience and undamaged parts so a scenario can be re-run.</summary>
     public void ResetCombatState()
     {
+        damagedParts.Clear();
+        stats = undamagedStats;
         CurrentHP = stats.Hp;
         CurrentOrganization = stats.Organization;
         CurrentManpower = MaxManpower;

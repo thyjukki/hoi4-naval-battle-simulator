@@ -25,14 +25,16 @@
           "required": true,
           "allowedCategories": [
             "ship_super_heavy_battery"
-          ]
+          ],
+          "gameOrder": 14
         },
         {
           "id": "fixed_ship_anti_air_slot",
           "name": "Anti-Air",
           "allowedCategories": [
             "ship_anti_air"
-          ]
+          ],
+          "gameOrder": 2
         },
         {
           "id": "fixed_ship_fire_control_system_slot",
@@ -40,14 +42,16 @@
           "required": true,
           "allowedCategories": [
             "ship_fire_control_system"
-          ]
+          ],
+          "gameOrder": 15
         },
         {
           "id": "fixed_ship_radar_slot",
           "name": "Radar/Sonar",
           "allowedCategories": [
             "ship_radar"
-          ]
+          ],
+          "gameOrder": 3
         },
         {
           "id": "fixed_ship_engine_slot",
@@ -55,7 +59,8 @@
           "required": true,
           "allowedCategories": [
             "heavy_ship_engine"
-          ]
+          ],
+          "gameOrder": 4
         },
         {
           "id": "fixed_ship_secondaries_slot",
@@ -64,7 +69,8 @@
             "ship_anti_air",
             "ship_secondaries",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 5
         },
         {
           "id": "fixed_ship_armor_slot",
@@ -72,7 +78,8 @@
           "required": true,
           "allowedCategories": [
             "ship_super_heavy_armor"
-          ]
+          ],
+          "gameOrder": 12
         },
         {
           "id": "front_1_custom_slot",
@@ -80,7 +87,8 @@
           "allowedCategories": [
             "ship_anti_air",
             "ship_super_heavy_battery"
-          ]
+          ],
+          "gameOrder": 6
         },
         {
           "id": "front_2_custom_slot",
@@ -88,7 +96,8 @@
           "allowedCategories": [
             "ship_anti_air",
             "ship_super_heavy_battery"
-          ]
+          ],
+          "gameOrder": 13
         },
         {
           "id": "mid_1_custom_slot",
@@ -98,7 +107,8 @@
             "ship_secondaries",
             "ship_airplane_launcher",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 7
         },
         {
           "id": "mid_2_custom_slot",
@@ -108,7 +118,8 @@
             "ship_secondaries",
             "ship_airplane_launcher",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 8
         },
         {
           "id": "mid_3_custom_slot",
@@ -118,7 +129,8 @@
             "ship_secondaries",
             "ship_airplane_launcher",
             "ship_dp_secondaries"
-          ]
+          ],
+          "gameOrder": 10
         },
         {
           "id": "rear_1_custom_slot",
@@ -129,7 +141,8 @@
             "ship_dp_secondaries",
             "ship_super_heavy_battery",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 9
         },
         {
           "id": "rear_2_custom_slot",
@@ -140,7 +153,8 @@
             "ship_dp_secondaries",
             "ship_super_heavy_battery",
             "ship_airplane_launcher"
-          ]
+          ],
+          "gameOrder": 11
         }
       ],
       "moduleCountLimits": [
