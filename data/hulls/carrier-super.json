@@ -1,0 +1,146 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "ship_hull_carrier_super_1",
+      "name": "Super Heavy Carrier Hull",
+      "archetype": "ship_hull_carrier_super",
+      "archetypeName": "Super Heavy Carrier Hull",
+      "equipmentType": "carrier",
+      "year": 1939,
+      "manpower": 10000,
+      "baseStats": {
+        "speed": 30,
+        "reliability": 0.7,
+        "hp": 400,
+        "surfaceVisibility": 33,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "carrierSize": 1,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 7000
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_super_heavy_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "front_2_custom_slot",
+          "name": "Front 2 Custom",
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "mid_3_custom_slot",
+          "name": "Mid 3 Custom",
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_light_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_light_battery",
+            "ship_medium_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_2",
+        "fixed_ship_armor_slot": "ship_armor_shbb"
+      }
+    }
+  ]
+}

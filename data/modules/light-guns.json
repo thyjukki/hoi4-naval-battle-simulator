@@ -2,7 +2,83 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
+      "id": "ship_light_battery_1",
+      "name": "85 mm RF. Cannon",
+      "shortName": "Light Battery I",
+      "category": "ship_light_battery",
+      "categoryName": "Rapid Fire Guns",
+      "statModifiers": {
+        "lightAttack": 1,
+        "lightPiercing": 0.1,
+        "productionCost": 90
+      },
+      "statAverages": {
+        "lightPiercing": 3
+      },
+      "statMultipliers": {
+        "speed": -0.005
+      }
+    },
+    {
+      "id": "ship_light_battery_2",
+      "name": "105 mm RF. Cannon",
+      "shortName": "Light Battery II",
+      "category": "ship_light_battery",
+      "categoryName": "Rapid Fire Guns",
+      "statModifiers": {
+        "lightAttack": 2,
+        "lightPiercing": 0.15,
+        "productionCost": 120
+      },
+      "statAverages": {
+        "lightPiercing": 4
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "ship_light_battery_3",
+      "name": "127 mm RF. Cannon",
+      "shortName": "Light Battery III",
+      "category": "ship_light_battery",
+      "categoryName": "Rapid Fire Guns",
+      "statModifiers": {
+        "lightAttack": 3,
+        "lightPiercing": 0.2,
+        "productionCost": 150
+      },
+      "statAverages": {
+        "lightPiercing": 5
+      },
+      "statMultipliers": {
+        "speed": -0.015
+      }
+    },
+    {
+      "id": "ship_light_battery_4",
+      "name": "130 mm RF. Cannon",
+      "shortName": "Light Battery IV",
+      "category": "ship_light_battery",
+      "categoryName": "Rapid Fire Guns",
+      "statModifiers": {
+        "lightAttack": 4,
+        "lightPiercing": 0.25,
+        "productionCost": 180
+      },
+      "statAverages": {
+        "lightPiercing": 6
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
       "id": "dp_light_battery_1",
+      "name": "100mm Dual-Purpose Battery",
+      "shortName": "Dual-Purpose Main Battery I",
+      "category": "dp_light_battery",
+      "categoryName": "Dual-Purpose Battery",
       "statModifiers": {
         "lightAttack": 0.5,
         "antiAir": 1,
@@ -17,6 +93,10 @@
     },
     {
       "id": "dp_light_battery_2",
+      "name": "113mm Dual-Purpose Battery",
+      "shortName": "Dual-Purpose Main Battery II",
+      "category": "dp_light_battery",
+      "categoryName": "Dual-Purpose Battery",
       "statModifiers": {
         "lightAttack": 1,
         "antiAir": 2,
@@ -31,6 +111,10 @@
     },
     {
       "id": "dp_light_battery_3",
+      "name": "127mm Dual-Purpose Battery",
+      "shortName": "Dual-Purpose Main Battery III",
+      "category": "dp_light_battery",
+      "categoryName": "Dual-Purpose Battery",
       "statModifiers": {
         "lightAttack": 1.5,
         "antiAir": 3,
@@ -44,120 +128,15 @@
       }
     },
     {
-      "id": "light_battery_1",
-      "statModifiers": {
-        "lightAttack": 1,
-        "productionCost": 90,
-        "lightPiercing": 0.1
-      },
-      "statAverages": {
-        "lightPiercing": 3
-      },
-      "statMultipliers": {
-        "speed": -0.005
-      }
-    },
-    {
-      "id": "light_battery_2",
-      "statModifiers": {
-        "lightAttack": 2,
-        "productionCost": 120,
-        "lightPiercing": 0.15
-      },
-      "statAverages": {
-        "lightPiercing": 4
-      },
-      "statMultipliers": {
-        "speed": -0.01
-      }
-    },
-    {
-      "id": "light_battery_3",
-      "statModifiers": {
-        "lightAttack": 3,
-        "productionCost": 150,
-        "lightPiercing": 0.2
-      },
-      "statAverages": {
-        "lightPiercing": 5
-      },
-      "statMultipliers": {
-        "speed": -0.015
-      }
-    },
-    {
-      "id": "light_battery_4",
-      "statModifiers": {
-        "lightAttack": 4,
-        "productionCost": 180,
-        "lightPiercing": 0.25
-      },
-      "statAverages": {
-        "lightPiercing": 6
-      },
-      "statMultipliers": {
-        "speed": -0.02
-      }
-    },
-    {
-      "id": "light_battery_sub",
+      "id": "ship_light_battery_sub",
+      "name": "200mm Battery",
+      "category": "ship_light_battery_sub",
+      "categoryName": "Deck Guns",
       "statModifiers": {
         "productionCost": 110
       },
       "statMultipliers": {
         "subVisibility": 0.05
-      }
-    },
-    {
-      "id": "medium_light_battery_1",
-      "statModifiers": {
-        "lightAttack": 3,
-        "productionCost": 400
-      },
-      "statAverages": {
-        "lightPiercing": 4
-      },
-      "statMultipliers": {
-        "speed": -0.04
-      }
-    },
-    {
-      "id": "medium_light_battery_2",
-      "statModifiers": {
-        "lightAttack": 6,
-        "productionCost": 450
-      },
-      "statAverages": {
-        "lightPiercing": 6
-      },
-      "statMultipliers": {
-        "speed": -0.05
-      }
-    },
-    {
-      "id": "medium_light_battery_3",
-      "statModifiers": {
-        "lightAttack": 9,
-        "productionCost": 500
-      },
-      "statAverages": {
-        "lightPiercing": 8
-      },
-      "statMultipliers": {
-        "speed": -0.06
-      }
-    },
-    {
-      "id": "medium_light_battery_4",
-      "statModifiers": {
-        "lightAttack": 12,
-        "productionCost": 550
-      },
-      "statAverages": {
-        "lightPiercing": 10
-      },
-      "statMultipliers": {
-        "speed": -0.07
       }
     }
   ]

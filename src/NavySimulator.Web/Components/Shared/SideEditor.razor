@@ -200,7 +200,7 @@
         return Workspace.Catalog.Researches
             .Select(research => new CheckItem(
                 research.ID,
-                StatInfo.Summarize(research.StatModifiers, research.StatAverages, research.StatMultipliers) + AppliesTo(research.AppliesToRoles, research.AppliesToTypes) +
+                ModifierInfo.SummarizeResearch(research) + AppliesTo(research.AppliesToRoles, research.AppliesToTypes) +
                 (research.EquipmentBonus ? " · equipment bonus" : string.Empty),
                 Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research) ?? string.Empty)))
             .ToList();

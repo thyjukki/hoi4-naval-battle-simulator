@@ -17,6 +17,8 @@ public sealed class StaticModifiers
 
     public const string NavalHitChance = "naval_hit_chance";
     public const string NavalRetreatSpeed = "naval_retreat_speed";
+    public const string NavalRetreatSpeedAfterInitialCombat = "naval_retreat_speed_after_initial_combat";
+    public const string SubRetreatSpeed = "sub_retreat_speed";
     public const string ConvoyRetreatSpeed = "convoy_retreat_speed";
     public const string SortieEfficiency = "sortie_efficiency";
     public const string NavalDamageFactor = "naval_damage_factor";

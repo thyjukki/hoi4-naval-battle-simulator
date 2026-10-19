@@ -2,7 +2,11 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "torpedo_1",
+      "id": "ship_torpedo_1",
+      "name": "3x 450mm Torpedo Launcher",
+      "shortName": "Torpedo Launcher I",
+      "category": "ship_torpedo",
+      "categoryName": "Torpedo Launchers",
       "statModifiers": {
         "torpedoAttack": 18,
         "productionCost": 90
@@ -12,40 +16,56 @@
       }
     },
     {
-      "id": "torpedo_2",
+      "id": "ship_torpedo_2",
+      "name": "4x 450mm Torpedo Launcher",
+      "shortName": "Torpedo Launcher II",
+      "category": "ship_torpedo",
+      "categoryName": "Torpedo Launchers",
       "statModifiers": {
         "torpedoAttack": 25,
-        "productionCost": 120,
-        "torpedoHitChanceFactor": 0.01
+        "torpedoHitChanceFactor": 0.01,
+        "productionCost": 120
       },
       "statMultipliers": {
         "speed": -0.02
       }
     },
     {
-      "id": "torpedo_3",
+      "id": "ship_torpedo_3",
+      "name": "3x 533mm Torpedo Launcher",
+      "shortName": "Torpedo Launcher III",
+      "category": "ship_torpedo",
+      "categoryName": "Torpedo Launchers",
       "statModifiers": {
         "torpedoAttack": 34,
-        "productionCost": 150,
-        "torpedoHitChanceFactor": 0.015
+        "torpedoHitChanceFactor": 0.015,
+        "productionCost": 150
       },
       "statMultipliers": {
         "speed": -0.03
       }
     },
     {
-      "id": "torpedo_4",
+      "id": "ship_torpedo_4",
+      "name": "4x 533mm Torpedo Launcher",
+      "shortName": "Torpedo Launcher IV",
+      "category": "ship_torpedo",
+      "categoryName": "Torpedo Launchers",
       "statModifiers": {
         "torpedoAttack": 44,
-        "productionCost": 180,
-        "torpedoHitChanceFactor": 0.02
+        "torpedoHitChanceFactor": 0.02,
+        "productionCost": 180
       },
       "statMultipliers": {
         "speed": -0.04
       }
     },
     {
-      "id": "torpedo_sub_1",
+      "id": "ship_torpedo_sub_1",
+      "name": "4x 450mm Torpedo Tubes",
+      "shortName": "Torpedo Tubes I",
+      "category": "ship_torpedo_sub",
+      "categoryName": "Torpedo Room",
       "statModifiers": {
         "torpedoAttack": 16,
         "productionCost": 80
@@ -55,45 +75,60 @@
       }
     },
     {
-      "id": "torpedo_sub_2",
+      "id": "ship_torpedo_sub_2",
+      "name": "6x 450mm Torpedo Tubes",
+      "shortName": "Torpedo Tubes II",
+      "category": "ship_torpedo_sub",
+      "categoryName": "Torpedo Room",
       "statModifiers": {
         "torpedoAttack": 20,
-        "productionCost": 100,
-        "torpedoHitChanceFactor": 0.005
+        "torpedoHitChanceFactor": 0.005,
+        "productionCost": 100
       },
       "statMultipliers": {
         "speed": -0.02
       }
     },
     {
-      "id": "torpedo_sub_3",
+      "id": "ship_torpedo_sub_3",
+      "name": "4x 533mm Torpedo Tubes",
+      "shortName": "Torpedo Tubes III",
+      "category": "ship_torpedo_sub",
+      "categoryName": "Torpedo Room",
       "statModifiers": {
         "torpedoAttack": 26,
-        "productionCost": 120,
-        "torpedoHitChanceFactor": 0.01
+        "torpedoHitChanceFactor": 0.01,
+        "productionCost": 120
       },
       "statMultipliers": {
         "speed": -0.03
       }
     },
     {
-      "id": "torpedo_sub_4",
+      "id": "ship_torpedo_sub_4",
+      "name": "6x 533mm Torpedo Tubes",
+      "shortName": "Torpedo Tubes IV",
+      "category": "ship_torpedo_sub",
+      "categoryName": "Torpedo Room",
       "statModifiers": {
         "torpedoAttack": 32,
-        "productionCost": 140,
-        "torpedoHitChanceFactor": 0.015
+        "torpedoHitChanceFactor": 0.015,
+        "productionCost": 140
       },
       "statMultipliers": {
         "speed": -0.04
       }
     },
     {
-      "id": "torpedo_sub_nuclear",
+      "id": "ship_torpedo_sub_nuclear",
+      "name": "Nuclear Torpedo",
+      "category": "ship_torpedo_sub",
+      "categoryName": "Torpedo Room",
       "statModifiers": {
+        "reliability": -0.15,
         "torpedoAttack": 44,
-        "productionCost": 520,
         "torpedoHitChanceFactor": 0.05,
-        "reliability": -0.15
+        "productionCost": 520
       },
       "statMultipliers": {
         "speed": -0.05

@@ -70,6 +70,42 @@ public class HitChanceRulesTests
     }
 
     [Fact]
+    public void ModifierSum_AddsTheScreeningBonusWeaponFactors_AsLoggedInTheGame()
+    {
+        // TFB's screening_bonus; the capital designs of jukki_usa_vs_bc_japan have heavy and light hit factors 0.15.
+        // The game logged modifiers 1.9857 (heavy) and 1.5356 (light) at screening 0.64285, 2.4130 and 1.7328 at 0.97144.
+        var tfb = GameDefines.Vanilla();
+        tfb.StaticModifiers.Blocks[StaticModifiers.ScreeningBonus] = new(StringComparer.Ordinal)
+        {
+            [StaticModifiers.NavalHitChance] = 0.3,
+            [StaticModifiers.NavalHeavyGunHitChanceFactor] = 1,
+            [StaticModifiers.NavalLightGunHitChanceFactor] = 0.3
+        };
+        var capital = TestEntityFactory.CreateShip("bb", ShipRole.Capital,
+            TestEntityFactory.CapitalStats() with { HeavyHitChanceFactor = 0.15, LightHitChanceFactor = 0.15 });
+        var screen = TestEntityFactory.CreateShip("dd", ShipRole.Screen, TestEntityFactory.ScreenStats() with { LightHitChanceFactor = 0.15 });
+
+        Assert.Equal(1.9857, HitChanceRules.ModifierSum(capital, WeaponSlot.Heavy, new(0.64285, 1), 0, tfb), 3);
+        Assert.Equal(1.5356, HitChanceRules.ModifierSum(capital, WeaponSlot.Light, new(0.64285, 1), 0, tfb), 3);
+        Assert.Equal(2.4130, HitChanceRules.ModifierSum(capital, WeaponSlot.Heavy, new(0.97144, 1), 0, tfb), 3);
+        Assert.Equal(1.7328, HitChanceRules.ModifierSum(capital, WeaponSlot.Light, new(0.97144, 1), 0, tfb), 3);
+        Assert.Equal(1.15, HitChanceRules.ModifierSum(screen, WeaponSlot.Light, new(0.97144, 1), 0, tfb), 9);
+    }
+
+    [Fact]
+    public void ModifierSum_AddsCountryHitChanceModifiers()
+    {
+        var screen = TestEntityFactory.Screen("dd");
+        screen.CountryModifiers = new([
+            new(StaticModifiers.NavalHitChance, 0.1),
+            new(StaticModifiers.NavalTorpedoHitChanceFactor, 0.05)
+        ]);
+
+        Assert.Equal(1.1, HitChanceRules.ModifierSum(screen, WeaponSlot.Light, FullScreening, 0, defines), 9);
+        Assert.Equal(1.15, HitChanceRules.ModifierSum(screen, WeaponSlot.Torpedo, FullScreening, 0, defines), 9);
+    }
+
+    [Fact]
     public void CrewFactor_AddsOrganizationAndManpowerPenalties()
     {
         var ship = TestEntityFactory.Screen("dd");

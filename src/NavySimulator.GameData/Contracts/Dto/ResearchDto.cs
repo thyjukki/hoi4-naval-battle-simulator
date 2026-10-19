@@ -9,5 +9,8 @@ public class ResearchDto
     public List<string> AppliesToRoles { get; set; } = [];
     public List<string> AppliesToTypes { get; set; } = [];
     public bool EquipmentBonus { get; set; }
+
+    /// <summary>S-STATS-COUNTRY: country modifiers by game key (e.g. <c>naval_retreat_speed</c>), for every ship of the side.</summary>
+    public Dictionary<string, double> CountryModifiers { get; set; } = [];
 }
 

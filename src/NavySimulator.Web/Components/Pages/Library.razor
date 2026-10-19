@@ -5,7 +5,7 @@
 
 <div class="page-head">
     <h1>Library</h1>
-    <span class="muted">The content designs and scenarios are built from (read-only). Values are as written in the JSON: +flat, ~averaged, % multiplied.</span>
+    <span class="muted">The content designs and scenarios are built from (read-only). Hulls, modules and ship types come from the game (<code>NavySimulator import-ship-data</code>). Values are as written in the JSON: +flat, ~averaged, % multiplied.</span>
 </div>
 
 <div class="panel">
@@ -23,7 +23,7 @@
                 <table class="data compact">
                     <thead>
                         <tr>
-                            <th>Hull</th><th>Role</th><th>Types</th><th class="num">Manpower</th>
+                            <th>Hull</th><th>ID</th><th>Archetype</th><th class="num">Year</th><th class="num" title="Fixed + custom slots; hover for the allowed categories">Slots</th><th class="num">Manpower</th>
                             @foreach (var stat in HullStats)
                             {
                                 <th class="num">@stat.Label</th>
@@ -32,13 +32,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var hull in Workspace.Catalog.Hulls.Where(hull => Matches(hull.ID, hull.Role, string.Join(" ", hull.Types))))
+                        @foreach (var hull in Workspace.Catalog.Hulls.Where(hull => Matches(hull.ID, hull.Name, hull.ArchetypeName, hull.Archetype)))
                         {
                             var stats = hull.BaseStats.ToDomain();
+                            var fixedSlots = hull.Slots.Count(DesignSlots.IsFixed);
                             <tr>
-                                <td>@hull.ID</td>
-                                <td>@hull.Role</td>
-                                <td class="muted">@string.Join(", ", hull.Types)</td>
+                                <td>@(hull.Name ?? hull.ID)</td>
+                                <td class="muted small">@hull.ID</td>
+                                <td class="muted">@(hull.ArchetypeName ?? hull.Archetype)</td>
+                                <td class="num">@hull.Year</td>
+                                <td class="num" title="@SlotSummary(hull)">@fixedSlots + @(hull.Slots.Count - fixedSlots)</td>
                                 <td class="num">@hull.Manpower</td>
                                 @foreach (var stat in HullStats)
                                 {
@@ -53,15 +56,37 @@
 
             case "modules":
                 <table class="data compact">
-                    <thead><tr><th>Category</th><th>Module</th><th>Effect</th><th class="num">Used in</th></tr></thead>
+                    <thead><tr><th>Category</th><th>Module</th><th>ID</th><th>Effect</th><th>Design rules</th><th class="num">Used in</th></tr></thead>
                     <tbody>
-                        @foreach (var module in Workspace.Catalog.Modules.Where(module => Matches(module.ID, Workspace.ModuleCategory(module))))
+                        @foreach (var module in Workspace.Catalog.Modules.Where(module => Matches(module.ID, module.Name, module.ShortName, Workspace.ModuleCategory(module))))
                         {
                             <tr>
                                 <td class="muted">@Workspace.ModuleCategory(module)</td>
-                                <td>@module.ID</td>
+                                <td>@DesignSlots.ModuleLabel(module)</td>
+                                <td class="muted small">@module.ID</td>
                                 <td class="small">@StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers)</td>
-                                <td class="num">@Workspace.Catalog.ShipDesigns.Count(design => design.ModuleIDs.Contains(module.ID))</td>
+                                <td class="small muted">@ModuleRules(module)</td>
+                                <td class="num">@Workspace.Catalog.ShipDesigns.Count(design => design.Modules.ContainsValue(module.ID))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                break;
+
+            case "shipTypes":
+                <table class="data compact">
+                    <thead><tr><th>Ship type</th><th>ID</th><th>Role</th><th>Hulls</th><th>Needs one of</th><th class="num">Organization</th><th class="num" title="The highest priority wins when several types accept a design">Priority</th></tr></thead>
+                    <tbody>
+                        @foreach (var shipType in Workspace.Catalog.ShipTypes.Where(shipType => Matches(shipType.ID, shipType.Name, shipType.Role)))
+                        {
+                            <tr>
+                                <td>@(shipType.Name ?? shipType.ID)</td>
+                                <td class="muted small">@shipType.ID</td>
+                                <td>@shipType.Role</td>
+                                <td class="muted">@string.Join(", ", shipType.Hulls)</td>
+                                <td class="small">@(shipType.RequiredModules.Count == 0 ? "–" : string.Join(", ", shipType.RequiredModules.Select(id => DesignSlots.ModuleLabelOf(Workspace.Catalog, id))))</td>
+                                <td class="num">@shipType.Organization</td>
+                                <td class="num">@shipType.Priority</td>
                             </tr>
                         }
                     </tbody>
@@ -97,7 +122,7 @@
                                 <td class="muted">@Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research))</td>
                                 <td>@research.ID</td>
                                 <td class="muted">@Scope(research.AppliesToRoles, research.AppliesToTypes)</td>
-                                <td class="small">@StatInfo.Summarize(research.StatModifiers, research.StatAverages, research.StatMultipliers)</td>
+                                <td class="small">@ModifierInfo.SummarizeResearch(research)</td>
                                 <td class="small" title="Equipment bonuses go into the design multiplier (S-STATS-BONUS); technologies scale the ship (S-STATS-SHIP)">@(research.EquipmentBonus ? "equipment bonus" : "technology")</td>
                             </tr>
                         }
@@ -156,7 +181,7 @@
 
 @code {
     private static readonly IReadOnlyList<StatInfo> HullStats =
-        StatInfo.All.Where(stat => stat.Key is "hp" or "organization" or "armor" or "speed" or "reliability" or "surfaceVisibility" or "subVisibility"
+        StatInfo.All.Where(stat => stat.Key is "hp" or "armor" or "speed" or "reliability" or "surfaceVisibility" or "subVisibility"
             or "surfaceDetection" or "subDetection" or "productionCost").ToList();
 
     private string tab = "hulls";
@@ -167,6 +192,7 @@
         var catalog = Workspace.Catalog;
         yield return ("hulls", "Hulls", catalog.Hulls.Count);
         yield return ("modules", "Modules", catalog.Modules.Count);
+        yield return ("shipTypes", "Ship types", catalog.ShipTypes.Count);
         yield return ("mios", "MIOs", catalog.Mios.Count);
         yield return ("researches", "Researches", catalog.Researches.Count);
         yield return ("spirits", "Spirits", catalog.Spirits.Count);
@@ -176,6 +202,24 @@
     private bool Matches(params string?[] values)
     {
         return filter.Length == 0 || values.Any(value => value?.Contains(filter, StringComparison.OrdinalIgnoreCase) == true);
+    }
+
+    private string SlotSummary(HullDto hull)
+    {
+        return string.Join("\n", hull.Slots.Select(slot =>
+            $"{DesignSlots.SlotLabel(slot)}{(slot.Required ? " (required)" : "")}: {string.Join(", ", slot.AllowedCategories.Select(CategoryName))}"));
+    }
+
+    private string ModuleRules(ModuleDto module)
+    {
+        var rules = module.ForbiddenCategories.Select(category => $"forbids {CategoryName(category)}")
+            .Concat(module.AddEquipmentTypes.Select(type => $"adds {type}"));
+        return string.Join(", ", rules);
+    }
+
+    private string CategoryName(string category)
+    {
+        return Workspace.Catalog.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
     }
 
     private static string Scope(List<string> roles, List<string>? types)

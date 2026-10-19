@@ -113,7 +113,7 @@ public sealed class WorkspaceTests : IDisposable
     public void DesignStats_ReportUnknownModules()
     {
         var problems = new List<string>();
-        var design = new ShipDesignDto { ID = "x", HullID = "destroyer_hull_1", ModuleIDs = ["no_such_module"] };
+        var design = new ShipDesignDto { ID = "x", HullID = "ship_hull_light_1", Modules = { ["fixed_ship_battery_slot"] = "no_such_module" } };
 
         var stats = Workspace.DesignStats(design, problems);
 

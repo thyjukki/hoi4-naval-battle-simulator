@@ -1,0 +1,144 @@
+{
+  "$schema": "../schemas/ship-types.schema.json",
+  "shipTypes": [
+    {
+      "id": "battle_cruiser",
+      "name": "Battlecruiser",
+      "role": "Capital",
+      "unitTypes": [
+        "capital_ship"
+      ],
+      "priority": 8,
+      "hulls": [
+        "ship_hull_heavy"
+      ],
+      "requiredModules": [
+        "ship_armor_bc_1",
+        "ship_armor_bc_2",
+        "ship_armor_bc_3"
+      ],
+      "organization": 50
+    },
+    {
+      "id": "battleship",
+      "name": "Battleship",
+      "role": "Capital",
+      "unitTypes": [
+        "capital_ship"
+      ],
+      "priority": 9,
+      "hulls": [
+        "ship_hull_heavy"
+      ],
+      "requiredModules": [
+        "ship_armor_bb_1",
+        "ship_armor_bb_2",
+        "ship_armor_bb_3"
+      ],
+      "organization": 50
+    },
+    {
+      "id": "carrier",
+      "name": "Carrier",
+      "role": "Carrier",
+      "unitTypes": [
+        "carrier"
+      ],
+      "priority": 10,
+      "hulls": [
+        "ship_hull_carrier"
+      ],
+      "organization": 40
+    },
+    {
+      "id": "destroyer",
+      "name": "Destroyer",
+      "role": "Screen",
+      "unitTypes": [
+        "screen_ship"
+      ],
+      "priority": 3,
+      "hulls": [
+        "ship_hull_light"
+      ],
+      "organization": 35
+    },
+    {
+      "id": "heavy_cruiser",
+      "name": "Heavy Cruiser",
+      "role": "Capital",
+      "unitTypes": [
+        "capital_ship"
+      ],
+      "priority": 6,
+      "hulls": [
+        "ship_hull_cruiser"
+      ],
+      "requiredModules": [
+        "ship_armor_cruiser_heavy_1",
+        "ship_armor_cruiser_heavy_2",
+        "ship_armor_cruiser_heavy_3",
+        "ship_armor_cruiser_heavy_4"
+      ],
+      "organization": 40
+    },
+    {
+      "id": "light_cruiser",
+      "name": "Light Cruiser",
+      "role": "Screen",
+      "unitTypes": [
+        "screen_ship"
+      ],
+      "priority": 5,
+      "hulls": [
+        "ship_hull_cruiser"
+      ],
+      "requiredModules": [
+        "ship_armor_cruiser_1",
+        "ship_armor_cruiser_2",
+        "ship_armor_cruiser_3",
+        "ship_armor_cruiser_4"
+      ],
+      "organization": 40
+    },
+    {
+      "id": "submarine",
+      "name": "Submarine",
+      "role": "Submarine",
+      "unitTypes": [
+        "submarine"
+      ],
+      "priority": 2,
+      "hulls": [
+        "ship_hull_submarine"
+      ],
+      "organization": 30
+    },
+    {
+      "id": "sh_battleship",
+      "name": "Superheavy Battleship",
+      "role": "Capital",
+      "unitTypes": [
+        "capital_ship"
+      ],
+      "priority": 11,
+      "hulls": [
+        "ship_hull_super_heavy"
+      ],
+      "organization": 50
+    },
+    {
+      "id": "sh_carrier",
+      "name": "Superheavy Carrier",
+      "role": "Carrier",
+      "unitTypes": [
+        "carrier"
+      ],
+      "priority": 12,
+      "hulls": [
+        "ship_hull_carrier_super"
+      ],
+      "organization": 40
+    }
+  ]
+}

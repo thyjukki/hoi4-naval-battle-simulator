@@ -1,0 +1,39 @@
+{
+  "$schema": "../schemas/modules.schema.json",
+  "modules": [
+    {
+      "id": "ship_mine_layer_1",
+      "name": "Minelaying Rails",
+      "category": "ship_mine_layer",
+      "categoryName": "Minelaying Gear",
+      "statModifiers": {
+        "productionCost": 90
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "ship_mine_layer_sub",
+      "name": "Minelaying Tubes",
+      "category": "ship_mine_layer_sub",
+      "categoryName": "Mine Warfare",
+      "statModifiers": {
+        "speed": -0.02,
+        "productionCost": 90
+      }
+    },
+    {
+      "id": "ship_mine_sweeper_1",
+      "name": "Minesweeping Gear",
+      "category": "ship_mine_warfare",
+      "categoryName": "Mine Warfare",
+      "statModifiers": {
+        "productionCost": 30
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    }
+  ]
+}

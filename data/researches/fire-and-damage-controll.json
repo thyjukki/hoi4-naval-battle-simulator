@@ -13,7 +13,7 @@
         "lightAttack": 0.05,
         "heavyAttack": 0.05
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+      "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser"]
     },
     {
       "id": "fire_control_methods_2",
@@ -21,7 +21,7 @@
         "lightAttack": 0.1,
         "heavyAttack": 0.1
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+      "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser"]
     },
     {
       "id": "fire_control_methods_2_ca",
@@ -29,7 +29,7 @@
         "lightAttack": 0.05,
         "heavyAttack": 0.05
       },
-      "appliesToTypes": ["Heavy Cruiser"]
+      "appliesToTypes": ["heavy_cruiser"]
     },
     {
       "id": "fire_control_methods_3",
@@ -37,7 +37,7 @@
         "lightAttack": 0.15,
         "heavyAttack": 0.15
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+      "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser"]
     },
     {
       "id": "fire_control_methods_3_cruiser",
@@ -45,7 +45,7 @@
         "lightAttack": 0.1,
         "heavyAttack": 0.1
       },
-      "appliesToTypes": ["Heavy Cruiser", "Light Cruiser"]
+      "appliesToTypes": ["heavy_cruiser", "light_cruiser"]
     },
     {
       "id": "fire_control_methods_3_dd",
@@ -53,7 +53,7 @@
         "lightAttack": 0.05,
         "heavyAttack": 0.05
       },
-      "appliesToTypes": ["Destroyer"]
+      "appliesToTypes": ["destroyer"]
     }
   ]
 }

@@ -1,0 +1,624 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "ship_hull_submarine_1",
+      "name": "Early Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1922,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 12,
+        "reliability": 0.6,
+        "hp": 10,
+        "surfaceVisibility": 1,
+        "subVisibility": 27,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 260
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_submarine_2",
+      "name": "Basic Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1936,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 14,
+        "reliability": 0.7,
+        "hp": 20,
+        "surfaceVisibility": 1,
+        "subVisibility": 24,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 300
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_radar"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_2"
+      }
+    },
+    {
+      "id": "ship_hull_submarine_3",
+      "name": "Improved Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1940,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 16,
+        "reliability": 0.75,
+        "hp": 30,
+        "surfaceVisibility": 1,
+        "subVisibility": 21,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 380
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_snorkel",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_3"
+      }
+    },
+    {
+      "id": "ship_hull_submarine_4",
+      "name": "Advanced Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1944,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 18,
+        "reliability": 0.8,
+        "hp": 35,
+        "surfaceVisibility": 1,
+        "subVisibility": 18,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 530
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_snorkel",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_4"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_submarine",
+      "name": "Cruiser Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1940,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 16,
+        "reliability": 0.75,
+        "hp": 30,
+        "surfaceVisibility": 1,
+        "subVisibility": 21,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 490
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher",
+            "ship_extra_fuel_tank",
+            "ship_light_battery_sub"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_snorkel",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher",
+            "ship_extra_fuel_tank"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_fleet_submarine",
+      "name": "Fleet Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1940,
+      "manpower": 200,
+      "baseStats": {
+        "speed": 18,
+        "reliability": 0.75,
+        "hp": 40,
+        "surfaceVisibility": 1,
+        "subVisibility": 21,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 650
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher",
+            "ship_extra_fuel_tank"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_snorkel",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher",
+            "ship_extra_fuel_tank",
+            "ship_rocket"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_midget_submarine",
+      "name": "Midget Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1940,
+      "manpower": 100,
+      "baseStats": {
+        "speed": 8.3,
+        "reliability": 0.6,
+        "hp": 5,
+        "surfaceVisibility": 1,
+        "subVisibility": 15,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 150
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_torpedo_slot": "inherit",
+        "fixed_ship_engine_slot": "inherit"
+      }
+    },
+    {
+      "id": "ship_hull_nuclear_submarine",
+      "name": "Nuclear Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1954,
+      "manpower": 400,
+      "baseStats": {
+        "speed": 20,
+        "reliability": 0.75,
+        "hp": 50,
+        "surfaceVisibility": 1,
+        "subVisibility": 16,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 1150
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_nuclear_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher",
+            "ship_extra_fuel_tank"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_airplane_launcher",
+            "ship_nuclear_rocket",
+            "ship_rocket"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_airplane_launcher"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_nuclear_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_carrier_submarine",
+      "name": "Carrier Submarine",
+      "archetype": "ship_hull_submarine",
+      "archetypeName": "Submarine",
+      "equipmentType": "submarine",
+      "year": 1944,
+      "manpower": 350,
+      "baseStats": {
+        "speed": 18,
+        "reliability": 0.75,
+        "hp": 50,
+        "surfaceVisibility": 1,
+        "subVisibility": 20,
+        "surfaceDetection": 15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 850
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "required": true,
+          "allowedCategories": [
+            "ship_torpedo_sub"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "sub_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo_sub",
+            "ship_mine_layer_sub",
+            "ship_extra_fuel_tank"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sub_snorkel",
+            "ship_sub_coating"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "required": true,
+          "allowedCategories": [
+            "ship_submarine_deck_space"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "sub_ship_engine_1"
+      }
+    }
+  ]
+}

@@ -2,8 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "hulls.schema.json",
   "title": "NavySimulator Hulls",
+  "description": "Written by 'NavySimulator import-ship-data' from common/units/equipment/ship_hull_*.txt.",
   "type": "object",
-  "required": ["hulls"],
+  "required": [
+    "hulls"
+  ],
   "properties": {
     "$schema": {
       "type": "string"
@@ -12,85 +15,126 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "role", "type", "manpower", "baseStats"],
+        "required": [
+          "id",
+          "archetype",
+          "equipmentType",
+          "manpower",
+          "baseStats",
+          "slots"
+        ],
         "properties": {
-          "id": { "$ref": "#/$defs/id" },
-          "role": { "$ref": "#/$defs/shipRole" },
-          "type": {
-            "type": "array",
-            "items": { "$ref": "#/$defs/shipType" },
-            "uniqueItems": true,
-            "minItems": 1
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "archetype": {
+            "type": "string",
+            "minLength": 1
+          },
+          "archetypeName": {
+            "type": "string"
+          },
+          "equipmentType": {
+            "type": "string",
+            "enum": [
+              "screen_ship",
+              "capital_ship",
+              "carrier",
+              "submarine"
+            ]
+          },
+          "year": {
+            "type": "integer"
           },
           "manpower": {
             "type": "integer",
             "minimum": 1
           },
-          "baseStats": { "$ref": "#/$defs/shipStats" }
+          "baseStats": {
+            "$ref": "common.schema.json#/$defs/shipStats"
+          },
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "allowedCategories"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "allowedCategories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "uniqueItems": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "moduleCountLimits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "operator",
+                "count"
+              ],
+              "properties": {
+                "modules": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Module IDs, 'any' or 'empty'."
+                },
+                "categories": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Module categories or 'any'."
+                },
+                "operator": {
+                  "type": "string",
+                  "enum": [
+                    "<",
+                    ">",
+                    "=",
+                    "any"
+                  ]
+                },
+                "count": {
+                  "type": "integer"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "defaultModules": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
         },
         "additionalProperties": false
       }
     }
   },
-  "$defs": {
-    "id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "shipRole": {
-      "type": "string",
-      "enum": ["Screen", "Capital", "Carrier", "Submarine", "Convoy"]
-    },
-    "shipType": {
-      "type": "string",
-      "enum": [
-        "SHBB",
-        "Battleship",
-        "Battlecruiser",
-        "Carrier",
-        "Heavy Cruiser",
-        "Light Cruiser",
-        "Torpedo Cruiser",
-        "Destroyer",
-        "Submarine"
-      ]
-    },
-    "shipStats": {
-      "type": "object",
-      "properties": {
-        "speed": { "type": "number" },
-        "reliability": { "type": "number" },
-        "organization": { "type": "number" },
-        "hp": { "type": "number" },
-        "surfaceVisibility": { "type": "number" },
-        "subVisibility": { "type": "number" },
-        "surfaceDetection": { "type": "number" },
-        "subDetection": { "type": "number" },
-        "carrierSubDetection": { "type": "number" },
-        "carrierSurfaceDetection": { "type": "number" },
-        "carrierSize": { "type": "number" },
-        "lightAttack": { "type": "number" },
-        "lightPiercing": { "type": "number" },
-        "heavyAttack": { "type": "number" },
-        "heavyPiercing": { "type": "number" },
-        "torpedoAttack": { "type": "number" },
-        "depthChargeAttack": { "type": "number" },
-        "antiAir": { "type": "number" },
-        "armor": { "type": "number" },
-        "torpedoDamageReductionFactor": { "type": "number" },
-        "torpedoEnemyCriticalChanceFactor": { "type": "number" },
-        "torpedoHitChanceFactor": { "type": "number" },
-        "depthChargeHitChanceFactor": { "type": "number" },
-        "lightHitChangeFactor": { "type": "number" },
-        "lightHitChanceFactor": { "type": "number" },
-        "heavyHitChanceFactor": { "type": "number" },
-        "navalWeatherPenaltyFactor": { "type": "number" },
-        "productionCost": { "type": "number" }
-      },
-      "additionalProperties": false
-    }
-  },
   "additionalProperties": false
 }
-
-

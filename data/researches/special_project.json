@@ -10,7 +10,7 @@
       "statMultipliers": {
         "torpedoAttack": 0.075
       },
-      "appliesToTypes": ["Torpedo Cruiser"]
+      "appliesToTypes": ["ship_hull_torpedo_cruiser"]
     },
     {
       "id": "sp_torpedo_cruiser_eq_bonus_light_attack",
@@ -22,7 +22,7 @@
         "lightAttack": 0.05,
         "lightPiercing": 0.05
       },
-      "appliesToTypes": ["Torpedo Cruiser"]
+      "appliesToTypes": ["ship_hull_torpedo_cruiser"]
     }
   ]
 }

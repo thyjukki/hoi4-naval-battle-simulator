@@ -1,0 +1,161 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "ship_hull_super_heavy_1",
+      "name": "Super Heavy Battleship",
+      "archetype": "ship_hull_super_heavy",
+      "archetypeName": "Super Heavy Battleship",
+      "equipmentType": "capital_ship",
+      "year": 1940,
+      "manpower": 9000,
+      "baseStats": {
+        "speed": 32,
+        "reliability": 0.8,
+        "hp": 700,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "productionCost": 5500
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_super_heavy_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "heavy_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_super_heavy_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_super_heavy_battery"
+          ]
+        },
+        {
+          "id": "front_2_custom_slot",
+          "name": "Front 2 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_super_heavy_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_airplane_launcher",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_airplane_launcher",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "mid_3_custom_slot",
+          "name": "Mid 3 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_airplane_launcher",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_super_heavy_battery",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_super_heavy_battery",
+            "ship_airplane_launcher"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "heavy_ship_engine_2",
+        "fixed_ship_armor_slot": "ship_armor_shbb"
+      }
+    }
+  ]
+}

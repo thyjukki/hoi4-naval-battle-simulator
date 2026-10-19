@@ -18,7 +18,7 @@ public static class CatalogWriter
     public const string FleetsFolder = "force-compositions";
 
     // Lists that are always written, even when empty, because the files have always spelled them out.
-    private static readonly HashSet<string> AlwaysWrittenCollections = new(["moduleIDs", "researchIDs", "spiritIDs"], StringComparer.Ordinal);
+    private static readonly HashSet<string> AlwaysWrittenCollections = new(["modules", "researchIDs", "spiritIDs"], StringComparer.Ordinal);
 
     private static readonly JsonSerializerOptions Options = new()
     {

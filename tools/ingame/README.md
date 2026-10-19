@@ -9,8 +9,10 @@ index was built for (the runner checks its SHA-256), Steam running. The hooks an
 |---|---|
 | `run_battles.py` | Runner: per save and seed, starts the game on the save, types the console commands, unpauses, logs, closes the game |
 | `battle_logger.js` | Frida agent: hooks the combat hour and the shot loop, sends one record per combat hour |
+| `make_save.py` | Writes a simulator scenario into a battle save: designs, ships, aggressiveness, repair priority, technologies |
 | `savefile.py` | Reads plain-text saves (task forces, ships, design variants) and writes a copy with another dice seed |
 | `summarize.py` | Outcome of every logged run (length, HP left, ships fighting / escaped / sunk) and the spread over runs |
+| `compare.py` | Logged game runs against simulator runs: start values, outcome per design, hit chances per shooter, weapon and target |
 
 ## Setting up a battle
 
@@ -18,11 +20,29 @@ index was built for (the runner checks its SHA-256), Steam running. The hooks an
    aggressiveness, so the battle starts within an hour of unpausing. Save. This is the template save.
 2. Close the game. The runner starts its own game for each run and the game window takes keyboard focus while it runs.
 
+### From a simulator scenario
+
+```
+python make_save.py jukki_usa_vs_bc_japan.json light_attack_vs_torp_cruiser_battle_start.hoi4 --dotnet <.NET 10 dotnet> --defines "<mod folder>"
+```
+
+writes `<scenario id>_battle_start.hoi4` to the save games folder from a template save that already holds one task
+force per side in one sea province, at war (here the CL3 battle start). It runs `NavySimulator list-ships` for the
+scenario's ships (ship type, HP, organization, manpower, experience; `--defines` because experience levels come from the
+defines), then per side rewrites one of the country's design variants on each design's hull to the design's modules
+(named after the design, so the logs show the simulator's design IDs), replaces the task force's ships, sets
+`navy_engagement_rule` and `repair_mode` from the aggressiveness and repair priority, adds the game technologies behind
+the side's researches (`GAME_TECHS`: the simulator's research IDs are not the game's yet) and removes the running naval
+combat, so the game starts the battle afresh in the first hour. The game picks the attacker itself (in the CL3 template
+ROM). Spirits, commanders, doctrines and MIOs are not written. It reads the result back and checks ships, variants and
+experience.
+
 ## Running
 
 ```
 python run_battles.py my_battle.hoi4 --seeds 10 --locations 7906
 python summarize.py ../../output/ingame
+python compare.py ../../output/ingame/<save>_<timestamp> [more game folders] ../../output/<scenario>_<timestamp> BUL
 ```
 
 For each seed the runner writes `nsim_<save>_s<seed>.hoi4` (the template with `multiplayer_random_seed` replaced) to the
@@ -32,7 +52,8 @@ changes the first two) and unpauses. It stops when every combat has ended (`--ex
 catch a second engagement), closes the game and deletes the copy. `continue_game.json` is restored at the end.
 
 A save replays the identical battle every time it is loaded with the same console commands; the seed is what makes
-repetitions independent. `--seeds 0` runs the save's own seed once.
+repetitions independent. `--seeds 0` runs the save's own seed once. A run gives up when no combat has started after
+`--start-hours` (48) game hours.
 
 ## Output
 

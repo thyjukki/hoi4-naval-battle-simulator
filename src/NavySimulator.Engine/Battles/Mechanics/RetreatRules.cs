@@ -56,30 +56,25 @@ public static class RetreatRules
     /// <summary>
     /// [RE] 0x196fe80, per day: BASE_ESCAPE_SPEED + min(tick * ESCAPE_SPEED_PER_COMBAT_DAY / 24, MAX) + retreat speed
     /// modifiers + speed * SPEED_TO_ESCAPE_SPEED / 100, plus the submarine bonus (ESCAPE_SPEED_HIDDEN_SUB while hidden).
-    /// The screening and night bonuses come from the static modifiers.
+    /// The retreat speed modifier is naval_retreat_speed for warships (plus naval_retreat_speed_after_initial_combat after
+    /// COMBAT_INITIAL_DURATION), sub_retreat_speed for submarines and convoy_retreat_speed for convoys.
     /// </summary>
     public static double EscapeSpeedPerDay(Ship ship, int tick, ScreeningSummary ownScreening, double darkness, GameDefines defines)
     {
         var navy = defines.NNavy;
-        var modifiers = defines.StaticModifiers;
         var speed = navy.BASE_ESCAPE_SPEED + Math.Min(tick * navy.ESCAPE_SPEED_PER_COMBAT_DAY / 24.0, navy.MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION);
-        var retreatSpeedKey = ship.Role == ShipRole.Convoy ? StaticModifiers.ConvoyRetreatSpeed : StaticModifiers.NavalRetreatSpeed;
-        var line = TargetingRules.LineOf(ship);
-
-        if (line is 2 or 3)
+        var retreatSpeedKey = ship.Role switch
         {
-            speed += ownScreening.ScreeningEfficiency * modifiers.Get(StaticModifiers.ScreeningBonus, retreatSpeedKey);
-        }
+            ShipRole.Convoy => StaticModifiers.ConvoyRetreatSpeed,
+            ShipRole.Submarine => StaticModifiers.SubRetreatSpeed,
+            _ => StaticModifiers.NavalRetreatSpeed
+        };
 
-        if (line == 3)
-        {
-            speed += ScreeningRules.CombinedCarrierScreening(ownScreening) * modifiers.Get(StaticModifiers.CapitalScreeningBonus, retreatSpeedKey);
-        }
+        speed += MemberModifierRules.Get(ship, retreatSpeedKey, ownScreening, darkness, defines);
 
-        // Submarines and convoys use their own retreat speed modifiers, which the night block does not have.
-        if (ship.Role is not (ShipRole.Convoy or ShipRole.Submarine))
+        if (retreatSpeedKey == StaticModifiers.NavalRetreatSpeed && tick > navy.COMBAT_INITIAL_DURATION)
         {
-            speed += darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.NavalRetreatSpeed);
+            speed += MemberModifierRules.Get(ship, StaticModifiers.NavalRetreatSpeedAfterInitialCombat, ownScreening, darkness, defines);
         }
 
         speed += ship.GetFinalStats().Speed * navy.SPEED_TO_ESCAPE_SPEED / 100.0;

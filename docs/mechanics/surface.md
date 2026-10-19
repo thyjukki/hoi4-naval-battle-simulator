@@ -4,6 +4,17 @@ Status: implemented (`src/NavySimulator.Engine/Battles/`) and checked against **
 
 "Tick" is the game's combat hour counter. It is 1 during battle hour 0, 2 during hour 1, and so on.
 
+## S-DESIGN: hulls, module slots and ship types [PDX + ASSUMED]
+
+The game's ship designer rules, read from the script files and the game's own `common/units/equipment/_documentation.md`; none of it is decoded from hoi4.exe yet. Code: `DesignRules` (`Engine/Ships/`), checked by the loader (warnings) and the Designs page. Data: `hulls/`, `modules/` and `ship-types/` are written by `NavySimulator import-ship-data` (GameData `Import/`) from the game and mods, with the game's IDs.
+- **S-DESIGN-HULL** [PDX]: a hull is a `ship_hull_*` equipment of a naval archetype (`ship_hull_cruiser`, `ship_hull_heavy`, ...). Its stats are the archetype's values overridden by its own [ASSUMED]: this reproduces all 27 hand-entered TFB hulls, while reading them along `parent` would give TFB's heavy hulls the pre-dreadnought's speed of 18 ([finding](../reverse-engineering/findings/S-STATS-design-stats.md), Unresolved). Equipment of the same archetypes without the `ship_hull_` prefix (`light_cruiser_1`, `battleship_1`, ...) belongs to the tech tree for players without Man the Guns (`technologies/naval.txt`) and is not imported. There is no battleship, battlecruiser, light or heavy cruiser hull: the modules decide (S-DESIGN-TYPE).
+- **S-DESIGN-SLOT** [PDX]: `module_slots` lists the slots, each `required` or not, with its `allowed_module_categories`; a module fits a slot if its `category` is allowed, and a required slot must be filled. `module_slots = inherit` and `slot = inherit` take the parent equipment's slots (the archetype's when there is no `parent`); `slot = other_slot` copies an earlier slot. Slots named `fixed_*` are the designer's fixed slots, the rest custom slots.
+- **S-DESIGN-FORBID** [PDX]: a module's `forbid_module_categories` excludes those categories from every other slot of the design, e.g. TFB's light cruiser armor forbids `ship_medium_battery` and vanilla's medium battery forbids light batteries.
+- **S-DESIGN-LIMIT** [PDX]: `module_count_limit` counts the slots matching any of its conditions (`module`, `category`, `any`, `empty`) and requires `count < n`, `> n` or `= n`; limits are inherited along `parent`, a child's limit with the same conditions replaces the parent's, and `count = any` cancels it.
+- **S-DESIGN-TYPE** [PDX + ASSUMED]: the ship type is a naval sub-unit of `common/units`. Candidates are the sub-units whose `need`/`need_equipment` names the hull's archetype; a candidate qualifies if the design has one of its `need_equipment_modules = { any = { ... } }` modules (when listed) and each of its `type`s is among the design's equipment types (the archetype's `type` plus every module's `add_equipment_type`); the highest `priority` wins. TFB tells light from heavy cruisers and battleships from battlecruisers by the armor module; vanilla makes a cruiser with a medium battery (`add_equipment_type = capital_ship`) a heavy cruiser by priority. The type gives the role (`screen_ship` → screen, `capital_ship` → capital, `carrier`, `submarine`) and the organization (`max_organisation`, S-STATS-SHIP). Research, MIO and spirit type filters match the ship type, the hull or the archetype ID. If no type qualifies (the game would refuse the design), the simulator uses the highest-priority candidate whose unit types match, else any candidate, and reports it.
+- **Overrides**: a design with `allowAnyModule` may break S-DESIGN-SLOT/FORBID/LIMIT and the required slots; without it, the loader only warns. Modules in slots the hull does not have are an error.
+- **Open**: whether the game's sub-unit pick works exactly so (the subset and priority rule is inferred from the scripts, not decoded); the hull stat inheritance (above).
+
 ## S-STATS: ship stats before combat [RE]
 
 Finding: [S-STATS-design-stats.md](../reverse-engineering/findings/S-STATS-design-stats.md). Code: `ShipDesign.ComputeStats`, `Ship.ApplyExternalModifiers`.
@@ -13,10 +24,11 @@ Finding: [S-STATS-design-stats.md](../reverse-engineering/findings/S-STATS-desig
   - Carrier size: `floor(add + avg + multiplier)` (its multiplier is a flat add).
 - **S-STATS-MIO**: the MIO's `equipment_bonus` sum. Light, heavy and torpedo hit chance factors are added; every other stat joins the multiplier, so a percentage on a stat the design has 0 of does nothing. The JSON's `statModifiers`/`statMultipliers` split is notation only; both are summed.
 - **S-STATS-BONUS**: idea and named equipment bonuses (`add_equipment_bonus`, e.g. TFB special projects) are multiplicative for every stat, hit chance factors included. In the data they are researches with `"equipmentBonus": true`.
-- **S-STATS-SHIP** (0xc3d090): technology blocks are sub-unit bonuses. `ship = variant × (1 + tech) + tech` for the additive set: org, HP, reliability, hit chance factors, torpedo damage reduction, torpedo enemy crit chance and naval weather penalty. Organization comes from the sub-unit, so it is never scaled.
+- **S-STATS-SHIP** (0xc3d090): technology blocks are sub-unit bonuses. `ship = variant × (1 + tech) + tech` for the additive set: org, HP, reliability, hit chance factors, torpedo damage reduction, torpedo enemy crit chance and naval weather penalty. Organization comes from the sub-unit (the ship type's `max_organisation`, S-DESIGN-TYPE), so it is never scaled.
 - **S-STATS-CLAMP**: reliability ≥ 0, production cost ≥ 0.1.
 - **S-STATS-PARTS** (lasting stat penalties from damaged parts) is not modelled (S-CRIT-PART).
-- **S-STATS-COMBAT**: attack (`max(0, stat × (1 + Σ attack factors + naval_damage_factor + …))`), armor (`× max(0, 1 + defence factors + naval_defense_factor + …)`) and speed (`× max(0.1, 1 + naval_speed_factor + …)`) modifiers are combat-time, not design stats. Only the experience terms are modelled: `naval_damage_factor` in attack and `naval_defense_factor` in armor (the armor the piercing tier is read against). Both enter the S-DMG hit multiplier again, so each counts twice [RE + CAL: logged in-game hits, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)]. `naval_night_attack` and the rest are not modelled. Spirits are still applied as [LEGACY] stat modifiers; their real effects belong here.
+- **S-STATS-COMBAT**: attack (`max(0, stat × (1 + Σ attack factors + naval_damage_factor + …))`), armor (`× max(0, 1 + defence factors + naval_defense_factor + …)`) and speed (`× max(0.1, 1 + naval_speed_factor + …)`) modifiers are combat-time, not design stats. Of these, only the experience terms are modelled: `naval_damage_factor` in attack and `naval_defense_factor` in armor (the armor the piercing tier is read against). Both enter the S-DMG hit multiplier again, so each counts twice [RE + CAL: logged in-game hits, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)]. `naval_night_attack` and the rest are not modelled. Spirits are still applied as [LEGACY] stat modifiers; their real effects belong here.
+- **S-STATS-COUNTRY** [RE + CAL]: country modifiers. A technology's top-level keys (e.g. `smoke_generator`'s `naval_retreat_speed = 0.2`) are modifiers of the country, not of an equipment or sub-unit, and the ship modifier sum `0xc38760` gathers them for every ship of the country; the combat getters read them through it (the member modifier getter `0x1972570` adds the screening bonuses on top). Values of the same key add up over the side's researches. In the data a research lists them as `countryModifiers` by game key; they apply to every ship of the side, whatever the research's `appliesToRoles`/`appliesToTypes` (which scope only its stat blocks). The engine reads the retreat speeds of S-RETREAT-SPEED and the hit chance terms of S-HIT-MODS (`naval_hit_chance`, `naval_light_gun_hit_chance_factor`, `naval_heavy_gun_hit_chance_factor`, `naval_torpedo_hit_chance_factor`); the loader warns about any other key and ignores it. Doctrines, spirits and the other country sources will join the same sum.
 
 ## S-HOUR: hour structure [RE]
 
@@ -45,6 +57,8 @@ The previous `Interleaved` and `Simultaneous` variants are removed.
 - **S-POS-SIZE**: every ship in the battle counts 1, all lines and retreating ships included. If `own >= MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY` (4): `sizePenalty = clamp((own/enemy - 1) × HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR (0.25), 0, MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO (0.75))`.
 - **S-POS-DETECT**: `bonus = (ΣownSurfaceDetection - ΣenemySurfaceDetection) / 100 × RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR (0.01)`, at most `MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION` (0.25), applied only if positive. Ten ships at 40 against ten at 20 gives only +0.02.
 - **S-POS-DMG**: `DAMAGE_PENALTY_ON_MINIMUM_POSITIONING (0.5) × (1 - positioning)` is subtracted inside the additive damage multiplier (S-DMG).
+
+[CAL] In 12 logged TFB battles (`jukki_usa_vs_bc_japan`) positioning matched the formula in all 2,240 side-hours, counting the ships at the end of the previous hour as above, with TFB's values (size factor 0.4, at most 1.2, only from 60 own ships; detection bonus at most 0.1), and every gun hit fitted the damage multiplier with TFB's penalty 0.8 at positioning 0.65 to 1 ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
 - **S-POS-SCREEN**: see S-SCREEN.
 
 **Carrier ratio** [RE] (0x161c217): `penalty = clamp((1 - ownA / enemyA) × HIGHER_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR × enemyB, 0, MAX_CARRIER_RATIO_POSITIONING_PENALTY_FACTOR)`, where `A` = Σ sortie efficiency × planes over a side's carriers and `B` = their mean sortie efficiency × min(1, planes / CARRIER_PLANES_AMOUNT_FOR_POSITIONING). No penalty if the enemy has no carrier air.
@@ -57,7 +71,7 @@ The previous `Interleaved` and `Simultaneous` variants are removed.
 - `screening = clamp(screens / ceil(3 × (capitals + carriers) + 0.5 × convoys) × factor, 0, 1)`; 1 if nothing needs screening.
 - `carrierScreening = clamp(capitals / ceil(1 × carriers + 0.25 × convoys) × factor, 0, 1)`; 1 if nothing needs it.
 - The required counts are **rounded up** (one capital plus one convoy needs 4 screens). Ships in every in-battle state count; submarines do not.
-- Effects come from the static modifiers `screening_bonus` (`naval_hit_chance 0.4`, `naval_retreat_speed 0.2`, `convoy_retreat_speed 0.2`) scaled by screening, for battle-line and carrier-line ships, and `capital_screening_bonus` (`naval_retreat_speed 0.2`, `sortie_efficiency 0.1`) scaled by `1 - (1 - screening)(1 - carrierScreening)` for carrier-line ships. They are loaded from `common/modifiers` (`GameDefines.StaticModifiers`).
+- Effects come from the static modifiers `screening_bonus` (`naval_hit_chance 0.4`, `naval_retreat_speed 0.2`, `convoy_retreat_speed 0.2`) scaled by screening, for battle-line and carrier-line ships, and `capital_screening_bonus` (`naval_retreat_speed 0.2`, `sortie_efficiency 0.1`) scaled by `1 - (1 - screening)(1 - carrierScreening)` for carrier-line ships. They are loaded from `common/modifiers` (`GameDefines.StaticModifiers`). Every key of the two blocks applies, because the combat rules read each modifier through the member modifier getter `0x1972570` (`MemberModifierRules`). TFB's `screening_bonus` has `naval_hit_chance 0.3`, `naval_heavy_gun_hit_chance_factor 1`, `naval_light_gun_hit_chance_factor 0.3` and `naval_retreat_speed 0.25`; [CAL] in the `jukki_usa_vs_bc_japan` game run the capitals' heavy and light hit chances fit `1 + (0.3 + 1) × screening + 0.15` and `1 + (0.3 + 0.3) × screening + 0.15` exactly for both sides (screening 0.64 and 0.97), while screens matched without them.
 
 **Code.** `ScreeningRules.cs`. **Not modelled:** the `screening_efficiency` modifier and the `screening_without_screens` fallback.
 
@@ -94,7 +108,7 @@ Lines: 1 screens, 2 capitals, 3 carriers and convoys. Submarines are not on a li
   - Convoys: base 4, 40 from submarines; ×15 for heavy and torpedo. Then `× (1 + 10 × (1 - hpRatio))`.
   - Then an exclusive state multiplier: fighting ×1.5, retreating ×0.5, waiting ×1. Active convoys are always retreating.
   - The resulting table is the wiki's (30/2, 3/6, 15/1, 60/4, 600/40, 4).
-- **Pick**: `T = U × Σweights`; the heaviest candidate takes `[0, maxWeight]`, then the rest accumulate in list order. That is weight-proportional.
+- **Pick**: `T = U × Σweights`; the heaviest candidate takes `[0, maxWeight]`, then the rest accumulate in list order. That is weight-proportional. [CAL] Replayed shot by shot on 12 logged TFB battles (`jukki_usa_vs_bc_japan`, about 127,000 shots), the weights predict every shooter → target split and every HP and state bin within noise ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
 - **Retreating shooters** use exactly the same rules (the wiki's "highest weight among active targets" rule is not in the game).
 
 **Code.** `TargetingRules.cs`. **Not modelled:** `naval_torpedo_screen_penetration_factor` (scales `1 - screening` for the roll).
@@ -110,14 +124,15 @@ shot hits when U < hit   (no upper cap: hit >= 1 always hits)
 - **S-HIT-WEAPON**: `GUN_HIT_PROFILES[slot]` {heavy 70, torpedo 100, light 45}; depth charges `DEPTH_CHARGES_HIT_PROFILE` (100).
 - `profileFactor = clamp((shipProfile / weaponProfile)², MIN_HIT_PROFILE_MULT (0), 1)`.
 - `crewFactor = max(0, 1 + COMBAT_LOW_ORG_HIT_CHANCE_PENALTY (-0.5) × missingOrg + COMBAT_LOW_MANPOWER_HIT_CHANCE_PENALTY (-0.25) × missingManpower)`, both the shooter's, **added** into one factor.
-- **S-HIT-MODS**: `modifierSum = 1 + naval_hit_chance + the shooter's hit chance factor for the slot` (depth charges use the light factor), one **unclamped sum**. `naval_hit_chance` here is:
-  - `screening_bonus` × screening (0.4 at full screening) for battle-line and carrier-line shooters;
+- **S-HIT-MODS**: `modifierSum = 1 + naval_hit_chance + the shooter's hit chance factor for the slot` (depth charges use the light factor), one **unclamped sum**. The slot's factor is the design stat plus the modifier `naval_light_gun|heavy_gun|torpedo_hit_chance_factor`. Both modifiers are read through the member modifier getter, so each is the sum of:
+  - the country modifiers (S-STATS-COUNTRY);
+  - `screening_bonus` × screening (vanilla `naval_hit_chance` 0.4 at full screening) for battle-line and carrier-line shooters, and `capital_screening_bonus` × combined carrier screening for the carrier line; their per-weapon entries add to the slot's factor ([CAL] with TFB's block, see S-SCREEN);
   - `night` × darkness (−0.25 at full dark), see S-NIGHT.
 
   Admiral skills and traits, doctrines and weather (S-WEATHER) would add to the same sum; they are not modelled.
 - `COMBAT_EVASION_TO_HIT_CHANCE` has no reader in 1.19.3 (dead define).
 
-**Code.** `HitChanceRules.cs`.
+**Code.** `HitChanceRules.cs`; the modifier getter is `MemberModifierRules.Get`.
 
 ## S-NIGHT: night [RE effect, ASSUMED darkness, CAL: none with weather off]
 
@@ -160,7 +175,7 @@ Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (
 
 ## S-DMG-APPLY: HP, organization, manpower [RE]
 
-- `strDamage = d × COMBAT_DAMAGE_TO_STR_FACTOR (0.6)`; `orgDamage = d × (1 - hpBeforeShot / maxHp) × COMBAT_DAMAGE_TO_ORG_FACTOR (1)`. The wiki's 100 HP / 50 org example (30 HP, then 0, 15, 30 org) is a unit test.
+- `strDamage = d × COMBAT_DAMAGE_TO_STR_FACTOR (0.6)`; `orgDamage = d × (1 - hpBeforeShot / maxHp) × COMBAT_DAMAGE_TO_ORG_FACTOR (1)` ([CAL] on every hit of 12 logged TFB battles; nothing else costs organization in combat, [LOG](../reverse-engineering/findings/LOG-ingame-logging.md)). The wiki's 100 HP / 50 org example (30 HP, then 0, 15, 30 org) is a unit test.
 - Before HP is reduced, experience and manpower losses use the **unclamped** `strDamage` (S-XP). Then HP and organization are reduced and clamped at 0.
 - A ship sinks at 0 HP; it stops being a target and does not fire for the rest of the hour.
 
@@ -170,7 +185,7 @@ Then per hit: `d = base × (1 + COMBAT_DAMAGE_RANDOMNESS (0.5) × (U - 0.05))` (
 
 Only fighting ships, from tick `COMBAT_MIN_DURATION` (8), before they fire:
 - Threshold by the task force **aggressiveness**, the game's "Select aggressiveness" setting (its engagement rule): Do Not Engage and Engage At Low Risk `REPAIR_AND_RETURN_PRIO_LOW_COMBAT` (0.9); Engage At Medium Risk `..._MEDIUM_COMBAT` (0.6); Engage At High Risk and Always Engage `..._HIGH_COMBAT` (0.4). Capital ships and carriers multiply it by `CAPITAL_SHIP_COMBAT_RETREAT_MULT` (0.5).
-- If `hp / maxHp < threshold`: roll `U <= COMBAT_RETREAT_DECISION_CHANCE` (0.2); success → retreating, no shots this hour. Organization is not used.
+- If `hp / maxHp < threshold`: roll `U <= COMBAT_RETREAT_DECISION_CHANCE` (0.2); success → retreating, no shots this hour. Organization is not used. [CAL] In 12 logged TFB battles 20 % of fighting ship-hours below the threshold started a retreat and none above it ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
 - The task force's **repair priority** (Never repair, Low, Medium, High; save key `repair_mode`) is a different setting despite the `REPAIR_AND_RETURN_PRIO_*_COMBAT` define names. It decides when a task force goes home for repairs and is not read in combat. Scenarios record it per side (`repairPriority`, default High: the 230 task forces left at their defaults in the recorded save all had `repair_mode=3`, with `navy_engagement_rule=2`, the aggressiveness default), and the engine keeps it with the side without using it.
 - [CAL] The aggressiveness, not the repair priority, sets the threshold. In a recorded TFB battle (75 vs 75 light cruisers, `data/battle-scenario-la-vs-torp-cl3.json`), both task forces were on Always Engage (`navy_engagement_rule=4`) and Never repair (`repair_mode=0`). The battle ended with all 74 surviving Romanian ships at or below 40% HP (highest 52.8 of 132). That matches 0.4; Never repair under the repair-priority reading would have been 0.9.
 
@@ -183,16 +198,21 @@ Only fighting ships, from tick `COMBAT_MIN_DURATION` (8), before they fire:
 Daily speed, additive:
 ```
 BASE_ESCAPE_SPEED (0.05) + min(tick × ESCAPE_SPEED_PER_COMBAT_DAY (0.015) / 24, MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION (0.5))
-+ retreat speed modifiers (screening_bonus × screening for battle line and carrier line; capital_screening_bonus × combined
-  carrier screening for the carrier line; night × darkness for surface warships)
++ retreat speed modifier: naval_retreat_speed for warships, sub_retreat_speed for submarines, convoy_retreat_speed for
+  convoys; warships also add naval_retreat_speed_after_initial_combat once tick > COMBAT_INITIAL_DURATION (6)
 + speed × SPEED_TO_ESCAPE_SPEED (0.5) / 100
 + submarines: ESCAPE_SPEED_SUB_BASE (0.1), or ESCAPE_SPEED_HIDDEN_SUB (0.35) while hidden
 ```
+Each retreat speed modifier is read through the member modifier getter `0x1972570`, so it is the sum of:
+- the country modifiers (S-STATS-COUNTRY), e.g. the `smoke_generator` technology (vanilla and TFB): `naval_retreat_speed = 0.2`;
+- the `night` static modifier × darkness (vanilla has only `naval_retreat_speed 0.1`, so only warships get it);
+- `screening_bonus` × screening for the battle line and carrier line, and `capital_screening_bonus` × combined carrier screening for the carrier line.
+
 Each hour a retreating ship adds `speed / 24` to its progress and escapes at 1. A 30-knot capital with full screening at tick 10 escapes in about 59 hours.
 
-[CAL] Country `naval_retreat_speed` modifiers add to the same sum and are **not modelled** (combat-modifier layer). In the CL3 battle both countries had TFB's `smoke_generator` technology (`naval_retreat_speed = 0.2`): the logged escape progress of every retreating cruiser grew by exactly 0.2 a day more than the formula above, and the ships escaped in 31–35 hours instead of the engine's 42–48 ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)).
+The modifier ids are mapped to names with medium confidence, except `naval_retreat_speed` (0x5b), which is confirmed: [CAL] in the CL3 battle both countries had `smoke_generator`, and the logged escape progress of every retreating cruiser grew by exactly 0.2 a day more than the formula without it ([LOG](../reverse-engineering/findings/LOG-ingame-logging.md)). With the country modifier, 200 simulator seeds escape in the same time as the 12 game seeds for every decision hour (decided before hour 100: 36.0 h against the game's 36.1; 100–200: 33.7 and 33.7; 200–300: 31.7 and 31.7; later: 30 and 30).
 
-**Code.** `RetreatRules.EscapeSpeedPerDay`, `AdvanceRetreat`.
+**Code.** `RetreatRules.EscapeSpeedPerDay`, `AdvanceRetreat`, `MemberModifierRules.Get`; country modifiers in `BattleParticipant.CountryModifiers` and `Ship.CountryModifiers`.
 
 ## S-SUB: submarines [RE]
 

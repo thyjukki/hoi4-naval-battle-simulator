@@ -518,7 +518,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x58 | naval_retreat_chance_after_initial_combat? (medium) | 0x1975280 (0x1975325) | [ACT/retreat], [HOUR/end] |
 | 0x59 | naval_retreat_speed_after_initial_combat (medium) | 0x196fe80 | [ACT/speed] |
 | 0x5a | naval_enemy_positioning_in_initial_attack? (medium). Gate **disagrees**: POS `side+0xd8 == 0`, HOUR "side not in all-retreat" | 0x161b960 (0x161bbb5) | [POS/pos], [HOUR/end] |
-| 0x5b | naval_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
+| 0x5b | naval_retreat_speed (confirmed in-game: TFB `smoke_generator`'s country value, +0.2/day) | 0x196fe80 via 0x1972570 | [ACT/speed], [LOG] |
 | 0x5c | sub_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
 | 0x5d | convoy_retreat_speed (medium) | 0x196fe80 | [ACT/speed] |
 | 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg] |
@@ -539,7 +539,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x1bc | naval_torpedo_reveal_chance_factor | torpedo-firing reveal (0x1973f87..) | [ACT/sub], [POS/sub] |
 | 0x1bd | naval_torpedo_screen_penetration_factor? | 0x1972c00 torpedo MaxBox | [TGT/torp] |
 | 0x1be | naval_torpedo_cooldown_factor | 0x1972a70 | [ACT/cooldown] |
-| 0x1bf / 0x1c0 / 0x1c1 | NAVAL_TORPEDO / LIGHT_GUN / HEAVY_GUN _HIT_CHANCE_FACTOR | 0x1970b48 | [HIT/mods] |
+| 0x1bf / 0x1c0 / 0x1c1 | NAVAL_TORPEDO / LIGHT_GUN / HEAVY_GUN _HIT_CHANCE_FACTOR (read via 0x1972570: TFB's `screening_bonus` entries confirmed in-game) | 0x1970b48 via 0x1972570 | [HIT/mods], [LOG] |
 | 0x1c2 | NAVAL_TORPEDO_ENEMY_CRITICAL_CHANCE_FACTOR | 0x1970b48 | [HIT/crit] |
 | 0x1c3 | NAVAL_TORPEDO_DAMAGE_REDUCTION_FACTOR | 0x1970b48 (0x1971338..) | [HIT/pierce] |
 | 0x1c7 | NAVAL_HIT_CHANCE_AGAINST_A_COUNTRY | 0x1970b48 | [HIT/mods] |
@@ -553,7 +553,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 
 | Block | Bound / read at | Effect | Finding |
 |---|---|---|---|
-| `screening_bonus` | bound 0x60ed2a; read 0x1972570 | `+screening × value` for boxes 2, 3 (naval_hit_chance 0.4, naval_retreat_speed 0.2, convoy_retreat_speed 0.2) | [TGT/bonus], [HIT/mods] |
+| `screening_bonus` | bound 0x60ed2a; read 0x1972570 | `+screening × value` for boxes 2, 3, every key (vanilla naval_hit_chance 0.4, naval_retreat_speed 0.2, convoy_retreat_speed 0.2; TFB adds heavy/light gun hit chance factors 1 / 0.3, confirmed in-game) | [TGT/bonus], [HIT/mods], [LOG] |
 | `capital_screening_bonus` | bound 0x60ed5d; read 0x1972570 | box 3: `+0x161ece0 value × value` (naval_retreat_speed 0.2, sortie_efficiency 0.1) | [TGT/bonus], [AIR/sortie] |
 | `ship_experience_bonus_max`, `_malus_min`, `carrier_experience_bonus_max`, `_malus_min` | loaded 0x60ec2b / 0x60ec5e; applied 0xc3ce50 | level effect × `s` | [XP/effect] |
 | `night` (× darkness), `weather_*` | generic gather 0xc38760 (mod 0x28); night holder 0x15c3080 for carrier_traffic | hit chance, carrier traffic | [HIT/mods], [AIR/sortie], [README/disagree] |

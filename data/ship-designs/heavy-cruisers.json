@@ -3,34 +3,34 @@
   "shipDesigns": [
     {
       "id": "ca3_armor4",
-      "hullID": "heavy_cruiser_hull_3",
-      "moduleIDs": [
-        "medium_battery_3",
-        "fire_control_3",
-        "radar_4",
-        "engine_cruiser_3",
-        "armor_cruiser_heavy_4",
-        "anti_air_4",
-        "light_secondaries_2"
-      ]
+      "hullID": "ship_hull_cruiser_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_medium_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_4",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_2",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_heavy_4"
+      }
     },
     {
       "id": "torpedo_cruiser_torpattack",
-      "hullID": "torpedo_cruiser_hull",
-      "moduleIDs": [
-        "medium_battery_3",
-        "fire_control_3",
-        "radar_4",
-        "engine_cruiser_3",
-        "armor_cruiser_4",
-        "anti_air_4",
-        "anti_air_4",
-        "light_secondaries_2",
-        "torpedo_3",
-        "torpedo_3",
-        "torpedo_3",
-        "torpedo_3"
-      ]
+      "hullID": "ship_hull_torpedo_cruiser",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_medium_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_4",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_2",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_heavy_4",
+        "front_1_custom_slot": "ship_torpedo_3",
+        "mid_1_custom_slot": "ship_torpedo_3",
+        "mid_2_custom_slot": "ship_torpedo_3",
+        "rear_1_custom_slot": "ship_torpedo_3",
+        "rear_2_custom_slot": "ship_anti_air_4"
+      }
     }
   ]
 }

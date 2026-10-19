@@ -66,28 +66,15 @@ public static class HitChanceRules
     }
 
     /// <summary>
-    /// S-HIT-MODS [RE]: 1 + naval_hit_chance + the shooter's hit chance factor for the slot. naval_hit_chance includes
-    /// the static modifier <c>screening_bonus</c> scaled by screening for the battle line and carrier line, and the
-    /// <c>night</c> modifier scaled by darkness. Not clamped.
+    /// S-HIT-MODS [RE]: 1 + naval_hit_chance + the shooter's hit chance factor for the slot (design stat plus the
+    /// naval_*_hit_chance_factor modifier). Both modifiers are read through the member modifier getter, so they include
+    /// screening_bonus × screening for the battle line and carrier line (TFB's has heavy 1 and light 0.3 factors,
+    /// [CAL] jukki_usa_vs_bc_japan), country modifiers and the night modifier × darkness. Not clamped.
     /// </summary>
     public static double ModifierSum(Ship shooter, WeaponSlot slot, ScreeningSummary shooterScreening, double darkness, GameDefines defines)
     {
         var stats = shooter.GetFinalStats();
-        var modifiers = defines.StaticModifiers;
-        var navalHitChance = darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.NavalHitChance);
-
-        if (TargetingRules.LineOf(shooter) is 2 or 3)
-        {
-            navalHitChance += shooterScreening.ScreeningEfficiency *
-                              modifiers.Get(StaticModifiers.ScreeningBonus, StaticModifiers.NavalHitChance);
-        }
-
-        if (TargetingRules.LineOf(shooter) == 3)
-        {
-            navalHitChance += ScreeningRules.CombinedCarrierScreening(shooterScreening) *
-                              modifiers.Get(StaticModifiers.CapitalScreeningBonus, StaticModifiers.NavalHitChance);
-        }
-
+        var navalHitChance = MemberModifierRules.Get(shooter, StaticModifiers.NavalHitChance, shooterScreening, darkness, defines);
         var (weaponFactor, weaponModifier) = slot switch
         {
             WeaponSlot.Heavy => (stats.HeavyHitChanceFactor, StaticModifiers.NavalHeavyGunHitChanceFactor),
@@ -95,8 +82,7 @@ public static class HitChanceRules
             _ => (stats.LightHitChanceFactor, StaticModifiers.NavalLightGunHitChanceFactor)
         };
 
-        // The per-weapon modifier gathers province modifiers too, so a night block entry (TFB: torpedo -0.15) applies.
-        weaponFactor += darkness * modifiers.Get(StaticModifiers.Night, weaponModifier);
+        weaponFactor += MemberModifierRules.Get(shooter, weaponModifier, shooterScreening, darkness, defines);
 
         return 1.0 + navalHitChance + weaponFactor;
     }

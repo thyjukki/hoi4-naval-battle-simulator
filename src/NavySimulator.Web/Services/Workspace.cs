@@ -4,6 +4,7 @@ using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Stats;
 using NavySimulator.GameData;
 using NavySimulator.GameData.Contracts;
+using NavySimulator.GameData.Import;
 
 namespace NavySimulator.Web.Services;
 
@@ -113,6 +114,46 @@ public sealed class Workspace
         modCandidates = Hoi4Locator.Find();
         sourceNames.Clear();
         Notify();
+    }
+
+    /// <summary>
+    /// What an import of hulls, modules and ship types reads: the HOI4 install found on this computer, then the define
+    /// sources (Simulate as) that are mod folders, in order.
+    /// </summary>
+    public (string? Game, IReadOnlyList<string> Mods) ShipDataSources()
+    {
+        var game = ModCandidates.FirstOrDefault(candidate => candidate.Kind == DefinesCandidateKind.Game)?.Path;
+        var mods = ExtraDefineSources.Select(ResolveDefinesSource)
+            .Where(Directory.Exists)
+            .Where(path => game is null || Hoi4Locator.Normalize(path) != Hoi4Locator.Normalize(game))
+            .ToList();
+        return (game, mods);
+    }
+
+    /// <summary>
+    /// Reads hulls, modules and ship types from the game and the Simulate-as mods (<see cref="ShipDataSources"/>), writes
+    /// them over <c>hulls/</c>, <c>modules/</c> and <c>ship-types/</c> and reloads the catalog. Designs are not touched.
+    /// </summary>
+    public ShipDataImport ImportShipData()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-ship-data --game <dir>' instead.");
+        }
+
+        ShipDataImport import;
+
+        lock (sync)
+        {
+            import = ShipDataImporter.Read(new GameFileSystem(game, mods));
+            ShipDataWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
     }
 
     /// <summary>What every battle simulates: "Vanilla 1.19.3", or the names of the GUI's define sources (e.g. the mod).</summary>
@@ -306,16 +347,24 @@ public sealed class Workspace
         return Catalog.Hulls.FirstOrDefault(hull => hull.ID == id);
     }
 
-    /// <summary>A module's category: its file name in <c>modules/</c>, e.g. "heavy guns".</summary>
+    /// <summary>A module's category as the game's designer titles it, e.g. "Rapid Fire Guns".</summary>
     public string ModuleCategory(ModuleDto module)
     {
-        var file = Catalog.SourceFileOf(module);
-        return file is null ? "other" : Path.GetFileNameWithoutExtension(file).Replace('-', ' ').Replace('_', ' ');
+        return module.CategoryName ?? module.Category;
     }
 
+    /// <summary>The design's role, from its ship type (S-DESIGN-TYPE); null when the design cannot be built.</summary>
     public ShipRole? RoleOf(ShipDesignDto design)
     {
-        return Library.Hulls.TryGetValue(design.HullID, out var hull) ? hull.Role : null;
+        return Library.TryCreateDesign(design)?.Role;
+    }
+
+    /// <summary>The design's ship type and whether it accepts the design (false: a fallback, S-DESIGN-TYPE).</summary>
+    public (ShipTypeDto? Type, bool Matches) ShipTypeOf(ShipDesignDto design)
+    {
+        var check = Library.CheckDesign(design);
+        var type = check?.ShipType is { } shipType ? Catalog.ShipTypes.FirstOrDefault(candidate => candidate.ID == shipType.ID) : null;
+        return (type, check?.ShipTypeMatches ?? false);
     }
 
     /// <summary>The design's stats (S-STATS-DESIGN), or null when its hull is unknown.</summary>
@@ -364,6 +413,7 @@ public sealed class Workspace
             }
 
             var saved = Clone(design);
+            DesignSlots.Normalize(Catalog, saved);
             var oldFile = existing is null ? null : Catalog.SourceFileOf(existing);
 
             if (existing is not null && oldFile is not null && !SameFile(oldFile, file))

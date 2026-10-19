@@ -4,7 +4,7 @@
 - Simulate Hearts of Iron 4 (HOI4) naval battles as close to the real game as possible, down to decoded formulas.
 - Sources of truth, in order: reverse-engineering findings (`docs/reverse-engineering/findings/`), calibration against recorded in-game battles (`docs/calibration.md`), the game's own files (defines, unit/equipment scripts). The wiki and community testing are secondary.
 - The spec lives in `docs/mechanics/`. Every rule has an ID (`S-*` surface, `A-*` air) and provenance tags ([DEFINE], [RE], [CAL], [WIKI], [PDX], [COMMUNITY], [LEGACY], [ASSUMED]). Code cites the ID where it implements the rule.
-- Fleets consist of ships; ships have a design = hull + modules + optional MIO; researches (technologies and equipment bonuses) and spirits add stat modifiers, combined as decoded in S-STATS (`docs/mechanics/surface.md`).
+- Fleets consist of ships; ships have a design = hull + one module per hull slot + optional MIO; the ship type (light cruiser, battleship, ...) is not a hull but follows from hull and modules (S-DESIGN), and gives the role and organization; researches (technologies and equipment bonuses) and spirits add stat modifiers, combined as decoded in S-STATS (`docs/mechanics/surface.md`).
 - Battles are between 2 sides, each with a fleet, researches, spirits and the task force's aggressiveness (engagement rule: retreat threshold and which lines submarines attack) and repair priority (recorded, not used in combat). Use the game's terms: aggressiveness (Do Not Engage, Engage At Low/Medium/High Risk, Always Engage) and repair priority (Never repair, Low, Medium, High; not used in combat).
 
 ## Possible stats
@@ -17,7 +17,7 @@
 ## Project Snapshot
 - Solution `NavySimulator.sln`:
   - `src/NavySimulator.Engine`: simulation only, no I/O. Namespace `NavySimulator.Engine`.
-  - `src/NavySimulator.GameData`: JSON setup loading (`Loading/`), saving edits back to JSON (`Saving/CatalogWriter`), report files (`Reports/ReportWriter`), Paradox script parser (`Paradox/`), defines `.lua` parser and binder (`Defines/`). Namespace `NavySimulator.GameData`.
+  - `src/NavySimulator.GameData`: JSON setup loading (`Loading/`), importing hulls, modules and ship types from game/mod folders (`Import/`), saving edits back to JSON (`Saving/CatalogWriter`), report files (`Reports/ReportWriter`), Paradox script parser (`Paradox/`), defines `.lua` parser and binder (`Defines/`). Namespace `NavySimulator.GameData`.
   - `src/NavySimulator.Cli`: entrypoint (`Program.cs`) and options. Executable name `NavySimulator`.
   - `src/NavySimulator.Web`: the GUI, a local Blazor Server app (`Services/` for state and logic, `Components/` for pages). Spec in `docs/gui.md`.
   - `tests/NavySimulator.Engine.Tests`, `tests/NavySimulator.GameData.Tests`, `tests/NavySimulator.Web.Tests`: xUnit.
@@ -32,6 +32,7 @@
 - All randomness goes through `IRandomSource` (seeded `SeededRandomSource`; scripted in tests).
 - Results: `BattleResult` with per-shot `ShotRecord`s, `ShipResult`s, `SideResult`s, structured `BattleEvent`s, a per-hour `Timeline` (`HourSummary`), the hourly log and notes about ignored inputs. A session can also keep every ship's state per hour (`recordShipHistory`, used by the GUI to rewind).
 - Setup: `SetupLoader.ReadCatalog` reads a data directory into a `ContentCatalog` (DTOs plus each item's source file); `SetupLoader.BuildScenario` validates and builds a `BattleScenario` from a catalog and a scenario DTO (in-memory edits included); `ContentLibrary` makes engine objects for previews. `LoadScenarioFromDirectory` is both steps in one.
+- Designs: `Hull` (slots, count limits), `StatModule` (category, forbidden categories, added equipment types), `ShipType` (a naval sub-unit) in `Engine/Ships/`; `DesignRules` checks a design and picks its ship type (S-DESIGN). Rule breaks are loader warnings, not errors, and a design's `allowAnyModule` silences them.
 - Air combat (`Engine/Battles/Air/`: `AirPhase`, `AirRules`) runs after each side's surface fire in air hours; spec `docs/mechanics/air.md`.
 - Reverse-engineering: findings in `docs/reverse-engineering/findings/` (hoi4.exe 1.19.3, with SHA-256), tooling in `tools/re/`. Re-run it after game patches before trusting the [RE] tags.
 
@@ -56,12 +57,12 @@
 - GUI: keep logic in `src/NavySimulator.Web/Services/` (plain classes, tested in `tests/NavySimulator.Web.Tests`) and Razor components thin. Read battle state only through `BattleRunner.View`, which copies it under the stepping lock. Document user-visible GUI changes in `docs/gui.md`.
 - Define values: never hand-copy numbers into code. Add a property to the defines class with the exact game key and vanilla default; see `docs/mechanics/defines.md`.
 - Add regression tests in `tests/NavySimulator.Engine.Tests/Mechanics/` (rule-level, use `ScriptedRandomSource` for exact rolls) or `Battles/` (engine-level).
-- `tools/import_hoi4_ship_modules.py` refreshes `data/modules/00_imported_ship_modules.json` from HOI4 module scripts (to be replaced by `PdxParser`-based import in milestone 4).
+- Hull, module and ship type data: never hand-edit `data/hulls/`, `data/modules/` or `data/ship-types/`; re-import them with `dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "<HOI4 dir>" --mod "<mod dir>"` (the user's data is TFB's: the local dev checkout over vanilla). IDs and names are the game's.
 - Reverse-engineering: check `docs/reverse-engineering/index.md` before decoding anything in hoi4.exe; add every newly decoded function and field to it, with pseudocode in a findings file.
 - Keep changes small and compile-check with `dotnet build` after structural edits.
 
 ## Known Integration Boundaries
 - No external dependencies beyond the .NET SDK (xUnit in tests).
-- Runtime input: `data/` JSON (`hulls/`, `modules/`, `mios/`, `ship-designs/`, `researches/`, `spirits/`, `planes/`, `force-compositions/`, `battle-scenario.json`) and optional defines (`data/defines/*.lua`, or a HOI4/mod folder).
+- Runtime input: `data/` JSON (`hulls/`, `modules/`, `ship-types/`, `mios/`, `ship-designs/`, `researches/`, `spirits/`, `planes/`, `force-compositions/`, `battle-scenario.json`) and optional defines (`data/defines/*.lua`, or a HOI4/mod folder).
 - The GUI uses only the ASP.NET Core shared framework (no NuGet packages); its per-user settings live in the local application data folder, outside the repository.
 - Battle mechanics reference: https://hoi4.paradoxwikis.com/Naval_battle (snapshot in `docs/reference/`), treated as a secondary source.

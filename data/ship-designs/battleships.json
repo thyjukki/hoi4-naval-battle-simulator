@@ -3,60 +3,80 @@
   "shipDesigns": [
     {
       "id": "39_battleship_balanced",
-      "hullID": "heavy_hull_3",
-      "moduleIDs": [
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "fire_control_3",
-        "radar_4",
-        "engine_heavy_3",
-        "anti_air_4",
-        "anti_air_4",
-        "anti_air_4",
-        "light_secondaries_2",
-        "light_secondaries_2",
-        "light_secondaries_2",
-        "armor_bb_3"
-      ]
+      "hullID": "ship_hull_heavy_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_heavy_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_4",
+        "fixed_ship_engine_slot": "heavy_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_2",
+        "fixed_ship_armor_slot": "ship_armor_bb_3",
+        "front_1_custom_slot": "ship_anti_air_4",
+        "mid_1_custom_slot": "ship_secondaries_2",
+        "mid_2_custom_slot": "ship_secondaries_2",
+        "mid_3_custom_slot": "ship_anti_air_4",
+        "rear_1_custom_slot": "ship_heavy_battery_3",
+        "rear_2_custom_slot": "ship_heavy_battery_3"
+      }
     },
     {
       "id": "39_battleship_pure_la",
-      "hullID": "heavy_hull_3",
-      "moduleIDs": [
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "fire_control_2",
-        "radar_2",
-        "engine_heavy_3",
-        "anti_air_3",
-        "light_secondaries_2",
-        "light_secondaries_2",
-        "light_secondaries_2",
-        "light_secondaries_2",
-        "armor_bb_3"
-      ]
+      "hullID": "ship_hull_heavy_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_heavy_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_3",
+        "fixed_ship_engine_slot": "heavy_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_3",
+        "fixed_ship_armor_slot": "ship_armor_bb_3",
+        "front_1_custom_slot": "ship_heavy_battery_3",
+        "mid_1_custom_slot": "ship_secondaries_3",
+        "mid_2_custom_slot": "ship_secondaries_3",
+        "mid_3_custom_slot": "ship_secondaries_3",
+        "rear_1_custom_slot": "ship_heavy_battery_3",
+        "rear_2_custom_slot": "ship_heavy_battery_3"
+      }
     },
     {
       "id": "39_battleship_pure_aa",
-      "hullID": "heavy_hull_3",
-      "moduleIDs": [
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "heavy_battery_3",
-        "fire_control_3",
-        "radar_3",
-        "engine_heavy_3",
-        "anti_air_4",
-        "anti_air_4",
-        "anti_air_4",
-        "anti_air_4",
-        "light_secondaries_2",
-        "armor_bb_3"
-      ]
+      "hullID": "ship_hull_heavy_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_heavy_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_3",
+        "fixed_ship_engine_slot": "heavy_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_2",
+        "fixed_ship_armor_slot": "ship_armor_bb_3",
+        "front_1_custom_slot": "ship_heavy_battery_3",
+        "mid_1_custom_slot": "ship_anti_air_4",
+        "mid_2_custom_slot": "ship_anti_air_4",
+        "mid_3_custom_slot": "ship_anti_air_4",
+        "rear_1_custom_slot": "ship_heavy_battery_3",
+        "rear_2_custom_slot": "ship_heavy_battery_3"
+      }
+    },
+    {
+      "id": "shbb_4battery_2aa",
+      "hullID": "ship_hull_super_heavy_1",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_super_heavy_battery_1",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_3",
+        "fixed_ship_engine_slot": "heavy_ship_engine_3",
+        "fixed_ship_secondaries_slot": "ship_secondaries_3",
+        "fixed_ship_armor_slot": "ship_armor_shbb",
+        "front_1_custom_slot": "ship_super_heavy_battery_1",
+        "front_2_custom_slot": "ship_super_heavy_battery_1",
+        "mid_1_custom_slot": "ship_secondaries_3",
+        "mid_2_custom_slot": "ship_secondaries_3",
+        "mid_3_custom_slot": "ship_secondaries_3",
+        "rear_1_custom_slot": "ship_super_heavy_battery_1",
+        "rear_2_custom_slot": "ship_anti_air_3"
+      }
     }
   ]
 }

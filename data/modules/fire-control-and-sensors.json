@@ -2,73 +2,101 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "fire_control_0",
+      "id": "ship_fire_control_system_0",
+      "name": "Central Rangefinding",
+      "shortName": "Fire Control 0",
+      "category": "ship_fire_control_system",
+      "categoryName": "Fire Control Systems",
       "statModifiers": {
-        "productionCost": 60,
         "lightHitChanceFactor": 0.025,
-        "heavyHitChanceFactor": 0.025
+        "heavyHitChanceFactor": 0.025,
+        "productionCost": 60
       }
     },
     {
-      "id": "fire_control_1",
+      "id": "ship_fire_control_system_1",
+      "name": "Director Fire",
+      "shortName": "Fire Control I",
+      "category": "ship_fire_control_system",
+      "categoryName": "Fire Control Systems",
       "statModifiers": {
-        "productionCost": 135,
         "lightHitChanceFactor": 0.05,
-        "heavyHitChanceFactor": 0.05
+        "heavyHitChanceFactor": 0.05,
+        "productionCost": 135
       },
       "statMultipliers": {
         "antiAir": 0.025
       }
     },
     {
-      "id": "fire_control_2",
+      "id": "ship_fire_control_system_2",
+      "name": "Mechanical Rangekeeper",
+      "shortName": "Fire Control II",
+      "category": "ship_fire_control_system",
+      "categoryName": "Fire Control Systems",
       "statModifiers": {
-        "productionCost": 165,
         "lightHitChanceFactor": 0.075,
-        "heavyHitChanceFactor": 0.075
+        "heavyHitChanceFactor": 0.075,
+        "productionCost": 165
       },
       "statMultipliers": {
         "antiAir": 0.05
       }
     },
     {
-      "id": "fire_control_3",
+      "id": "ship_fire_control_system_3",
+      "name": "Ballistic Computer",
+      "shortName": "Fire Control III",
+      "category": "ship_fire_control_system",
+      "categoryName": "Fire Control Systems",
       "statModifiers": {
-        "productionCost": 225,
         "lightHitChanceFactor": 0.1,
-        "heavyHitChanceFactor": 0.1
+        "heavyHitChanceFactor": 0.1,
+        "productionCost": 225
       },
       "statMultipliers": {
         "antiAir": 0.075
       }
     },
     {
-      "id": "radar_1",
+      "id": "ship_radar_1",
+      "name": "Decimetric Naval Search Radar",
+      "shortName": "Radar I",
+      "category": "ship_radar",
+      "categoryName": "Radar",
       "statModifiers": {
-        "productionCost": 100,
-        "surfaceDetection": 3
+        "surfaceDetection": 3,
+        "productionCost": 100
       }
     },
     {
-      "id": "radar_2",
+      "id": "ship_radar_2",
+      "name": "Improved Decimetric Naval Search Radar",
+      "shortName": "Radar II",
+      "category": "ship_radar",
+      "categoryName": "Radar",
       "statModifiers": {
+        "surfaceDetection": 5,
+        "subDetection": 2,
         "lightHitChanceFactor": 0.025,
         "heavyHitChanceFactor": 0.025,
-        "productionCost": 130,
-        "surfaceDetection": 5,
-        "subDetection": 2
+        "productionCost": 130
       },
       "statMultipliers": {
         "antiAir": 0.025
       }
     },
     {
-      "id": "radar_3",
+      "id": "ship_radar_3",
+      "name": "Centimetric Gunnery Radar",
+      "shortName": "Radar III",
+      "category": "ship_radar",
+      "categoryName": "Radar",
       "statModifiers": {
-        "lightHitChanceFactor": 0.05,
-        "heavyHitChanceFactor": 0.05,
         "surfaceDetection": 7,
         "subDetection": 6,
+        "lightHitChanceFactor": 0.05,
+        "heavyHitChanceFactor": 0.05,
         "productionCost": 160
       },
       "statMultipliers": {
@@ -76,13 +104,17 @@
       }
     },
     {
-      "id": "radar_4",
+      "id": "ship_radar_4",
+      "name": "Integrated Fire Control Radar",
+      "shortName": "Radar IV",
+      "category": "ship_radar",
+      "categoryName": "Radar",
       "statModifiers": {
+        "surfaceDetection": 9,
+        "subDetection": 14,
         "lightHitChanceFactor": 0.075,
         "heavyHitChanceFactor": 0.075,
-        "productionCost": 190,
-        "surfaceDetection": 9,
-        "subDetection": 14
+        "productionCost": 190
       },
       "statMultipliers": {
         "antiAir": 0.075

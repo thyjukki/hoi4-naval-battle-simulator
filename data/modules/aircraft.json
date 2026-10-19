@@ -1,0 +1,127 @@
+{
+  "$schema": "../schemas/modules.schema.json",
+  "modules": [
+    {
+      "id": "ship_airplane_launcher_1",
+      "name": "Floatplane Catapult",
+      "category": "ship_airplane_launcher",
+      "categoryName": "Aircraft Facilities",
+      "statModifiers": {
+        "surfaceDetection": 2,
+        "subDetection": 1.5,
+        "productionCost": 150
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "ship_airplane_launcher_2",
+      "name": "Improved Floatplane Catapult",
+      "category": "ship_airplane_launcher",
+      "categoryName": "Aircraft Facilities",
+      "statModifiers": {
+        "surfaceDetection": 4,
+        "subDetection": 3.5,
+        "productionCost": 170
+      },
+      "statMultipliers": {
+        "speed": -0.01
+      }
+    },
+    {
+      "id": "ship_seaplane_tender_1",
+      "name": "Seaplane Tender",
+      "category": "ship_seaplane_tender",
+      "categoryName": "Seaplane Tender",
+      "statModifiers": {
+        "surfaceDetection": 2,
+        "subDetection": 5,
+        "productionCost": 60
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "ship_seaplane_tender_2",
+      "name": "Improved Seaplane Tender",
+      "category": "ship_seaplane_tender",
+      "categoryName": "Seaplane Tender",
+      "statModifiers": {
+        "surfaceDetection": 3,
+        "subDetection": 7,
+        "productionCost": 75
+      },
+      "statMultipliers": {
+        "speed": -0.03
+      }
+    },
+    {
+      "id": "ship_deck_space",
+      "name": "Hangar Space",
+      "category": "ship_deck_space",
+      "categoryName": "Hangar Space",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statModifiers": {
+        "carrierSize": 2,
+        "productionCost": 1750
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "big_ship_deck_space",
+      "name": "Floating Airfield Runway",
+      "category": "big_ship_deck_space",
+      "categoryName": "Hangar Space",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statModifiers": {
+        "carrierSize": 3,
+        "productionCost": 2000
+      },
+      "statMultipliers": {
+        "speed": -0.1
+      }
+    },
+    {
+      "id": "ship_escort_deck_space",
+      "name": "Escort Carrier Hangar",
+      "category": "ship_escort_deck_space",
+      "categoryName": "Hangar Space",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statModifiers": {
+        "carrierSubDetection": 5,
+        "carrierSurfaceDetection": 1,
+        "carrierSize": 1,
+        "productionCost": 700
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "ship_submarine_deck_space",
+      "name": "Submarine Carrier Hangar",
+      "category": "ship_submarine_deck_space",
+      "categoryName": "Submarine Hangar Space",
+      "addEquipmentTypes": [
+        "carrier"
+      ],
+      "statModifiers": {
+        "productionCost": 350
+      },
+      "statMultipliers": {
+        "speed": -0.05,
+        "subVisibility": 0.1
+      }
+    }
+  ]
+}

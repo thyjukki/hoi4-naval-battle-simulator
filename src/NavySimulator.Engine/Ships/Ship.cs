@@ -23,7 +23,7 @@ public class Ship
         ResetCombatState();
     }
 
-    public ShipRole Role => Design.Hull.Role;
+    public ShipRole Role => Design.Role;
     public int MaxManpower { get; }
     public int CurrentManpower { get; set; }
     public double Experience { get; set; }
@@ -32,6 +32,9 @@ public class Ship
     public ShipStatus CurrentStatus { get; set; }
     public double RetreatProgress { get; set; }
     public bool AttemptedRetreat { get; set; }
+
+    /// <summary>S-STATS-COUNTRY: the country modifiers of the side the ship fights for, set by its <c>BattleParticipant</c>.</summary>
+    public ModifierSet CountryModifiers { get; set; } = ModifierSet.Empty;
 
     /// <summary>Per weapon slot (<c>WeaponSlot</c> index) charge in cooldowns; a slot fires while charge >= cooldown.</summary>
     public double[] SlotCharge { get; } = new double[3];

@@ -95,6 +95,16 @@ public sealed class BatchAndHelperTests : IDisposable
     }
 
     [Fact]
+    public void ResearchSummaries_ShowCountryModifiersWithTheGamesNames()
+    {
+        var smokeGenerator = test.Workspace.Catalog.Researches.First(research => research.ID == "smoke_generator");
+
+        Assert.Equal("Fleet speed while retreating +20%", ModifierInfo.SummarizeResearch(smokeGenerator));
+        Assert.Equal("Naval Hit Chance +5%", ModifierInfo.Summarize(new Dictionary<string, double> { ["naval_hit_chance"] = 0.05 }));
+        Assert.Equal("naval_speed_factor +5% (not simulated)", ModifierInfo.Summarize(new Dictionary<string, double> { ["naval_speed_factor"] = 0.05 }));
+    }
+
+    [Fact]
     public void GameLabels_UseTheGamesNames()
     {
         var aggressiveness = Enum.GetValues<Aggressiveness>().Select(value => GameLabels.Of(value)).ToList();

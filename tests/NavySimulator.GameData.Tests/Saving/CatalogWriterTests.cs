@@ -79,13 +79,13 @@ public sealed class CatalogWriterTests : IDisposable
         var design = before.ShipDesigns.First(candidate => candidate.ID == "39_battleship_balanced");
         var file = before.SourceFileOf(design)!;
         var othersInFile = before.ShipDesigns.Where(candidate => before.SourceFileOf(candidate) == file).Select(candidate => candidate.ID).ToList();
-        design.ModuleIDs = design.ModuleIDs.Take(3).ToList();
+        design.Modules = design.Modules.Take(3).ToDictionary();
 
         CatalogWriter.SaveShipDesign(dataDirectory, file, design);
         var after = loader.ReadCatalog(dataDirectory);
 
         Assert.Equal(othersInFile, after.ShipDesigns.Where(candidate => after.SourceFileOf(candidate) == file).Select(candidate => candidate.ID));
-        Assert.Equal(design.ModuleIDs, after.ShipDesigns.Single(candidate => candidate.ID == design.ID).ModuleIDs);
+        Assert.Equal(design.Modules, after.ShipDesigns.Single(candidate => candidate.ID == design.ID).Modules);
         Assert.Empty(after.ReadErrors);
     }
 
@@ -108,7 +108,7 @@ public sealed class CatalogWriterTests : IDisposable
     [Fact]
     public void SaveShipDesign_ToANewFile_CreatesIt()
     {
-        var design = new ShipDesignDto { ID = "custom_dd", HullID = "destroyer_hull_1", ModuleIDs = [] };
+        var design = new ShipDesignDto { ID = "custom_dd", HullID = "ship_hull_light_1" };
 
         CatalogWriter.SaveShipDesign(dataDirectory, "ship-designs/custom.json", design);
         var catalog = new SetupLoader().ReadCatalog(dataDirectory);
@@ -117,6 +117,8 @@ public sealed class CatalogWriterTests : IDisposable
         Assert.Contains(catalog.ShipDesigns, candidate => candidate.ID == "custom_dd" && catalog.SourceFileOf(candidate) == "ship-designs/custom.json");
         Assert.Contains("\"$schema\": \"../schemas/ship-designs.schema.json\"", text);
         Assert.DoesNotContain("mioID", text);
+        Assert.DoesNotContain("allowAnyModule", text);
+        Assert.Contains("\"modules\": {}", text);
     }
 
     [Fact]
@@ -176,7 +178,7 @@ public sealed class CatalogWriterTests : IDisposable
     [Fact]
     public void Writer_RejectsPathsOutsideTheDataDirectory()
     {
-        var design = new ShipDesignDto { ID = "x", HullID = "destroyer_hull_1" };
+        var design = new ShipDesignDto { ID = "x", HullID = "ship_hull_light_1" };
 
         Assert.Throws<ArgumentException>(() => CatalogWriter.SaveShipDesign(dataDirectory, "../escape.json", design));
         Assert.Throws<ArgumentException>(() => CatalogWriter.SaveShipDesign(dataDirectory, "ship-designs/not-json.txt", design));

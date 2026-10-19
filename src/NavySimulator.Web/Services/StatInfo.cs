@@ -36,7 +36,7 @@ public sealed record StatInfo(string Key, string Label, string Group, Func<ShipS
         new("carrierSurfaceDetection", "Carrier surface detection", "Movement and sensors", stats => stats.CarrierSurfaceDetection, "F2"),
         new("carrierSubDetection", "Carrier sub detection", "Movement and sensors", stats => stats.CarrierSubDetection, "F2"),
         new("carrierSize", "Carrier size (decks)", "Movement and sensors", stats => stats.CarrierSize, "F0"),
-        new("navalWeatherPenaltyFactor", "Weather penalty", "Movement and sensors", stats => stats.NavalWeatherPenaltyFactor, "P1", false),
+        new("navalWeatherPenaltyFactor", "Weather penalty factor", "Movement and sensors", stats => stats.NavalWeatherPenaltyFactor, "F2", false),
         new("productionCost", "Production cost", "Cost", stats => stats.ProductionCost, "F1", false, "Cost")
     ];
 

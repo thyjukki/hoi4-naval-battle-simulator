@@ -1,18 +1,20 @@
 using NavySimulator.Engine;
+using NavySimulator.Engine.Stats;
 using NavySimulator.GameData.Contracts;
 
 namespace NavySimulator.GameData;
 
 /// <summary>
 /// Engine objects for the content of a <see cref="ContentCatalog"/>, keyed by ID. Lenient: entries the engine cannot
-/// represent (unknown role) are skipped and the first of duplicate IDs wins, so editors can preview designs of a
-/// catalog that does not validate yet. <see cref="SetupLoader"/> only builds it from validated catalogs.
+/// represent (ship types with an unknown role) are skipped and the first of duplicate IDs wins, so editors can preview
+/// designs of a catalog that does not validate yet. <see cref="SetupLoader"/> only builds it from validated catalogs.
 /// </summary>
 public sealed class ContentLibrary
 {
     private ContentLibrary(
         Dictionary<string, Hull> hulls,
         Dictionary<string, StatModule> modules,
+        Dictionary<string, ShipType> shipTypes,
         Dictionary<string, MioBonus> mios,
         Dictionary<string, Research> researches,
         Dictionary<string, Spirit> spirits,
@@ -20,6 +22,7 @@ public sealed class ContentLibrary
     {
         Hulls = hulls;
         Modules = modules;
+        ShipTypes = shipTypes;
         Mios = mios;
         Researches = researches;
         Spirits = spirits;
@@ -28,6 +31,7 @@ public sealed class ContentLibrary
 
     public IReadOnlyDictionary<string, Hull> Hulls { get; }
     public IReadOnlyDictionary<string, StatModule> Modules { get; }
+    public IReadOnlyDictionary<string, ShipType> ShipTypes { get; }
     public IReadOnlyDictionary<string, MioBonus> Mios { get; }
     public IReadOnlyDictionary<string, Research> Researches { get; }
     public IReadOnlyDictionary<string, Spirit> Spirits { get; }
@@ -37,6 +41,7 @@ public sealed class ContentLibrary
     {
         var hulls = new Dictionary<string, Hull>();
         var modules = new Dictionary<string, StatModule>();
+        var shipTypes = new Dictionary<string, ShipType>();
         var mios = new Dictionary<string, MioBonus>();
         var researches = new Dictionary<string, Research>();
         var spirits = new Dictionary<string, Spirit>();
@@ -44,10 +49,16 @@ public sealed class ContentLibrary
 
         foreach (var hull in catalog.Hulls.Where(hull => !string.IsNullOrWhiteSpace(hull.ID)))
         {
-            if (Enum.TryParse<ShipRole>(hull.Role, true, out var role))
-            {
-                hulls.TryAdd(hull.ID, new Hull(hull.ID, role, ParseTypes(hull.Types ?? []), hull.Manpower, hull.BaseStats.ToDomain()));
-            }
+            hulls.TryAdd(hull.ID, new Hull(
+                hull.ID,
+                hull.Archetype,
+                hull.EquipmentType,
+                hull.Manpower,
+                hull.BaseStats.ToDomain(),
+                (hull.Slots ?? []).Select(slot => new ModuleSlot(slot.ID, slot.Required, slot.AllowedCategories ?? [])).ToList(),
+                (hull.ModuleCountLimits ?? [])
+                    .Select(limit => new ModuleCountLimit(limit.Modules ?? [], limit.Categories ?? [], limit.Operator, limit.Count))
+                    .ToList()));
         }
 
         foreach (var module in catalog.Modules.Where(module => !string.IsNullOrWhiteSpace(module.ID)))
@@ -56,7 +67,25 @@ public sealed class ContentLibrary
                 module.ID,
                 module.StatModifiers.ToDomain(),
                 module.StatMultipliers.ToDomain(),
-                module.StatAverages.ToDomain()));
+                module.StatAverages.ToDomain(),
+                module.Category,
+                module.AddEquipmentTypes ?? [],
+                module.ForbiddenCategories ?? []));
+        }
+
+        foreach (var shipType in catalog.ShipTypes.Where(shipType => !string.IsNullOrWhiteSpace(shipType.ID)))
+        {
+            if (Enum.TryParse<ShipRole>(shipType.Role, true, out var role))
+            {
+                shipTypes.TryAdd(shipType.ID, new ShipType(
+                    shipType.ID,
+                    role,
+                    shipType.UnitTypes ?? [],
+                    shipType.Priority,
+                    shipType.Hulls ?? [],
+                    shipType.RequiredModules ?? [],
+                    shipType.Organization));
+            }
         }
 
         foreach (var mio in catalog.Mios.Where(mio => !string.IsNullOrWhiteSpace(mio.ID)))
@@ -80,7 +109,8 @@ public sealed class ContentLibrary
                 research.StatMultipliers.ToDomain(),
                 ParseRoles(research.AppliesToRoles),
                 ParseTypes(research.AppliesToTypes ?? []),
-                research.EquipmentBonus));
+                research.EquipmentBonus,
+                new ModifierSet(research.CountryModifiers ?? [])));
         }
 
         foreach (var spirit in catalog.Spirits.Where(spirit => !string.IsNullOrWhiteSpace(spirit.ID)))
@@ -100,33 +130,33 @@ public sealed class ContentLibrary
             planes.TryAdd(plane.ID, new PlaneEquipment(plane.ID, plane.Stats.ToDomain()));
         }
 
-        return new ContentLibrary(hulls, modules, mios, researches, spirits, planes);
+        return new ContentLibrary(hulls, modules, shipTypes, mios, researches, spirits, planes);
     }
 
     /// <summary>
-    /// The design as an engine object, or null when its hull is unknown. Unknown module and MIO IDs are left out and
-    /// reported in <paramref name="problems"/>.
+    /// The design as an engine object, or null when its hull is unknown or no ship type needs the hull. Unknown module
+    /// and MIO IDs are left out and reported in <paramref name="problems"/>; so are modules in slots the hull does not
+    /// have. Module restrictions do not stop a design: see <see cref="CheckDesign"/>.
     /// </summary>
     public ShipDesign? TryCreateDesign(ShipDesignDto design, List<string>? problems = null)
     {
-        if (!Hulls.TryGetValue(design.HullID, out var hull))
+        if (!TryResolveModules(design, problems, out var hull, out var modulesBySlot))
         {
-            problems?.Add($"unknown hull '{design.HullID}'");
             return null;
         }
 
-        var modules = new List<StatModule>();
-
-        foreach (var moduleId in design.ModuleIDs)
+        foreach (var slotId in modulesBySlot.Keys.Where(slotId => hull.Slots.All(slot => slot.ID != slotId)))
         {
-            if (Modules.TryGetValue(moduleId, out var module))
-            {
-                modules.Add(module);
-            }
-            else
-            {
-                problems?.Add($"unknown module '{moduleId}'");
-            }
+            problems?.Add($"hull '{hull.ID}' has no slot '{slotId}'");
+        }
+
+        var modules = hull.Slots.Where(slot => modulesBySlot.ContainsKey(slot.ID)).Select(slot => modulesBySlot[slot.ID]).ToList();
+        var (shipType, _) = DesignRules.ResolveShipType(hull, modules, ShipTypes.Values);
+
+        if (shipType is null)
+        {
+            problems?.Add($"no ship type needs hull '{hull.ID}' (archetype '{hull.Archetype}')");
+            return null;
         }
 
         MioBonus? mio = null;
@@ -136,7 +166,44 @@ public sealed class ContentLibrary
             problems?.Add($"unknown MIO '{design.MioID}'");
         }
 
-        return new ShipDesign(design.ID, hull, modules, mio);
+        return new ShipDesign(design.ID, hull, shipType, modules, mio);
+    }
+
+    /// <summary>The designer rules for the design (S-DESIGN), or null when its hull is unknown. Unknown modules are skipped.</summary>
+    public DesignCheck? CheckDesign(ShipDesignDto design)
+    {
+        return TryResolveModules(design, null, out var hull, out var modulesBySlot)
+            ? DesignRules.Check(hull, modulesBySlot, ShipTypes.Values)
+            : null;
+    }
+
+    private bool TryResolveModules(
+        ShipDesignDto design,
+        List<string>? problems,
+        [System.Diagnostics.CodeAnalysis.NotNullWhen(true)] out Hull? hull,
+        out Dictionary<string, StatModule> modulesBySlot)
+    {
+        modulesBySlot = new Dictionary<string, StatModule>(StringComparer.Ordinal);
+
+        if (!Hulls.TryGetValue(design.HullID, out hull))
+        {
+            problems?.Add($"unknown hull '{design.HullID}'");
+            return false;
+        }
+
+        foreach (var (slotId, moduleId) in design.Modules ?? [])
+        {
+            if (Modules.TryGetValue(moduleId, out var module))
+            {
+                modulesBySlot[slotId] = module;
+            }
+            else
+            {
+                problems?.Add($"unknown module '{moduleId}' in slot '{slotId}'");
+            }
+        }
+
+        return true;
     }
 
     internal static List<ShipRole> ParseRoles(List<string> roleNames)

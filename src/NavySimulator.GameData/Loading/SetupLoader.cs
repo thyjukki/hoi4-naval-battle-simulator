@@ -24,6 +24,7 @@ public class SetupLoader
     [
         ("hulls", "hulls.json"),
         ("modules", "modules.json"),
+        ("ship-types", "ship-types.json"),
         ("mios", "mios.json"),
         ("ship-designs", "ship-designs.json"),
         ("researches", "researches.json"),
@@ -68,12 +69,15 @@ public class SetupLoader
 
         catalog.Hulls.AddRange(ReadCollectionFromFolderOrFile<HullDto>(catalog, "hulls", "hulls.json", "hulls"));
         catalog.Modules.AddRange(ReadCollectionFromFolderOrFile<ModuleDto>(catalog, "modules", "modules.json", "modules"));
+        catalog.ShipTypes.AddRange(ReadCollectionFromFolderOrFile<ShipTypeDto>(catalog, "ship-types", "ship-types.json", "shipTypes"));
         catalog.Mios.AddRange(ReadCollectionFromFolderOrFile<MioBonusDto>(catalog, "mios", "mios.json", "mios"));
         catalog.ShipDesigns.AddRange(ReadCollectionFromFolderOrFile<ShipDesignDto>(catalog, "ship-designs", "ship-designs.json", "shipDesigns"));
         catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
         catalog.Spirits.AddRange(ReadCollectionFromFolderOrFile<SpiritDto>(catalog, "spirits", "spirits.json", "spirits"));
         catalog.Planes.AddRange(ReadCollectionFromFolderOrFile<PlaneDto>(catalog, "planes", "planes.json", "planes"));
         catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
+        ValidateCountryModifierWarnings(catalog);
+        ValidateDesignRuleWarnings(catalog);
         return catalog;
     }
 
@@ -142,6 +146,7 @@ public class SetupLoader
         var dataDirectoryPath = catalog.DataDirectory;
         var hulls = catalog.Hulls;
         var modules = catalog.Modules;
+        var shipTypes = catalog.ShipTypes;
         var mios = catalog.Mios;
         var designs = catalog.ShipDesigns;
         var researches = catalog.Researches;
@@ -152,8 +157,8 @@ public class SetupLoader
         var rules = BuildRules(scenarioDto, errors);
 
         ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);
-        ValidateRequiredValues(hulls.Select(h => h.Role), "hulls.role", errors);
         ValidateRequiredIds(modules.Select(m => m.ID), "modules", errors);
+        ValidateRequiredIds(shipTypes.Select(t => t.ID), "shipTypes", errors);
         ValidateRequiredIds(mios.Select(m => m.ID), "mios", errors);
         ValidateRequiredIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateRequiredIds(researches.Select(r => r.ID), "researches", errors);
@@ -163,6 +168,7 @@ public class SetupLoader
 
         ValidateDuplicateIds(hulls.Select(h => h.ID), "hulls", errors);
         ValidateDuplicateIds(modules.Select(m => m.ID), "modules", errors);
+        ValidateDuplicateIds(shipTypes.Select(t => t.ID), "shipTypes", errors);
         ValidateDuplicateIds(mios.Select(m => m.ID), "mios", errors);
         ValidateDuplicateIds(designs.Select(d => d.ID), "shipDesigns", errors);
         ValidateDuplicateIds(researches.Select(r => r.ID), "researches", errors);
@@ -183,44 +189,34 @@ public class SetupLoader
             }
         }
 
-        var hullIds = hulls.Select(h => h.ID).ToHashSet();
         foreach (var hull in hulls)
         {
-            var hullTypes = hull.Types ?? [];
-
-            if (!Enum.TryParse<ShipRole>(hull.Role, true, out _))
-            {
-                errors.Add($"hull '{hull.ID}' has unknown role '{hull.Role}'.");
-            }
-
-            if (hullTypes.Count == 0)
-            {
-                errors.Add($"hull '{hull.ID}' must define at least one type in 'type'.");
-            }
-
-            foreach (var hullType in hullTypes)
-            {
-                if (!ShipHullTypes.IsKnown(hullType))
-                {
-                    errors.Add($"hull '{hull.ID}' has unknown type '{hullType}'.");
-                }
-            }
-
             if (hull.Manpower <= 0)
             {
                 errors.Add($"hull '{hull.ID}' must define manpower greater than 0.");
             }
+
+            foreach (var duplicate in (hull.Slots ?? []).GroupBy(slot => slot.ID).Where(group => group.Count() > 1))
+            {
+                errors.Add($"hull '{hull.ID}' has slot '{duplicate.Key}' more than once.");
+            }
         }
 
-        var moduleIds = modules.Select(m => m.ID).ToHashSet();
-        var mioIds = mios.Select(m => m.ID).ToHashSet();
+        foreach (var shipType in shipTypes)
+        {
+            if (!Enum.TryParse<ShipRole>(shipType.Role, true, out _))
+            {
+                errors.Add($"shipType '{shipType.ID}' has unknown role '{shipType.Role}'.");
+            }
+        }
+
+        var library = ContentLibrary.From(catalog);
         var designIds = designs.Select(d => d.ID).ToHashSet();
         var researchIds = researches.Select(r => r.ID).ToHashSet();
         var spiritIds = spirits.Select(s => s.ID).ToHashSet();
         var planeIds = planes.Select(p => p.ID).ToHashSet();
         var fleetIds = forceCompositionsFile.Fleets.Select(f => f.ID).ToHashSet();
-        var hullRoleByHullId = hulls.ToDictionary(h => h.ID, h => h.Role, StringComparer.OrdinalIgnoreCase);
-        var designHullByDesignId = designs.ToDictionary(d => d.ID, d => d.HullID, StringComparer.OrdinalIgnoreCase);
+        var knownTypes = KnownTypeFilters(catalog);
 
         ValidateScopedRoleFilters(
             mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToRoles))),
@@ -231,28 +227,22 @@ public class SetupLoader
         ValidateScopedTypeFilters(
             mios.SelectMany(mio => mio.Modifiers.Select(modifier => ($"{mio.ID}", modifier.AppliesToTypes ?? []))),
             "mio modifier",
+            knownTypes,
             errors);
-        ValidateScopedTypeFilters(researches.Select(r => (r.ID, r.AppliesToTypes ?? [])), "research", errors);
-        ValidateScopedTypeFilters(spirits.Select(s => (s.ID, s.AppliesToTypes ?? [])), "spirit", errors);
+        ValidateScopedTypeFilters(researches.Select(r => (r.ID, r.AppliesToTypes ?? [])), "research", knownTypes, errors);
+        ValidateScopedTypeFilters(spirits.Select(s => (s.ID, s.AppliesToTypes ?? [])), "spirit", knownTypes, errors);
+
+        var designById = new Dictionary<string, ShipDesign>();
 
         foreach (var design in designs)
         {
-            if (!hullIds.Contains(design.HullID))
-            {
-                errors.Add($"shipDesign '{design.ID}' references unknown hullID '{design.HullID}'.");
-            }
+            var problems = new List<string>();
+            var shipDesign = library.TryCreateDesign(design, problems);
+            errors.AddRange(problems.Select(problem => $"shipDesign '{design.ID}': {problem}."));
 
-            foreach (var moduleId in design.ModuleIDs)
+            if (shipDesign is not null)
             {
-                if (!moduleIds.Contains(moduleId))
-                {
-                    errors.Add($"shipDesign '{design.ID}' references unknown moduleID '{moduleId}'.");
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(design.MioID) && !mioIds.Contains(design.MioID))
-            {
-                errors.Add($"shipDesign '{design.ID}' references unknown mioID '{design.MioID}'.");
+                designById.TryAdd(design.ID, shipDesign);
             }
         }
 
@@ -310,9 +300,7 @@ public class SetupLoader
                     errors.Add($"fleet '{fleet.ID}' has carrierAirwings for shipDesignID '{shipDesignId}' that is not present in shipDesigns.");
                 }
 
-                if (!designHullByDesignId.TryGetValue(shipDesignId, out var hullId) ||
-                    !hullRoleByHullId.TryGetValue(hullId, out var hullRole) ||
-                    !hullRole.Equals(nameof(ShipRole.Carrier), StringComparison.OrdinalIgnoreCase))
+                if (designById.TryGetValue(shipDesignId, out var carrierDesign) && carrierDesign.Role != ShipRole.Carrier)
                 {
                     errors.Add($"fleet '{fleet.ID}' has carrierAirwings for non-carrier shipDesignID '{shipDesignId}'.");
                 }
@@ -356,15 +344,8 @@ public class SetupLoader
             throw new SetupValidationException(errors);
         }
 
-        var library = ContentLibrary.From(catalog);
         var researchById = library.Researches;
         var spiritById = library.Spirits;
-        var designById = new Dictionary<string, ShipDesign>();
-
-        foreach (var design in designs)
-        {
-            designById[design.ID] = library.TryCreateDesign(design)!;
-        }
 
         var fleetDtoById = forceCompositionsFile.Fleets.ToDictionary(fleet => fleet.ID, StringComparer.Ordinal);
         var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, defines);
@@ -597,6 +578,32 @@ public class SetupLoader
         {
             errors.Add($"File '{fileName}' has invalid JSON: {ex.Message}");
             return default;
+        }
+    }
+
+    // S-STATS-COUNTRY: country modifiers the combat rules do not read yet would otherwise be dropped without notice.
+    private static void ValidateCountryModifierWarnings(ContentCatalog catalog)
+    {
+        foreach (var research in catalog.Researches)
+        {
+            foreach (var key in (research.CountryModifiers ?? []).Keys.Where(key => !BattleParticipant.ModelledCountryModifiers.Contains(key)))
+            {
+                catalog.Warnings.Add($"{catalog.SourceFileOf(research)} '{research.ID}': country modifier '{key}' is not simulated yet and is ignored.");
+            }
+        }
+    }
+
+    // S-DESIGN: designs that break the designer's module restrictions are still simulated, unless they override them.
+    private static void ValidateDesignRuleWarnings(ContentCatalog catalog)
+    {
+        var library = ContentLibrary.From(catalog);
+
+        foreach (var design in catalog.ShipDesigns.Where(design => !design.AllowAnyModule))
+        {
+            foreach (var issue in library.CheckDesign(design)?.Issues.Where(issue => issue.IsRestriction) ?? [])
+            {
+                catalog.Warnings.Add($"{catalog.SourceFileOf(design)} '{design.ID}': {issue.Message}.");
+            }
         }
     }
 
@@ -939,21 +946,6 @@ public class SetupLoader
         }
     }
 
-    private static void ValidateRequiredValues(IEnumerable<string> values, string sectionName, List<string> errors)
-    {
-        var index = 0;
-
-        foreach (var value in values)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                errors.Add($"{sectionName}[{index}] must not be empty.");
-            }
-
-            index++;
-        }
-    }
-
     private static void ValidateDuplicateIds(IEnumerable<string> ids, string sectionName, List<string> errors)
     {
         var duplicates = ids
@@ -1100,16 +1092,27 @@ public class SetupLoader
         }
     }
 
+    // Type filters match a design's ship type, hull or hull archetype (ShipDesign.Types).
+    private static HashSet<string> KnownTypeFilters(ContentCatalog catalog)
+    {
+        return catalog.ShipTypes.Select(type => type.ID)
+            .Concat(catalog.Hulls.Select(hull => hull.ID))
+            .Concat(catalog.Hulls.Select(hull => hull.Archetype))
+            .Where(id => !string.IsNullOrWhiteSpace(id))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
     private static void ValidateScopedTypeFilters(
         IEnumerable<(string ID, List<string> AppliesToTypes)> entries,
         string entryType,
+        HashSet<string> knownTypes,
         List<string> errors)
     {
         foreach (var entry in entries)
         {
             foreach (var hullType in entry.AppliesToTypes)
             {
-                if (!ShipHullTypes.IsKnown(hullType))
+                if (!knownTypes.Contains(hullType))
                 {
                     errors.Add($"{entryType} '{entry.ID}' has unknown appliesToTypes value '{hullType}'.");
                 }

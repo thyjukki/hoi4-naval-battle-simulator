@@ -2,88 +2,829 @@
   "$schema": "../schemas/hulls.schema.json",
   "hulls": [
     {
-      "id": "carrier_hull_ca",
-      "role": "Carrier",
-      "type": ["Carrier"],
-      "manpower": 1000,
-      "baseStats": {
-        "speed": 28,
-        "organization": 40,
-        "hp": 125,
-        "surfaceVisibility": 30,
-        "surfaceDetection": 26,
-        "subVisibility": 0,
-        "subDetection": 5,
-        "reliability": 0.65,
-        "productionCost": 2100
-      }
-    },
-    {
-      "id": "carrier_hull_bb",
-      "role": "Carrier",
-      "type": ["Carrier"],
-      "manpower": 5000,
-      "baseStats": {
-        "speed": 24,
-        "organization": 40,
-        "hp": 325,
-        "surfaceVisibility": 30,
-        "surfaceDetection": 26,
-        "subVisibility": 0,
-        "subDetection": 5,
-        "reliability": 0.65,
-        "productionCost": 2400
-      }
-    },
-    {
-      "id": "carrier_hull_1",
-      "role": "Carrier",
-      "type": ["Carrier"],
+      "id": "ship_hull_carrier_1",
+      "name": "Basic Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1939,
       "manpower": 4500,
       "baseStats": {
         "speed": 26,
-        "organization": 40,
+        "reliability": 0.7,
         "hp": 250,
         "surfaceVisibility": 30,
         "surfaceDetection": 26,
-        "subVisibility": 0,
         "subDetection": 5,
-        "reliability": 0.7,
+        "navalWeatherPenaltyFactor": 1,
         "productionCost": 2400
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_2"
       }
     },
     {
-      "id": "carrier_hull_2",
-      "role": "Carrier",
-      "type": ["Carrier"],
+      "id": "ship_hull_carrier_2",
+      "name": "Improved Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1940,
       "manpower": 5000,
       "baseStats": {
         "speed": 26,
-        "organization": 40,
+        "reliability": 0.75,
         "hp": 325,
         "surfaceVisibility": 30,
         "surfaceDetection": 26,
-        "subVisibility": 0,
         "subDetection": 5,
-        "reliability": 0.75,
+        "navalWeatherPenaltyFactor": 1,
         "productionCost": 2600
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_3"
       }
     },
     {
-      "id": "carrier_hull_3",
-      "role": "Carrier",
-      "type": ["Carrier"],
+      "id": "ship_hull_carrier_3",
+      "name": "Advanced Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1942,
       "manpower": 5500,
       "baseStats": {
         "speed": 26,
-        "organization": 40,
+        "reliability": 0.8,
         "hp": 350,
         "surfaceVisibility": 30,
         "surfaceDetection": 26,
-        "subVisibility": 0,
         "subDetection": 5,
-        "reliability": 0.8,
+        "navalWeatherPenaltyFactor": 1,
         "productionCost": 2800
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_4"
+      }
+    },
+    {
+      "id": "ship_hull_carrier_modern",
+      "name": "Modern Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1948,
+      "manpower": 6500,
+      "baseStats": {
+        "speed": 30,
+        "reliability": 0.85,
+        "hp": 400,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 4250
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_nuclear_engine",
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_4"
+      }
+    },
+    {
+      "id": "ship_hull_mega_carrier",
+      "name": "Ice Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1944,
+      "manpower": 6000,
+      "baseStats": {
+        "speed": 18,
+        "reliability": 0.8,
+        "hp": 350,
+        "surfaceVisibility": 40,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 4500
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "big_ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_3_custom_slot",
+          "name": "Mid 3 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "big_ship_deck_space",
+            "ship_ice_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_carrier_conversion_bb",
+      "name": "Converted Battleship",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1922,
+      "manpower": 5000,
+      "baseStats": {
+        "speed": 24,
+        "reliability": 0.65,
+        "hp": 325,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2400
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "heavy_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "heavy_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_carrier_conversion_ca",
+      "name": "Converted Cruiser",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1922,
+      "manpower": 1000,
+      "baseStats": {
+        "speed": 28,
+        "reliability": 0.65,
+        "hp": 125,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2100
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "cruiser_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_escort_carrier",
+      "name": "Escort Carrier",
+      "archetype": "ship_hull_carrier",
+      "archetypeName": "Carrier",
+      "equipmentType": "carrier",
+      "year": 1936,
+      "manpower": 2500,
+      "baseStats": {
+        "speed": 22,
+        "reliability": 0.7,
+        "hp": 175,
+        "surfaceVisibility": 30,
+        "surfaceDetection": 26,
+        "subDetection": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 1500
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_deck_slot_1",
+          "name": "Deck Space 1",
+          "required": true,
+          "allowedCategories": [
+            "ship_escort_deck_space"
+          ]
+        },
+        {
+          "id": "fixed_ship_deck_slot_2",
+          "name": "Deck Space 2",
+          "allowedCategories": [
+            "ship_escort_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "carrier_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_escort_deck_space",
+            "ship_carrier_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_escort_deck_space",
+            "ship_carrier_armor"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "carrier_ship_engine_1"
       }
     }
   ]

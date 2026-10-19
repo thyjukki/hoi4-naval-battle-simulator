@@ -2,11 +2,18 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "medium_battery_1",
+      "id": "ship_medium_battery_1",
+      "name": "17 cm Cannon",
+      "shortName": "Heavy Cruiser Battery I",
+      "category": "ship_medium_battery",
+      "categoryName": "Medium Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
+        "hp": 5,
         "heavyAttack": 10,
-        "productionCost": 800,
-        "hp": 5
+        "productionCost": 800
       },
       "statAverages": {
         "heavyPiercing": 22
@@ -17,11 +24,18 @@
       }
     },
     {
-      "id": "medium_battery_2",
+      "id": "ship_medium_battery_2",
+      "name": "19 cm Cannon",
+      "shortName": "Heavy Cruiser Battery II",
+      "category": "ship_medium_battery",
+      "categoryName": "Medium Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
+        "hp": 10,
         "heavyAttack": 14,
-        "productionCost": 850,
-        "hp": 10
+        "productionCost": 850
       },
       "statAverages": {
         "heavyPiercing": 28
@@ -32,11 +46,18 @@
       }
     },
     {
-      "id": "medium_battery_3",
+      "id": "ship_medium_battery_3",
+      "name": "20.3 cm Cannon",
+      "shortName": "Heavy Cruiser Battery III",
+      "category": "ship_medium_battery",
+      "categoryName": "Medium Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
+        "hp": 15,
         "heavyAttack": 18,
-        "productionCost": 900,
-        "hp": 15
+        "productionCost": 900
       },
       "statAverages": {
         "heavyPiercing": 34
@@ -47,11 +68,18 @@
       }
     },
     {
-      "id": "medium_battery_4",
+      "id": "ship_medium_battery_4",
+      "name": "20.3 cm Auto-Loading Cannon",
+      "shortName": "Heavy Cruiser Battery IV",
+      "category": "ship_medium_battery",
+      "categoryName": "Medium Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
+        "hp": 20,
         "heavyAttack": 22,
-        "productionCost": 950,
-        "hp": 20
+        "productionCost": 950
       },
       "statAverages": {
         "heavyPiercing": 40
@@ -59,6 +87,93 @@
       "statMultipliers": {
         "speed": -0.1,
         "hp": 0.15
+      }
+    },
+    {
+      "id": "ship_light_medium_battery_1",
+      "name": "14.5 cm Cannon",
+      "shortName": "Light Cruiser Battery I",
+      "category": "ship_light_medium_battery",
+      "categoryName": "Light Medium Battery",
+      "statModifiers": {
+        "lightAttack": 3,
+        "productionCost": 400
+      },
+      "statAverages": {
+        "lightPiercing": 4
+      },
+      "statMultipliers": {
+        "speed": -0.04
+      }
+    },
+    {
+      "id": "ship_light_medium_battery_2",
+      "name": "15 cm Cannon",
+      "shortName": "Light Cruiser Battery II",
+      "category": "ship_light_medium_battery",
+      "categoryName": "Light Medium Battery",
+      "statModifiers": {
+        "lightAttack": 6,
+        "productionCost": 450
+      },
+      "statAverages": {
+        "lightPiercing": 6
+      },
+      "statMultipliers": {
+        "speed": -0.05
+      }
+    },
+    {
+      "id": "ship_light_medium_battery_3",
+      "name": "15.5 cm Cannon",
+      "shortName": "Light Cruiser Battery III",
+      "category": "ship_light_medium_battery",
+      "categoryName": "Light Medium Battery",
+      "statModifiers": {
+        "lightAttack": 9,
+        "productionCost": 500
+      },
+      "statAverages": {
+        "lightPiercing": 8
+      },
+      "statMultipliers": {
+        "speed": -0.06
+      }
+    },
+    {
+      "id": "ship_light_medium_battery_4",
+      "name": "15.5 cm Auto-Loading Cannon",
+      "shortName": "Light Cruiser Battery Auto-loading",
+      "category": "ship_light_medium_battery",
+      "categoryName": "Light Medium Battery",
+      "statModifiers": {
+        "lightAttack": 12,
+        "productionCost": 550
+      },
+      "statAverages": {
+        "lightPiercing": 10
+      },
+      "statMultipliers": {
+        "speed": -0.07
+      }
+    },
+    {
+      "id": "dp_ship_medium_1",
+      "name": "152mm RF. Dual-Purpose Battery",
+      "shortName": "Light Cruiser Battery IV",
+      "category": "ship_light_medium_battery",
+      "categoryName": "Light Medium Battery",
+      "statModifiers": {
+        "lightAttack": 8,
+        "antiAir": 6,
+        "productionCost": 400
+      },
+      "statAverages": {
+        "lightPiercing": 8
+      },
+      "statMultipliers": {
+        "speed": -0.04,
+        "hp": 0.1
       }
     }
   ]

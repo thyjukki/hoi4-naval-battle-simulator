@@ -44,8 +44,9 @@ internal static class TestEntityFactory
 
     public static Ship CreateShip(string id, ShipRole role, ShipStats stats, double experience = 0, int manpower = 400)
     {
-        var hull = new Hull($"{id}_hull", role, [role.ToString()], manpower, stats);
-        var design = new ShipDesign($"{id}_design", hull, []);
+        var hull = new Hull($"{id}_hull", $"{id}_archetype", string.Empty, manpower, stats);
+        var shipType = new ShipType(role.ToString(), role, [], 0, [hull.Archetype], [], 0);
+        var design = new ShipDesign($"{id}_design", hull, shipType, []);
         return new Ship(id, design, experience);
     }
 

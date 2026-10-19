@@ -2,92 +2,129 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "armor_bb_1",
+      "id": "ship_armor_bb_1",
+      "name": "200mm Belt/40mm Deck",
+      "shortName": "Battleship Armor I",
+      "category": "ship_heavy_armor",
+      "categoryName": "Battleship Armor Scheme",
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.1,
-        "torpedoDamageReductionFactor": -0.1
+        "torpedoDamageReductionFactor": -0.1,
+        "torpedoEnemyCriticalChanceFactor": 0.1
       },
       "statMultipliers": {
-        "productionCost": 0.1,
         "speed": -0.3,
-        "hp": 0.15
+        "hp": 0.15,
+        "productionCost": 0.1
       }
     },
     {
-      "id": "armor_bb_2",
+      "id": "ship_armor_bc_1",
+      "name": "150mm Belt/25mm Deck",
+      "shortName": "Battlecruiser Armor I",
+      "category": "ship_heavy_armor_bc",
+      "categoryName": "Battle Cruiser Armor Scheme",
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
+        "torpedoDamageReductionFactor": -0.075,
+        "torpedoEnemyCriticalChanceFactor": 0.075
       },
       "statMultipliers": {
-        "productionCost": 0.125,
+        "speed": -0.15,
+        "armor": -0.1,
+        "productionCost": 0.05
+      }
+    },
+    {
+      "id": "ship_armor_bb_2",
+      "name": "350mm Belt/150mm Deck",
+      "shortName": "Battleship Armor II",
+      "category": "ship_heavy_armor",
+      "categoryName": "Battleship Armor Scheme",
+      "statModifiers": {
+        "torpedoDamageReductionFactor": -0.05,
+        "torpedoEnemyCriticalChanceFactor": 0.05
+      },
+      "statMultipliers": {
         "speed": -0.3,
         "hp": 0.2,
-        "armor": 0.1
+        "armor": 0.1,
+        "productionCost": 0.125
       }
     },
     {
-      "id": "armor_bb_3",
+      "id": "ship_armor_bc_2",
+      "name": "305mm Belt/100mm Deck",
+      "shortName": "Battlecruiser Armor II",
+      "category": "ship_heavy_armor_bc",
+      "categoryName": "Battle Cruiser Armor Scheme",
+      "statModifiers": {
+        "torpedoDamageReductionFactor": -0.025,
+        "torpedoEnemyCriticalChanceFactor": 0.025
+      },
       "statMultipliers": {
-        "productionCost": 0.15,
+        "speed": -0.15,
+        "hp": 0.05,
+        "productionCost": 0.075
+      }
+    },
+    {
+      "id": "ship_armor_bb_3",
+      "name": "380mm Belt/155mm Deck",
+      "shortName": "Battleship Armor III",
+      "category": "ship_heavy_armor",
+      "categoryName": "Battleship Armor Scheme",
+      "statMultipliers": {
         "speed": -0.3,
         "hp": 0.25,
-        "armor": 0.3
+        "armor": 0.3,
+        "productionCost": 0.15
       }
     },
     {
-      "id": "armor_bc_1",
+      "id": "ship_armor_bc_3",
+      "name": "330mm Belt/130mm Deck",
+      "shortName": "Battlecruiser Armor III",
+      "category": "ship_heavy_armor_bc",
+      "categoryName": "Battle Cruiser Armor Scheme",
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.075,
-        "torpedoDamageReductionFactor": -0.075
+        "torpedoDamageReductionFactor": 0.025,
+        "torpedoEnemyCriticalChanceFactor": -0.025
       },
       "statMultipliers": {
-        "productionCost": 0.05,
-        "speed": -0.15,
-        "armor": -0.1
-      }
-    },
-    {
-      "id": "armor_bc_2",
-      "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.025,
-        "torpedoDamageReductionFactor": -0.025
-      },
-      "statMultipliers": {
-        "productionCost": 0.075,
-        "speed": -0.15,
-        "hp": 0.05
-      }
-    },
-    {
-      "id": "armor_bc_3",
-      "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": -0.025,
-        "torpedoDamageReductionFactor": 0.025
-      },
-      "statMultipliers": {
-        "productionCost": 0.1,
         "speed": -0.15,
         "hp": 0.1,
-        "armor": 0.1
+        "armor": 0.1,
+        "productionCost": 0.1
       }
     },
     {
-      "id": "armor_carrier_deck",
+      "id": "ship_armor_shbb",
+      "name": "450mm Belt/210mm Deck",
+      "shortName": "Super-Heavy Armor",
+      "category": "ship_super_heavy_armor",
+      "categoryName": "Super Heavy Armor Scheme",
       "statModifiers": {
-        "armor": 6
+        "surfaceVisibility": 10,
+        "armor": 55,
+        "torpedoEnemyCriticalChanceFactor": 0.1
       },
       "statMultipliers": {
-        "hp": 0.2,
-        "productionCost": 0.1,
-        "speed": -0.05
+        "speed": -0.35,
+        "hp": 0.1,
+        "productionCost": 0.275
       }
     },
     {
-      "id": "armor_cruiser_1",
+      "id": "ship_armor_cruiser_1",
+      "name": "50mm Belt/40mm Deck",
+      "shortName": "Cruiser Armor I",
+      "category": "ship_cruiser_armor",
+      "categoryName": "Light Cruiser Armor Scheme",
+      "forbiddenCategories": [
+        "ship_medium_battery"
+      ],
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": -0.1,
-        "torpedoDamageReductionFactor": 0.65
+        "torpedoDamageReductionFactor": 0.65,
+        "torpedoEnemyCriticalChanceFactor": -0.1
       },
       "statMultipliers": {
         "speed": -0.05,
@@ -95,139 +132,199 @@
       }
     },
     {
-      "id": "armor_cruiser_2",
+      "id": "ship_armor_cruiser_2",
+      "name": "100mm Belt/30mm Deck",
+      "shortName": "Cruiser Armor II",
+      "category": "ship_cruiser_armor",
+      "categoryName": "Light Cruiser Armor Scheme",
+      "forbiddenCategories": [
+        "ship_medium_battery"
+      ],
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": -0.15,
-        "torpedoDamageReductionFactor": 0.75
+        "torpedoDamageReductionFactor": 0.75,
+        "torpedoEnemyCriticalChanceFactor": -0.15
       },
       "statMultipliers": {
-        "productionCost": 0.1,
         "speed": -0.075,
         "hp": 0.1,
-        "armor": 0.1
+        "armor": 0.1,
+        "productionCost": 0.1
       }
     },
     {
-      "id": "armor_cruiser_3",
+      "id": "ship_armor_cruiser_3",
+      "name": "120mm Belt/50mm Deck",
+      "shortName": "Cruiser Armor III",
+      "category": "ship_cruiser_armor",
+      "categoryName": "Light Cruiser Armor Scheme",
+      "forbiddenCategories": [
+        "ship_medium_battery"
+      ],
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": -0.2,
-        "torpedoDamageReductionFactor": 0.85
+        "torpedoDamageReductionFactor": 0.85,
+        "torpedoEnemyCriticalChanceFactor": -0.2
       },
       "statMultipliers": {
-        "productionCost": 0.125,
         "speed": -0.1,
         "hp": 0.2,
-        "armor": 0.2
+        "armor": 0.2,
+        "productionCost": 0.125
       }
     },
     {
-      "id": "armor_cruiser_4",
+      "id": "ship_armor_cruiser_4",
+      "name": "150mm Belt/60mm Deck",
+      "shortName": "Cruiser Armor IV",
+      "category": "ship_cruiser_armor",
+      "categoryName": "Light Cruiser Armor Scheme",
+      "forbiddenCategories": [
+        "ship_medium_battery"
+      ],
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": -0.25,
-        "torpedoDamageReductionFactor": 0.9
+        "torpedoDamageReductionFactor": 0.9,
+        "torpedoEnemyCriticalChanceFactor": -0.25
       },
       "statMultipliers": {
-        "productionCost": 0.15,
         "speed": -0.125,
         "hp": 0.3,
-        "armor": 0.3
+        "armor": 0.3,
+        "productionCost": 0.15
       }
     },
     {
-      "id": "armor_cruiser_heavy_1",
+      "id": "ship_armor_cruiser_heavy_1",
+      "name": "80mm Belt/40mm Deck",
+      "shortName": "Heavy Cruiser Armour I",
+      "category": "ship_heavy_cruiser_armor",
+      "categoryName": "Heavy Cruiser Armor Scheme",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.1,
-        "torpedoDamageReductionFactor": -0.1
-      },
-      "statMultipliers": {
-        "speed": -0.075,
-        "productionCost": 0.1,
-        "hp": 0.2,
-        "armor": 0.2
-      }
-    },
-    {
-      "id": "armor_cruiser_heavy_2",
-      "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.075,
-        "torpedoDamageReductionFactor": -0.075
-      },
-      "statMultipliers": {
-        "productionCost": 0.15,
-        "speed": -0.1,
-        "hp": 0.3,
-        "armor": 0.3
-      }
-    },
-    {
-      "id": "armor_cruiser_heavy_3",
-      "statModifiers": {
-        "torpedoEnemyCriticalChanceFactor": 0.05,
-        "torpedoDamageReductionFactor": -0.05
-      },
-      "statMultipliers": {
-        "productionCost": 0.2,
-        "speed": -0.125,
-        "hp": 0.3,
-        "armor": 0.4
-      }
-    },
-    {
-      "id": "armor_cruiser_heavy_4",
-      "statMultipliers": {
-        "productionCost": 0.25,
-        "speed": -0.15,
-        "hp": 0.4,
-        "armor": 0.5
-      }
-    },
-    {
-      "id": "armor_ice_carrier_deck_1",
-      "statModifiers": {
-        "hp": 30,
-        "navalWeatherPenaltyFactor": -0.05,
-        "armor": 2
-      },
-      "statMultipliers": {
-        "productionCost": 0.1,
-        "speed": -0.1
-      }
-    },
-    {
-      "id": "armor_ice_carrier_deck_2",
-      "statModifiers": {
-        "hp": 35,
-        "navalWeatherPenaltyFactor": -0.1,
-        "armor": 4
-      },
-      "statMultipliers": {
-        "productionCost": 0.15,
-        "speed": -0.15
-      }
-    },
-    {
-      "id": "armor_ice_carrier_deck_3",
-      "statModifiers": {
-        "hp": 40,
-        "navalWeatherPenaltyFactor": -0.15,
-        "armor": 6
-      },
-      "statMultipliers": {
-        "productionCost": 0.2,
-        "speed": -0.15
-      }
-    },
-    {
-      "id": "armor_shbb",
-      "statModifiers": {
-        "armor": 55,
-        "surfaceVisibility": 10,
+        "torpedoDamageReductionFactor": -0.1,
         "torpedoEnemyCriticalChanceFactor": 0.1
       },
       "statMultipliers": {
-        "productionCost": 0.275,
-        "speed": -0.35,
-        "hp": 0.1
+        "speed": -0.075,
+        "hp": 0.2,
+        "armor": 0.2,
+        "productionCost": 0.1
+      }
+    },
+    {
+      "id": "ship_armor_cruiser_heavy_2",
+      "name": "110mm Belt/50mm Deck",
+      "shortName": "Heavy Cruiser Armour II",
+      "category": "ship_heavy_cruiser_armor",
+      "categoryName": "Heavy Cruiser Armor Scheme",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statModifiers": {
+        "torpedoDamageReductionFactor": -0.075,
+        "torpedoEnemyCriticalChanceFactor": 0.075
+      },
+      "statMultipliers": {
+        "speed": -0.1,
+        "hp": 0.3,
+        "armor": 0.3,
+        "productionCost": 0.15
+      }
+    },
+    {
+      "id": "ship_armor_cruiser_heavy_3",
+      "name": "140mm Belt/70mm Deck",
+      "shortName": "Heavy Cruiser Armour III",
+      "category": "ship_heavy_cruiser_armor",
+      "categoryName": "Heavy Cruiser Armor Scheme",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statModifiers": {
+        "torpedoDamageReductionFactor": -0.05,
+        "torpedoEnemyCriticalChanceFactor": 0.05
+      },
+      "statMultipliers": {
+        "speed": -0.125,
+        "hp": 0.3,
+        "armor": 0.4,
+        "productionCost": 0.2
+      }
+    },
+    {
+      "id": "ship_armor_cruiser_heavy_4",
+      "name": "180mm Belt/80mm Deck",
+      "shortName": "Heavy Cruiser Armour IV",
+      "category": "ship_heavy_cruiser_armor",
+      "categoryName": "Heavy Cruiser Armor Scheme",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
+      "statMultipliers": {
+        "speed": -0.15,
+        "hp": 0.4,
+        "armor": 0.5,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "ship_armor_carrier_deck",
+      "name": "90mm Deck",
+      "shortName": "Flight Deck Armor",
+      "category": "ship_carrier_armor",
+      "categoryName": "Deck Armor",
+      "statModifiers": {
+        "armor": 6
+      },
+      "statMultipliers": {
+        "speed": -0.05,
+        "hp": 0.2,
+        "productionCost": 0.1
+      }
+    },
+    {
+      "id": "ship_armor_ice_carrier_deck_1",
+      "name": "Pykrete Runway Reinforcements",
+      "category": "ship_ice_carrier_armor",
+      "categoryName": "Runway Reinforcements",
+      "statModifiers": {
+        "hp": 30,
+        "armor": 2,
+        "navalWeatherPenaltyFactor": -0.05
+      },
+      "statMultipliers": {
+        "speed": -0.1,
+        "productionCost": 0.1
+      }
+    },
+    {
+      "id": "ship_armor_ice_carrier_deck_2",
+      "name": "Steel-Reinforced Pykrete Runway",
+      "category": "ship_ice_carrier_armor",
+      "categoryName": "Runway Reinforcements",
+      "statModifiers": {
+        "hp": 35,
+        "armor": 4,
+        "navalWeatherPenaltyFactor": -0.1
+      },
+      "statMultipliers": {
+        "speed": -0.15,
+        "productionCost": 0.15
+      }
+    },
+    {
+      "id": "ship_armor_ice_carrier_deck_3",
+      "name": "Ice-Composite Runway",
+      "category": "ship_ice_carrier_armor",
+      "categoryName": "Runway Reinforcements",
+      "statModifiers": {
+        "hp": 40,
+        "armor": 6,
+        "navalWeatherPenaltyFactor": -0.15
+      },
+      "statMultipliers": {
+        "speed": -0.15,
+        "productionCost": 0.2
       }
     }
   ]

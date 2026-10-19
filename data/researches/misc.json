@@ -2,7 +2,10 @@
   "$schema": "../schemas/researches.schema.json",
   "researches": [
     {
-      "id": "smoke_generators"
+      "id": "smoke_generator",
+      "countryModifiers": {
+        "naval_retreat_speed": 0.2
+      }
     }
   ]
 }

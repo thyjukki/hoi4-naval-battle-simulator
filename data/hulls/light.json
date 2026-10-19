@@ -1,0 +1,504 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "ship_hull_light_1",
+      "name": "Early Destroyer",
+      "archetype": "ship_hull_light",
+      "archetypeName": "Light Hull",
+      "equipmentType": "screen_ship",
+      "year": 1922,
+      "manpower": 250,
+      "baseStats": {
+        "speed": 32,
+        "reliability": 0.8,
+        "hp": 26,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "depthChargeAttack": 1,
+        "torpedoDamageReductionFactor": 0.45,
+        "torpedoEnemyCriticalChanceFactor": -0.05,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 450
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "light_ship_engine"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_depth_charge",
+            "ship_seaplane_tender",
+            "ship_light_battery"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_depth_charge"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "light_ship_engine_1"
+      }
+    },
+    {
+      "id": "ship_hull_light_2",
+      "name": "Basic Destroyer",
+      "archetype": "ship_hull_light",
+      "archetypeName": "Light Hull",
+      "equipmentType": "screen_ship",
+      "year": 1936,
+      "manpower": 325,
+      "baseStats": {
+        "speed": 33,
+        "reliability": 0.85,
+        "hp": 40,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "subDetection": 1.5,
+        "depthChargeAttack": 1,
+        "torpedoDamageReductionFactor": 0.5,
+        "torpedoEnemyCriticalChanceFactor": -0.1,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 550
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "light_ship_engine"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_seaplane_tender"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_seaplane_tender"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "light_ship_engine_2"
+      }
+    },
+    {
+      "id": "ship_hull_light_3",
+      "name": "Improved Destroyer",
+      "archetype": "ship_hull_light",
+      "archetypeName": "Light Hull",
+      "equipmentType": "screen_ship",
+      "year": 1940,
+      "manpower": 400,
+      "baseStats": {
+        "speed": 34,
+        "reliability": 0.9,
+        "hp": 50,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "subDetection": 2,
+        "depthChargeAttack": 1,
+        "torpedoDamageReductionFactor": 0.55,
+        "torpedoEnemyCriticalChanceFactor": -0.15,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 600
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "light_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_seaplane_tender"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "light_ship_engine_3"
+      }
+    },
+    {
+      "id": "ship_hull_light_4",
+      "name": "Advanced Destroyer",
+      "archetype": "ship_hull_light",
+      "archetypeName": "Light Hull",
+      "equipmentType": "screen_ship",
+      "year": 1944,
+      "manpower": 500,
+      "baseStats": {
+        "speed": 35,
+        "reliability": 0.95,
+        "hp": 65,
+        "surfaceVisibility": 12.5,
+        "surfaceDetection": 20,
+        "subDetection": 2.5,
+        "depthChargeAttack": 1,
+        "torpedoDamageReductionFactor": 0.6,
+        "torpedoEnemyCriticalChanceFactor": -0.2,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 650
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_torpedo_slot",
+          "name": "Torpedoes",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "light_ship_engine"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_seaplane_tender"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_mine_warfare",
+            "ship_mine_layer",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "light_ship_engine_4"
+      }
+    }
+  ]
+}

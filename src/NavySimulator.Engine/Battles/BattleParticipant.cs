@@ -1,9 +1,22 @@
+using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles;
 
 public class BattleParticipant
 {
+    /// <summary>
+    /// S-STATS-COUNTRY: the country modifiers the combat rules read so far (the retreat speeds of S-RETREAT-SPEED, the hit
+    /// chance terms of S-HIT-MODS). The loader warns about any other key.
+    /// </summary>
+    public static IReadOnlySet<string> ModelledCountryModifiers { get; } = new HashSet<string>(
+    [
+        StaticModifiers.NavalRetreatSpeed, StaticModifiers.NavalRetreatSpeedAfterInitialCombat,
+        StaticModifiers.SubRetreatSpeed, StaticModifiers.ConvoyRetreatSpeed,
+        StaticModifiers.NavalHitChance, StaticModifiers.NavalLightGunHitChanceFactor,
+        StaticModifiers.NavalHeavyGunHitChanceFactor, StaticModifiers.NavalTorpedoHitChanceFactor
+    ], StringComparer.Ordinal);
+
     public readonly Fleet Fleet;
     public readonly string Commander;
     public readonly string Doctrine;
@@ -11,6 +24,9 @@ public class BattleParticipant
     public readonly List<Research> Researches;
     public readonly List<Spirit> Spirits;
     public readonly Aggressiveness Aggressiveness;
+
+    /// <summary>S-STATS-COUNTRY [RE + CAL]: the country modifiers of the side's researches, summed. Every ship of the side gets them.</summary>
+    public readonly ModifierSet CountryModifiers;
 
     /// <summary>Recorded with the task force setup; not read in combat (see <see cref="NavySimulator.Engine.Battles.RepairPriority"/>).</summary>
     public readonly RepairPriority RepairPriority;
@@ -53,6 +69,7 @@ public class BattleParticipant
         ExternalMissionEfficiency = externalMissionEfficiency;
         CarrierStanceIndex = carrierStanceIndex;
         CarrierNightTraffic = carrierNightTraffic;
+        CountryModifiers = researches.Aggregate(ModifierSet.Empty, (current, research) => current.Add(research.CountryModifiers));
 
         ApplyFleetModifiers();
     }
@@ -61,8 +78,8 @@ public class BattleParticipant
     {
         foreach (var ship in Fleet.Ships)
         {
-            var role = ship.Design.Hull.Role;
-            var hullTypes = ship.Design.Hull.Types;
+            var role = ship.Design.Role;
+            var hullTypes = ship.Design.Types;
 
             var applicableResearches = Researches.Where(research => research.AppliesTo(role, hullTypes)).ToList();
             var applicableSpirits = Spirits.Where(spirit => spirit.AppliesTo(role, hullTypes)).ToList();
@@ -79,6 +96,9 @@ public class BattleParticipant
             var spiritMultipliers = applicableSpirits.Aggregate(new ShipStats(), (current, spirit) => current.Add(spirit.StatMultipliers));
 
             ship.ApplyExternalModifiers(equipmentBonuses, technology, spiritModifiers, spiritAverages, spiritMultipliers);
+
+            // S-STATS-COUNTRY [RE]: the ship modifier sum 0xc38760 gathers the country's modifiers for every ship.
+            ship.CountryModifiers = CountryModifiers;
         }
     }
 }

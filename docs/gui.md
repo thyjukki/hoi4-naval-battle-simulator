@@ -45,7 +45,7 @@ The GUI keeps one shared state for every browser tab: reloading the page or swit
 ### Scenario
 
 - Open any scenario file in the data directory root (files with a `battleScenario` block), start a **New** one, **Save**, **Save as** (file name in the data directory root) or **Revert**. A dot in the top bar marks unsaved changes. Opening (or reverting) a scenario first reloads the content files (designs, fleets and the rest) if any changed on disk since the GUI read them, so a scenario written outside the GUI finds the designs and fleets written with it.
-- Every setting of `battle-scenario.json` is editable: ID, terrain, weather, max hours, iterations, seed (empty for a random one), retreat and re-engage switches, the `rules` block (damage randomness, start hour, air region phase, night, weather), the scenario's define sources, and per side: fleet, aggressiveness and repair priority (with the game's names; repair priority is recorded but not used in combat), ship experience level, commander, doctrine, researches, spirits, land-based naval strike planes (count, plane, mission efficiency), carrier stance and carrier night traffic.
+- Every setting of `battle-scenario.json` is editable: ID, terrain, weather, max hours, iterations, seed (empty for a random one), retreat and re-engage switches, the `rules` block (damage randomness, start hour, air region phase, night, weather), the scenario's define sources, and per side: fleet, aggressiveness and repair priority (with the game's names; repair priority is recorded but not used in combat), ship experience level, commander, doctrine, researches, spirits, land-based naval strike planes (count, plane, mission efficiency), carrier stance and carrier night traffic. The research list shows each research's effects, country modifiers included.
 - The scenario is validated as you type, with the same checks the CLI runs; warnings about ignored content are listed.
 - **Swap sides** exchanges attacker and defender (the attacker fires first each hour, S-ORDER). **Mirror attacker → defender** copies the attacker's whole setup to the defender, for mirror matches.
 
@@ -55,7 +55,13 @@ Force compositions in `data/force-compositions/`: ID, file, ship designs with co
 
 ### Designs
 
-Ship designs in `data/ship-designs/`: a sortable, filterable table of every design with headline stats and the number of fleets using it, and an editor for ID, file, hull, MIO and modules (add, remove, duplicate, change; each module shows its effect). The stats panel shows the design's stats (S-STATS-DESIGN), optionally with the attacker's or defender's researches applied (S-STATS-SHIP), compared with the saved version or any other design. Renaming a design renames it in every fleet that uses it. A design used by a fleet cannot be deleted. Module slots are not checked against the hull.
+Ship designs in `data/ship-designs/`: a sortable, filterable table of every design (hull and ship type with the game's names, role, headline stats, the number of fleets using it; ⚠ marks a design that breaks a designer rule) and an editor laid out like the game's designer (S-DESIGN):
+- **Hull**: the game's hulls by archetype (Cruiser, Heavy Ship, ...), with their year. Switching hulls keeps the modules in the slots the new hull also has and that still take them, and says which were removed.
+- **Ship type**: picked from the hull and modules as the game does, e.g. the armor makes a TFB cruiser a light or heavy cruiser (S-DESIGN-TYPE); it gives the role and organization. "fallback" means no ship type accepts the design (the game would not build it).
+- **Modules**: one row per slot, fixed slots first, then custom slots; `*` marks a required slot. Each slot offers only the modules its categories allow, grouped by category, with the game's short and long names, and shows the module's effect and the categories it forbids. Broken rules are shown at the slot: a category the slot does not take, a module another module forbids, an empty required slot, and above the slots, a module count limit or a missing ship type. **Hull defaults** fits the game's default variant of the hull; **New design** starts from it.
+- **Allow any module** overrides the restrictions for the design: every slot offers every module, and broken rules are only noted ("Overridden"). It is saved with the design (`allowAnyModule`), and the loader then does not warn about it.
+
+The stats panel shows the design's stats (S-STATS-DESIGN), optionally with the attacker's or defender's researches applied (S-STATS-SHIP), compared with the saved version or any other design. Saving writes the modules in the hull's slot order. Renaming a design renames it in every fleet that uses it. A design used by a fleet cannot be deleted.
 
 ### Batch
 
@@ -63,13 +69,14 @@ Runs the edited scenario many times on all cores; run *i* uses seed base + *i*, 
 
 ### Library
 
-Read-only tables of hulls, modules (with how many designs use them), MIOs, researches, spirits and planes, as written in the JSON.
+Read-only tables of hulls (name, archetype, year, fixed + custom slots with their categories on hover, base stats), modules (category, names, effect, the categories they forbid and equipment types they add, how many designs use them), ship types (role, hulls, the modules one of which they need, organization, priority), MIOs, researches, spirits and planes, as written in the JSON. A research's effect lists its stat blocks and then its country modifiers (S-STATS-COUNTRY) with the game's names, e.g. "Fleet speed while retreating +20%"; country modifiers the engine does not read yet are marked "not simulated" (they also appear in the content warnings).
 
 ### Settings
 
 - **Simulate as**: pick whose defines and static modifiers every battle uses: **Vanilla HOI4** (the built-in 1.19.3 values) or one of the folders found on this computer: the HOI4 install, the mods the launcher knows (the `*.mod` files and folders in `Documents/Paradox Interactive/Hearts of Iron IV/mod`, so local checkouts are included) and Steam workshop mods. Only folders with `common/defines` or `common/modifiers` are listed. The choice is saved in the GUI settings file and shown in the top bar (**Simulating …**); **Rescan** searches again. A mod is applied over the built-in vanilla values, as the game loads it; ship, module and research data still come from `data/`.
 - **Define sources** (advanced): the same setting as a list, for layering several sources or adding a `.lua` file or any folder by path. Choosing under Simulate as replaces the list.
 - **Effective defines**: the source chain for the edited scenario, how many values were applied, and every applied value.
+- **Import hulls, modules and ship types** reads them from the HOI4 install and the mods chosen under Simulate as (as `NavySimulator import-ship-data` does) and replaces the files in `hulls/`, `modules/` and `ship-types/`; designs are kept and the Designs page shows the rules they now break.
 - **Reload data from disk** after editing JSON outside the GUI (opening a scenario also does it when files changed); content problems (read errors, ignored keys) are listed.
 
 ## What the GUI writes
@@ -85,6 +92,9 @@ Read-only tables of hulls, modules (with how many designs use them), MIOs, resea
 | `BattleSession` | `Engine/Battles/` | The hour loop, steppable: `StepHour`, `Step(n)`, `RunToEnd`, `BuildResult` at any time. Keeps a per-hour `Timeline`, structured `Events` and, when asked, every ship's state at the end of every hour. `BattleEngine.Simulate` runs a session to its end, so the CLI and the GUI fight the same battle for the same seed. |
 | `ContentCatalog`, `ContentLibrary`, `SetupLoader.BuildScenario` | `GameData/Loading/` | The data directory's content as DTOs with their source files; engine objects for previews; scenario building from in-memory edits. |
 | `CatalogWriter` | `GameData/Saving/` | Writes designs, fleets and scenarios back to their files. |
+| `ShipDataImporter`, `ShipDataWriter`, `GameFileSystem`, `LocalisationTable` | `GameData/Import/` | Read hulls, modules, ship types and their names from the game with mods layered over it, and write them to the data directory. |
+| `DesignRules` | `Engine/Ships/` | The designer rules: slots, forbidden categories, count limits and the ship type (S-DESIGN). |
+| `DesignSlots` | `Web/Services/` | The Designs page's slot editor: slot rows with their issues, the modules a slot offers, switching hulls, hull defaults, readable names. |
 | `ReportWriter` | `GameData/Reports/` | The report files shared by the CLI and the GUI. |
 | `Workspace` | `Web/Services/` | Singleton GUI state: catalog, edited scenario, saving, stat previews, settings, the active ruleset (Simulate as). |
 | `Hoi4Locator` | `Web/Services/` | Finds the HOI4 install, Steam workshop mods and the launcher's mods (`Documents/Paradox Interactive/Hearts of Iron IV/mod`) for Simulate as. |
@@ -97,7 +107,7 @@ The services are covered by `tests/NavySimulator.Web.Tests` (stepping equals the
 
 ## Limits
 
-- Module slots, hull module categories and design rules are not checked; any module fits any hull.
-- Hulls, modules, MIOs, researches, spirits and planes are read-only in the GUI; edit their JSON and use **Reload data from disk**.
+- Design rules follow the scripts (S-DESIGN), not decoded code: the ship type pick in particular is inferred.
+- Hulls, modules, ship types, MIOs, researches, spirits and planes are read-only in the GUI. Re-import hulls, modules and ship types from the game (Settings); edit the other JSON and use **Reload data from disk**.
 - Unsaved editor changes live in the server process; they are lost when it stops.
 - Rewinding keeps one state per ship per hour in memory, which is why Run to end pauses every 5,000 hours.

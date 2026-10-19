@@ -3,6 +3,16 @@ using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
 using NavySimulator.GameData;
 
+if (args.Length > 0 && args[0] == ImportShipDataCommand.Name)
+{
+    return ImportShipDataCommand.Run(args[1..]);
+}
+
+if (args.Length > 0 && args[0] == ListShipsCommand.Name)
+{
+    return ListShipsCommand.Run(args[1..]);
+}
+
 CliOptions options;
 
 try

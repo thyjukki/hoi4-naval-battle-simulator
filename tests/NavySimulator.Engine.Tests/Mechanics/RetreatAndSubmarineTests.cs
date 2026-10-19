@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -57,6 +58,55 @@ public class RetreatAndSubmarineTests
     }
 
     [Fact]
+    public void EscapeSpeed_AddsTheCountryRetreatSpeedOfTheShipsRole()
+    {
+        // S-RETREAT-SPEED / S-STATS-COUNTRY: warships read naval_retreat_speed, submarines sub_retreat_speed, convoys convoy_retreat_speed.
+        var countryModifiers = new ModifierSet(new Dictionary<string, double>
+        {
+            ["naval_retreat_speed"] = 0.2,
+            ["sub_retreat_speed"] = 0.3,
+            ["convoy_retreat_speed"] = 0.4
+        });
+        var screen = TestEntityFactory.Screen("dd");
+        var submarine = TestEntityFactory.Submarine("ss");
+        var convoy = TestEntityFactory.CreateShip("cv", ShipRole.Convoy, new ShipStats(Speed: 10, Hp: 100));
+        screen.CountryModifiers = countryModifiers;
+        submarine.CountryModifiers = countryModifiers;
+        convoy.CountryModifiers = countryModifiers;
+        var noScreening = new ScreeningSummary(0, 0);
+
+        Assert.Equal(0.05 + 0.2 + 30 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(screen, 0, noScreening, 0, defines), 9);
+        Assert.Equal(0.05 + 0.3 + 15 * 0.5 / 100 + 0.35, RetreatRules.EscapeSpeedPerDay(submarine, 0, noScreening, 0, defines), 9);
+        Assert.Equal(0.05 + 0.4 + 10 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(convoy, 0, noScreening, 0, defines), 9);
+    }
+
+    [Fact]
+    public void EscapeSpeed_AddsTheAfterInitialCombatModifierOnlyAfterCombatInitialDuration()
+    {
+        var screen = TestEntityFactory.Screen("dd");
+        screen.CountryModifiers = new ModifierSet(new Dictionary<string, double> { ["naval_retreat_speed_after_initial_combat"] = 0.1 });
+        var noScreening = new ScreeningSummary(0, 0);
+
+        Assert.Equal(0.05 + 6 * 0.015 / 24 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 6, noScreening, 0, defines), 9);
+        Assert.Equal(0.05 + 7 * 0.015 / 24 + 0.15 + 0.1, RetreatRules.EscapeSpeedPerDay(screen, 7, noScreening, 0, defines), 9);
+    }
+
+    [Fact]
+    public void Participant_GivesEveryShipItsResearchesCountryModifiers_WhateverTheirStatScope()
+    {
+        // TFB's smoke_generator plus a research whose stat blocks are for another ship type: country modifiers are not scoped.
+        var smokeGenerator = CreateResearch("smoke_generator", [], new Dictionary<string, double> { ["naval_retreat_speed"] = 0.2 });
+        var scoped = CreateResearch("dd_only", ["Destroyer"], new Dictionary<string, double> { ["naval_retreat_speed"] = 0.05 });
+        var screen = TestEntityFactory.Screen("cl");
+
+        var participant = new BattleParticipant(new Fleet("f", [screen]), string.Empty, string.Empty, 0, [smokeGenerator, scoped], []);
+
+        Assert.Equal(0.25, participant.CountryModifiers.Get("naval_retreat_speed"), 9);
+        Assert.Equal(0.25, screen.CountryModifiers.Get("naval_retreat_speed"), 9);
+        Assert.Equal(0.05 + 0.25 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 0, new ScreeningSummary(0, 0), 0, defines), 9);
+    }
+
+    [Fact]
     public void RevealChance_MatchesTheDecodedFormula()
     {
         var submarine = TestEntityFactory.Submarine("ss");
@@ -76,5 +126,10 @@ public class RetreatAndSubmarineTests
 
         SubmarineRules.HourlyReveal(submarine, 20, 1.0, defines, new ScriptedRandomSource(0.99));
         Assert.Equal(7, submarine.RevealTimer);
+    }
+
+    private static Research CreateResearch(string id, List<string> appliesToTypes, Dictionary<string, double> countryModifiers)
+    {
+        return new Research(id, new ShipStats(), new ShipStats(), new ShipStats(), [], appliesToTypes, countryModifiers: new ModifierSet(countryModifiers));
     }
 }

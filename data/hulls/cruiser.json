@@ -1,0 +1,1263 @@
+{
+  "$schema": "../schemas/hulls.schema.json",
+  "hulls": [
+    {
+      "id": "ship_hull_cruiser_1",
+      "name": "Early Cruiser",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1922,
+      "manpower": 600,
+      "baseStats": {
+        "speed": 28,
+        "reliability": 0.8,
+        "hp": 70,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 3,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2000
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_cruiser_armor",
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_mine_layer"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_mine_layer"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_mine_layer",
+            "ship_depth_charge"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_1",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_2",
+      "name": "Basic Cruiser",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1936,
+      "manpower": 800,
+      "baseStats": {
+        "speed": 29,
+        "reliability": 0.85,
+        "hp": 90,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2100
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_cruiser_armor",
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_mine_layer"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_depth_charge",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_mine_layer"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_2",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_3",
+      "name": "Improved Cruiser",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1940,
+      "manpower": 1200,
+      "baseStats": {
+        "speed": 30,
+        "reliability": 0.9,
+        "hp": 110,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 7,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2200
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_cruiser_armor",
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_mine_layer",
+            "ship_depth_charge"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_airplane_launcher",
+            "ship_mine_layer",
+            "ship_depth_charge"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_3",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_4",
+      "name": "Advanced Cruiser",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1944,
+      "manpower": 1400,
+      "baseStats": {
+        "speed": 31,
+        "reliability": 0.95,
+        "hp": 130,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 9,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2300
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_cruiser_armor",
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_light_battery",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_torpedo",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "ship_depth_charge",
+            "dp_light_battery",
+            "ship_mine_layer",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "ship_depth_charge",
+            "dp_light_battery",
+            "ship_mine_layer",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "mid_3_custom_slot",
+          "name": "Mid 3 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "ship_depth_charge",
+            "dp_light_battery",
+            "ship_mine_layer",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_4",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_panzerschiff",
+      "name": "Panzerschiff",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1929,
+      "manpower": 1800,
+      "baseStats": {
+        "speed": 25,
+        "reliability": 0.8,
+        "hp": 200,
+        "surfaceVisibility": 20,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 6,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 3000
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_heavy_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_heavy_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_light_medium_battery",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_light_medium_battery",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_torpedo",
+            "ship_light_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "modules": [
+            "ship_heavy_battery_3"
+          ],
+          "operator": "<",
+          "count": 1
+        },
+        {
+          "modules": [
+            "ship_heavy_battery_4"
+          ],
+          "operator": "<",
+          "count": 1
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_heavy_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_1",
+        "fixed_ship_secondaries_slot": "ship_secondaries_1",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_heavy_1",
+        "front_1_custom_slot": "ship_anti_air_1",
+        "rear_1_custom_slot": "ship_torpedo_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_coastal_defense_ship",
+      "name": "Coastal Defense Ship",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1929,
+      "manpower": 1800,
+      "baseStats": {
+        "speed": 22,
+        "reliability": 0.8,
+        "hp": 70,
+        "surfaceVisibility": 18,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 4,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 3500
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_heavy_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_light_battery",
+            "ship_medium_battery",
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_light_battery",
+            "ship_anti_air",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_light_battery",
+            "ship_anti_air",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_light_battery",
+            "ship_torpedo",
+            "ship_mine_layer"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_engine_slot": "cruiser_ship_engine_1",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_heavy_1"
+      }
+    },
+    {
+      "id": "ship_hull_torpedo_cruiser",
+      "name": "Torpedo Cruiser",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1940,
+      "manpower": 960,
+      "baseStats": {
+        "speed": 30,
+        "reliability": 0.85,
+        "hp": 105,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 18,
+        "subDetection": 1,
+        "armor": 6.5,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2100
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_airplane_launcher",
+            "ship_torpedo"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_depth_charge"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_medium_battery_1",
+        "fixed_ship_anti_air_slot": "ship_anti_air_1",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_0",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_2",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_heavy_1",
+        "front_1_custom_slot": "ship_anti_air_1",
+        "mid_1_custom_slot": "ship_torpedo_1",
+        "mid_2_custom_slot": "ship_torpedo_1",
+        "rear_1_custom_slot": "ship_torpedo_1",
+        "rear_2_custom_slot": "ship_anti_air_1"
+      }
+    },
+    {
+      "id": "ship_hull_cruiser_modern_aa",
+      "archetype": "ship_hull_cruiser",
+      "archetypeName": "Cruiser",
+      "equipmentType": "screen_ship",
+      "year": 1954,
+      "manpower": 1400,
+      "baseStats": {
+        "speed": 33,
+        "reliability": 0.95,
+        "hp": 130,
+        "surfaceVisibility": 17.5,
+        "surfaceDetection": 20,
+        "subDetection": 1,
+        "armor": 10,
+        "navalWeatherPenaltyFactor": 1,
+        "productionCost": 2100
+      },
+      "slots": [
+        {
+          "id": "fixed_ship_battery_slot",
+          "name": "Battery",
+          "required": true,
+          "allowedCategories": [
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "fixed_ship_anti_air_slot",
+          "name": "Anti-Air",
+          "allowedCategories": [
+            "ship_anti_air"
+          ]
+        },
+        {
+          "id": "fixed_ship_fire_control_system_slot",
+          "name": "Fire Control System",
+          "required": true,
+          "allowedCategories": [
+            "ship_fire_control_system",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_radar_slot",
+          "name": "Radar/Sonar",
+          "allowedCategories": [
+            "ship_radar",
+            "ship_sonar"
+          ]
+        },
+        {
+          "id": "fixed_ship_engine_slot",
+          "name": "Engine",
+          "required": true,
+          "allowedCategories": [
+            "cruiser_ship_engine"
+          ]
+        },
+        {
+          "id": "fixed_ship_secondaries_slot",
+          "name": "Secondaries",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_secondaries",
+            "ship_dp_secondaries"
+          ]
+        },
+        {
+          "id": "fixed_ship_armor_slot",
+          "name": "Armor",
+          "required": true,
+          "allowedCategories": [
+            "ship_cruiser_armor",
+            "ship_heavy_cruiser_armor"
+          ]
+        },
+        {
+          "id": "front_1_custom_slot",
+          "name": "Front 1 Custom",
+          "allowedCategories": [
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "mid_1_custom_slot",
+          "name": "Mid 1 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery",
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "mid_2_custom_slot",
+          "name": "Mid 2 Custom",
+          "allowedCategories": [
+            "ship_torpedo",
+            "ship_anti_air",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery",
+            "ship_secondaries",
+            "ship_dp_secondaries",
+            "ship_airplane_launcher"
+          ]
+        },
+        {
+          "id": "rear_1_custom_slot",
+          "name": "Rear 1 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        },
+        {
+          "id": "rear_2_custom_slot",
+          "name": "Rear 2 Custom",
+          "allowedCategories": [
+            "ship_mine_layer",
+            "ship_anti_air",
+            "ship_airplane_launcher",
+            "ship_depth_charge",
+            "ship_light_battery",
+            "dp_light_battery",
+            "ship_light_medium_battery",
+            "ship_medium_battery"
+          ]
+        }
+      ],
+      "moduleCountLimits": [
+        {
+          "categories": [
+            "ship_radar"
+          ],
+          "operator": "<",
+          "count": 2
+        },
+        {
+          "categories": [
+            "ship_sonar"
+          ],
+          "operator": "<",
+          "count": 2
+        }
+      ],
+      "defaultModules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_1",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_4",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_1"
+      }
+    }
+  ]
+}

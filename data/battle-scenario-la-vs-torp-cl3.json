@@ -20,7 +20,7 @@
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
       "externalNavalStrikePlanes": 0,
-      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1"],
+      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1", "smoke_generator"],
       "spiritIDs": [],
       "shipExperienceLevel": 0
     },
@@ -31,7 +31,7 @@
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
       "externalNavalStrikePlanes": 0,
-      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1"],
+      "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1", "smoke_generator"],
       "spiritIDs": [],
       "shipExperienceLevel": 0
     }

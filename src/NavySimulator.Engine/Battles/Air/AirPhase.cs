@@ -95,7 +95,7 @@ public sealed class AirPhase
         // [RE] The carrier's own sortie_efficiency modifiers (spirits, doctrines) add to the base.
         var carrier = group.Carrier!;
         var bonus = side.Participant.Spirits
-            .Where(spirit => spirit.AppliesTo(carrier.Role, carrier.Design.Hull.Types))
+            .Where(spirit => spirit.AppliesTo(carrier.Role, carrier.Design.Types))
             .Sum(spirit => spirit.SortieEffiency);
         return AirRules.SortieEfficiency(group, side.Screening, ReferenceEquals(side, Attacker), StanceIndex(side), hour, darkness, defines, bonus,
             side.Participant.CarrierNightTraffic);

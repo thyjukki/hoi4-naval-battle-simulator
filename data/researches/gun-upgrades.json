@@ -7,7 +7,7 @@
         "lightAttack": 0.05,
         "lightPiercing": 0.05
       },
-      "appliesToTypes": ["Destroyer", "Light Cruiser", "Heavy Cruiser", "Battleship", "Battlecruiser", "SHBB", "Carrier"]
+      "appliesToTypes": ["destroyer", "light_cruiser", "heavy_cruiser", "battleship", "battle_cruiser", "sh_battleship", "carrier"]
     },
     {
       "id": "light_upgrade_2",
@@ -15,7 +15,7 @@
         "lightAttack": 0.05,
         "lightPiercing": 0.05
       },
-      "appliesToTypes": ["Destroyer", "Light Cruiser", "Heavy Cruiser", "Battleship", "Battlecruiser", "SHBB", "Carrier"]
+      "appliesToTypes": ["destroyer", "light_cruiser", "heavy_cruiser", "battleship", "battle_cruiser", "sh_battleship", "carrier"]
     },
     {
       "id": "heavy_upgrade_1",
@@ -23,7 +23,7 @@
         "heavyAttack": 0.05,
         "heavyPiercing": 0.05
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser", "Heavy Cruiser"]
+      "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser", "heavy_cruiser"]
     },
     {
       "id": "heavy_upgrade_2",
@@ -31,21 +31,21 @@
         "heavyAttack": 0.05,
         "heavyPiercing": 0.05
       },
-      "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser", "Heavy Cruiser"]
+      "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser", "heavy_cruiser"]
     },
     {
       "id": "torpedo_upgrade_1",
       "statMultipliers": {
         "torpedoAttack": 0.05
       },
-      "appliesToTypes": ["Destroyer", "Submarine", "Light Cruiser", "Heavy Cruiser"]
+      "appliesToTypes": ["destroyer", "submarine", "light_cruiser", "heavy_cruiser"]
     },
     {
       "id": "torpedo_upgrade_2",
       "statModifiers": {
         "torpedoHitChanceFactor": 0.05
       },
-      "appliesToTypes": ["Destroyer", "Submarine", "Light Cruiser", "Heavy Cruiser"]
+      "appliesToTypes": ["destroyer", "submarine", "light_cruiser", "heavy_cruiser"]
     }
   ]
 }

@@ -38,17 +38,9 @@
   "$defs": {
     "shipType": {
       "type": "string",
-      "enum": [
-        "SHBB",
-        "Battleship",
-        "Battlecruiser",
-        "Carrier",
-        "Heavy Cruiser",
-        "Light Cruiser",
-        "Torpedo Cruiser",
-        "Destroyer",
-        "Submarine"
-      ]
+      "minLength": 1,
+      "description": "A ship type (sub-unit) ID from ship-types/, a hull ID or a hull archetype (matched against ShipDesign.Types).",
+      "examples": ["destroyer", "light_cruiser", "heavy_cruiser", "battle_cruiser", "battleship", "sh_battleship", "carrier", "sh_carrier", "submarine", "ship_hull_torpedo_cruiser"]
     }
   },
   "additionalProperties": false

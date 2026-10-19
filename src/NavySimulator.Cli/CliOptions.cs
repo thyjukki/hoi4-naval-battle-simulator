@@ -21,6 +21,9 @@ public sealed class CliOptions
           --seed <n>          Base seed; run i uses seed + i - 1 (default: scenario seed, else random)
           --out <dir>         Output root directory (default: output)
           --help              Show this help
+
+        Import hulls, modules and ship types from the game: NavySimulator import-ship-data --help
+        List a scenario's ships as JSON (for tools/ingame/make_save.py): NavySimulator list-ships --help
         """;
 
     public static CliOptions Parse(string[] args)

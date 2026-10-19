@@ -6,7 +6,7 @@
 
 <div class="page-head">
     <h1>Ship designs</h1>
-    <span class="muted">Hull + modules + optional MIO, in <code>ship-designs/</code>. Stats follow S-STATS-DESIGN.</span>
+    <span class="muted">Hull + a module per slot + optional MIO, in <code>ship-designs/</code>. The ship type follows from the hull and modules (S-DESIGN); stats follow S-STATS-DESIGN.</span>
     <button class="right" @onclick="NewDesign">New design</button>
 </div>
 
@@ -25,7 +25,7 @@
 
 <div class="panel" style="margin-bottom: 14px">
     <div class="panel-head">
-        <input type="search" placeholder="Filter designs, hulls, modules…" @bind="filter" @bind:event="oninput" style="width: 260px" />
+        <input type="search" placeholder="Filter designs, hulls, types, modules…" @bind="filter" @bind:event="oninput" style="width: 260px" />
         <div class="button-group">
             <button class="small @(roleFilter is null ? "on" : "")" @onclick="() => roleFilter = null">All</button>
             @foreach (var role in Enum.GetValues<ShipRole>())
@@ -41,6 +41,7 @@
                 <tr>
                     <th class="sortable" @onclick="@(() => SortBy("id"))">Design @Arrow("id")</th>
                     <th class="sortable" @onclick="@(() => SortBy("hull"))">Hull @Arrow("hull")</th>
+                    <th class="sortable" @onclick="@(() => SortBy("type"))">Type @Arrow("type")</th>
                     <th>Role</th>
                     <th class="num">Modules</th>
                     @foreach (var stat in StatInfo.Headline)
@@ -54,10 +55,21 @@
                 @foreach (var row in Rows())
                 {
                     <tr class="clickable @(row.Design.ID == selectedId ? "selected" : "")" @onclick="() => Select(row.Design.ID)">
-                        <td>@row.Design.ID</td>
-                        <td class="muted">@row.Design.HullID</td>
+                        <td>
+                            @row.Design.ID
+                            @if (row.Issues > 0)
+                            {
+                                <span class="warn small" title="Breaks @row.Issues designer rule(s); open it to see which"> ⚠</span>
+                            }
+                            @if (row.Design.AllowAnyModule)
+                            {
+                                <span class="faint small" title="Module restrictions overridden"> (any module)</span>
+                            }
+                        </td>
+                        <td class="muted" title="@row.Design.HullID">@row.HullName</td>
+                        <td>@row.TypeName</td>
                         <td>@row.Role</td>
-                        <td class="num">@row.Design.ModuleIDs.Count</td>
+                        <td class="num">@row.Design.Modules.Count</td>
                         @foreach (var stat in StatInfo.Headline)
                         {
                             <td class="num">@(row.Stats is null ? "" : stat.Display(row.Stats))</td>
@@ -79,6 +91,9 @@ else
     var problems = new List<string>();
     var stats = Workspace.DesignStats(editing, problems);
     var hull = Workspace.FindHull(editing.HullID);
+    var (shipType, typeMatches) = Workspace.ShipTypeOf(editing);
+    var slotRows = DesignSlots.Rows(Workspace.Catalog, Workspace.Library, editing);
+    var designIssues = DesignSlots.DesignIssues(Workspace.Library, editing);
     <div class="split wide-left">
         <div class="stack">
             <div class="panel">
@@ -111,21 +126,22 @@ else
                         </div>
                         <div class="field span-2">
                             <label>Hull</label>
-                            <select @bind="editing.HullID" class="@(hull is null ? "invalid" : "")">
+                            <select value="@editing.HullID" @onchange="args => ChangeHull(args.Value?.ToString())" class="@(hull is null ? "invalid" : "")">
                                 @if (hull is null)
                                 {
                                     <option value="@editing.HullID">@(string.IsNullOrEmpty(editing.HullID) ? "(choose a hull)" : $"{editing.HullID} (unknown)")</option>
                                 }
-                                @foreach (var group in Workspace.Catalog.Hulls.GroupBy(item => item.Role))
+                                @foreach (var group in Workspace.Catalog.Hulls.GroupBy(item => item.ArchetypeName ?? item.Archetype))
                                 {
                                     <optgroup label="@group.Key">
                                         @foreach (var item in group)
                                         {
-                                            <option value="@item.ID">@item.ID · @string.Join("/", item.Types)</option>
+                                            <option value="@item.ID">@(item.Name ?? item.ID)@(item.Year is { } year ? $" ({year})" : "")</option>
                                         }
                                     </optgroup>
                                 }
                             </select>
+                            <span class="hint">@editing.HullID</span>
                         </div>
                         <div class="field span-2">
                             <label>MIO</label>
@@ -136,6 +152,26 @@ else
                                     <option value="@mio.ID">@mio.ID</option>
                                 }
                             </select>
+                        </div>
+                        <div class="field span-2">
+                            <label>Ship type</label>
+                            <div class="row tight">
+                                <span>@(shipType?.Name ?? shipType?.ID ?? "none")</span>
+                                @if (shipType is not null)
+                                {
+                                    <span class="badge role">@shipType.Role</span>
+                                }
+                                @if (shipType is not null && !typeMatches)
+                                {
+                                    <span class="badge escaped" title="No ship type accepts this hull with these modules; the game would not build it">fallback</span>
+                                }
+                            </div>
+                            <span class="hint">Picked from the hull and modules, e.g. the armor (S-DESIGN-TYPE).</span>
+                        </div>
+                        <div class="field span-2">
+                            <label>Module restrictions</label>
+                            <label class="check"><input type="checkbox" @bind:get="editing.AllowAnyModule" @bind:set="SetAllowAnyModule" /> Allow any module</label>
+                            <span class="hint">Overrides slot categories, forbidden modules, count limits and required slots.</span>
                         </div>
                     </div>
                     @if (usedBy.Count > 0)
@@ -148,38 +184,62 @@ else
             <div class="panel">
                 <div class="panel-head">
                     <h2>Modules</h2>
-                    <span class="muted small">@editing.ModuleIDs.Count fitted · slots are not checked against the hull</span>
+                    <span class="muted small">@editing.Modules.Count of @(hull?.Slots.Count ?? 0) slots fitted</span>
+                    <div class="row tight right">
+                        <button class="small" @onclick="UseDefaults" disabled="@(hull is null)" title="The hull's default variant in the game">Hull defaults</button>
+                        <button class="small ghost" @onclick="() => editing.Modules.Clear()" disabled="@(editing.Modules.Count == 0)">Clear</button>
+                    </div>
                 </div>
                 <div class="panel-body module-list">
-                    @for (var i = 0; i < editing.ModuleIDs.Count; i++)
+                    @if (designIssues.Count > 0)
                     {
-                        var index = i;
-                        var moduleId = editing.ModuleIDs[index];
-                        <div class="module-row">
-                            <span class="index">@(index + 1)</span>
-                            <select value="@moduleId" @onchange="args => SetModule(index, args.Value?.ToString())" title="@ModuleSummary(moduleId)"
-                                    class="@(Workspace.Library.Modules.ContainsKey(moduleId) ? "" : "invalid")">
-                                @if (!Workspace.Library.Modules.ContainsKey(moduleId))
-                                {
-                                    <option value="@moduleId">@moduleId (unknown)</option>
-                                }
-                                @ModuleOptions()
-                            </select>
-                            <span class="row tight">
-                                <button class="small icon" title="Fit another of this module" @onclick="() => editing.ModuleIDs.Insert(index + 1, moduleId)">+</button>
-                                <button class="small icon danger" title="Remove" @onclick="() => editing.ModuleIDs.RemoveAt(index)">✕</button>
-                            </span>
+                        <div class="message @(editing.AllowAnyModule ? "info" : "warning")">
+                            @foreach (var issue in designIssues)
+                            {
+                                <div class="small">@(editing.AllowAnyModule ? "Overridden: " : "")@DesignSlots.Describe(Workspace.Catalog, issue)</div>
+                            }
                         </div>
-                        <div class="small faint" style="margin: -3px 0 2px 36px">@ModuleSummary(moduleId)</div>
                     }
-                    <div class="module-row" style="margin-top: 6px">
-                        <span class="index">+</span>
-                        <select @bind="moduleToAdd">
-                            <option value="">Add a module…</option>
-                            @ModuleOptions()
-                        </select>
-                        <button class="small" @onclick="AddModule" disabled="@string.IsNullOrEmpty(moduleToAdd)">Add</button>
-                    </div>
+                    @foreach (var group in slotRows.GroupBy(row => DesignSlots.IsFixed(row.Slot) ? "Fixed slots" : "Custom slots"))
+                    {
+                        <div class="list-group slot-group">@group.Key</div>
+                        @foreach (var row in group)
+                        {
+                            var slotId = row.Slot.ID;
+                            var flagged = row.Issues.Any(issue => !issue.IsRestriction || !editing.AllowAnyModule);
+                            <div class="slot-row">
+                                <span class="slot-name" title="@slotId">
+                                    @DesignSlots.SlotLabel(row.Slot)
+                                    @if (row.Slot.Required)
+                                    {
+                                        <span class="required" title="Required">*</span>
+                                    }
+                                </span>
+                                <select value="@(row.ModuleID ?? string.Empty)" @onchange="args => SetModule(slotId, args.Value?.ToString())"
+                                        class="@(flagged ? "invalid" : "")" title="@(row.Module is null ? "" : ModuleSummary(row.Module))">
+                                    <option value="">(empty)</option>
+                                    @if (row.ModuleID is not null && row.Module is null)
+                                    {
+                                        <option value="@row.ModuleID">@row.ModuleID (unknown)</option>
+                                    }
+                                    @SlotOptions(row)
+                                </select>
+                            </div>
+                            @if (row.Module is not null)
+                            {
+                                <div class="slot-note faint">@ModuleSummary(row.Module)</div>
+                            }
+                            @foreach (var issue in row.Issues)
+                            {
+                                var overridden = issue.IsRestriction && editing.AllowAnyModule;
+                                <div class="slot-note @(overridden ? "muted" : "warn")">@(overridden ? "Overridden: " : "")@DesignSlots.Describe(Workspace.Catalog, issue)</div>
+                            }
+                        }
+                    }
+                    @if (hull is null)
+                    {
+                        <p class="empty">Choose a hull to fit modules.</p>
+                    }
                 </div>
             </div>
         </div>
@@ -274,7 +334,6 @@ else
     private string file = string.Empty;
     private bool isNew;
     private string? pendingId;
-    private string? moduleToAdd;
     private string researchSide = "none";
     private string compareWith = SavedOption;
     private IReadOnlyList<string> usedBy = [];
@@ -304,21 +363,31 @@ else
         _ = InvokeAsync(StateHasChanged);
     }
 
-    private sealed record DesignRow(ShipDesignDto Design, ShipRole? Role, ShipStats? Stats, int Fleets);
+    private sealed record DesignRow(ShipDesignDto Design, string HullName, string TypeName, ShipRole? Role, ShipStats? Stats, int Fleets, int Issues);
 
     private List<DesignRow> Rows()
     {
         var rows = Workspace.Catalog.ShipDesigns
-            .Select(design => new DesignRow(design, Workspace.RoleOf(design), Workspace.DesignStats(design), Workspace.FleetsUsingDesign(design.ID).Count))
+            .Select(design =>
+            {
+                var (type, matches) = Workspace.ShipTypeOf(design);
+                var issues = design.AllowAnyModule ? 0 : Workspace.Library.CheckDesign(design)?.Issues.Count ?? 0;
+                return new DesignRow(
+                    design,
+                    Workspace.FindHull(design.HullID)?.Name ?? design.HullID,
+                    type is null ? string.Empty : (type.Name ?? type.ID) + (matches ? string.Empty : " (fallback)"),
+                    Workspace.RoleOf(design),
+                    Workspace.DesignStats(design),
+                    Workspace.FleetsUsingDesign(design.ID).Count,
+                    issues);
+            })
             .Where(row => roleFilter is null || row.Role == roleFilter)
-            .Where(row => filter.Length == 0 ||
-                          row.Design.ID.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                          row.Design.HullID.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                          row.Design.ModuleIDs.Any(module => module.Contains(filter, StringComparison.OrdinalIgnoreCase)));
+            .Where(row => filter.Length == 0 || Matches(row));
         var stat = StatInfo.All.FirstOrDefault(candidate => candidate.Key == sortKey);
         var ordered = sortKey switch
         {
-            "hull" => rows.OrderBy(row => row.Design.HullID, StringComparer.Ordinal),
+            "hull" => rows.OrderBy(row => row.HullName, StringComparer.Ordinal),
+            "type" => rows.OrderBy(row => row.TypeName, StringComparer.Ordinal),
             _ when stat is not null => rows.OrderBy(row => row.Stats is null ? double.MinValue : stat.Get(row.Stats)),
             _ => rows.OrderBy(row => row.Design.ID, StringComparer.Ordinal)
         };
@@ -332,9 +401,17 @@ else
         return list;
     }
 
+    private bool Matches(DesignRow row)
+    {
+        return new[] { row.Design.ID, row.Design.HullID, row.HullName, row.TypeName }
+                   .Any(value => value.Contains(filter, StringComparison.OrdinalIgnoreCase)) ||
+               row.Design.Modules.Values.Any(module => module.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+                                                       DesignSlots.ModuleLabelOf(Workspace.Catalog, module).Contains(filter, StringComparison.OrdinalIgnoreCase));
+    }
+
     private void SortBy(string key)
     {
-        sortDescending = sortKey == key ? !sortDescending : key != "id" && key != "hull";
+        sortDescending = sortKey == key ? !sortDescending : key is not ("id" or "hull" or "type");
         sortKey = key;
     }
 
@@ -385,6 +462,7 @@ else
         originalId = null;
         saved = null;
         editing = new ShipDesignDto { ID = "new_design", HullID = Workspace.Catalog.Hulls.FirstOrDefault()?.ID ?? string.Empty };
+        DesignSlots.UseDefaults(Workspace.Catalog, editing);
         originalJson = string.Empty;
         originalFile = null;
         file = Workspace.Catalog.FilesIn(CatalogWriter.ShipDesignsFolder).FirstOrDefault() ?? $"{CatalogWriter.ShipDesignsFolder}/custom.json";
@@ -468,33 +546,61 @@ else
         editing!.MioID = string.IsNullOrEmpty(value) ? null : value;
     }
 
-    private void SetModule(int index, string? value)
+    private void SetModule(string slotId, string? value)
     {
-        if (!string.IsNullOrEmpty(value))
+        DesignSlots.SetModule(Workspace.Catalog, editing!, slotId, value);
+    }
+
+    private void SetAllowAnyModule(bool value)
+    {
+        editing!.AllowAnyModule = value;
+    }
+
+    private void ChangeHull(string? hullId)
+    {
+        if (string.IsNullOrEmpty(hullId) || hullId == editing!.HullID)
         {
-            editing!.ModuleIDs[index] = value;
+            return;
         }
+
+        var removed = DesignSlots.ChangeHull(Workspace.Catalog, editing, hullId);
+        message = removed.Count == 0 ? null : $"Removed from slots the new hull lacks or does not allow them in: {string.Join(", ", removed)}.";
+        messageIsError = false;
     }
 
-    private void AddModule()
+    private void UseDefaults()
     {
-        editing!.ModuleIDs.Add(moduleToAdd!);
+        DesignSlots.UseDefaults(Workspace.Catalog, editing!);
     }
 
-    private string ModuleSummary(string moduleId)
+    private string ModuleSummary(ModuleDto module)
     {
-        var module = Workspace.Catalog.Modules.FirstOrDefault(candidate => candidate.ID == moduleId);
-        return module is null ? string.Empty : StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers);
+        var effect = StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers);
+        var forbids = module.ForbiddenCategories.Count == 0 ? string.Empty : $" · forbids {string.Join(", ", module.ForbiddenCategories.Select(CategoryName))}";
+        var adds = module.AddEquipmentTypes.Count == 0 ? string.Empty : $" · adds {string.Join(", ", module.AddEquipmentTypes)}";
+        return effect + forbids + adds;
     }
 
-    private RenderFragment ModuleOptions() => __builder =>
+    private string CategoryName(string category)
     {
-        @foreach (var group in Workspace.Catalog.Modules.GroupBy(module => Workspace.ModuleCategory(module)))
+        return Workspace.Catalog.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
+    }
+
+    private RenderFragment SlotOptions(SlotRow row) => __builder =>
+    {
+        var options = DesignSlots.Options(Workspace.Catalog, row.Slot, editing!.AllowAnyModule).ToList();
+
+        if (row.Module is not null && !options.Contains(row.Module))
+        {
+            options.Insert(0, row.Module);
+        }
+
+        @foreach (var group in options.GroupBy(module => DesignSlots.Allows(row.Slot, module) ? Workspace.ModuleCategory(module) : $"{Workspace.ModuleCategory(module)} (not allowed here)"))
         {
             <optgroup label="@group.Key">
                 @foreach (var module in group)
                 {
-                    <option value="@module.ID">@module.ID</option>
+                    <option value="@module.ID">@DesignSlots.ModuleLabel(module)</option>
                 }
             </optgroup>
         }

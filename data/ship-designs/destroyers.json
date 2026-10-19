@@ -3,52 +3,53 @@
   "shipDesigns": [
     {
       "id": "test_dd",
-      "hullID": "destroyer_hull_1",
-      "moduleIDs": [
-        "light_battery_1",
-        "fire_control_0",
-        "engine_dd_1"
-      ]
+      "hullID": "ship_hull_light_1",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_light_battery_1",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_0",
+        "fixed_ship_engine_slot": "light_ship_engine_1"
+      }
     },
     {
       "id": "dd_3_la",
-      "hullID": "destroyer_hull_3",
-      "moduleIDs": [
-        "engine_dd_3",
-        "fire_control_3",
-        "radar_4",
-        "anti_air_4",
-        "light_battery_3",
-        "light_battery_3",
-        "light_battery_3",
-        "light_battery_3"
-      ]
+      "hullID": "ship_hull_light_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_light_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_3",
+        "fixed_ship_torpedo_slot": "ship_torpedo_3",
+        "fixed_ship_engine_slot": "light_ship_engine_3",
+        "front_1_custom_slot": "ship_light_battery_3",
+        "mid_1_custom_slot": "ship_light_battery_3",
+        "rear_1_custom_slot": "ship_light_battery_3"
+      }
     },
     {
       "id": "dd_3_la_torp",
-      "hullID": "destroyer_hull_3",
-      "moduleIDs": [
-        "engine_dd_3",
-        "fire_control_3",
-        "radar_4",
-        "anti_air_4",
-        "light_battery_3",
-        "light_battery_3",
-        "torpedo_3",
-        "torpedo_3"
-      ]
+      "hullID": "ship_hull_light_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_light_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_4",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_3",
+        "fixed_ship_radar_slot": "ship_radar_4",
+        "fixed_ship_torpedo_slot": "ship_torpedo_3",
+        "fixed_ship_engine_slot": "light_ship_engine_3",
+        "front_1_custom_slot": "ship_light_battery_3",
+        "mid_1_custom_slot": "ship_torpedo_3"
+      }
     },
     {
       "id": "dd_3_la_torp_cheap",
-      "hullID": "destroyer_hull_3",
-      "moduleIDs": [
-        "engine_dd_3",
-        "light_battery_3",
-        "light_battery_3",
-        "torpedo_3",
-        "torpedo_3",
-        "torpedo_3"
-      ]
+      "hullID": "ship_hull_light_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_light_battery_3",
+        "fixed_ship_torpedo_slot": "ship_torpedo_3",
+        "fixed_ship_engine_slot": "light_ship_engine_3",
+        "front_1_custom_slot": "ship_light_battery_3",
+        "mid_1_custom_slot": "ship_torpedo_3",
+        "rear_1_custom_slot": "ship_torpedo_3"
+      }
     }
   ]
 }

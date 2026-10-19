@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ship-types.schema.json",
+  "title": "NavySimulator Ship Types",
+  "description": "Naval sub-units of common/units, written by 'NavySimulator import-ship-data'. A design's ship type is picked from its hull and modules (S-DESIGN-TYPE).",
+  "type": "object",
+  "required": [
+    "shipTypes"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "shipTypes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "role",
+          "unitTypes",
+          "hulls"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "common.schema.json#/$defs/shipRole"
+          },
+          "unitTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "hulls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "requiredModules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "organization": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

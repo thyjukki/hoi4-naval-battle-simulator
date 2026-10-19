@@ -22,6 +22,17 @@
             "type": "boolean",
             "description": "True for an idea or named equipment bonus (add_equipment_bonus, e.g. special projects): its values join the design multiplier for every stat (S-STATS-BONUS). False (default) for a technology sub-unit bonus applied on the ship (S-STATS-SHIP)."
           },
+          "countryModifiers": {
+            "type": "object",
+            "description": "Country modifiers by game key, as the technology script declares them at its top level (S-STATS-COUNTRY). They apply to every ship of the side; appliesToRoles and appliesToTypes scope only the stat blocks. Keys the engine does not read yet are ignored with a loader warning.",
+            "properties": {
+              "naval_retreat_speed": { "type": "number", "description": "Added to the daily escape speed of warships (S-RETREAT-SPEED)." },
+              "naval_retreat_speed_after_initial_combat": { "type": "number", "description": "Added to the daily escape speed of warships after COMBAT_INITIAL_DURATION hours." },
+              "sub_retreat_speed": { "type": "number", "description": "Added to the daily escape speed of submarines." },
+              "convoy_retreat_speed": { "type": "number", "description": "Added to the daily escape speed of convoys." }
+            },
+            "additionalProperties": { "type": "number" }
+          },
           "appliesToRoles": {
             "type": "array",
             "items": { "$ref": "#/$defs/shipRole" },
@@ -48,17 +59,9 @@
     },
     "shipType": {
       "type": "string",
-      "enum": [
-        "SHBB",
-        "Battleship",
-        "Battlecruiser",
-        "Carrier",
-        "Heavy Cruiser",
-        "Light Cruiser",
-        "Torpedo Cruiser",
-        "Destroyer",
-        "Submarine"
-      ]
+      "minLength": 1,
+      "description": "A ship type (sub-unit) ID from ship-types/, a hull ID or a hull archetype (matched against ShipDesign.Types).",
+      "examples": ["destroyer", "light_cruiser", "heavy_cruiser", "battle_cruiser", "battleship", "sh_battleship", "carrier", "sh_carrier", "submarine", "ship_hull_torpedo_cruiser"]
     },
     "shipStats": {
       "type": "object",

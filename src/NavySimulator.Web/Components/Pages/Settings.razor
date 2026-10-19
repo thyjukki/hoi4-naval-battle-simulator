@@ -108,7 +108,7 @@
                     <dd class="mono small" style="word-break: break-all">@Workspace.OutputDirectory</dd>
                     <dt>Content</dt>
                     <dd>
-                        @Workspace.Catalog.Hulls.Count hulls, @Workspace.Catalog.Modules.Count modules, @Workspace.Catalog.Mios.Count MIOs,
+                        @Workspace.Catalog.Hulls.Count hulls, @Workspace.Catalog.Modules.Count modules, @Workspace.Catalog.ShipTypes.Count ship types, @Workspace.Catalog.Mios.Count MIOs,
                         @Workspace.Catalog.ShipDesigns.Count designs, @Workspace.Catalog.Fleets.Count fleets, @Workspace.Catalog.Researches.Count researches,
                         @Workspace.Catalog.Spirits.Count spirits, @Workspace.Catalog.Planes.Count planes
                     </dd>
@@ -116,6 +116,13 @@
                 <div class="row">
                     <button @onclick="Reload">Reload data from disk</button>
                     <span class="small muted">After editing JSON files outside the GUI. Unsaved editor changes are kept only in the editors.</span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportShipData" disabled="@(importing || ShipDataGame is null)">Import hulls, modules and ship types</button>
+                    <span class="small muted">
+                        From @(ShipDataGame is null ? "the game (no HOI4 install found)" : ShipDataSourceNames()): replaces the files in
+                        <code>hulls/</code>, <code>modules/</code> and <code>ship-types/</code>. Designs are kept; the Designs page shows rules they break.
+                    </span>
                 </div>
                 <p class="small muted">Start the GUI with <code>--data &lt;dir&gt;</code> to work on another data directory.</p>
             </div>
@@ -212,6 +219,7 @@
     private ScenarioBuild? build;
     private string? message;
     private bool messageIsError;
+    private bool importing;
 
     protected override async Task OnInitializedAsync()
     {
@@ -292,6 +300,38 @@
     {
         return File.Exists(source) || Directory.Exists(source) || Directory.Exists(Path.Combine(Workspace.DataDirectory, source)) ||
                File.Exists(Path.Combine(Workspace.DataDirectory, source));
+    }
+
+    private string? ShipDataGame => Workspace.ShipDataSources().Game;
+
+    private string ShipDataSourceNames()
+    {
+        var (game, mods) = Workspace.ShipDataSources();
+        return string.Join(" + ", new[] { game! }.Concat(mods).Select(Workspace.SourceName));
+    }
+
+    private async Task ImportShipData()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportShipData);
+            message = $"Imported {import.Hulls.Count} hulls, {import.Modules.Count} modules and {import.ShipTypes.Count} ship types from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
     }
 
     private async Task Reload()

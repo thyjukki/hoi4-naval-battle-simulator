@@ -2,7 +2,11 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "light_secondaries_1",
+      "id": "ship_secondaries_1",
+      "name": "75mm RF. Cannon",
+      "shortName": "Secondary Battery I",
+      "category": "ship_secondaries",
+      "categoryName": "Secondary Battery",
       "statModifiers": {
         "lightAttack": 2,
         "productionCost": 200
@@ -15,7 +19,11 @@
       }
     },
     {
-      "id": "light_secondaries_2",
+      "id": "ship_secondaries_2",
+      "name": "120mm RF. Cannon",
+      "shortName": "Secondary Battery II",
+      "category": "ship_secondaries",
+      "categoryName": "Secondary Battery",
       "statModifiers": {
         "lightAttack": 4,
         "productionCost": 230
@@ -28,7 +36,45 @@
       }
     },
     {
-      "id": "dp_secondaries_1",
+      "id": "ship_secondaries_3",
+      "name": "127MM RF. Cannon",
+      "shortName": "Secondary Battery III",
+      "category": "ship_secondaries",
+      "categoryName": "Secondary Battery",
+      "statModifiers": {
+        "lightAttack": 6,
+        "productionCost": 260
+      },
+      "statAverages": {
+        "lightPiercing": 8
+      },
+      "statMultipliers": {
+        "speed": -0.02
+      }
+    },
+    {
+      "id": "ship_secondaries_4",
+      "name": "130mm RF. Auto-Loading Cannon",
+      "shortName": "Secondary Battery IV",
+      "category": "ship_secondaries",
+      "categoryName": "Secondary Battery",
+      "statModifiers": {
+        "lightAttack": 9,
+        "productionCost": 300
+      },
+      "statAverages": {
+        "lightPiercing": 10
+      },
+      "statMultipliers": {
+        "speed": -0.025
+      }
+    },
+    {
+      "id": "dp_ship_secondaries_1",
+      "name": "100mm Dual-Purpose Secondary Battery",
+      "shortName": "Dual-Purpose Secondary Battery I",
+      "category": "ship_dp_secondaries",
+      "categoryName": "Dual-Purpose Secondary Battery",
       "statModifiers": {
         "lightAttack": 2,
         "antiAir": 1.5,
@@ -42,7 +88,11 @@
       }
     },
     {
-      "id": "dp_secondaries_2",
+      "id": "dp_ship_secondaries_2",
+      "name": "113mm Dual-Purpose Secondary Battery",
+      "shortName": "Dual-Purpose Secondary Battery II",
+      "category": "ship_dp_secondaries",
+      "categoryName": "Dual-Purpose Secondary Battery",
       "statModifiers": {
         "lightAttack": 3,
         "antiAir": 3,
@@ -56,7 +106,11 @@
       }
     },
     {
-      "id": "dp_secondaries_3",
+      "id": "dp_ship_secondaries_3",
+      "name": "127mm Dual-Purpose Secondary Battery",
+      "shortName": "Dual-Purpose Secondary Battery III",
+      "category": "ship_dp_secondaries",
+      "categoryName": "Dual-Purpose Secondary Battery",
       "statModifiers": {
         "lightAttack": 4,
         "antiAir": 4.5,

@@ -340,6 +340,9 @@ TorpedoHitChanceFactor 0.063 (game: 0.06 × 1.05) vs 0.110 (simulator: 0.06 + 0.
 
 - How the hull's base array (`type+0x148`) is filled from `archetype` and `parent` (assumed: archetype values,
   overridden by the hull's own; the JSON hulls match this reading for heavy_hull_3 and light_cruiser_hull_3).
+  2026-10-19: the hull import (S-DESIGN-HULL) uses this reading and reproduces all 27 hand-entered TFB hulls. Reading
+  stats along `parent` instead would give TFB's `ship_hull_heavy_1..4` the pre-dreadnought's `naval_speed = 18` (and
+  `_1` its HP, reliability and manpower), against 30 in the hand-entered data, so the archetype reading is the likely one.
 - The variant-creation path that copies non-instant idea bonuses from `country+0x160` (only the instant add and
   the removal were traced).
 - Whether the script parser merges duplicate stat keys or repeated `add_stats` blocks in one module (the

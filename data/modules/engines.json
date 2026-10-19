@@ -2,86 +2,11 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "carrier_ship_nuclear_engine_1",
-      "statMultipliers": {
-        "speed": 0.6,
-        "productionCost": 0.25
-      }
-    },
-    {
-      "id": "engine_carrier_1",
-      "statModifiers": {
-        "productionCost": 400
-      },
-      "statMultipliers": {
-        "speed": 0.3
-      }
-    },
-    {
-      "id": "engine_carrier_2",
-      "statModifiers": {
-        "productionCost": 475
-      },
-      "statMultipliers": {
-        "speed": 0.4
-      }
-    },
-    {
-      "id": "engine_carrier_3",
-      "statModifiers": {
-        "productionCost": 550
-      },
-      "statMultipliers": {
-        "speed": 0.5
-      }
-    },
-    {
-      "id": "engine_carrier_4",
-      "statModifiers": {
-        "productionCost": 625
-      },
-      "statMultipliers": {
-        "speed": 0.6
-      }
-    },
-    {
-      "id": "engine_cruiser_1",
-      "statModifiers": {
-        "productionCost": 400
-      },
-      "statMultipliers": {
-        "speed": 0.2
-      }
-    },
-    {
-      "id": "engine_cruiser_2",
-      "statModifiers": {
-        "productionCost": 480
-      },
-      "statMultipliers": {
-        "speed": 0.25
-      }
-    },
-    {
-      "id": "engine_cruiser_3",
-      "statModifiers": {
-        "productionCost": 550
-      },
-      "statMultipliers": {
-        "speed": 0.3
-      }
-    },
-    {
-      "id": "engine_cruiser_4",
-      "statModifiers": {
-        "productionCost": 670
-      },
-      "statMultipliers": {
-        "speed": 0.35
-      }
-    },
-    {
-      "id": "engine_dd_1",
+      "id": "light_ship_engine_1",
+      "name": "35,000 Shp Engine",
+      "shortName": "Light Engine I",
+      "category": "light_ship_engine",
+      "categoryName": "Destroyer Engines",
       "statModifiers": {
         "productionCost": 90
       },
@@ -90,7 +15,11 @@
       }
     },
     {
-      "id": "engine_dd_2",
+      "id": "light_ship_engine_2",
+      "name": "40,000 Shp Engine",
+      "shortName": "Light Engine II",
+      "category": "light_ship_engine",
+      "categoryName": "Destroyer Engines",
       "statModifiers": {
         "productionCost": 120
       },
@@ -99,7 +28,11 @@
       }
     },
     {
-      "id": "engine_dd_3",
+      "id": "light_ship_engine_3",
+      "name": "45,000 Shp Engine",
+      "shortName": "Light Engine III",
+      "category": "light_ship_engine",
+      "categoryName": "Destroyer Engines",
       "statModifiers": {
         "productionCost": 150
       },
@@ -108,7 +41,11 @@
       }
     },
     {
-      "id": "engine_dd_4",
+      "id": "light_ship_engine_4",
+      "name": "50,000 Shp Engine",
+      "shortName": "Light Engine IV",
+      "category": "light_ship_engine",
+      "categoryName": "Destroyer Engines",
       "statModifiers": {
         "productionCost": 180
       },
@@ -117,74 +54,11 @@
       }
     },
     {
-      "id": "engine_heavy_1",
-      "statModifiers": {
-        "productionCost": 1800
-      },
-      "statMultipliers": {
-        "speed": 0.2
-      }
-    },
-    {
-      "id": "engine_heavy_2",
-      "statModifiers": {
-        "productionCost": 2200
-      },
-      "statMultipliers": {
-        "speed": 0.4
-      }
-    },
-    {
-      "id": "engine_heavy_3",
-      "statModifiers": {
-        "productionCost": 2800
-      },
-      "statMultipliers": {
-        "speed": 0.5
-      }
-    },
-    {
-      "id": "engine_heavy_4",
-      "statModifiers": {
-        "productionCost": 3200
-      },
-      "statMultipliers": {
-        "speed": 0.6
-      }
-    },
-    {
-      "id": "engine_sub_aip_1",
-      "statMultipliers": {
-        "productionCost": 0.3,
-        "subVisibility": -0.05,
-        "speed": 0.15
-      }
-    },
-    {
-      "id": "engine_sub_aip_2",
-      "statMultipliers": {
-        "productionCost": 0.35,
-        "subVisibility": -0.1,
-        "speed": 0.15
-      }
-    },
-    {
-      "id": "engine_sub_aip_3",
-      "statMultipliers": {
-        "productionCost": 0.4,
-        "subVisibility": -0.15,
-        "speed": 0.35
-      }
-    },
-    {
-      "id": "heavy_ship_nuclear_engine_1",
-      "statMultipliers": {
-        "speed": 0.6,
-        "productionCost": 0.25
-      }
-    },
-    {
       "id": "sub_ship_engine_1",
+      "name": "1,000 Shp Engine",
+      "shortName": "Submarine Engine I",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
       "statModifiers": {
         "productionCost": 90
       },
@@ -194,6 +68,10 @@
     },
     {
       "id": "sub_ship_engine_2",
+      "name": "2,000 Shp Engine",
+      "shortName": "Submarine Engine II",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
       "statModifiers": {
         "productionCost": 120
       },
@@ -203,6 +81,10 @@
     },
     {
       "id": "sub_ship_engine_3",
+      "name": "3,000 Shp Engine",
+      "shortName": "Submarine Engine III",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
       "statModifiers": {
         "productionCost": 150
       },
@@ -213,6 +95,10 @@
     },
     {
       "id": "sub_ship_engine_4",
+      "name": "4,000 Shp Engine",
+      "shortName": "Submarine Engine IV",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
       "statModifiers": {
         "productionCost": 170
       },
@@ -222,9 +108,224 @@
       }
     },
     {
+      "id": "ship_engine_sub_aip_1",
+      "name": "Air-Independent Propulsion",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
+      "statMultipliers": {
+        "speed": 0.15,
+        "subVisibility": -0.05,
+        "productionCost": 0.3
+      }
+    },
+    {
+      "id": "ship_engine_sub_aip_2",
+      "name": "AIP-Diesel Combination Engine",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
+      "statMultipliers": {
+        "speed": 0.15,
+        "subVisibility": -0.1,
+        "productionCost": 0.35
+      }
+    },
+    {
+      "id": "ship_engine_sub_aip_3",
+      "name": "High Speed Walter Engines",
+      "category": "sub_ship_engine",
+      "categoryName": "Submarine Engines",
+      "statMultipliers": {
+        "speed": 0.35,
+        "subVisibility": -0.15,
+        "productionCost": 0.4
+      }
+    },
+    {
       "id": "sub_ship_nuclear_engine_1",
+      "name": "Nuclear Submarine Reactor",
+      "shortName": "Submarine Reactor",
+      "category": "sub_ship_nuclear_engine",
+      "categoryName": "Submarine Nuclear Engines",
       "statMultipliers": {
         "speed": 0.1,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "cruiser_ship_engine_1",
+      "name": "60,000 Shp Engine",
+      "shortName": "Cruiser Engine I",
+      "category": "cruiser_ship_engine",
+      "categoryName": "Cruiser Engines",
+      "statModifiers": {
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "cruiser_ship_engine_2",
+      "name": "70,000 Shp Engine",
+      "shortName": "Cruiser Engine II",
+      "category": "cruiser_ship_engine",
+      "categoryName": "Cruiser Engines",
+      "statModifiers": {
+        "productionCost": 480
+      },
+      "statMultipliers": {
+        "speed": 0.25
+      }
+    },
+    {
+      "id": "cruiser_ship_engine_3",
+      "name": "80,000 Shp Engine",
+      "shortName": "Cruiser Engine III",
+      "category": "cruiser_ship_engine",
+      "categoryName": "Cruiser Engines",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "cruiser_ship_engine_4",
+      "name": "90,000 Shp Engine",
+      "shortName": "Cruiser Engine IV",
+      "category": "cruiser_ship_engine",
+      "categoryName": "Cruiser Engines",
+      "statModifiers": {
+        "productionCost": 670
+      },
+      "statMultipliers": {
+        "speed": 0.35
+      }
+    },
+    {
+      "id": "heavy_ship_engine_1",
+      "name": "30,000 Shp Engine",
+      "shortName": "Heavy Engine I",
+      "category": "heavy_ship_engine",
+      "categoryName": "Heavy Ship Engines",
+      "statModifiers": {
+        "productionCost": 1800
+      },
+      "statMultipliers": {
+        "speed": 0.2
+      }
+    },
+    {
+      "id": "heavy_ship_engine_2",
+      "name": "90,000 Shp Engine",
+      "shortName": "Heavy Engine II",
+      "category": "heavy_ship_engine",
+      "categoryName": "Heavy Ship Engines",
+      "statModifiers": {
+        "productionCost": 2200
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "heavy_ship_engine_3",
+      "name": "150,000 Shp Engine",
+      "shortName": "Heavy Engine III",
+      "category": "heavy_ship_engine",
+      "categoryName": "Heavy Ship Engines",
+      "statModifiers": {
+        "productionCost": 2800
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "heavy_ship_engine_4",
+      "name": "210,000 Shp Engine",
+      "shortName": "Heavy Engine IV",
+      "category": "heavy_ship_engine",
+      "categoryName": "Heavy Ship Engines",
+      "statModifiers": {
+        "productionCost": 3200
+      },
+      "statMultipliers": {
+        "speed": 0.6
+      }
+    },
+    {
+      "id": "heavy_ship_nuclear_engine_1",
+      "name": "Nuclear Heavy Ship Reactor",
+      "shortName": "Heavy Ship Reactor",
+      "category": "heavy_ship_nuclear_engine",
+      "categoryName": "Heavy Ship Nuclear Engines",
+      "statMultipliers": {
+        "speed": 0.6,
+        "productionCost": 0.25
+      }
+    },
+    {
+      "id": "carrier_ship_engine_1",
+      "name": "50,000 Shp Engine",
+      "shortName": "Carrier Engine I",
+      "category": "carrier_ship_engine",
+      "categoryName": "Carrier Engines",
+      "statModifiers": {
+        "productionCost": 400
+      },
+      "statMultipliers": {
+        "speed": 0.3
+      }
+    },
+    {
+      "id": "carrier_ship_engine_2",
+      "name": "120,000 Shp Engine",
+      "shortName": "Carrier Engine II",
+      "category": "carrier_ship_engine",
+      "categoryName": "Carrier Engines",
+      "statModifiers": {
+        "productionCost": 475
+      },
+      "statMultipliers": {
+        "speed": 0.4
+      }
+    },
+    {
+      "id": "carrier_ship_engine_3",
+      "name": "150,000 Shp Engine",
+      "shortName": "Carrier Engine III",
+      "category": "carrier_ship_engine",
+      "categoryName": "Carrier Engines",
+      "statModifiers": {
+        "productionCost": 550
+      },
+      "statMultipliers": {
+        "speed": 0.5
+      }
+    },
+    {
+      "id": "carrier_ship_engine_4",
+      "name": "210,000 Shp Engine",
+      "shortName": "Carrier Engine IV",
+      "category": "carrier_ship_engine",
+      "categoryName": "Carrier Engines",
+      "statModifiers": {
+        "productionCost": 625
+      },
+      "statMultipliers": {
+        "speed": 0.6
+      }
+    },
+    {
+      "id": "carrier_ship_nuclear_engine_1",
+      "name": "Nuclear Carrier Reactor",
+      "shortName": "Carrier Reactor",
+      "category": "carrier_ship_nuclear_engine",
+      "categoryName": "Carrier Nuclear Engines",
+      "statMultipliers": {
+        "speed": 0.6,
         "productionCost": 0.25
       }
     }

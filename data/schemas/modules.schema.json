@@ -2,19 +2,63 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "modules.schema.json",
   "title": "NavySimulator Modules",
+  "description": "Written by 'NavySimulator import-ship-data' from common/units/equipment/modules.",
   "type": "object",
-  "required": ["modules"],
+  "required": [
+    "modules"
+  ],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "modules": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id"],
+        "required": [
+          "id",
+          "category"
+        ],
         "properties": {
-          "id": { "$ref": "common.schema.json#/$defs/id" },
-          "statModifiers": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "statAverages": { "$ref": "common.schema.json#/$defs/shipStats" },
-          "statMultipliers": { "$ref": "common.schema.json#/$defs/shipStats" }
+          "id": {
+            "$ref": "common.schema.json#/$defs/id"
+          },
+          "name": {
+            "type": "string"
+          },
+          "shortName": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "addEquipmentTypes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "forbiddenCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "statModifiers": {
+            "$ref": "common.schema.json#/$defs/shipStats"
+          },
+          "statAverages": {
+            "$ref": "common.schema.json#/$defs/shipStats"
+          },
+          "statMultipliers": {
+            "$ref": "common.schema.json#/$defs/shipStats"
+          }
         },
         "additionalProperties": false
       }
@@ -22,4 +66,3 @@
   },
   "additionalProperties": false
 }
-

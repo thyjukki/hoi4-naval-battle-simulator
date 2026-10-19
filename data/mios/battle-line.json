@@ -13,14 +13,14 @@
             "lightPiercing": 0.05,
             "antiAir": 0.15
           },
-          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["light_cruiser", "heavy_cruiser", "sh_battleship", "battleship", "battle_cruiser"]
         },
         {
           "statMultipliers": {
             "heavyAttack": 0.05
           },
           "appliesToRoles": ["Capital"],
-          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["light_cruiser", "heavy_cruiser", "sh_battleship", "battleship", "battle_cruiser"]
         },
         {
           "statModifiers": {
@@ -31,7 +31,7 @@
             "hp": 0.1,
             "productionCost": 0.05
           },
-          "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser"]
         }
       ]
     },
@@ -48,14 +48,14 @@
             "heavyPiercing": 0.05,
             "antiAir": 0.15
           },
-          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["light_cruiser", "heavy_cruiser", "sh_battleship", "battleship", "battle_cruiser"]
         },
         {
           "statMultipliers": {
             "heavyAttack": 0.05
           },
           "appliesToRoles": ["Capital"],
-          "appliesToTypes": ["Light Cruiser", "Heavy Cruiser", "SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["light_cruiser", "heavy_cruiser", "sh_battleship", "battleship", "battle_cruiser"]
         },
         {
           "statModifiers": {
@@ -66,7 +66,7 @@
             "hp": 0.1,
             "productionCost": 0.05
           },
-          "appliesToTypes": ["SHBB", "Battleship", "Battlecruiser"]
+          "appliesToTypes": ["sh_battleship", "battleship", "battle_cruiser"]
         }
       ]
     }

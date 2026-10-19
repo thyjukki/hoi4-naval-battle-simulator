@@ -45,6 +45,24 @@ To match your game exactly, load your install's defines:
 dotnet run --project src/NavySimulator.Cli -- --defines "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV"
 ```
 
+### Importing hulls, modules and ship types
+
+`data/hulls/`, `data/modules/` and `data/ship-types/` are read from the game, with mods applied over it as the launcher loads them:
+
+```powershell
+dotnet run --project src/NavySimulator.Cli -- import-ship-data --game "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV" --mod "<mod folder>"
+```
+
+It replaces those three folders and keeps designs; the loader and the GUI's Designs page report designs that break the game's designer rules (S-DESIGN in [docs/mechanics/surface.md](docs/mechanics/surface.md)). The GUI does the same from Settings → Import, with the mods chosen under Simulate as.
+
+### Testing a scenario in the game
+
+`list-ships` prints a scenario's ships as JSON (design, hull, modules by slot, ship type, HP, organization, manpower, experience, stats); `tools/ingame/make_save.py` uses it to write the scenario into a battle save, and `tools/ingame/run_battles.py` replays that save in the game and logs it ([tools/ingame/README.md](tools/ingame/README.md)):
+
+```powershell
+dotnet run --project src/NavySimulator.Cli -- list-ships --scenario jukki_usa_vs_bc_japan.json --defines "<mod folder>"
+```
+
 ## Output
 
 `output/<scenario>_<timestamp>/`:
@@ -61,7 +79,8 @@ Everything lives in `data/`:
 | Folder / file | Content |
 |---|---|
 | `battle-scenario.json` | The battle: fleets per side, researches, spirits, `defines` sources, `rules` variants |
-| `hulls/`, `modules/`, `mios/`, `ship-designs/` | Ship definitions |
+| `hulls/`, `modules/`, `ship-types/` | Hulls with their module slots, modules, and ship types (naval sub-units), imported from the game with its IDs and names (below) |
+| `mios/`, `ship-designs/` | MIOs; designs: a hull and one module per slot (`"modules": { "<slot>": "<module>" }`) |
 | `researches/`, `spirits/`, `planes/`, `force-compositions/` | Modifiers, planes, fleets |
 | `defines/tfb-legacy.lua` | The previous simulator's TFB-mod values as an optional defines profile |
 | `schemas/` | JSON schemas for editor autocompletion |
@@ -76,7 +95,7 @@ Scenario additions:
 
 ```
 src/NavySimulator.Engine     simulation: defines, ships, battle rules, results (no I/O)
-src/NavySimulator.GameData   JSON loading and saving, report files, Paradox script parser, defines .lua parser
+src/NavySimulator.GameData   JSON loading and saving, ship data import from the game, report files, Paradox script parser, defines .lua parser
 src/NavySimulator.Cli        command line entrypoint
 src/NavySimulator.Web        GUI: local Blazor web app (docs/gui.md)
 tests/                       xUnit tests for Engine, GameData and the GUI services

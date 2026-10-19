@@ -2,7 +2,14 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "anti_air_1",
+      "id": "ship_anti_air_1",
+      "name": ".50 cal. MG",
+      "shortName": "Anti-Air I",
+      "category": "ship_anti_air",
+      "categoryName": "Anti-Air",
+      "addEquipmentTypes": [
+        "anti_air"
+      ],
       "statModifiers": {
         "antiAir": 3,
         "productionCost": 80
@@ -12,7 +19,14 @@
       }
     },
     {
-      "id": "anti_air_2",
+      "id": "ship_anti_air_2",
+      "name": "20mm AA",
+      "shortName": "Anti-Air II",
+      "category": "ship_anti_air",
+      "categoryName": "Anti-Air",
+      "addEquipmentTypes": [
+        "anti_air"
+      ],
       "statModifiers": {
         "antiAir": 4,
         "productionCost": 110
@@ -22,7 +36,14 @@
       }
     },
     {
-      "id": "anti_air_3",
+      "id": "ship_anti_air_3",
+      "name": "37mm AA",
+      "shortName": "Anti-Air III",
+      "category": "ship_anti_air",
+      "categoryName": "Anti-Air",
+      "addEquipmentTypes": [
+        "anti_air"
+      ],
       "statModifiers": {
         "antiAir": 5,
         "productionCost": 140
@@ -32,7 +53,14 @@
       }
     },
     {
-      "id": "anti_air_4",
+      "id": "ship_anti_air_4",
+      "name": "40mm Quad AA",
+      "shortName": "Anti-Air IV",
+      "category": "ship_anti_air",
+      "categoryName": "Anti-Air",
+      "addEquipmentTypes": [
+        "anti_air"
+      ],
       "statModifiers": {
         "antiAir": 6,
         "productionCost": 170

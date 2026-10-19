@@ -106,8 +106,102 @@ Both fixed in the engine and spec on 2026-10-19:
   blocks have no defense factor).
 - Before the fixes, on the CL3 battle (10 game seeds against 200 simulator seeds, night off by hand): the game left ROM
   2804 HP (sd 80) and BUL 7090 HP (sd 170) after 336 h; the simulator 2272 and 6895 after 316 h.
-- Still open: country `naval_retreat_speed` (S-RETREAT-SPEED, combat-modifier layer). With both fixes and the
-  smoke generator's 0.2 stood in by `BASE_ESCAPE_SPEED = 0.26`, 200 simulator seeds give 338 h, BUL 7056 HP, ROM 2801
-  HP, 0.9 ROM sunk, against the game's 336 h, 7075 (sd 161), 2802 (sd 72), 1.2 over 12 seeds.
+- Country `naval_retreat_speed` (S-RETREAT-SPEED, S-STATS-COUNTRY), modelled since 2026-10-19: researches carry
+  `countryModifiers`, and the CL3 scenario gives both sides `smoke_generator`. With TFB's defines and no override, 200
+  simulator seeds give 338 h, BUL 7056 HP, ROM 2801 HP, 0.9 ROM sunk, against the game's 336 h, 7075 (sd 161), 2802
+  (sd 72), 1.2 over 12 seeds. Time from the retreat decision to the escape, ROM ships by decision hour (simulator /
+  game): before 100, 36.0 / 36.1 h; 100–200, 33.7 / 33.7; 200–300, 31.7 / 31.7; later, 30 / 30. One BUL ship in the
+  game took 54 h (seed 3, ship 5755): its progress grew by 0.43 a day instead of the formula's 0.69, which fits a
+  speed penalty from a damaged critical part (the parts carry `naval_speed_factor` -0.2 to -0.9; S-CRIT-PART, not
+  modelled). No simulated escape took more than 37 h.
 
 The S-HOUR counter reading matches `BattleSession` ("tick is 1 in battle hour 0").
+
+## Second case: a generated mixed fleet (jukki_usa_vs_bc_japan, 2026-10-19)
+
+`tools/ingame/make_save.py` wrote `data/jukki_usa_vs_bc_japan.json` into the CL3 battle-start save
+(`jukki_usa_vs_bc_japan_battle_start.hoi4`): BUL got 8 `39_battleship_pure_la`, 27 `39lc_la` and 6 `shbb_4battery_2aa`,
+ROM 12 `39_battlecruiser_pure_la`, 54 `dd_3_la` and 5 `shbb_4battery_2aa`, both with the scenario's researches as TFB
+technologies, Always Engage, Never repair. One game seed (1) was logged.
+
+What the save showed:
+- **The battle restarts when the naval combat is removed.** With the `naval_combat` block deleted and both task forces
+  still in province 7906, the game started a new battle in the first hour. It made ROM the attacker (side 0); the
+  template's battle had BUL. In the simulator the attacker order changes nothing measurable here (200 seeds each way).
+- **Ship experience is the ship's `experience=` line** after `strength=` (history ships carry it, e.g. Italian ships
+  25; the CL3 ships had about 6.3 after the battle, as logged). `held_officer={ experience=… }` is the officer's: written
+  there, the ships started at 0, so the logged run had 0 experience on both sides.
+- **Start values and attacks match.** Max HP, organization and manpower of every design were the simulator's
+  (`NavySimulator list-ships`), and every logged shot profile equals the simulator's attack × 0.9 (TFB's 0-experience
+  `naval_damage_factor`) × piercing factor (heavy 156.8 / 112, light 33.6 / 32.4 / 13.8, torpedo 35.7; piercing 60.5 /
+  48.4, 8.8 / 7.071 / 6.38).
+- **TFB's `screening_bonus` per-weapon factors apply.** Capital ships hit 1.4–1.7 times (heavy) and 1.13–1.22 times
+  (light) as often as simulated, screens exactly as often. Dividing the logged hit chances by the base and profile
+  factor gives modifier sums of 1.9857 (heavy) and 1.5356 (light) for BUL's capitals at screening 0.64285, 2.4130 and
+  1.7328 for ROM's at 0.97144: exactly `1 + (0.3 + 1) × screening + 0.15` and `1 + (0.3 + 0.3) × screening + 0.15`.
+  TFB's `screening_bonus` has `naval_hit_chance = 0.3`, `naval_heavy_gun_hit_chance_factor = 1` and
+  `naval_light_gun_hit_chance_factor = 0.3`; the engine applied only the first. So the per-weapon modifiers are read
+  through the member modifier getter `0x1972570` like `naval_hit_chance` (S-HIT-MODS). Fixed in the engine
+  (`MemberModifierRules`): every simulated hit chance now lies within 1 % of the logged one.
+- Not modelled and present on both sides: `damage_control_1` and `_2` (`critical_receive_chance` and
+  `naval_critical_effect_factor` −0.1 each; S-CRIT-PART).
+
+Outcome after the fix, the game run against 200 simulator seeds at 0 experience with ROM attacking: 208 h against 231
+(175..421); ROM kept 8693 HP (simulator 7945, sd 484) and lost 7 destroyers sunk (4.3), 11 escaped (13.8); BUL kept 384 HP
+(667, sd 156) with 6/8 battleships, 13/27 light cruisers and all 6 SHBB sunk (5.5, 9.9, 4.3). The one game run went 1.5
+to 1.8 sd worse for BUL than the simulator's mean; a batch of seeds is needed before calling it a difference.
+
+Two more seeds with the scenario's experience (20, written as the ship's `experience=`; the game showed 20 in the first
+hour) and the scenario set to weather off, against 200 simulator seeds: 174 and 181 h (simulator 190, sd 18; 31 % of
+runs end by 181 h); BUL lost 27 and 29 ships sunk (25.5, sd 3.1) and kept 435 and 250 HP (474, sd 130); ROM kept 8532 and
+8272 HP (8129, sd 568) and lost 5 and 4 destroyers sunk (4.2). Hit chances again within 1–2 %. Escape progress of every
+retreating ship (BB, SHBB, light cruiser, destroyer; 2,300 ship-hours) grew by exactly the S-RETREAT-SPEED formula
+every hour, with TFB's escape defines, `smoke_generator` and `screening_bonus.naval_retreat_speed` (0.25 × screening)
+for capitals only. One thing to watch: all 6 of BUL's SHBB were sunk in all three game runs (11 of 11 retreating SHBB
+sunk before escaping in the two runs at 20 experience), while the simulator sinks all 6 in 24 % of runs and 75 % of
+retreating SHBB.
+
+Ten more seeds (3–12), so 12 game runs at 20 experience against the same 200 simulator seeds:
+
+| | game (12) | simulator (200) |
+|---|---|---|
+| hours | 188.6 (163..214) | 189.9 (sd 17.9) |
+| BUL ships sunk / HP left | 25.2 / 474 | 25.5 / 474 (sd 130) |
+| BUL sunk: BB, CL, SHBB | 6.25, 14.42, 4.50 | 5.99, 14.76, 4.72 |
+| ROM DD sunk / escaped | 3.92 / 17.58 | 4.16 / 17.89 |
+| ROM HP left | 8421 (sd 404) | 8129 (sd 568) |
+
+The SHBB losses were luck (4.50 against 4.72). ROM's damage dealt is the same to the HP (11,710 both); BUL dealt 8 %
+less in the game (3,409 against 3,701, about 2.5 standard errors), mostly with the SHBB's heavy guns, whose hit chance
+fell faster because their organization fell faster in the first 100 hours. No per-shot mechanic explains it: over the 12
+runs the logged hits equal the summed hit chances per weapon within noise; target shares of every shooter design match
+per 25-hour window; organization damage is `damage × (1 − hpBefore / maxHp)` on every hit (median ratio 1.000 over
+4,400 capital hits, no other org loss); experience falls the same way (final xp per design within about 0.5), and the
+attack in the shot profile steps with it exactly as TFB's levels give (−5 % `naval_damage_factor` per level below 2:
+20+ xp full attack, 10–20 xp 0.95, under 10 xp 0.9).
+
+**Resolved: dice luck.** In the 12 game runs BUL's hits fell 5.5 per run short of the sum of their logged hit chances
+(103.3 against 108.8, z −1.9; the rolls themselves are uniform, mean 0.501), while ROM's matched (+0.8). Over the 200
+simulator runs, BUL's damage dealt rises by 34 HP per hit of such luck (`3722 + 34.2 × BUL luck − 5.4 × ROM luck against
+BUL's light cruisers in the first 60 hours`, residual sd 426). With the game runs' luck the simulator predicts 3,526 HP;
+the game's 3,409 is 117 below (SE 123, z −0.95). The knock-on effects were all traced and are consistent with it:
+ROM's capitals' light guns hit BUL's light cruisers a little above their odds early (z +0.6 and +1.2), the cruisers
+fell below 40 % HP and retreated sooner (9.3 against 7.8 by hour 60), BUL's screening fell faster (0.455 against 0.503 at
+hour 75), which under TFB's `screening_bonus` (+1.3 × screening on heavy-gun hit chance) lowered BUL's capital hit
+chance; BUL also lost ships faster, keeping ROM above the 60-ship fleet-size threshold longer (ROM positioning 0.775
+against 0.823 at hours 80–99), so ROM's damage per hit was lower and its total equal.
+
+Rules this case confirmed against the logs (12 runs, TFB):
+- S-TARGET-WEIGHT: the weight-proportional pick, replayed shot by shot with live HP and states, predicts every
+  shooter → target split and every HP and state bin within noise (about 90,000 ROM and 37,000 BUL shots).
+- S-POS: positioning is exact in all 2,240 side-hours with the engine's counting (waiting, fighting, joining and
+  retreating ships at the end of the previous hour; escaped and sunk ones not) and TFB's values: fleet-size penalty
+  0.4 per +100 % ratio, at most 1.2, only from 60 own ships; detection bonus `Δ surface detection / 100 × 0.01`, at most
+  0.1.
+- S-DMG: every gun hit fits `profile × (1 − 0.8 × (1 − positioning) + naval_damage_factor) × (1 + 0.2 × (U − 0.05)) ×
+  0.5` (TFB's `DAMAGE_PENALTY_ON_MINIMUM_POSITIONING` 0.8), at positioning 0.65 to 1.
+- S-DMG-APPLY: organization damage is `d × (1 − hpBefore / maxHp)` on every hit, and nothing else costs organization.
+- S-RETREAT: below the threshold (0.4, capitals × 0.5) 20 % of fighting ship-hours start retreating, above it none.
+- S-RETREAT-SPEED, S-XP: exact escape progress every hour; experience losses and their level steps as simulated.
+- The logged `strDamage` includes overkill (a 59-damage hit on a 50 HP ship logs 59); compare HP lost
+  (`hpBefore − hpAfter`), as `tools/ingame/compare.py` does.

@@ -254,6 +254,9 @@ def record(messages, hwnd, out_dir, args):
             if last_hour_tick is not None and ticks - last_hour_tick > 48:
                 print("no combat hour for 48 hours; stopping", file=sys.stderr)
                 break
+            if last_hour_tick is None and ticks > args.start_hours:
+                print(f"no combat started within {args.start_hours} hours; stopping", file=sys.stderr)
+                break
             if ticks > args.max_hours:
                 print("stopping at --max-hours", file=sys.stderr)
                 break
@@ -335,6 +338,7 @@ def main():
     parser.add_argument("--locations", type=int, nargs="*", help="sea provinces whose task forces are named in the output (default: all)")
     parser.add_argument("--extra-hours", type=int, default=0, help="keep running this many hours after the last combat ends")
     parser.add_argument("--max-hours", type=int, default=2000)
+    parser.add_argument("--start-hours", type=int, default=48, help="give up when no combat has started after this many hours")
     parser.add_argument("--load-timeout", type=int, default=600)
     parser.add_argument("--settle", type=float, default=5, help="seconds to wait after loading before typing")
     parser.add_argument("--stall-seconds", type=float, default=8)

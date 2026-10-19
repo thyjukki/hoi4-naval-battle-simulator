@@ -1,0 +1,21 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "Jukki_bb_fleet_usa",
+      "shipDesigns": {
+        "shbb_4battery_2aa": 6,
+        "39_battleship_pure_la": 8,
+        "39lc_la": 27
+      }
+    },
+    {
+      "id": "japan_bc_dd_shbb",
+      "shipDesigns": {
+        "shbb_4battery_2aa": 5,
+        "39_battlecruiser_pure_la": 12,
+        "dd_3_la": 54
+      }
+    }
+  ]
+}

@@ -2,7 +2,14 @@
   "$schema": "../schemas/modules.schema.json",
   "modules": [
     {
-      "id": "heavy_battery_1",
+      "id": "ship_heavy_battery_1",
+      "name": "28 cm Cannon",
+      "shortName": "Heavy Battery I",
+      "category": "ship_heavy_battery",
+      "categoryName": "Heavy Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
         "heavyAttack": 12,
         "productionCost": 1200
@@ -15,7 +22,14 @@
       }
     },
     {
-      "id": "heavy_battery_2",
+      "id": "ship_heavy_battery_2",
+      "name": "30.5 cm Cannon",
+      "shortName": "Heavy Battery II",
+      "category": "ship_heavy_battery",
+      "categoryName": "Heavy Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
         "heavyAttack": 16,
         "productionCost": 1300
@@ -28,7 +42,14 @@
       }
     },
     {
-      "id": "heavy_battery_3",
+      "id": "ship_heavy_battery_3",
+      "name": "38 cm Cannon",
+      "shortName": "Heavy Battery III",
+      "category": "ship_heavy_battery",
+      "categoryName": "Heavy Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
         "heavyAttack": 20,
         "productionCost": 1400
@@ -41,7 +62,14 @@
       }
     },
     {
-      "id": "heavy_battery_4",
+      "id": "ship_heavy_battery_4",
+      "name": "40.6 cm Cannon",
+      "shortName": "Heavy Battery IV",
+      "category": "ship_heavy_battery",
+      "categoryName": "Heavy Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
         "heavyAttack": 24,
         "productionCost": 1500
@@ -54,20 +82,14 @@
       }
     },
     {
-      "id": "heavy_battery_sub_1",
-      "statModifiers": {
-        "heavyAttack": 6,
-        "productionCost": 500
-      },
-      "statAverages": {
-        "heavyPiercing": 24
-      },
-      "statMultipliers": {
-        "speed": -0.05
-      }
-    },
-    {
-      "id": "super_heavy_battery_1",
+      "id": "ship_super_heavy_battery_1",
+      "name": "46 cm Cannon",
+      "shortName": "Super-Heavy Battery",
+      "category": "ship_super_heavy_battery",
+      "categoryName": "Super Heavy Battery",
+      "addEquipmentTypes": [
+        "capital_ship"
+      ],
       "statModifiers": {
         "heavyAttack": 28,
         "productionCost": 1600
