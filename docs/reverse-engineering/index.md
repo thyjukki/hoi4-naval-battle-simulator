@@ -298,7 +298,7 @@ From [S-STATS-design-stats.md](findings/S-STATS-design-stats.md) (equipment vari
 | 0x13e81b0 | token id → EEquipmentStats |
 | 0x831c0 | static token registration (name → id) |
 | 0xc3d090 | CShip::RefreshStats |
-| 0xc3d340 | part stat penalties in the refresh: `stat × max(0, 1 + count × penalty)` per damaged part (in-game: only the attacks show it) |
+| 0xc3d340 | part stat penalties in the refresh: `stat × max(0, 1 + count × penalty)` per damaged part, every stat (in-game: attacks, surface detection, hit chance factors) |
 | 0xc3d4a3 | max organization `max(0.001, (max_organisation + navy_org) × (1 + navy_org_factor))`, current organization clamped to it |
 | 0x1019e50 / 0x1429cb0 / 0x142b5f0 | add variant stats to ship × (1 + sub-unit stat) |
 | 0x1019ea0 / 0x1429d30 | add sub-unit stat set (direct or base path) + clamps |
@@ -682,7 +682,8 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 
 - Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
 - Darkness value computation (with weather on; it is 0 with weather off [LOG]); whether `naval_night_attack` is read anywhere. [HOUR/night], [HIT/mods]
-- How the design's slot list is ordered (calibrated: slot names in first-appearance order of the equipment files) and which stat readers see part penalties (calibrated: the attacks only). [DMG/part], [LOG]
+- How the design's slot list is ordered (calibrated: slot names in first-appearance order of the equipment files). [DMG/part], [LOG]
+- The fixed-point rounding of `0xc3ac60` and the weight products (calibrated: quotient rounded half up, products truncated; 120,090 logged picks). [TGT/weight], [LOG]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
 - Whether light guns and depth charges both fire in one slot-2 call. [ACT/open]
 - Ship-type flag bit 39 (support ship?). [ACT/open], [TGT/bb]

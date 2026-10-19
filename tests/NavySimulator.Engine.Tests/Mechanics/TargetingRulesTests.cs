@@ -72,6 +72,31 @@ public class TargetingRulesTests
     }
 
     [Fact]
+    public void TargetWeight_IsTakenInTheGamesFixedPoint()
+    {
+        // HP ratio 1/3 rounds to 0.33333, so 6 × (2 − 0.33333) × 1.5 = 15.00003 rather than 15.
+        var shooter = TestEntityFactory.Screen("dd");
+        var target = TestEntityFactory.Screen("target");
+        target.CurrentHP = 100.0 / 3;
+        target.CurrentStatus = ShipStatus.Active;
+
+        Assert.Equal(15.00003, TargetingRules.TargetWeight(shooter, WeaponSlot.Light, target, defines), 9);
+    }
+
+    [Theory]
+    [InlineData(0.49999, "a")]
+    [InlineData(0.5, "a")]
+    [InlineData(0.50001, "b")]
+    public void WeightedPick_ComparesTheTruncatedThresholdInFixedPoint(double roll, string expected)
+    {
+        // T = trunc(U × 2) in fx5; "a" takes [0, 1].
+        var a = TestEntityFactory.Screen("a");
+        var b = TestEntityFactory.Screen("b");
+
+        Assert.Equal(expected, TargetingRules.WeightedPick([(a, 1.0), (b, 1.0)], new ScriptedRandomSource(roll))!.ID);
+    }
+
+    [Fact]
     public void TargetWeight_StateMultipliersAreExclusive()
     {
         var shooter = TestEntityFactory.Screen("dd");

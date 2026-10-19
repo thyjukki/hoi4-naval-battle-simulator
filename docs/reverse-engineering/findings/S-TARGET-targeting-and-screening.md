@@ -171,7 +171,7 @@ Convoy target:
 base = shooter is sub ? 40 : 4;   gun 0/1: base *= 15                -> 60 / 600 (light 4 / 40)
 dmg = 1 + 10 * (1 - ratio)        ratio = convoy+0x20 / max(convoy+0x18 -> +0x2e8, 0.001)   (1ad81e0; note the factor 10)
 ```
-Then `w = trunc(base * dmg)` and the target state multiplier: state 2 (fighting) **x1.5**, state 8 (retreating) **x0.5**, state 1 (waiting) x1. Each step truncates.
+Then `w = trunc(base * dmg)` and the target state multiplier: state 2 (fighting) **x1.5**, state 8 (retreating) **x0.5**, state 1 (waiting) x1. Each step truncates. [CAL] The fx5 quotient `hpRatio` is rounded half up, not truncated: on the engine's candidate lists for 120,090 logged picks (11 TFB battles), the rounded ratio with truncated products and `T = trunc(U × Σ)` fits every pick; a truncated ratio misses one and double arithmetic another ([LOG](LOG-ingame-logging.md)).
 
 **Verdict.**
 - Base table MATCHES the wiki exactly: 30/2, 3/6, 15/1, 60/4, 600/40, sub 4.

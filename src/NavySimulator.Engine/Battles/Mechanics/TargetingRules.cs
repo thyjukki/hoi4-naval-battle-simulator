@@ -1,5 +1,6 @@
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Random;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -124,7 +125,7 @@ public static class TargetingRules
         return WeightedPick(candidates, random);
     }
 
-    /// <summary>[RE] 0x1971440. Each step truncates to the game's 1e-5 fixed point; that rounding is not reproduced.</summary>
+    /// <summary>[RE] 0x1971440. Each step truncates to the game's fx5 fixed point, as the game does.</summary>
     public static double TargetWeight(Ship shooter, WeaponSlot slot, Ship target, GameDefines defines)
     {
         var hardcoded = defines.Hardcoded;
@@ -140,7 +141,7 @@ public static class TargetingRules
                 weight *= hardcoded.TargetHeavyTorpedoMultiplier;
             }
 
-            weight *= 1.0 + hardcoded.TargetConvoyDamagedFactor * (1.0 - HpRatio(target));
+            weight = FixedPoint.Truncate(weight * (1.0 + hardcoded.TargetConvoyDamagedFactor * (1.0 - FixedPointHpRatio(target))));
         }
         else
         {
@@ -163,19 +164,22 @@ public static class TargetingRules
                 weight *= hardcoded.TargetLightScreenMultiplier;
             }
 
-            weight *= 2.0 - HpRatio(target);
+            weight = FixedPoint.Truncate(weight * (2.0 - FixedPointHpRatio(target)));
         }
 
         // Exclusive state multiplier. Convoys are always retreating once their line is active.
         return target.CurrentStatus switch
         {
-            ShipStatus.Active => weight * hardcoded.TargetFightingMultiplier,
-            ShipStatus.Retreating => weight * hardcoded.TargetRetreatingMultiplier,
+            ShipStatus.Active => FixedPoint.Truncate(weight * hardcoded.TargetFightingMultiplier),
+            ShipStatus.Retreating => FixedPoint.Truncate(weight * hardcoded.TargetRetreatingMultiplier),
             _ => weight
         };
     }
 
-    /// <summary>[RE] T = trunc(U * sum); the heaviest candidate takes [0, maxW], the rest follow in list order.</summary>
+    /// <summary>
+    /// [RE] T = trunc(U * sum) in fx5; the heaviest candidate takes [0, maxW], the rest follow in list order. [CAL] In
+    /// double arithmetic one pick of 11 replayed battles (about 120,000 shots) fell on the other side of a boundary.
+    /// </summary>
     public static Ship? WeightedPick(IReadOnlyList<(Ship Target, double Weight)> candidates, IRandomSource random)
     {
         if (candidates.Count == 0)
@@ -183,7 +187,8 @@ public static class TargetingRules
             return null;
         }
 
-        var total = candidates.Sum(candidate => candidate.Weight);
+        var weights = candidates.Select(candidate => FixedPoint.Raw(candidate.Weight)).ToList();
+        var total = weights.Sum();
 
         if (total <= 0)
         {
@@ -194,14 +199,14 @@ public static class TargetingRules
 
         for (var i = 1; i < candidates.Count; i++)
         {
-            if (candidates[i].Weight > candidates[heaviest].Weight)
+            if (weights[i] > weights[heaviest])
             {
                 heaviest = i;
             }
         }
 
-        var threshold = random.NextDouble(RollKind.TargetPick) * total;
-        var cumulative = candidates[heaviest].Weight;
+        var threshold = FixedPoint.Raw(random.NextDouble(RollKind.TargetPick) * total / FixedPoint.Scale);
+        var cumulative = weights[heaviest];
 
         if (cumulative >= threshold)
         {
@@ -215,7 +220,7 @@ public static class TargetingRules
                 continue;
             }
 
-            cumulative += candidates[i].Weight;
+            cumulative += weights[i];
 
             if (cumulative >= threshold)
             {
@@ -229,5 +234,11 @@ public static class TargetingRules
     public static double HpRatio(Ship ship)
     {
         return ship.CurrentHP / Math.Max(ship.GetFinalStats().Hp, 0.001);
+    }
+
+    // [RE + CAL] 0xc3ac60 in the game's fixed point, for the target weight.
+    private static double FixedPointHpRatio(Ship ship)
+    {
+        return FixedPoint.Divide(ship.CurrentHP, Math.Max(ship.GetFinalStats().Hp, 0.001));
     }
 }

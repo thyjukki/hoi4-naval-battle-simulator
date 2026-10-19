@@ -53,8 +53,8 @@ public static class PositioningRules
     }
 
     // S-POS-DETECT [RE]: summed surface detection of all ships in the battle, difference / 100 * factor, only if positive.
-    // [CAL] Damaged parts do not lower it: after radar short circuits, 110 of 110 logged side-hours kept the undamaged
-    // detection (S-STATS-PARTS).
+    // [CAL] With damaged parts' penalties (S-STATS-PARTS): a short-circuited radar (−7) takes its ship's detection to 0,
+    // and the enemy's logged positioning rose by exactly that share.
     public static double DetectionBonus(BattleLines own, BattleLines enemy, GameDefines defines)
     {
         var navy = defines.NNavy;

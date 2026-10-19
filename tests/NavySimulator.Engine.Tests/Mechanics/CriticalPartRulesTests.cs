@@ -92,7 +92,7 @@ public class CriticalPartRulesTests
     }
 
     [Fact]
-    public void StatPenalties_ScaleTheAttacksByCount_AndLeaveDetectionAndHitChanceAlone()
+    public void StatPenalties_ScaleEveryStatByCount_DownToZero()
     {
         var guns = Part("heavy", damageInstancePerAddedModule: 1, statPenalties: new ShipStats(HeavyAttack: -0.5));
         var radar = Part("radar", statPenalties: new ShipStats(SurfaceDetection: -5, LightHitChanceFactor: -0.1));
@@ -104,8 +104,8 @@ public class CriticalPartRulesTests
         ship.DamagePart(guns);
         ship.DamagePart(radar);
         Assert.Equal(0, ship.GetFinalStats().HeavyAttack, 9);
-        Assert.Equal(20, ship.GetFinalStats().SurfaceDetection, 9);
-        Assert.Equal(0.2, ship.GetFinalStats().LightHitChanceFactor, 9);
+        Assert.Equal(0, ship.GetFinalStats().SurfaceDetection, 9);
+        Assert.Equal(0.2 * 0.9, ship.GetFinalStats().LightHitChanceFactor, 9);
     }
 
     [Fact]

@@ -252,10 +252,9 @@ With the parts imported (`data/critical-parts/`) and modelled (S-CRIT-PART), the
 - **Pick order**: with the candidates merged per part and the slots walked in the hull's order, an SHBB's heavy guns
   and a light cruiser's secondaries came up on the wrong rolls. Walking the slots in the order of their names' first
   appearance in the equipment files fits every pick in the 18 runs (26 part picks with their rolls in the shots).
-- **Stat penalties reach the attacks only**: after `shortcircuited_radar_N` (surface detection −5 to −18, hit chance
-  factors −0.025 to −0.1), the logged hit chances kept the undamaged factors (the replay compares them to 2e-5), and
-  positioning's detection sum kept the undamaged detection in 110 of 110 side-hours. Heavy guns ×0.5 and secondaries'
-  light attack ×0.75 show in every later shot profile.
+- **Stat penalties**: heavy guns ×0.5 and secondaries' light attack ×0.75 show in every later shot profile. (This
+  section first said the radar penalties do not apply; that came from picks in the wrong slot order, see the next
+  section.)
 - **Manpower loss**: the 17 manpower values off by one were the loss ratio. `round(maxMp × strDamage / maxHp × 0.5)`
   misses 48 of 22,087 logged losses over all runs (fractions just above .5 that the game rounds down); truncating
   `strDamage / maxHp` to fx5 first misses none.
@@ -270,4 +269,31 @@ BUL hit 97 times fewer than its logged hit chances (z −2.3) and ROM 215 more (
 0.50, every band below 0.5 within 2 SE). A regression of the simulator's BUL damage on both sides' hit luck predicts
 3,600 at the game runs' luck, leaving −211 ± 87 HP (2.4 SE). The CL3 battle still matches (339 h, BUL 7,101 and ROM
 2,805 HP left against the game's 336 h, 7,075 and 2,802).
+
+### Ten more replays: radar penalties and fixed-point target picks (2026-10-19)
+
+Seeds 18–27 were logged with rolls and replayed. Five matched every shot at once; the others showed two rules:
+- **Radar penalties apply.** In seeds 19 and 21 a `shortcircuited_radar_2` hit on a USA light cruiser was followed,
+  the same hour, by that ship's light hit chance at 0.9975 × the engine's, and from the next hour by Japan's
+  positioning, screening and fleet AA all stepping up (0.79372 → 0.79622, 0.97144 → 0.9725, 100.678 → 100.996). Surface
+  detection −7 as a factor takes the cruiser's detection to 0, and Japan's detection bonus grows by that share
+  (`ΔΣdet / 100 × 0.01` = 0.0025); screening and fleet AA scale with positioning. Seeds 20 and 22 (`radar_3` on capitals)
+  showed only the hit chances. Applying `stat_penalties` to every stat (0xc3d340) fixed all four. The earlier "attacks
+  only" reading came from the wrong slot order: seed 1 has no radar pick at all once the order is right.
+- **Target picks in fixed point.** One pick in seed 26 fell on the other side of a boundary. With the engine's own
+  candidate lists dumped, the variants were tested on all 120,090 picks: double arithmetic misses 1, truncating every
+  step (including `hpRatio`) misses 1 (seed 23), and the fx5 `hpRatio` quotient rounded half up with truncated products
+  and `T = trunc(U × Σ)` misses none (`FixedPoint.Divide`, `TargetingRules`).
+
+After both, all 11 replays (120,090 shots) match every shot, each side's HP damage within 0.1 HP. Left: organization
+regain (naval dominance), the last hour's skipped regain and experience, and 4 manpower values off by one: on the
+game's raw fx5 values the manpower formula fits all 9,778 logged losses, so these come from the engine's damage being
+computed in doubles.
+
+Free-running, 200 seeds against the 27 distinct game runs: Japan dealt 11,720 against 11,726 (17 runs) and the USA 3,785
+against 3,523 (the new 10 runs alone: 3,749, sd 748). With the game runs' hit luck the simulator predicts 3,711, leaving
+−188 ± 77 HP (2.4 SE). Two checks found nothing behind it: the game's 279,257 logged rolls have no correlation between
+consecutive rolls (all |z| ≤ 2.1 over the ten most common line pairs), and giving either side naval dominance's +10 %
+regain for the whole battle moves the USA damage by at most 6 HP. With every replayed battle exact, the gap is most
+likely chance in the game sample.
 
