@@ -12,6 +12,7 @@ Map each schema to these patterns:
 - `modules.schema.json` -> `data/modules/*.json`
 - `ship-types.schema.json` -> `data/ship-types/*.json`
 - `critical-parts.schema.json` -> `data/critical-parts/*.json`
+- `calibration.schema.json` -> `data/calibration/*.json`
 - `mios.schema.json` -> `data/mios/*.json`
 - `ship-designs.schema.json` -> `data/ship-designs/*.json`
 - `researches.schema.json` -> `data/researches/*.json`

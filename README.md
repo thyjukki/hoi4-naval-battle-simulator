@@ -89,6 +89,7 @@ Everything lives in `data/`:
 | `mios/`, `ship-designs/` | MIOs; designs: a hull and one module per slot (`"modules": { "<slot>": "<module>" }`) |
 | `researches/`, `spirits/`, `planes/`, `force-compositions/` | Modifiers, planes, fleets |
 | `defines/tfb-legacy.lua` | The previous simulator's TFB-mod values as an optional defines profile |
+| `calibration/` | Baselines: game observations of a setup (per seed: length, outcome, losses and HP left per design, HP curves) and the simulator's numbers they were last compared with ([docs/calibration.md](docs/calibration.md)) |
 | `schemas/` | JSON schemas for editor autocompletion |
 
 Scenario additions:

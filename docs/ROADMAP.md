@@ -26,12 +26,15 @@ The aim is a simulator that reproduces HOI4 naval combat as closely as possible,
 7. Calibration setups: `tools/ingame/make_save.py` writes a scenario into a template save (2026-10-19), but research IDs are mapped to game technologies by hand (`GAME_TECHS`) until technologies are imported, and spirits, doctrines, commanders and MIOs are not written.
 8. The ship type pick (S-DESIGN-TYPE) is inferred from the scripts, not decoded; hull stats are assumed to inherit from the archetype only (S-DESIGN-HULL).
 
-**Next steps (handoff 2026-10-19):**
-- Research modifiers (done 2026-10-19): `ResearchDto.countryModifiers` by game key, summed per side (`BattleParticipant.CountryModifiers`) and read by `RetreatRules.EscapeSpeedPerDay` like the game's member modifier getter; `smoke_generator` is in `data/researches/misc.json` and on both CL3 sides. The 12 game runs are in `output/ingame/cl3_batch/` (local, not committed): `python tools/ingame/summarize.py output/ingame/cl3_batch`.
-- Continue the modifier layer: the next country keys the combat rules read through the same getters (`naval_hit_chance` and the per-weapon hit chance factors are read since 2026-10-19 through `MemberModifierRules`; next `naval_damage_factor`/`naval_defense_factor` from doctrines and spirits, `naval_speed_factor`), then doctrines and spirits as sources of `countryModifiers` (replacing the [LEGACY] spirit stat blocks).
-- Record more cases with the runner: a mirror match and a carrier battle with weather on (weather off also removes night). `make_save.py` builds them from scenarios.
-- Write the CL3 observations as the first `data/calibration/` case (calibration.md format).
-- Open from the logs: armor's `naval_defense_factor` is decoded and now applied but not confirmed (TFB's experience blocks have no defense term); the light-hit HP difference noted before the escape speed was fixed is gone: with `smoke_generator`, light hits land on ROM ships at 58.9 % HP on average (median 55.6 %) over 200 simulator seeds, against 58.9 % (median 55.5 %) in the 12 game runs.
+**Baselines** (2026-10-19): two calibration cases in `data/calibration/` ([calibration.md](calibration.md#baselines)), each with the game's runs per seed and the simulator's reference numbers: `la-vs-torp-cl3` (12 seeds) and `jukki-usa-vs-bc-japan` (27 seeds, 11 of them with roll logs that `NavySimulator replay` reproduces shot for shot).
+
+**Next steps (handoff 2026-10-19, end of day):**
+- Checking a rule change: build, `dotnet test`, then replay every roll-logged seed of `jukki-usa-vs-bc-japan` (the `log` folders with `rollLog: true` in the case file; local, under `output/ingame/`) with `NavySimulator replay --log <run> --data data --scenario jukki_usa_vs_bc_japan.json --defines <TFB>`: all 11 must keep matching every shot. Then run 200 seeds of both baseline scenarios and rewrite the cases with `tools/ingame/make_calibration.py ... --sim <report> --sim-commit <commit>` (the commands are in [tools/ingame/README.md](../tools/ingame/README.md)).
+- First: refresh CL3's `simulatorReference` with the current engine (it is from c36e409, before the radar penalties and fixed-point target picks of 48972a4).
+- Continue the modifier layer (gap 1): `naval_damage_factor`/`naval_defense_factor` and the attack/armor factors from doctrines and spirits, then doctrines and spirits as sources of `countryModifiers` (replacing the [LEGACY] spirit stat blocks). The getters and `BattleParticipant.ModelledCountryModifiers` are where new keys go.
+- Record more baselines with the runner (all with roll logs now): a mirror match, a carrier battle with weather on (weather off also removes night), a submarine battle (part penalties on sub visibility are unverified). `make_save.py` builds them from scenarios.
+- Smaller: naval dominance's organization regain (region-wide; ≤ 6 HP on the mixed-fleet case), damage in fx5 (4 manpower values in 11 replays), parts from air crits, a GUI view of critical parts (the import data has no editor; the Library does not list them yet).
+- Logs are local and not committed: `output/ingame/cl3_batch/` (CL3), `output/ingame/jukki_usa_vs_bc_japan_battle_start_*` and `output/ingame/replay_test/` (mixed fleet). The case files name each run's folder.
 
 ## Milestone 1: foundation and surface combat (done)
 

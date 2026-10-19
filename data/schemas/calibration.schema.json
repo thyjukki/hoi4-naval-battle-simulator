@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "calibration.schema.json",
+  "title": "NavySimulator Calibration Case",
+  "description": "Observations of one battle setup in the game (docs/calibration.md), written by tools/ingame/make_calibration.py from logged runs.",
+  "type": "object",
+  "required": [
+    "id",
+    "scenario",
+    "observations"
+  ],
+  "$defs": {
+    "stat": {
+      "type": "object",
+      "properties": {
+        "mean": { "type": "number" },
+        "sd": { "type": "number" },
+        "min": { "type": "number" },
+        "max": { "type": "number" }
+      }
+    },
+    "summary": {
+      "description": "Means and spreads over the runs.",
+      "type": "object",
+      "properties": {
+        "runs": { "type": "integer" },
+        "durationHours": { "$ref": "#/$defs/stat" },
+        "outcomes": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "sides": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "side": { "enum": [ "attacker", "defender" ] },
+              "hpLeft": { "$ref": "#/$defs/stat" },
+              "sunk": { "$ref": "#/$defs/stat" }
+            }
+          }
+        },
+        "designs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "side": { "enum": [ "attacker", "defender" ] },
+              "design": { "type": "string" },
+              "count": { "type": "integer" },
+              "sunk": { "$ref": "#/$defs/stat" },
+              "retreated": { "$ref": "#/$defs/stat" },
+              "remaining": { "$ref": "#/$defs/stat" },
+              "hpLeft": { "$ref": "#/$defs/stat" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": { "type": "string" },
+    "gameVersion": { "type": "string" },
+    "mods": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": { "type": "string" },
+    "scenario": {
+      "description": "The scenario file in data/ that rebuilds the setup.",
+      "type": "string"
+    },
+    "attackerCountry": {
+      "description": "The country tag that plays the scenario's attacker (the game may make the other side the combat attacker).",
+      "type": "string"
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "startHourOfDay": { "type": [ "integer", "null" ] },
+        "weather": { "type": [ "string", "null" ] },
+        "weatherEnabled": { "type": "boolean" },
+        "terrain": { "type": [ "string", "null" ] }
+      }
+    },
+    "summary": { "$ref": "#/$defs/summary" },
+    "simulatorReference": {
+      "description": "The simulator's numbers the case was last compared with: the commit and seeds they were made with.",
+      "allOf": [
+        { "$ref": "#/$defs/summary" },
+        {
+          "type": "object",
+          "properties": {
+            "commit": { "type": "string" },
+            "seeds": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "durationHours",
+          "ships"
+        ],
+        "properties": {
+          "repetition": { "type": "integer" },
+          "seed": { "type": "integer" },
+          "log": {
+            "description": "The run's log folder (local, not committed).",
+            "type": "string"
+          },
+          "rollLog": {
+            "description": "The run has the game's rolls (rolls.csv) and replays with 'NavySimulator replay'.",
+            "type": "boolean"
+          },
+          "durationHours": { "type": "integer" },
+          "outcome": { "enum": [ "AttackerVictory", "DefenderVictory", "BothSidesGone", "Timeout", "InProgress" ] },
+          "ships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [ "side", "design", "count" ],
+              "properties": {
+                "side": { "enum": [ "attacker", "defender" ] },
+                "design": { "type": "string" },
+                "count": { "type": "integer" },
+                "sunk": { "type": "integer" },
+                "retreated": { "type": "integer" },
+                "remaining": { "type": "integer" },
+                "hpLeft": { "type": "number" }
+              }
+            }
+          },
+          "hourly": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "hour": { "type": "integer" },
+                "attackerHpFraction": { "type": "number" },
+                "defenderHpFraction": { "type": "number" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,3223 @@
+{
+  "$schema": "../schemas/calibration.schema.json",
+  "id": "jukki-usa-vs-bc-japan",
+  "gameVersion": "1.19.3",
+  "mods": [
+    "Their Finest Bruh (local dev checkout over vanilla 1.19.3)"
+  ],
+  "notes": "Mixed fleets generated into a save by tools/ingame/make_save.py (save jukki_usa_vs_bc_japan_battle_start.hoi4, Black Sea template, 1936.5.6.12): USA (BUL) 8 39_battleship_pure_la, 27 39lc_la, 6 shbb_4battery_2aa against Japan (ROM) 12 39_battlecruiser_pure_la, 54 dd_3_la, 5 shbb_4battery_2aa; 15 researches each, experience 20, Always Engage, Never repair. Weather off (the runner types 'weather'), so no night. The game makes ROM the combat attacker; the scenario's attacker is the USA. Seeds with rollLog replay with the game's own rolls (NavySimulator replay); all 11 match every shot as of 48972a4.",
+  "scenario": "jukki_usa_vs_bc_japan.json",
+  "attackerCountry": "BUL",
+  "conditions": {
+    "startHourOfDay": 13,
+    "weather": "clear",
+    "weatherEnabled": false,
+    "terrain": "ocean"
+  },
+  "summary": {
+    "runs": 27,
+    "durationHours": {
+      "mean": 187.63,
+      "sd": 14.56,
+      "min": 161,
+      "max": 214
+    },
+    "outcomes": {
+      "DefenderVictory": 27
+    },
+    "sides": [
+      {
+        "side": "attacker",
+        "hpLeft": {
+          "mean": 466.07,
+          "sd": 149.67,
+          "min": 250.2,
+          "max": 763.5
+        },
+        "sunk": {
+          "mean": 25.37,
+          "sd": 3.18,
+          "min": 18,
+          "max": 30
+        }
+      },
+      {
+        "side": "defender",
+        "hpLeft": {
+          "mean": 8307.36,
+          "sd": 558.49,
+          "min": 6865.0,
+          "max": 9204.5
+        },
+        "sunk": {
+          "mean": 3.7,
+          "sd": 1.77,
+          "min": 0,
+          "max": 7
+        }
+      }
+    ],
+    "designs": [
+      {
+        "side": "attacker",
+        "design": "39_battleship_pure_la",
+        "count": 8,
+        "sunk": {
+          "mean": 6.37,
+          "sd": 1.01,
+          "min": 5,
+          "max": 8
+        },
+        "retreated": {
+          "mean": 1.63,
+          "sd": 1.01,
+          "min": 0,
+          "max": 3
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 73.53,
+          "sd": 58.26,
+          "min": 0.0,
+          "max": 175.8
+        }
+      },
+      {
+        "side": "attacker",
+        "design": "39lc_la",
+        "count": 27,
+        "sunk": {
+          "mean": 14.37,
+          "sd": 2.39,
+          "min": 9,
+          "max": 18
+        },
+        "retreated": {
+          "mean": 12.63,
+          "sd": 2.39,
+          "min": 9,
+          "max": 18
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 300.51,
+          "sd": 77.22,
+          "min": 169.5,
+          "max": 458.0
+        }
+      },
+      {
+        "side": "attacker",
+        "design": "shbb_4battery_2aa",
+        "count": 6,
+        "sunk": {
+          "mean": 4.63,
+          "sd": 1.04,
+          "min": 2,
+          "max": 6
+        },
+        "retreated": {
+          "mean": 1.37,
+          "sd": 1.04,
+          "min": 0,
+          "max": 4
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 92.03,
+          "sd": 86.64,
+          "min": 0.0,
+          "max": 282.5
+        }
+      },
+      {
+        "side": "defender",
+        "design": "39_battlecruiser_pure_la",
+        "count": 12,
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "retreated": {
+          "mean": 0.19,
+          "sd": 0.4,
+          "min": 0,
+          "max": 1
+        },
+        "remaining": {
+          "mean": 11.81,
+          "sd": 0.4,
+          "min": 11,
+          "max": 12
+        },
+        "hpLeft": {
+          "mean": 3957.7,
+          "sd": 339.22,
+          "min": 3187.2,
+          "max": 4677.6
+        }
+      },
+      {
+        "side": "defender",
+        "design": "dd_3_la",
+        "count": 54,
+        "sunk": {
+          "mean": 3.7,
+          "sd": 1.77,
+          "min": 0,
+          "max": 7
+        },
+        "retreated": {
+          "mean": 18.26,
+          "sd": 3.97,
+          "min": 10,
+          "max": 26
+        },
+        "remaining": {
+          "mean": 32.04,
+          "sd": 3.86,
+          "min": 24,
+          "max": 39
+        },
+        "hpLeft": {
+          "mean": 1569.57,
+          "sd": 104.42,
+          "min": 1272.9,
+          "max": 1760.5
+        }
+      },
+      {
+        "side": "defender",
+        "design": "shbb_4battery_2aa",
+        "count": 5,
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "retreated": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "remaining": {
+          "mean": 5,
+          "sd": 0.0,
+          "min": 5,
+          "max": 5
+        },
+        "hpLeft": {
+          "mean": 2780.09,
+          "sd": 342.95,
+          "min": 2150.0,
+          "max": 3327.7
+        }
+      }
+    ]
+  },
+  "simulatorReference": {
+    "commit": "48972a4",
+    "seeds": "1..200",
+    "runs": 200,
+    "durationHours": {
+      "mean": 190.77,
+      "sd": 17.54,
+      "min": 149,
+      "max": 241
+    },
+    "outcomes": {
+      "DefenderVictory": 200
+    },
+    "sides": [
+      {
+        "side": "attacker",
+        "hpLeft": {
+          "mean": 463.58,
+          "sd": 125.85,
+          "min": 204.0,
+          "max": 923.7
+        },
+        "sunk": {
+          "mean": 25.61,
+          "sd": 2.87,
+          "min": 17,
+          "max": 34
+        }
+      },
+      {
+        "side": "defender",
+        "hpLeft": {
+          "mean": 8044.82,
+          "sd": 524.36,
+          "min": 6516.7,
+          "max": 9128.8
+        },
+        "sunk": {
+          "mean": 4.17,
+          "sd": 2.13,
+          "min": 0,
+          "max": 11
+        }
+      }
+    ],
+    "designs": [
+      {
+        "side": "attacker",
+        "design": "39_battleship_pure_la",
+        "count": 8,
+        "sunk": {
+          "mean": 5.97,
+          "sd": 1.14,
+          "min": 2,
+          "max": 8
+        },
+        "retreated": {
+          "mean": 2.02,
+          "sd": 1.14,
+          "min": 0,
+          "max": 6
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 94.21,
+          "sd": 66.2,
+          "min": 0.0,
+          "max": 370.0
+        }
+      },
+      {
+        "side": "attacker",
+        "design": "39lc_la",
+        "count": 27,
+        "sunk": {
+          "mean": 15,
+          "sd": 2.57,
+          "min": 7,
+          "max": 21
+        },
+        "retreated": {
+          "mean": 12,
+          "sd": 2.57,
+          "min": 6,
+          "max": 20
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 287.27,
+          "sd": 77.13,
+          "min": 91.8,
+          "max": 510.0
+        }
+      },
+      {
+        "side": "attacker",
+        "design": "shbb_4battery_2aa",
+        "count": 6,
+        "sunk": {
+          "mean": 4.63,
+          "sd": 1.01,
+          "min": 1,
+          "max": 6
+        },
+        "retreated": {
+          "mean": 1.36,
+          "sd": 1.01,
+          "min": 0,
+          "max": 5
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 82.1,
+          "sd": 73.51,
+          "min": 0.0,
+          "max": 308.6
+        }
+      },
+      {
+        "side": "defender",
+        "design": "39_battlecruiser_pure_la",
+        "count": 12,
+        "sunk": {
+          "mean": 0.06,
+          "sd": 0.24,
+          "min": 0,
+          "max": 1
+        },
+        "retreated": {
+          "mean": 0.33,
+          "sd": 0.58,
+          "min": 0,
+          "max": 3
+        },
+        "remaining": {
+          "mean": 11.62,
+          "sd": 0.64,
+          "min": 9,
+          "max": 12
+        },
+        "hpLeft": {
+          "mean": 3843.2,
+          "sd": 365.36,
+          "min": 2767.0,
+          "max": 4659.1
+        }
+      },
+      {
+        "side": "defender",
+        "design": "dd_3_la",
+        "count": 54,
+        "sunk": {
+          "mean": 4.11,
+          "sd": 2.11,
+          "min": 0,
+          "max": 10
+        },
+        "retreated": {
+          "mean": 18.45,
+          "sd": 3.76,
+          "min": 10,
+          "max": 28
+        },
+        "remaining": {
+          "mean": 31.44,
+          "sd": 4.27,
+          "min": 20,
+          "max": 41
+        },
+        "hpLeft": {
+          "mean": 1530.18,
+          "sd": 145.28,
+          "min": 1130.1,
+          "max": 1874.5
+        }
+      },
+      {
+        "side": "defender",
+        "design": "shbb_4battery_2aa",
+        "count": 5,
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "retreated": {
+          "mean": 0.04,
+          "sd": 0.18,
+          "min": 0,
+          "max": 1
+        },
+        "remaining": {
+          "mean": 4.96,
+          "sd": 0.18,
+          "min": 4,
+          "max": 5
+        },
+        "hpLeft": {
+          "mean": 2671.44,
+          "sd": 308.71,
+          "min": 1665.5,
+          "max": 3397.6
+        }
+      }
+    ]
+  },
+  "observations": [
+    {
+      "repetition": 1,
+      "seed": 1,
+      "log": "output/ingame/replay_test/jukki_usa_vs_bc_japan_battle_start_20261019_144911/s1",
+      "rollLog": true,
+      "durationHours": 174,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 93.1
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 341.8
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 11,
+          "hpLeft": 3609.3
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 12,
+          "remaining": 37,
+          "hpLeft": 1685.9
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3236.6
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.878,
+          "defenderHpFraction": 0.9215
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7261,
+          "defenderHpFraction": 0.8564
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5689,
+          "defenderHpFraction": 0.8291
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4266,
+          "defenderHpFraction": 0.7774
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3247,
+          "defenderHpFraction": 0.752
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1979,
+          "defenderHpFraction": 0.7371
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0538,
+          "defenderHpFraction": 0.7212
+        }
+      ]
+    },
+    {
+      "repetition": 2,
+      "seed": 2,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140503/s2",
+      "rollLog": false,
+      "durationHours": 181,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 80.7
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 169.5
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3847.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 4,
+          "retreated": 14,
+          "remaining": 36,
+          "hpLeft": 1647.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2776.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8618,
+          "defenderHpFraction": 0.9339
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6969,
+          "defenderHpFraction": 0.8579
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5458,
+          "defenderHpFraction": 0.7913
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.3933,
+          "defenderHpFraction": 0.7402
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2887,
+          "defenderHpFraction": 0.7184
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.149,
+          "defenderHpFraction": 0.7061
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.065,
+          "defenderHpFraction": 0.6992
+        }
+      ]
+    },
+    {
+      "repetition": 3,
+      "seed": 3,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s3",
+      "rollLog": false,
+      "durationHours": 214,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 150.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 10,
+          "retreated": 17,
+          "remaining": 0,
+          "hpLeft": 388.0
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 198.1
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3802.8
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 20,
+          "remaining": 32,
+          "hpLeft": 1662.3
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2667.7
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8488,
+          "defenderHpFraction": 0.9354
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7283,
+          "defenderHpFraction": 0.884
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.6025,
+          "defenderHpFraction": 0.827
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.488,
+          "defenderHpFraction": 0.7837
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.4139,
+          "defenderHpFraction": 0.7516
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2883,
+          "defenderHpFraction": 0.7275
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1848,
+          "defenderHpFraction": 0.7149
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.1131,
+          "defenderHpFraction": 0.6919
+        }
+      ]
+    },
+    {
+      "repetition": 4,
+      "seed": 4,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s4",
+      "rollLog": false,
+      "durationHours": 193,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 266.3
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 2,
+          "retreated": 4,
+          "remaining": 0,
+          "hpLeft": 282.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4677.6
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 4,
+          "retreated": 25,
+          "remaining": 25,
+          "hpLeft": 1478.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2917.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8355,
+          "defenderHpFraction": 0.9628
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6976,
+          "defenderHpFraction": 0.9128
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5538,
+          "defenderHpFraction": 0.8749
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4338,
+          "defenderHpFraction": 0.8179
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2956,
+          "defenderHpFraction": 0.7923
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.228,
+          "defenderHpFraction": 0.7849
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1316,
+          "defenderHpFraction": 0.776
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0558,
+          "defenderHpFraction": 0.767
+        }
+      ]
+    },
+    {
+      "repetition": 5,
+      "seed": 5,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s5",
+      "rollLog": false,
+      "durationHours": 163,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 41.6
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 233.4
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4135.1
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 16,
+          "remaining": 33,
+          "hpLeft": 1603.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3048.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.856,
+          "defenderHpFraction": 0.9217
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7048,
+          "defenderHpFraction": 0.8706
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5451,
+          "defenderHpFraction": 0.8297
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.3684,
+          "defenderHpFraction": 0.7862
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.1945,
+          "defenderHpFraction": 0.7689
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.114,
+          "defenderHpFraction": 0.7636
+        }
+      ]
+    },
+    {
+      "repetition": 6,
+      "seed": 6,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s6",
+      "rollLog": false,
+      "durationHours": 205,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 167.1
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 235.6
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 144.4
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3891.6
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 19,
+          "remaining": 33,
+          "hpLeft": 1667.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2764.3
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8638,
+          "defenderHpFraction": 0.9371
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6981,
+          "defenderHpFraction": 0.8796
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5625,
+          "defenderHpFraction": 0.8071
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4234,
+          "defenderHpFraction": 0.7718
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3453,
+          "defenderHpFraction": 0.7486
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2242,
+          "defenderHpFraction": 0.7209
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1537,
+          "defenderHpFraction": 0.706
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0783,
+          "defenderHpFraction": 0.7035
+        }
+      ]
+    },
+    {
+      "repetition": 7,
+      "seed": 7,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s7",
+      "rollLog": false,
+      "durationHours": 196,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 90.4
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 312.6
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4193.5
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 20,
+          "remaining": 32,
+          "hpLeft": 1576.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2823.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8548,
+          "defenderHpFraction": 0.9315
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6973,
+          "defenderHpFraction": 0.8634
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5217,
+          "defenderHpFraction": 0.8173
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4365,
+          "defenderHpFraction": 0.7875
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.314,
+          "defenderHpFraction": 0.7616
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2129,
+          "defenderHpFraction": 0.7563
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1467,
+          "defenderHpFraction": 0.7264
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0546,
+          "defenderHpFraction": 0.7264
+        }
+      ]
+    },
+    {
+      "repetition": 8,
+      "seed": 8,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s8",
+      "rollLog": false,
+      "durationHours": 199,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 50.4
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 274.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 3,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 230.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3769.7
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 6,
+          "retreated": 23,
+          "remaining": 25,
+          "hpLeft": 1458.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2570.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9011,
+          "defenderHpFraction": 0.88
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7304,
+          "defenderHpFraction": 0.8149
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5792,
+          "defenderHpFraction": 0.7749
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.418,
+          "defenderHpFraction": 0.7292
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.301,
+          "defenderHpFraction": 0.7108
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2194,
+          "defenderHpFraction": 0.6912
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1485,
+          "defenderHpFraction": 0.6661
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0664,
+          "defenderHpFraction": 0.6592
+        }
+      ]
+    },
+    {
+      "repetition": 9,
+      "seed": 9,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s9",
+      "rollLog": false,
+      "durationHours": 187,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 66.6
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 276.9
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 118.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 11,
+          "hpLeft": 3187.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 0,
+          "retreated": 22,
+          "remaining": 32,
+          "hpLeft": 1584.0
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2901.1
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.863,
+          "defenderHpFraction": 0.9315
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7135,
+          "defenderHpFraction": 0.8568
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5899,
+          "defenderHpFraction": 0.7836
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.47,
+          "defenderHpFraction": 0.7345
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3199,
+          "defenderHpFraction": 0.6888
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2179,
+          "defenderHpFraction": 0.665
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1202,
+          "defenderHpFraction": 0.6586
+        }
+      ]
+    },
+    {
+      "repetition": 10,
+      "seed": 10,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s10",
+      "rollLog": false,
+      "durationHours": 181,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 130.5
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 9,
+          "retreated": 18,
+          "remaining": 0,
+          "hpLeft": 401.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 231.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4483.5
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 10,
+          "remaining": 39,
+          "hpLeft": 1717.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2496.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8723,
+          "defenderHpFraction": 0.9502
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7109,
+          "defenderHpFraction": 0.8919
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5852,
+          "defenderHpFraction": 0.8312
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4475,
+          "defenderHpFraction": 0.7901
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3462,
+          "defenderHpFraction": 0.7564
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2889,
+          "defenderHpFraction": 0.7443
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.178,
+          "defenderHpFraction": 0.7415
+        }
+      ]
+    },
+    {
+      "repetition": 11,
+      "seed": 11,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s11",
+      "rollLog": false,
+      "durationHours": 190,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 249.8
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 197.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3677.7
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 13,
+          "remaining": 36,
+          "hpLeft": 1656.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3238.6
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8776,
+          "defenderHpFraction": 0.9243
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7572,
+          "defenderHpFraction": 0.8544
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5972,
+          "defenderHpFraction": 0.8334
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4581,
+          "defenderHpFraction": 0.782
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3602,
+          "defenderHpFraction": 0.7611
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2748,
+          "defenderHpFraction": 0.7355
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1299,
+          "defenderHpFraction": 0.7297
+        }
+      ]
+    },
+    {
+      "repetition": 12,
+      "seed": 12,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s12",
+      "rollLog": false,
+      "durationHours": 180,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 5.3
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 212.2
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 41.6
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4229.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 7,
+          "retreated": 17,
+          "remaining": 30,
+          "hpLeft": 1500.4
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2870.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8377,
+          "defenderHpFraction": 0.9285
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6901,
+          "defenderHpFraction": 0.8483
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5408,
+          "defenderHpFraction": 0.8168
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.419,
+          "defenderHpFraction": 0.7756
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2697,
+          "defenderHpFraction": 0.7516
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1676,
+          "defenderHpFraction": 0.7323
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0839,
+          "defenderHpFraction": 0.7308
+        }
+      ]
+    },
+    {
+      "repetition": 13,
+      "seed": 13,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144129/s13",
+      "rollLog": false,
+      "durationHours": 166,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 141.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 285.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3743.9
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 4,
+          "retreated": 18,
+          "remaining": 32,
+          "hpLeft": 1549.0
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3185.0
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8634,
+          "defenderHpFraction": 0.9422
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7278,
+          "defenderHpFraction": 0.8781
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5742,
+          "defenderHpFraction": 0.8259
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.3951,
+          "defenderHpFraction": 0.7563
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.241,
+          "defenderHpFraction": 0.7279
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1318,
+          "defenderHpFraction": 0.7179
+        }
+      ]
+    },
+    {
+      "repetition": 14,
+      "seed": 14,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144129/s14",
+      "rollLog": false,
+      "durationHours": 196,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 175.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 284.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 136.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4108.1
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 3,
+          "retreated": 23,
+          "remaining": 28,
+          "hpLeft": 1535.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2324.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8594,
+          "defenderHpFraction": 0.9177
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7093,
+          "defenderHpFraction": 0.8712
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5626,
+          "defenderHpFraction": 0.8288
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4482,
+          "defenderHpFraction": 0.7782
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3262,
+          "defenderHpFraction": 0.7143
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2418,
+          "defenderHpFraction": 0.7011
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1571,
+          "defenderHpFraction": 0.681
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.063,
+          "defenderHpFraction": 0.6735
+        }
+      ]
+    },
+    {
+      "repetition": 15,
+      "seed": 15,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s15",
+      "rollLog": false,
+      "durationHours": 169,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 57.9
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 308.0
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4140.7
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 13,
+          "remaining": 39,
+          "hpLeft": 1760.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2943.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8381,
+          "defenderHpFraction": 0.9226
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6731,
+          "defenderHpFraction": 0.8658
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5343,
+          "defenderHpFraction": 0.8161
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4111,
+          "defenderHpFraction": 0.7939
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2445,
+          "defenderHpFraction": 0.7721
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1622,
+          "defenderHpFraction": 0.7593
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0357,
+          "defenderHpFraction": 0.7476
+        }
+      ]
+    },
+    {
+      "repetition": 16,
+      "seed": 16,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s16",
+      "rollLog": false,
+      "durationHours": 183,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 155.5
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 299.6
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 17.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3878.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 21,
+          "remaining": 31,
+          "hpLeft": 1505.7
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3312.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.864,
+          "defenderHpFraction": 0.9511
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7114,
+          "defenderHpFraction": 0.8833
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5912,
+          "defenderHpFraction": 0.8506
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4756,
+          "defenderHpFraction": 0.7891
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3187,
+          "defenderHpFraction": 0.7609
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.216,
+          "defenderHpFraction": 0.7482
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0936,
+          "defenderHpFraction": 0.7377
+        }
+      ]
+    },
+    {
+      "repetition": 17,
+      "seed": 17,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s17",
+      "rollLog": false,
+      "durationHours": 187,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 46.3
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 174.7
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 39.2
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4191.9
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 17,
+          "remaining": 35,
+          "hpLeft": 1612.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2642.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8443,
+          "defenderHpFraction": 0.9636
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6991,
+          "defenderHpFraction": 0.9114
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5566,
+          "defenderHpFraction": 0.8434
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4497,
+          "defenderHpFraction": 0.7843
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.4058,
+          "defenderHpFraction": 0.7718
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2941,
+          "defenderHpFraction": 0.745
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.119,
+          "defenderHpFraction": 0.7181
+        }
+      ]
+    },
+    {
+      "repetition": 18,
+      "seed": 18,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s18",
+      "rollLog": true,
+      "durationHours": 205,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 45.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 307.7
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 118.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 11,
+          "hpLeft": 3479.9
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 7,
+          "retreated": 17,
+          "remaining": 30,
+          "hpLeft": 1438.4
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2230.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8689,
+          "defenderHpFraction": 0.9045
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7012,
+          "defenderHpFraction": 0.8007
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5474,
+          "defenderHpFraction": 0.7488
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4582,
+          "defenderHpFraction": 0.6991
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3523,
+          "defenderHpFraction": 0.6567
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2723,
+          "defenderHpFraction": 0.6327
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1786,
+          "defenderHpFraction": 0.609
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0795,
+          "defenderHpFraction": 0.6043
+        }
+      ]
+    },
+    {
+      "repetition": 19,
+      "seed": 19,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s19",
+      "rollLog": true,
+      "durationHours": 207,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 11.2
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 226.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 89.1
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4169.1
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 3,
+          "retreated": 20,
+          "remaining": 31,
+          "hpLeft": 1573.6
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2700.6
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8767,
+          "defenderHpFraction": 0.9472
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7253,
+          "defenderHpFraction": 0.8802
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.6096,
+          "defenderHpFraction": 0.8344
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4914,
+          "defenderHpFraction": 0.7915
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.376,
+          "defenderHpFraction": 0.7529
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2598,
+          "defenderHpFraction": 0.7453
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1717,
+          "defenderHpFraction": 0.7376
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.0782,
+          "defenderHpFraction": 0.7198
+        }
+      ]
+    },
+    {
+      "repetition": 20,
+      "seed": 20,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s20",
+      "rollLog": true,
+      "durationHours": 181,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 20.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 458.0
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 29.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4190.7
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 20,
+          "remaining": 29,
+          "hpLeft": 1392.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2227.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8831,
+          "defenderHpFraction": 0.927
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.753,
+          "defenderHpFraction": 0.884
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.6263,
+          "defenderHpFraction": 0.8093
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.5265,
+          "defenderHpFraction": 0.7557
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3568,
+          "defenderHpFraction": 0.7034
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2118,
+          "defenderHpFraction": 0.6811
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1081,
+          "defenderHpFraction": 0.6674
+        }
+      ]
+    },
+    {
+      "repetition": 21,
+      "seed": 21,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s21",
+      "rollLog": true,
+      "durationHours": 161,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 362.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4321.6
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 21,
+          "remaining": 31,
+          "hpLeft": 1555.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3327.7
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8802,
+          "defenderHpFraction": 0.943
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6837,
+          "defenderHpFraction": 0.8912
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5679,
+          "defenderHpFraction": 0.8475
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4106,
+          "defenderHpFraction": 0.8086
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2381,
+          "defenderHpFraction": 0.7909
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1053,
+          "defenderHpFraction": 0.7836
+        }
+      ]
+    },
+    {
+      "repetition": 22,
+      "seed": 22,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s22",
+      "rollLog": true,
+      "durationHours": 191,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 73.0
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 362.8
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 64.1
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4087.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 3,
+          "retreated": 18,
+          "remaining": 33,
+          "hpLeft": 1600.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2755.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8887,
+          "defenderHpFraction": 0.9472
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7525,
+          "defenderHpFraction": 0.8642
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5876,
+          "defenderHpFraction": 0.8245
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.456,
+          "defenderHpFraction": 0.7693
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3446,
+          "defenderHpFraction": 0.7405
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2522,
+          "defenderHpFraction": 0.7284
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1428,
+          "defenderHpFraction": 0.7225
+        }
+      ]
+    },
+    {
+      "repetition": 23,
+      "seed": 23,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s23",
+      "rollLog": true,
+      "durationHours": 211,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 90.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 428.6
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 135.6
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 3442.1
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 4,
+          "retreated": 26,
+          "remaining": 24,
+          "hpLeft": 1272.9
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2150.0
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8823,
+          "defenderHpFraction": 0.9183
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7233,
+          "defenderHpFraction": 0.8548
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.607,
+          "defenderHpFraction": 0.748
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4956,
+          "defenderHpFraction": 0.6907
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3843,
+          "defenderHpFraction": 0.6442
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.297,
+          "defenderHpFraction": 0.6183
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.2144,
+          "defenderHpFraction": 0.6033
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.1231,
+          "defenderHpFraction": 0.5844
+        }
+      ]
+    },
+    {
+      "repetition": 24,
+      "seed": 24,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s24",
+      "rollLog": true,
+      "durationHours": 179,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 21.8
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 18,
+          "retreated": 9,
+          "remaining": 0,
+          "hpLeft": 283.1
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 5.4
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4042.4
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 6,
+          "retreated": 14,
+          "remaining": 34,
+          "hpLeft": 1629.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3041.4
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8739,
+          "defenderHpFraction": 0.9261
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7448,
+          "defenderHpFraction": 0.9014
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5946,
+          "defenderHpFraction": 0.8513
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4816,
+          "defenderHpFraction": 0.8049
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3159,
+          "defenderHpFraction": 0.7683
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1702,
+          "defenderHpFraction": 0.7654
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0481,
+          "defenderHpFraction": 0.7365
+        }
+      ]
+    },
+    {
+      "repetition": 25,
+      "seed": 25,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s25",
+      "rollLog": true,
+      "durationHours": 175,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 18,
+          "retreated": 9,
+          "remaining": 0,
+          "hpLeft": 216.2
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 102.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 11,
+          "hpLeft": 4024.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 5,
+          "retreated": 18,
+          "remaining": 31,
+          "hpLeft": 1527.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 3013.1
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8388,
+          "defenderHpFraction": 0.9418
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.6967,
+          "defenderHpFraction": 0.8723
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5739,
+          "defenderHpFraction": 0.8417
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4504,
+          "defenderHpFraction": 0.8066
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.2941,
+          "defenderHpFraction": 0.7617
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.1645,
+          "defenderHpFraction": 0.7375
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.0462,
+          "defenderHpFraction": 0.724
+        }
+      ]
+    },
+    {
+      "repetition": 26,
+      "seed": 26,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s26",
+      "rollLog": true,
+      "durationHours": 202,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 157.7
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 321.8
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 138.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 12,
+          "hpLeft": 4064.3
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 3,
+          "retreated": 20,
+          "remaining": 31,
+          "hpLeft": 1571.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2568.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8284,
+          "defenderHpFraction": 0.9456
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.681,
+          "defenderHpFraction": 0.8863
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.5787,
+          "defenderHpFraction": 0.838
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4661,
+          "defenderHpFraction": 0.7882
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3439,
+          "defenderHpFraction": 0.7508
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2384,
+          "defenderHpFraction": 0.7319
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1372,
+          "defenderHpFraction": 0.7127
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.07,
+          "defenderHpFraction": 0.6935
+        }
+      ]
+    },
+    {
+      "repetition": 27,
+      "seed": 27,
+      "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s27",
+      "rollLog": true,
+      "durationHours": 190,
+      "outcome": "DefenderVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 110.3
+        },
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 27,
+          "sunk": 11,
+          "retreated": 16,
+          "remaining": 0,
+          "hpLeft": 434.7
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 164.2
+        },
+        {
+          "side": "defender",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 11,
+          "hpLeft": 3469.2
+        },
+        {
+          "side": "defender",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": 2,
+          "retreated": 16,
+          "remaining": 36,
+          "hpLeft": 1618.7
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 5,
+          "hpLeft": 2324.2
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.8534,
+          "defenderHpFraction": 0.9236
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.7017,
+          "defenderHpFraction": 0.8125
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.564,
+          "defenderHpFraction": 0.7496
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.4466,
+          "defenderHpFraction": 0.7
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.3688,
+          "defenderHpFraction": 0.6686
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.2659,
+          "defenderHpFraction": 0.6559
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.1617,
+          "defenderHpFraction": 0.6386
+        }
+      ]
+    }
+  ]
+}

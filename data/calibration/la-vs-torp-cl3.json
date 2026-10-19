@@ -1,0 +1,1394 @@
+{
+  "$schema": "../schemas/calibration.schema.json",
+  "id": "la-vs-torp-cl3",
+  "gameVersion": "1.19.3",
+  "mods": [
+    "Their Finest Bruh (local dev checkout over vanilla 1.19.3)"
+  ],
+  "notes": "The user's hand-made TFB battle (save light_attack_vs_torp_cruiser_battle_start.hoi4, Black Sea, province 7906, 1936.5.6.12): 75 light-attack CL3 (BUL, 39lc_la) against 75 torpedo CL3 (ROM, 39lc_torp), identical techs incl. smoke_generator, no doctrines or admirals, experience 0, Always Engage, Never repair. Weather off, so no night. The recorded manual battle (BUL 7464 HP left) was a lucky roll; these are 12 automated seeds without roll logs. The simulator reference predates 48972a4 (radar penalties, fixed-point target picks).",
+  "scenario": "battle-scenario-la-vs-torp-cl3.json",
+  "attackerCountry": "BUL",
+  "conditions": {
+    "startHourOfDay": 12,
+    "weather": "clear",
+    "weatherEnabled": false,
+    "terrain": "ocean"
+  },
+  "summary": {
+    "runs": 12,
+    "durationHours": {
+      "mean": 335.58,
+      "sd": 21.08,
+      "min": 297,
+      "max": 355
+    },
+    "outcomes": {
+      "AttackerVictory": 12
+    },
+    "sides": [
+      {
+        "side": "attacker",
+        "hpLeft": {
+          "mean": 7075.18,
+          "sd": 160.68,
+          "min": 6869.2,
+          "max": 7417.0
+        },
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        }
+      },
+      {
+        "side": "defender",
+        "hpLeft": {
+          "mean": 2802.38,
+          "sd": 72.34,
+          "min": 2665.9,
+          "max": 2901.8
+        },
+        "sunk": {
+          "mean": 1.17,
+          "sd": 0.94,
+          "min": 0,
+          "max": 3
+        }
+      }
+    ],
+    "designs": [
+      {
+        "side": "attacker",
+        "design": "39lc_la",
+        "count": 75,
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "retreated": {
+          "mean": 1.58,
+          "sd": 1.31,
+          "min": 0,
+          "max": 4
+        },
+        "remaining": {
+          "mean": 73.42,
+          "sd": 1.31,
+          "min": 71,
+          "max": 75
+        },
+        "hpLeft": {
+          "mean": 7075.18,
+          "sd": 160.68,
+          "min": 6869.2,
+          "max": 7417.0
+        }
+      },
+      {
+        "side": "defender",
+        "design": "39lc_torp",
+        "count": 75,
+        "sunk": {
+          "mean": 1.17,
+          "sd": 0.94,
+          "min": 0,
+          "max": 3
+        },
+        "retreated": {
+          "mean": 73.83,
+          "sd": 0.94,
+          "min": 72,
+          "max": 75
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 2802.38,
+          "sd": 72.34,
+          "min": 2665.9,
+          "max": 2901.8
+        }
+      }
+    ]
+  },
+  "simulatorReference": {
+    "commit": "c36e409",
+    "seeds": "1..200",
+    "runs": 200,
+    "durationHours": {
+      "mean": 338.66,
+      "sd": 22.56,
+      "min": 273,
+      "max": 389
+    },
+    "outcomes": {
+      "AttackerVictory": 200
+    },
+    "sides": [
+      {
+        "side": "attacker",
+        "hpLeft": {
+          "mean": 7100.76,
+          "sd": 171.19,
+          "min": 6630.8,
+          "max": 7505.4
+        },
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        }
+      },
+      {
+        "side": "defender",
+        "hpLeft": {
+          "mean": 2804.51,
+          "sd": 88.8,
+          "min": 2597.3,
+          "max": 3042.3
+        },
+        "sunk": {
+          "mean": 0.91,
+          "sd": 0.73,
+          "min": 0,
+          "max": 3
+        }
+      }
+    ],
+    "designs": [
+      {
+        "side": "attacker",
+        "design": "39lc_la",
+        "count": 75,
+        "sunk": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "retreated": {
+          "mean": 1.62,
+          "sd": 1.32,
+          "min": 0,
+          "max": 5
+        },
+        "remaining": {
+          "mean": 73.38,
+          "sd": 1.32,
+          "min": 70,
+          "max": 75
+        },
+        "hpLeft": {
+          "mean": 7100.76,
+          "sd": 171.19,
+          "min": 6630.8,
+          "max": 7505.4
+        }
+      },
+      {
+        "side": "defender",
+        "design": "39lc_torp",
+        "count": 75,
+        "sunk": {
+          "mean": 0.91,
+          "sd": 0.73,
+          "min": 0,
+          "max": 3
+        },
+        "retreated": {
+          "mean": 74.09,
+          "sd": 0.73,
+          "min": 72,
+          "max": 75
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 2804.51,
+          "sd": 88.8,
+          "min": 2597.3,
+          "max": 3042.3
+        }
+      }
+    ]
+  },
+  "observations": [
+    {
+      "repetition": 1,
+      "seed": 1,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s1",
+      "rollLog": false,
+      "durationHours": 349,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 6945.1
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 3,
+          "retreated": 72,
+          "remaining": 0,
+          "hpLeft": 2890.2
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.971,
+          "defenderHpFraction": 0.925
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9229,
+          "defenderHpFraction": 0.8588
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8862,
+          "defenderHpFraction": 0.7858
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.854,
+          "defenderHpFraction": 0.7213
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8165,
+          "defenderHpFraction": 0.644
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7871,
+          "defenderHpFraction": 0.5634
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7655,
+          "defenderHpFraction": 0.5079
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7433,
+          "defenderHpFraction": 0.446
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.726,
+          "defenderHpFraction": 0.3849
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7141,
+          "defenderHpFraction": 0.3346
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.71,
+          "defenderHpFraction": 0.3199
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7074,
+          "defenderHpFraction": 0.3124
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7043,
+          "defenderHpFraction": 0.305
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7019,
+          "defenderHpFraction": 0.2973
+        }
+      ]
+    },
+    {
+      "repetition": 2,
+      "seed": 2,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s2",
+      "rollLog": false,
+      "durationHours": 351,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 7043.5
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 75,
+          "remaining": 0,
+          "hpLeft": 2884.3
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9666,
+          "defenderHpFraction": 0.9367
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9347,
+          "defenderHpFraction": 0.865
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.9029,
+          "defenderHpFraction": 0.8004
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8656,
+          "defenderHpFraction": 0.7231
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8319,
+          "defenderHpFraction": 0.6439
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7999,
+          "defenderHpFraction": 0.5889
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7739,
+          "defenderHpFraction": 0.5219
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7512,
+          "defenderHpFraction": 0.4587
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7321,
+          "defenderHpFraction": 0.405
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7225,
+          "defenderHpFraction": 0.3607
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7158,
+          "defenderHpFraction": 0.321
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.713,
+          "defenderHpFraction": 0.311
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7123,
+          "defenderHpFraction": 0.3031
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7119,
+          "defenderHpFraction": 0.2958
+        }
+      ]
+    },
+    {
+      "repetition": 3,
+      "seed": 3,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s3",
+      "rollLog": false,
+      "durationHours": 305,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 7193.5
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 2,
+          "retreated": 73,
+          "remaining": 0,
+          "hpLeft": 2760.0
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9637,
+          "defenderHpFraction": 0.9254
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9246,
+          "defenderHpFraction": 0.8615
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8912,
+          "defenderHpFraction": 0.7796
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.859,
+          "defenderHpFraction": 0.6948
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8269,
+          "defenderHpFraction": 0.6311
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.8013,
+          "defenderHpFraction": 0.5555
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7737,
+          "defenderHpFraction": 0.4716
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7527,
+          "defenderHpFraction": 0.4075
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7413,
+          "defenderHpFraction": 0.3489
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7325,
+          "defenderHpFraction": 0.3057
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7275,
+          "defenderHpFraction": 0.2913
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.727,
+          "defenderHpFraction": 0.2837
+        }
+      ]
+    },
+    {
+      "repetition": 4,
+      "seed": 4,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s4",
+      "rollLog": false,
+      "durationHours": 353,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 4,
+          "remaining": 71,
+          "hpLeft": 7253.6
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 1,
+          "retreated": 74,
+          "remaining": 0,
+          "hpLeft": 2781.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9617,
+          "defenderHpFraction": 0.918
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9282,
+          "defenderHpFraction": 0.8297
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8951,
+          "defenderHpFraction": 0.7465
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8677,
+          "defenderHpFraction": 0.6853
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8365,
+          "defenderHpFraction": 0.62
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.8078,
+          "defenderHpFraction": 0.5539
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7862,
+          "defenderHpFraction": 0.4703
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7622,
+          "defenderHpFraction": 0.4031
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7515,
+          "defenderHpFraction": 0.3463
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7439,
+          "defenderHpFraction": 0.3159
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7383,
+          "defenderHpFraction": 0.3077
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7375,
+          "defenderHpFraction": 0.302
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7347,
+          "defenderHpFraction": 0.2949
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7331,
+          "defenderHpFraction": 0.2871
+        }
+      ]
+    },
+    {
+      "repetition": 5,
+      "seed": 5,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s5",
+      "rollLog": false,
+      "durationHours": 297,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 75,
+          "hpLeft": 7417.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 1,
+          "retreated": 74,
+          "remaining": 0,
+          "hpLeft": 2786.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9684,
+          "defenderHpFraction": 0.9241
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9323,
+          "defenderHpFraction": 0.8343
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.9044,
+          "defenderHpFraction": 0.7471
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8732,
+          "defenderHpFraction": 0.6654
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8487,
+          "defenderHpFraction": 0.609
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.8265,
+          "defenderHpFraction": 0.5308
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.8031,
+          "defenderHpFraction": 0.454
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7791,
+          "defenderHpFraction": 0.3866
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7616,
+          "defenderHpFraction": 0.3289
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7557,
+          "defenderHpFraction": 0.2986
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7503,
+          "defenderHpFraction": 0.2922
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7492,
+          "defenderHpFraction": 0.2844
+        }
+      ]
+    },
+    {
+      "repetition": 6,
+      "seed": 6,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s6",
+      "rollLog": false,
+      "durationHours": 355,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 3,
+          "remaining": 72,
+          "hpLeft": 6869.2
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 75,
+          "remaining": 0,
+          "hpLeft": 2874.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9611,
+          "defenderHpFraction": 0.9239
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9186,
+          "defenderHpFraction": 0.833
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8799,
+          "defenderHpFraction": 0.7497
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8417,
+          "defenderHpFraction": 0.6664
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8079,
+          "defenderHpFraction": 0.5994
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7727,
+          "defenderHpFraction": 0.5408
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7506,
+          "defenderHpFraction": 0.4645
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7359,
+          "defenderHpFraction": 0.4117
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7171,
+          "defenderHpFraction": 0.3687
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7075,
+          "defenderHpFraction": 0.3308
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.704,
+          "defenderHpFraction": 0.318
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7014,
+          "defenderHpFraction": 0.3108
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.6959,
+          "defenderHpFraction": 0.3045
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.6939,
+          "defenderHpFraction": 0.2967
+        }
+      ]
+    },
+    {
+      "repetition": 7,
+      "seed": 7,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s7",
+      "rollLog": false,
+      "durationHours": 353,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 0,
+          "remaining": 75,
+          "hpLeft": 7097.5
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 1,
+          "retreated": 74,
+          "remaining": 0,
+          "hpLeft": 2756.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9652,
+          "defenderHpFraction": 0.9316
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9329,
+          "defenderHpFraction": 0.8529
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8971,
+          "defenderHpFraction": 0.7706
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.863,
+          "defenderHpFraction": 0.6996
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.838,
+          "defenderHpFraction": 0.6292
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.8042,
+          "defenderHpFraction": 0.5557
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.778,
+          "defenderHpFraction": 0.4818
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7597,
+          "defenderHpFraction": 0.409
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7406,
+          "defenderHpFraction": 0.3558
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7307,
+          "defenderHpFraction": 0.3186
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7243,
+          "defenderHpFraction": 0.3055
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7222,
+          "defenderHpFraction": 0.2987
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7186,
+          "defenderHpFraction": 0.292
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7181,
+          "defenderHpFraction": 0.2843
+        }
+      ]
+    },
+    {
+      "repetition": 8,
+      "seed": 8,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s8",
+      "rollLog": false,
+      "durationHours": 353,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 3,
+          "remaining": 72,
+          "hpLeft": 6965.7
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 1,
+          "retreated": 74,
+          "remaining": 0,
+          "hpLeft": 2665.9
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9643,
+          "defenderHpFraction": 0.9262
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9311,
+          "defenderHpFraction": 0.8641
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8854,
+          "defenderHpFraction": 0.7986
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8487,
+          "defenderHpFraction": 0.7235
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8173,
+          "defenderHpFraction": 0.6408
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7844,
+          "defenderHpFraction": 0.5688
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7625,
+          "defenderHpFraction": 0.5051
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7361,
+          "defenderHpFraction": 0.4365
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7237,
+          "defenderHpFraction": 0.3721
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7131,
+          "defenderHpFraction": 0.326
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7096,
+          "defenderHpFraction": 0.2988
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.706,
+          "defenderHpFraction": 0.2908
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7048,
+          "defenderHpFraction": 0.2841
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7036,
+          "defenderHpFraction": 0.2753
+        }
+      ]
+    },
+    {
+      "repetition": 9,
+      "seed": 9,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s9",
+      "rollLog": false,
+      "durationHours": 325,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 6942.2
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 1,
+          "retreated": 74,
+          "remaining": 0,
+          "hpLeft": 2901.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9636,
+          "defenderHpFraction": 0.9286
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9244,
+          "defenderHpFraction": 0.8615
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8851,
+          "defenderHpFraction": 0.7876
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8482,
+          "defenderHpFraction": 0.7227
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8188,
+          "defenderHpFraction": 0.6458
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7867,
+          "defenderHpFraction": 0.5677
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7551,
+          "defenderHpFraction": 0.4902
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7311,
+          "defenderHpFraction": 0.433
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7182,
+          "defenderHpFraction": 0.3715
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.708,
+          "defenderHpFraction": 0.3255
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7032,
+          "defenderHpFraction": 0.3123
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7017,
+          "defenderHpFraction": 0.3042
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7012,
+          "defenderHpFraction": 0.2977
+        }
+      ]
+    },
+    {
+      "repetition": 10,
+      "seed": 10,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_114547/s10",
+      "rollLog": false,
+      "durationHours": 320,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 7170.2
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 75,
+          "remaining": 0,
+          "hpLeft": 2733.3
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9612,
+          "defenderHpFraction": 0.9273
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9254,
+          "defenderHpFraction": 0.8534
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.885,
+          "defenderHpFraction": 0.7813
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8481,
+          "defenderHpFraction": 0.7056
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8229,
+          "defenderHpFraction": 0.621
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7983,
+          "defenderHpFraction": 0.5435
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7759,
+          "defenderHpFraction": 0.4606
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7579,
+          "defenderHpFraction": 0.4017
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7434,
+          "defenderHpFraction": 0.3461
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7325,
+          "defenderHpFraction": 0.3051
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7276,
+          "defenderHpFraction": 0.2959
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.725,
+          "defenderHpFraction": 0.2875
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7243,
+          "defenderHpFraction": 0.279
+        }
+      ]
+    },
+    {
+      "repetition": 11,
+      "seed": 11,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_120217/s11",
+      "rollLog": false,
+      "durationHours": 319,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 3,
+          "remaining": 72,
+          "hpLeft": 6927.6
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 2,
+          "retreated": 73,
+          "remaining": 0,
+          "hpLeft": 2795.8
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9601,
+          "defenderHpFraction": 0.9318
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9231,
+          "defenderHpFraction": 0.8496
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.887,
+          "defenderHpFraction": 0.7652
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8452,
+          "defenderHpFraction": 0.6992
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8149,
+          "defenderHpFraction": 0.6341
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7814,
+          "defenderHpFraction": 0.5728
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7583,
+          "defenderHpFraction": 0.4999
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7434,
+          "defenderHpFraction": 0.4424
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.7218,
+          "defenderHpFraction": 0.3862
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.709,
+          "defenderHpFraction": 0.3259
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7032,
+          "defenderHpFraction": 0.2987
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7001,
+          "defenderHpFraction": 0.2919
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.6998,
+          "defenderHpFraction": 0.2853
+        }
+      ]
+    },
+    {
+      "repetition": 12,
+      "seed": 12,
+      "log": "output/ingame/cl3_batch/light_attack_vs_torp_cruiser_battle_start_20261019_120217/s12",
+      "rollLog": false,
+      "durationHours": 347,
+      "outcome": "AttackerVictory",
+      "ships": [
+        {
+          "side": "attacker",
+          "design": "39lc_la",
+          "count": 75,
+          "sunk": 0,
+          "retreated": 1,
+          "remaining": 74,
+          "hpLeft": 7077.1
+        },
+        {
+          "side": "defender",
+          "design": "39lc_torp",
+          "count": 75,
+          "sunk": 2,
+          "retreated": 73,
+          "remaining": 0,
+          "hpLeft": 2797.5
+        }
+      ],
+      "hourly": [
+        {
+          "hour": 24,
+          "attackerHpFraction": 0.9627,
+          "defenderHpFraction": 0.9228
+        },
+        {
+          "hour": 48,
+          "attackerHpFraction": 0.9303,
+          "defenderHpFraction": 0.8536
+        },
+        {
+          "hour": 72,
+          "attackerHpFraction": 0.8868,
+          "defenderHpFraction": 0.7735
+        },
+        {
+          "hour": 96,
+          "attackerHpFraction": 0.8525,
+          "defenderHpFraction": 0.7066
+        },
+        {
+          "hour": 120,
+          "attackerHpFraction": 0.8247,
+          "defenderHpFraction": 0.6309
+        },
+        {
+          "hour": 144,
+          "attackerHpFraction": 0.7941,
+          "defenderHpFraction": 0.5649
+        },
+        {
+          "hour": 168,
+          "attackerHpFraction": 0.7659,
+          "defenderHpFraction": 0.4861
+        },
+        {
+          "hour": 192,
+          "attackerHpFraction": 0.7465,
+          "defenderHpFraction": 0.4209
+        },
+        {
+          "hour": 216,
+          "attackerHpFraction": 0.735,
+          "defenderHpFraction": 0.3469
+        },
+        {
+          "hour": 240,
+          "attackerHpFraction": 0.7222,
+          "defenderHpFraction": 0.3163
+        },
+        {
+          "hour": 264,
+          "attackerHpFraction": 0.7183,
+          "defenderHpFraction": 0.306
+        },
+        {
+          "hour": 288,
+          "attackerHpFraction": 0.7167,
+          "defenderHpFraction": 0.2998
+        },
+        {
+          "hour": 312,
+          "attackerHpFraction": 0.7156,
+          "defenderHpFraction": 0.2934
+        },
+        {
+          "hour": 336,
+          "attackerHpFraction": 0.7152,
+          "defenderHpFraction": 0.287
+        }
+      ]
+    }
+  ]
+}

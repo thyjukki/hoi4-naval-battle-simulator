@@ -13,6 +13,7 @@ index was built for (the runner checks its SHA-256), Steam running. The hooks an
 | `savefile.py` | Reads plain-text saves (task forces, ships, design variants) and writes a copy with another dice seed |
 | `summarize.py` | Outcome of every logged run (length, HP left, ships fighting / escaped / sunk) and the spread over runs |
 | `compare.py` | Logged game runs against simulator runs: start values, outcome per design, hit chances per shooter, weapon and target |
+| `make_calibration.py` | Writes logged runs as a calibration case (baseline) in `data/calibration/`, with a simulator report as the reference |
 
 ## Setting up a battle
 
@@ -44,7 +45,12 @@ scenario's `rules.startHourOfDay` should be the save's hour + 1.
 python run_battles.py my_battle.hoi4 --seeds 10 --locations 7906
 python summarize.py ../../output/ingame
 python compare.py ../../output/ingame/<save>_<timestamp> [more game folders] ../../output/<scenario>_<timestamp> BUL
+python make_calibration.py ../../output/ingame/<save>_<timestamp> [more game folders] --id <case> --scenario <scenario>.json --attacker BUL --sim ../../output/<scenario>_<timestamp> --sim-commit <commit>
 ```
+
+`make_calibration.py` keeps each seed once (the copy with roll logs if there are several), maps the countries to the
+scenario's sides (`--attacker`) and the game's variant names to design IDs (`--design "39LC LA=39lc_la"`; saves from
+`make_save.py` already use the IDs).
 
 For each seed the runner writes `nsim_<save>_s<seed>.hoi4` (the template with `multiplayer_random_seed` replaced) to the
 save games folder, points `continue_game.json` at it, starts `hoi4.exe -continuelastsave`, waits for `game.log` to
