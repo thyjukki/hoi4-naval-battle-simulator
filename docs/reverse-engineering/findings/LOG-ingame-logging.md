@@ -318,3 +318,38 @@ The organization regain's 0.22 an hour (S-ORG-REGAIN) comes from naval dominance
   roll-logged replays still match every shot; their 10,210 end-of-hour organization differences drop to 3,825, none
   before the game hands dominance to ROM, the rest 0.02 an hour after it and the battle's last hour. 200 simulator seeds
   move by 6.5 HP of USA damage (mixed fleet) and not at all for CL3.
+
+## Carrier and land-based air tests (2026-10-20)
+
+Five scenarios generated into the CL3 template with `make_save.py --attacker-country ROM` (Japan = ROM attacks, as the
+game makes it; region 30, air phase 6; TFB, weather off) and logged with the extended air logger: `air_cv_mirror` (30
+runs), `air_cv_bombers_vs_fighters` (30), `air_land_vs_fleet` (10, more queued), `air_cv_land_mix` (8, more queued),
+`jukki_usa_vs_bc_japan_ingame` (11). New logger hooks: the generator's integer draw 0x2233fa0 (args file, line; result
+with bit 31 cleared), A-SORTIE 0x19786c0 (out = sortie), A-TARGET 0x197a700 (returns the target member), A-INTERCEPT
+0x197b380 and A-AA-PREEMPT 0x197c8b0 (return the planes shot down), 0x197ac80 (returns the HP damage truncated, not the
+hits), 0x1978e30 (attack, targeting, agility averages: args 2, 3, 4), the carrier-ratio helper 0x161eeb0 (A and B
+outputs, with each air object's sortie and `+0x5c` planes), the strike's applied damage, each wing's mission disruption
+(`wing+0x90+0xa8`), effectiveness (`+0x90+0xd8`) and ace (`wing+0x2e8` resolved: `+0x158` alive, `+0x170` template,
+`+0x30` its chance), and every air object of both sides at the end of each hour.
+
+What the logs showed (each item fixed or modelled in the engine the same night, see air.md / surface.md):
+- **TFB carrier fighters never intercept**: the stance ratios are 1.0, so `defShare = 0`; 0 planes intercepted in 40
+  battles. The interception roll (0x27d) is still made whenever the target's group has a fighter wing, even an empty
+  one or on an escaped carrier.
+- **Air target pick**: an integer draw at 0x43f, list order (0x24f04f0); every target matched in replay.
+- **Fleet AA counts escaped ships** and is fixed at the side update; positioning and screening are computed side by
+  side in turn; a new side starts unscreened; the stance sortie window ends at the game counter, one hour earlier than
+  the battle hour suggests; carrier sortie experience is unclamped and given in the counter-0 creation update.
+- **Carrier manpower**: carriers written with the hull's 5,500 crew got 7,500 at the first daily update (deck spaces
+  add 500 each, outside `add_stats`); the import now reads module `manpower`.
+- **The region's air war**: carrier wings lose planes between naval strikes (6–16 a side per air hour in the mirror),
+  wings emptied there are deleted from their pool (the first wing of a pool, order kept), and strike wings of a side
+  without enough escorts strike disrupted (attack ×0.55–0.67). Decoded in
+  [A-REGION](A-REGION-carrier-wings-in-the-region-air-war.md); the decoded efficiency formula reproduced the logged
+  averages. In the CL3 template the attacker's carrier wings had a mission over the region (effectiveness 0.734,
+  disruptable) and the defender's did not (1.0, never disrupted).
+- **Aces**: earned after strikes (0xb68), dying only after strikes that lost planes (0xb52); an ace raises its own
+  wing's naval targeting (TFB support aces); when the region's air war deletes an ace's wing the ace can show up on
+  another wing of the pool.
+- **Land-based wings** joined from Burgas (BUL, effectiveness 0.6) and Dobrogea (ROM, 1.0) when in range (land CAS
+  never did); their disruption counts twice (the wing's efficiency in the average and the air object's factor).

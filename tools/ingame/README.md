@@ -9,10 +9,11 @@ index was built for (the runner checks its SHA-256), Steam running. The hooks an
 |---|---|
 | `run_battles.py` | Runner: per save and seed, starts the game on the save, types the console commands, unpauses, logs, closes the game |
 | `battle_logger.js` | Frida agent: hooks the combat hour and the shot loop, sends one record per combat hour |
-| `make_save.py` | Writes a simulator scenario into a battle save: designs, ships, aggressiveness, repair priority, technologies, doctrines, spirits, MIOs, the admiral, the pride of the fleet, the region's naval dominance |
+| `make_save.py` | Writes a simulator scenario into a battle save: designs, ships, aggressiveness, repair priority, technologies, doctrines, spirits, MIOs, the admiral, the pride of the fleet, the region's naval dominance, carrier wings, land-based wings on their missions |
 | `savefile.py` | Reads plain-text saves (task forces, ships, design variants) and writes a copy with another dice seed |
 | `summarize.py` | Outcome of every logged run (length, HP left, ships fighting / escaped / sunk) and the spread over runs |
 | `compare.py` | Logged game runs against simulator runs: start values, outcome per design, hit chances per shooter, weapon and target |
+| `air_compare.py` | Logged carrier / land-based air battles against simulator runs: length, sunk and escaped, HP lost in total and to air, strikes, planes left |
 | `make_calibration.py` | Writes logged runs as a calibration case (baseline) in `data/calibration/`, with a simulator report as the reference |
 
 ## Setting up a battle
@@ -84,7 +85,18 @@ variant of (Bulgaria has no `ship_hull_carrier_3` variant in 1936) gets a copy o
 family. The logger records every air object's strike (planes, wings with their executing mission) in raw.jsonl `air`.
 The game picks the attacker (ROM, so Japan in the USA vs Japan saves): with TFB's stance ratios of 1.0 the defender's
 carriers launch only their bonus sortie efficiency in the first 24 h, so compare with a simulator scenario that has
-the same attacker and the battle region's `airRegionPhase` (region 30: 6).
+the same attacker and the battle region's `airRegionPhase` (region 30: 6). `--attacker-country ROM` gives the
+scenario's attacker the task force the game will make attacker (`jukki_usa_vs_bc_japan_ingame.json` and the `air_*`
+test scenarios are written so).
+
+Land-based wings ([A-MISSION-SAVE](../../docs/reverse-engineering/findings/A-MISSION-SAVE-air-mission-save-format.md)):
+each `landBasedAirwings` entry becomes one wing of the country's variant of the plane at the country's air base
+(`--air-base TAG=ID`; defaults Burgas 329 for BUL and Dobrogea 350 for ROM in the CL3 template), in the country's pool
+of that sub-unit there (a new pool if none), with `mission={ type=16 (naval strike) or 1 (air superiority) period=2
+active=yes strategic_region=30 region_change_penalty=0 missions_done=0 }` (`--air-region`). `region_change_penalty=0`
+must follow `strategic_region`, which sets it to 0.9 on load. Only wings in range join a battle: land CAS (range 640)
+from either base never joined in province 7906; tactical bombers did (mission effectiveness 0.6 from Burgas, 1.0 from
+Dobrogea).
 
 Game rules: every written save turns TFB's Admiral Command Limit off (`game_rules={ navy_cap="DISABLED" }`). Under its
 default (cap 150) TFB weighs the ships under each admiral (destroyer and submarine 1, cruisers 2, battleships and
@@ -144,9 +156,14 @@ One folder per run under `output/ingame/<save>_<timestamp>/<seed>/` (or `--out`)
   non-zero value of the modifier sum's holders (country, task force, experience, captain, admiral) for the modifiers the
   combat terms read. A change here shows where a game-side difference comes from.
 - `rolls.csv`: every `random_fixed` call of the combat update in call order: hour, sequence, source line, value, and the
-  index of the shot loop it fell in (-1 outside one).
+  index of the shot loop it fell in (-1 outside one); since 2026-10-20 also the generator's integer draws (`int` = 1,
+  value = n / 2^31: the air target pick 0x43f and bookkeeping draws).
 - `raw.jsonl`: everything the logger sent, including every member's state at the start of each hour. With the rolls
   it lets `NavySimulator replay --log <run folder>` fight each hour with the game's own dice (S-REPLAY in
-  [surface.md](../../docs/mechanics/surface.md)).
+  [surface.md](../../docs/mechanics/surface.md)). Air (since 2026-10-20): per strike attempt (`air`) the air object's
+  pointer, carrier, planes, stacking factor, sortie efficiency, target, planes intercepted and shot down by AA,
+  strikers, the stat averages (attack, targeting, agility), the damage it applied, and per wing its planes, missions,
+  disruption, mission effectiveness and ace (alive, template chance); per hour the carrier-ratio helper's sums
+  (`carrierRatio`) and every air object of both sides at the end of the hour (`airObjects`).
 
 `hour` is the game's combat hour counter, which is 1 in the first hour (the engine's `tick`).
