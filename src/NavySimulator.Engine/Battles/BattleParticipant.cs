@@ -175,6 +175,9 @@ public class BattleParticipant
     /// </summary>
     public readonly double RadarCoverage;
 
+    /// <summary>A-COVERAGE: the side's air bases, one per state its land-based wings fly from.</summary>
+    public readonly IReadOnlyList<AirBaseSetup> AirBases;
+
     public BattleParticipant(
         Fleet fleet,
         Admiral? admiral,
@@ -193,7 +196,8 @@ public class BattleParticipant
         IReadOnlyDictionary<string, int>? planeStockpile = null,
         bool? carrierWingsOnRegionMission = null,
         double carrierMissionEfficiency = 1.0,
-        double radarCoverage = 0)
+        double radarCoverage = 0,
+        IReadOnlyList<AirBaseSetup>? airBases = null)
     {
         if (prideOfTheFleet is not null && !fleet.Ships.Contains(prideOfTheFleet))
         {
@@ -213,6 +217,7 @@ public class BattleParticipant
         CarrierWingsOnRegionMission = carrierWingsOnRegionMission;
         CarrierMissionEfficiency = carrierMissionEfficiency;
         RadarCoverage = Math.Clamp(radarCoverage, 0, 1);
+        AirBases = airBases ?? [];
         Doctrines = doctrines ?? [];
         Mios = mios ?? [];
         DesignMios = designMios ?? new Dictionary<string, Mio?>();

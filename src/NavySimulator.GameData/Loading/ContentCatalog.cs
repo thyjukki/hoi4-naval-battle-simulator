@@ -54,6 +54,9 @@ public sealed class ContentCatalog
     /// <summary>S-REGION: the sea regions of <c>sea-regions/</c> (imported by <c>NavySimulator import-regions</c>), empty when the folder does not exist.</summary>
     public List<SeaRegionDto> SeaRegions { get; } = [];
 
+    /// <summary>A-COVERAGE: the states' air bases of <c>air-bases/</c> (imported by <c>NavySimulator import-regions</c>).</summary>
+    public List<AirBaseDto> AirBases { get; } = [];
+
     /// <summary>S-TERRAIN: the naval terrains of <c>naval-terrains/</c>, empty when the folder does not exist.</summary>
     public List<NavalTerrainDto> NavalTerrains { get; } = [];
 

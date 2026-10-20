@@ -12,7 +12,11 @@ public sealed class SeaRegion(
     IReadOnlyList<WeatherPeriod> weather,
     int mapWidth,
     int mapHeight,
-    int weatherStates)
+    int weatherStates,
+    int boxX = 0,
+    int boxY = 0,
+    int boxWidth = 0,
+    int boxHeight = 0)
 {
     public int ID { get; } = id;
 
@@ -31,4 +35,14 @@ public sealed class SeaRegion(
 
     /// <summary>S-WEATHER-SIM: how many region weather states the game keeps (the highest strategic region id + 1), which sets how often each is visited.</summary>
     public int WeatherStates { get; } = weatherStates;
+
+    /// <summary>
+    /// A-COVERAGE [RE] 0x15a43c0: the union of the provinces' boxes, pixels from the left and the bottom; width 0: unknown
+    /// (land wings then cover the whole region).
+    /// </summary>
+    public int BoxX { get; } = boxX;
+
+    public int BoxY { get; } = boxY;
+    public int BoxWidth { get; } = boxWidth;
+    public int BoxHeight { get; } = boxHeight;
 }

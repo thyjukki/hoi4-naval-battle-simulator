@@ -308,6 +308,10 @@
                 "type": "number",
                 "minimum": 0,
                 "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors)."
+              },
+              "airBase": {
+                "type": "integer",
+                "description": "A-COVERAGE: the state whose air base the wing flies from (air-bases/); coverage of the battle's region from it, the base's crowding and supply then give the effectiveness, and missionEfficiency is only the rest (region change penalty, fuel)."
               }
             },
             "additionalProperties": false
@@ -344,6 +348,34 @@
           "minimum": 0,
           "maximum": 1,
           "description": "A-DETECT-RAD: share of the battle region's provinces covered by the side's (and its friends') radars, each times its state's control share (default 0). Times DETECT_CHANCE_FROM_RADARS it adds to the side's air detection in the region."
+        },
+        "airBases": {
+          "type": "array",
+          "description": "A-COVERAGE: the side's air bases by state: air base building level (absent: crowding not counted), the other planes stationed there, the air supply ratio (default 1).",
+          "items": {
+            "type": "object",
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "type": "integer"
+              },
+              "level": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "otherPlanes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "supplyRatio": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "additionalProperties": false

@@ -8,7 +8,8 @@ namespace NavySimulator.GameData.Import;
 /// Reads where naval battles are fought from the game's files [PDX]: the naval terrains of <c>common/terrain</c>
 /// (<c>categories</c> entries with <c>naval_terrain = yes</c>), and every strategic region of <c>map/strategicregions</c>
 /// with sea provinces (<c>map/definition.csv</c>), with its <c>naval_terrain</c>, weather periods and the provinces' map
-/// positions (S-REGION, S-TERRAIN, S-WEATHER-REGION, S-NIGHT).
+/// positions (S-REGION, S-TERRAIN, S-WEATHER-REGION, S-NIGHT), and every state's air base position from
+/// <c>map/buildings.txt</c> with the state's name and owner (A-COVERAGE).
 /// </summary>
 public static class RegionImporter
 {
@@ -24,9 +25,27 @@ public static class RegionImporter
 
         ReadTerrains(files, localisation, import);
         var seaProvinces = ReadSeaProvinces(files, import);
-        var positions = ProvincePositions.Read(files, import.Warnings);
+        // [RE] 0x140a3c0: the game's province position is the truncated mean pixel of provinces.bmp (S-NIGHT, A-COVERAGE);
+        // map/unitstacks.txt only when the bitmap cannot be read.
+        var geometry = ProvinceGeometry.Read(files, import.Warnings);
+        var positions = geometry is not null
+            ? geometry.Shapes.ToDictionary(entry => entry.Key, entry => ((double)entry.Value.X, (double)entry.Value.Y))
+            : ProvincePositions.Read(files, import.Warnings);
         var (width, height) = ProvincePositions.MapSize(files, import.Warnings);
         var weatherStates = ReadRegions(files, localisation, seaProvinces, positions, import);
+        ReadAirBases(files, localisation, geometry, import);
+
+        // A-COVERAGE [RE] 0x15a43c0: the region's box, the union of its provinces' boxes (the coverage precheck).
+        foreach (var region in import.Regions)
+        {
+            if (geometry?.Union(region.Provinces.Select(province => province.ID)) is { } box)
+            {
+                region.BoxX = box.BoxX;
+                region.BoxY = box.BoxY;
+                region.BoxWidth = box.BoxWidth;
+                region.BoxHeight = box.BoxHeight;
+            }
+        }
 
         foreach (var region in import.Regions)
         {
@@ -35,6 +54,70 @@ public static class RegionImporter
             region.WeatherStates = weatherStates;
         }
         return import;
+    }
+
+    // A-COVERAGE: every state with an air_base entry in map/buildings.txt (`state;building;x;height;z;rotation;adjacent sea`),
+    // its name, owner and provinces from history/states. [RE] 0xabce20: a land wing's coverage is measured from the centre of
+    // the box of the state's provinces, not from the building's position (which is kept when the state has no geometry).
+    private static void ReadAirBases(GameFileSystem files, LocalisationTable localisation, ProvinceGeometry? geometry, RegionImport import)
+    {
+        var path = files.GetFiles("map", "buildings.txt").FirstOrDefault();
+
+        if (path is null)
+        {
+            import.Warnings.Add("map/buildings.txt not found: no air bases.");
+            return;
+        }
+
+        var owners = new Dictionary<int, string>();
+        var stateProvinces = new Dictionary<int, List<int>>();
+
+        foreach (var statePath in files.GetFiles("history/states", "*.txt"))
+        {
+            var state = Parse(files, statePath, import)?.GetBlock("state");
+
+            if (state?.GetDouble("id") is not { } id)
+            {
+                continue;
+            }
+
+            if (state.GetBlock("history")?.GetString("owner") is { } owner)
+            {
+                owners[(int)id] = owner;
+            }
+
+            stateProvinces[(int)id] = (state.GetBlock("provinces")?.BareValues ?? [])
+                .Select(province => int.TryParse(province.Scalar, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) ? number : -1)
+                .Where(number => number >= 0)
+                .ToList();
+        }
+
+        var bases = new SortedDictionary<int, AirBaseDto>();
+
+        foreach (var line in File.ReadLines(path))
+        {
+            var fields = line.Split(';');
+
+            if (fields.Length < 5 || fields[1].Trim() != "air_base" ||
+                !int.TryParse(fields[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var stateId) ||
+                !double.TryParse(fields[2], NumberStyles.Float, CultureInfo.InvariantCulture, out var x) ||
+                !double.TryParse(fields[4], NumberStyles.Float, CultureInfo.InvariantCulture, out var z))
+            {
+                continue;
+            }
+
+            var centre = geometry?.Union(stateProvinces.GetValueOrDefault(stateId) ?? []);
+            bases.TryAdd(stateId, new AirBaseDto
+            {
+                State = stateId,
+                Name = localisation.Get($"STATE_{stateId}"),
+                Owner = owners.GetValueOrDefault(stateId),
+                X = centre?.X ?? x,
+                Y = centre?.Y ?? z
+            });
+        }
+
+        import.AirBases.AddRange(bases.Values);
     }
 
     private static void ReadTerrains(GameFileSystem files, LocalisationTable localisation, RegionImport import)

@@ -124,6 +124,11 @@ public class SetupLoader
             catalog.SeaRegions.AddRange(ReadCollectionFromFolderOrFile<SeaRegionDto>(catalog, SeaRegionsFolder, $"{SeaRegionsFolder}.json", "regions"));
         }
 
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, AirBasesFolder)))
+        {
+            catalog.AirBases.AddRange(ReadCollectionFromFolderOrFile<AirBaseDto>(catalog, AirBasesFolder, $"{AirBasesFolder}.json", "airBases"));
+        }
+
         if (Directory.Exists(Path.Combine(dataDirectoryPath, NavalTerrainsFolder)))
         {
             catalog.NavalTerrains.AddRange(ReadCollectionFromFolderOrFile<NavalTerrainDto>(catalog, NavalTerrainsFolder, $"{NavalTerrainsFolder}.json", "terrains"));
@@ -155,6 +160,7 @@ public class SetupLoader
     private const string LeaderTraitsFolder = "leader-traits";
     private const string LeaderSkillsFolder = "leader-skills";
     private const string SeaRegionsFolder = "sea-regions";
+    private const string AirBasesFolder = "air-bases";
     private const string NavalTerrainsFolder = "naval-terrains";
 
     /// <summary>
@@ -410,6 +416,8 @@ public class SetupLoader
         ValidateMios("defender", scenarioDto.Defender, library, errors);
         ValidateCountry("attacker", scenarioDto.Attacker, catalog, errors);
         ValidateCountry("defender", scenarioDto.Defender, catalog, errors);
+        ValidateAirBases("attacker", scenarioDto.Attacker, catalog, errors);
+        ValidateAirBases("defender", scenarioDto.Defender, catalog, errors);
         ValidateAdmiral("attacker", scenarioDto.Attacker, library, errors);
         ValidateAdmiral("defender", scenarioDto.Defender, library, errors);
         var fleetsById = forceCompositionsFile.Fleets.GroupBy(fleet => fleet.ID).ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
@@ -426,8 +434,8 @@ public class SetupLoader
         var spiritById = library.Spirits;
 
         var fleetDtoById = forceCompositionsFile.Fleets.ToDictionary(fleet => fleet.ID, StringComparer.Ordinal);
-        var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, library, defines);
-        var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, library, defines);
+        var attacker = BuildParticipant(scenarioDto.Attacker, fleetDtoById, designById, researchById, spiritById, library, defines, catalog);
+        var defender = BuildParticipant(scenarioDto.Defender, fleetDtoById, designById, researchById, spiritById, library, defines, catalog);
         WarnAboutDoctrineRules("attacker", attacker);
         WarnAboutDoctrineRules("defender", defender);
         WarnAboutMioRules("attacker", scenarioDto.Attacker, attacker, catalog);
@@ -1236,7 +1244,8 @@ public class SetupLoader
         IReadOnlyDictionary<string, Research> researchById,
         IReadOnlyDictionary<string, Spirit> spiritById,
         ContentLibrary library,
-        GameDefines defines)
+        GameDefines defines,
+        ContentCatalog catalog)
     {
         // Each side gets its own Fleet and Ship instances, even when both sides use the same fleet definition.
         var fleet = BuildFleet(fleetDtoById[participant.FleetID], designById, participant.ShipExperienceLevel, defines);
@@ -1259,11 +1268,59 @@ public class SetupLoader
             BuildDesignMios(participant, library),
             pride,
             participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0,
-                string.IsNullOrEmpty(entry.Mission) ? LandBasedAirwing.NavalStrike : entry.Mission)).ToList(),
+                string.IsNullOrEmpty(entry.Mission) ? LandBasedAirwing.NavalStrike : entry.Mission, entry.AirBase)).ToList(),
             new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal),
             participant.CarrierWingsOnRegionMission,
             participant.CarrierMissionEfficiency ?? 1.0,
-            participant.RadarCoverage ?? 0);
+            participant.RadarCoverage ?? 0,
+            BuildAirBases(participant, catalog));
+    }
+
+    /// <summary>
+    /// A-COVERAGE: the side's air bases: each listed one with its settings, and each other state a land wing flies from with
+    /// none (no crowding, supply 1).
+    /// </summary>
+    private static List<AirBaseSetup> BuildAirBases(BattleParticipantDto participant, ContentCatalog catalog)
+    {
+        var states = participant.AirBases.Select(entry => entry.State)
+            .Concat(participant.LandBasedAirwings.Where(entry => entry.AirBase is not null).Select(entry => entry.AirBase!.Value))
+            .Distinct()
+            .ToList();
+        var result = new List<AirBaseSetup>();
+
+        foreach (var state in states)
+        {
+            if (catalog.AirBases.LastOrDefault(item => item.State == state) is not { } dto)
+            {
+                continue;
+            }
+
+            var setup = participant.AirBases.FirstOrDefault(entry => entry.State == state);
+            var airBase = new AirBase(dto.State, dto.Name ?? $"State {dto.State}", (int)dto.X, (int)dto.Y);
+            result.Add(new AirBaseSetup(airBase, setup?.Level, setup?.OtherPlanes ?? 0, setup?.SupplyRatio ?? 1.0));
+        }
+
+        return result;
+    }
+
+    /// <summary>A-COVERAGE: air bases must be imported states; levels, other planes and supply must not be negative.</summary>
+    private static void ValidateAirBases(string role, BattleParticipantDto participant, ContentCatalog catalog, List<string> errors)
+    {
+        var states = participant.AirBases.Select(entry => entry.State)
+            .Concat(participant.LandBasedAirwings.Where(entry => entry.AirBase is not null).Select(entry => entry.AirBase!.Value))
+            .Distinct();
+
+        foreach (var state in states.Where(state => catalog.AirBases.All(item => item.State != state)))
+        {
+            errors.Add(catalog.AirBases.Count == 0
+                ? $"battleScenario.{role}: air base of state {state} needs the air bases (run 'NavySimulator import-regions')."
+                : $"battleScenario.{role}: no air base in state {state}.");
+        }
+
+        foreach (var setup in participant.AirBases.Where(entry => entry.Level < 0 || entry.OtherPlanes < 0 || entry.SupplyRatio < 0))
+        {
+            errors.Add($"battleScenario.{role}.airBases: state {setup.State} needs level, otherPlanes and supplyRatio >= 0.");
+        }
     }
 
     /// <summary>S-POTF: the first ship of the named design in the fleet (ships of one design are alike); null when none.</summary>

@@ -1011,6 +1011,70 @@ From [A-REGION-ESCAPE-escaped-carrier-wings.md][ESC]: an escaped carrier stays i
 |---|---|---|
 | naval combat group +0x88 / +0x90 / +0x94 | escaped carriers' AirFX: array / capacity / count | [ESC/state] |
 
+### Land mission effectiveness (A-COVERAGE)
+
+From [A-COVERAGE-land-mission-effectiveness.md][COV]: a land wing's coverage of the region from its base's state, the base's crowding, supply and fuel. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1012f80 / 0x10132d0 | in-range count: origin = state centre (land) or task force location (carrier); precheck d²(region centre) ≤ R² + hd²; per province d² ≤ R² | A-COVERAGE | [COV/count] |
+| 0x118f660 | dx wrap into [−W/2, W/2] | A-COVERAGE | [COV/count] |
+| 0x121a7ae | country_supply: proportional give-out to consumers → 0x1a0afb0 | A-COVERAGE | [COV/supply] |
+| 0x140a3c0 | province position +0xb8 / +0xbc = truncated mean pixel (y from bottom), +0xc0 pixel count (also S-NIGHT's position) | A-COVERAGE, S-NIGHT | [COV/count] |
+| 0x140a610 | province rect +0x88..+0x94 snapped to even pixels | A-COVERAGE | [COV/count] |
+| 0x15a43c0 | region template centre +0xe0 / +0xe4, boxes +0xf0 / +0xfc, +0x108 | A-COVERAGE | [COV/count] |
+| 0x2959fe0 (slot 0xc670f0 → 0xc44530 → 0xc45d50 / 0xc67630) | hourly parallel crowd recompute launched from 0xc5efc0 | A-COVERAGE | [COV/crowd] |
+| 0x3335f50 | `NGame.MAP_SCALE_PIXEL_TO_KM` (registered at 0x8407d0) | A-COVERAGE | [COV/range] |
+| 0x9d37a0 / 0xe21330 / 0xe212d0 | d² state → province / region → state / region → location province, with x wrap | A-COVERAGE | [COV/count] |
+| 0xa5f7b0 | provinces.bmp run scan (map.cpp; "TOO LARGE BOX" check) | A-COVERAGE | [COV/count] |
+| 0xabce00 (0xabce20) | state template +0x148 / +0x14c centre (aligned box of the state's provinces, seam variant), +0x150 = max(w, h) | A-COVERAGE | [COV/count] |
+| 0xc4d490 / 0xc53790 | base entry supply location province | A-COVERAGE | [COV/supply] |
+| 0xc4d770 / 0xf625b0 | base entry asked supply = Σ trunc(planes × SUPPLY_NEED_FACTOR × 0.01) × BASE_AIR_SUPPLY_MULT_FOR_TRUCK_BUFFER (0x3337100) | A-COVERAGE | [COV/supply] |
+| 0xc4d910 / 0xf5c4d0 | planes at the base: all countries, pools and wings | A-COVERAGE | [COV/crowd] |
+| 0xc579f0 / 0xc57b70 | crowd factor per base (P vs capacity, r > 0.9 → 0, 1 − CAPACITY_PENALTY × r) → entry+0xd8 | A-COVERAGE | [COV/crowd] |
+| 0xc65490 | base capacity +0x78: Σ air base level × AIRBASE_CAPACITY_MULT (0x3333e68); rocket × ROCKETSITE_CAPACITY_MULT (0x3333ef4) | A-COVERAGE | [COV/crowd] |
+| 0xc667b0 | CAirBase writer: +0x68 state, +0x60 carrier, +0x78 capacity, +0x48 countries, +0x7c base, +0x84 level, +0x88 allow_equipment_type | A-COVERAGE | [COV/crowd] |
+| 0xf5ba20 | pool fuel use = Σ effective planes × fuel × FUEL_COST_MULT × MISSION_FUEL_COSTS[mission] | A-COVERAGE | [COV/fuel] |
+| 0xf5e5c0 | (correction) wing range in fixed map px = air_range ×1e5 / MAP_SCALE × (1 + air_range_factor + ace) | A-COVERAGE | [COV/range] |
+| 0xf87480 | UpdateCoverage: recompute if forced or the integer R changed; skips training or no region; cov = min(1, n / provinces) | A-COVERAGE | [COV/update] |
+| 0x10f3080 → 0xc4bb10 | country fuel distribution sets entry received fuel (+0xf0) | A-COVERAGE | [COV/fuel] |
+
+| Field | Meaning | Finding |
+|---|---|---|
+| mission +0x78 | (correction) whole map px of the last coverage computation | [COV/update] |
+
+### Land wing accidents (A-ACCIDENT)
+
+From [A-ACCIDENT-land-wing-accidents.md][ACC]: the hourly accident pass, its local generator, the chance and the planes lost. Not simulated yet. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x715310 | country `accidents_score` (+0x14e8) accumulator: `+= trunc(x · ACCIDENT_EFFECT_MULT)`, returns the integer part | A-ACCIDENT | [ACC/effect] |
+| 0xc4daf0 | `chance = trunc(trunc((BASE + air_accidents) · trunc((1 − min(rel, 1)) · REL_MULT)) · M)`, M additive (weather > 0, carrier, training, xp, country) | A-ACCIDENT | [ACC/chance] |
+| 0xc5efc0 | hourly accident pass: three base lists, seed `random_int(strategicair.cpp, 0x1be8)`, per (base, country) entry 0xc60290 | A-ACCIDENT | [ACC/pass] |
+| 0xc60290 | accident per entry: local hash `next()`, gate `u < 10000`, start pool, per eligible wing draw u2, `p_raw > u2 / 10` → 0xf5dd80(next() % 1e5), stop | A-ACCIDENT | [ACC/pass] |
+| 0xf5dd80 | accident effect: n = 0x715310(planes · u3); RemovePlanes; wing+0x84 += n; ace death u3 ≤ ACE_DEATH_CHANCE_BASE | A-ACCIDENT | [ACC/effect] |
+| 0xf61d70 | accident chance: 0 if type 0 / no planes / mission inactive (non-training); rel = stat 0x41; xp `air_accidents_factor`; owner | A-ACCIDENT | [ACC/chance] |
+| 0xf63e00 | wing XP average after a plane-count change | A-ACCIDENT | [ACC/effect] |
+| 0xf80920 | mission active with a region | A-ACCIDENT | [ACC/chance] |
+
+### Mixed plane variants in a wing (A-MIXED)
+
+From [A-MIXED-plane-variants-in-a-wing.md][MIX]: which variants refill a wing, how it stores them, which planes are lost first, and the plane-share mix of its stats. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x100cce0 / 0x100e900 | equipment container add / position: archetype groups, entries sorted by 0xbd1f20 | A-MIXED | [MIX/order] |
+| 0x100f430 | archetype groups of a container | A-MIXED | [MIX/stock] |
+| 0x100ff30 | main variant (largest amount); 0xf60710 = the wing's | A-MIXED | [MIX/order] |
+| 0xbd1f20 / 0xbd1fe0 | wing entry order: version, type index, creator, origin (ascending) | A-MIXED | [MIX/order] |
+| 0xbd2420 / 0xbd2430 | stockpile order (archetype ↑, year ↓, upgrades ↓, own first, creator ↑, id ↓) | A-REINFORCE, A-MIXED | [MIX/stock] |
+| 0xbd7dc0 | variant better than (swap test) | A-MIXED | [MIX/stock] |
+| 0xbe3c80 | variant writer: +0x41c version, +0x41d max_version, +0x41e is_frame, +0x424 obsolete, +0x427 can_upgrade_type, +0x1c creator, +0x20 origin | A-MIXED | [MIX/order] |
+| 0xc924b0 | equipment type ctor: +0x418 = database index | A-MIXED | [MIX/order] |
+| 0xe6f910 | return a wing's planes of one archetype to stock, worst first | A-MIXED | [MIX/stock] |
+| 0xf63580 | (update) RemovePlanes: entries in container order (oldest type first), manpower × MANPOWER_LOSS_RATIO_PLANE_SHOT, XP via 0xf63e00, no cache refresh | A-MIXED, A-ACCIDENT | [MIX/remove] |
+
 ## 2. Struct fields
 
 ### Ship (ship.cpp object)
@@ -2044,3 +2108,18 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [ESC/state]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-state-the-escape-0x1973470-member-hourupdate
 [ESC/tf]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-tf-the-ship-stays-in-its-task-force-and-the-task-force-stays-in-the-combat
 [ESC/exec]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-exec-nothing-in-the-air-code-reads-the-carriers-combat-state
+[COV]: findings/A-COVERAGE-land-mission-effectiveness.md
+[COV/range]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-range-wing-range-in-map-pixels-0xf5e5c0
+[COV/count]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-count-in-range-provinces-0x10132d0--0x1012f80list-region-base-rangefixed-limit--0
+[COV/update]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-update-updatecoverage-0xf87480mission-force
+[COV/crowd]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-crowd-capacity_penalty-0xc579f0base--0xc57b70entry-base-f
+[COV/supply]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-supply-the-base-entrys-supply-ratio-entry0x30
+[COV/fuel]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-fuel-and-region-change-penalty
+[ACC]: findings/A-ACCIDENT-land-wing-accidents.md
+[ACC/pass]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-pass-when-and-over-which-wings
+[ACC/chance]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-chance-0xf61d70--0xc4daf0
+[ACC/effect]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-effect-planes-lost-0xf5dd80
+[MIX]: findings/A-MIXED-plane-variants-in-a-wing.md
+[MIX/stock]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-stock-which-variants-the-day-tick-gives-a-reinforce
+[MIX/order]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-order-how-a-wing-stores-its-variants
+[MIX/remove]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-remove-which-planes-are-lost-first-removeplanes-0xf63580

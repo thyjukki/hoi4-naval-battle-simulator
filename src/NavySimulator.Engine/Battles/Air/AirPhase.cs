@@ -392,7 +392,7 @@ public sealed class AirPhase
                     break;
                 }
 
-                var budget = (int)Math.Round(external.Planes * LandEffectiveness(own, external.LandBased!, conditions), MidpointRounding.AwayFromZero);
+                var budget = (int)Math.Round(external.Planes * LandEffectiveness(own, external, conditions), MidpointRounding.AwayFromZero);
                 var add = Math.Clamp(Math.Min(budget, cap - externalJoined[own]), 0, int.MaxValue);
                 externalJoined[own] += add;
                 external.Offered = Math.Min(add, external.Planes);
@@ -508,7 +508,7 @@ public sealed class AirPhase
                 }
                 else if (group.LandBased is { } landBased)
                 {
-                    var effectiveness = LandEffectiveness(side, landBased, conditions);
+                    var effectiveness = LandEffectiveness(side, group, conditions);
 
                     foreach (var wing in group.Wings.Where(wing => wing.Planes > 0))
                     {
@@ -612,13 +612,34 @@ public sealed class AirPhase
         return RegionAirWarRules.Effectiveness(side.Participant.CarrierMissionEfficiency, AirRules.CrowdFactor(carrier, planes, defines), modifier);
     }
 
-    // [RE] A-REGION-SYNC 0xf78500: a land wing's effectiveness: its input × (1 + air_mission_efficiency of the country and
-    // the region's weather), at most 1.
-    private static double LandEffectiveness(BattleSide side, LandBasedAirwing landBased, RegionAirConditions conditions)
+    // [RE] A-REGION-SYNC / A-COVERAGE 0xf78500: a land wing's effectiveness, clamp(coverage × crowding × supply × its input ×
+    // (1 + air_mission_efficiency of the country and the region's weather), 0, 1). Without an air base the input stands
+    // for coverage, crowding and supply.
+    private double LandEffectiveness(BattleSide side, AirGroup group, RegionAirConditions conditions)
     {
+        var landBased = group.LandBased!;
         var modifier = side.Participant.CountryModifiers.Get(StaticModifiers.AirMissionEfficiency) +
                        conditions.WeatherModifier(StaticModifiers.AirMissionEfficiency);
-        return RegionAirWarRules.Effectiveness(landBased.MissionEfficiency, 1, modifier);
+        var setup = side.Participant.AirBases.FirstOrDefault(entry => entry.Base.State == landBased.AirBase);
+
+        if (setup is null)
+        {
+            return RegionAirWarRules.Effectiveness(landBased.MissionEfficiency, 1, modifier);
+        }
+
+        var coverage = 1.0;
+
+        if (scenario.Location.Region is { } region && group.Wings.Count > 0)
+        {
+            var range = AirCoverageRules.RangePixels(group.Wings[0].Stats.Range, side.Participant.CountryModifiers.Get(StaticModifiers.AirRangeFactor), defines);
+            coverage = AirCoverageRules.Coverage(setup.Base, region, range);
+        }
+
+        // [RE] 0xc4d910: every plane at the base: the side's wings flying from it and the other planes stationed there.
+        var planes = setup.OtherPlanes + groups[side].Where(other => other.LandBased?.AirBase == setup.Base.State).Sum(other => other.Planes);
+        var crowding = setup.Level is { } level ? AirCoverageRules.Crowding(planes, level, defines) : 1;
+        var baseEfficiency = FixedPoint.Truncate(FixedPoint.Truncate(FixedPoint.Truncate(coverage * crowding) * setup.SupplyRatio) * landBased.MissionEfficiency);
+        return RegionAirWarRules.Effectiveness(baseEfficiency, 1, modifier);
     }
 
     // [RE] A-STATS-MISSION-EFF 0xf7ed40: the mission efficiency of the executing mission (naval strike, air superiority).

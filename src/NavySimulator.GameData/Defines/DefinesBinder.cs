@@ -18,6 +18,8 @@ public static class DefinesBinder
             ["NAir"] = defines.NAir,
             ["NMilitary"] = defines.NMilitary,
             ["NDoctrines"] = defines.NDoctrines,
+            ["NGame"] = defines.NGame,
+            ["NBuildings"] = defines.NBuildings,
             ["NGraphics"] = defines.NGraphics
         };
 

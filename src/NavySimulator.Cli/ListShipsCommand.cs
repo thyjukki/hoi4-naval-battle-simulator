@@ -223,7 +223,7 @@ public static class ListShipsCommand
             carrierWingsOnRegionMission = side.CarrierWingsOnRegionMission,
             // A-REINFORCE, A-EXTERNAL: the side's plane stockpile and land-based planes.
             planeStockpile = side.PlaneStockpile.Select(entry => new { plane = Plane(entry.Key), count = entry.Value }).ToList(),
-            landBasedAirwings = side.LandBasedAirwings.Select(entry => new { plane = Plane(entry.PlaneID), planes = entry.Planes, missionEfficiency = entry.MissionEfficiency, disruptionFactor = entry.DisruptionFactor, mission = string.IsNullOrEmpty(entry.Mission) ? "naval_bomber" : entry.Mission }).ToList(),
+            landBasedAirwings = side.LandBasedAirwings.Select(entry => new { plane = Plane(entry.PlaneID), planes = entry.Planes, missionEfficiency = entry.MissionEfficiency, disruptionFactor = entry.DisruptionFactor, mission = string.IsNullOrEmpty(entry.Mission) ? "naval_bomber" : entry.Mission, airBase = entry.AirBase }).ToList(),
             designs
         };
     }

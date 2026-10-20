@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Air bases",
+  "description": "A-COVERAGE: every state's air base position (map/buildings.txt), written by NavySimulator import-regions.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "airBases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "integer", "description": "The state's ID." },
+          "name": { "type": "string", "description": "The state's name." },
+          "owner": { "type": "string", "description": "The state's owner at the game's start (history/states)." },
+          "x": { "type": "number", "description": "Map position from the left, in pixels." },
+          "y": { "type": "number", "description": "Map position from the bottom (buildings.txt z), in pixels." }
+        },
+        "required": [ "state", "x", "y" ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

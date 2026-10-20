@@ -2,6 +2,9 @@
   "$schema": "schemas/battle-scenario.schema.json",
   "battleScenario": {
     "id": "air_cv_land_mix",
+    "regionID": 30,
+    "provinceID": 7906,
+    "startDate": "1936.5.6",
     "terrain": "ocean",
     "weather": "clear",
     "maxHours": 720,
@@ -40,11 +43,18 @@
       "landBasedAirwings": [
         {
           "planeID": "tac_bomber_equipment_2",
-          "planes": 100
+          "planes": 100,
+          "airBase": 77
         }
       ],
       "carrierWingsOnRegionMission": true,
-      "carrierMissionEfficiency": 0.734
+      "carrierMissionEfficiency": 0.734,
+      "airBases": [
+        {
+          "state": 77,
+          "level": 10
+        }
+      ]
     },
     "defender": {
       "fleetID": "air_test_cv_std_b",
@@ -74,13 +84,20 @@
         {
           "planeID": "tac_bomber_equipment_2",
           "planes": 100,
-          "missionEfficiency": 0.6
+          "airBase": 211
         },
         {
           "planeID": "fighter_equipment_2",
           "planes": 100,
           "mission": "air_superiority",
-          "missionEfficiency": 0.343
+          "airBase": 211
+        }
+      ],
+      "airBases": [
+        {
+          "state": 211,
+          "level": 10,
+          "otherPlanes": 1000
         }
       ]
     }

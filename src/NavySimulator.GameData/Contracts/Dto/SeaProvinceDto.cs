@@ -5,7 +5,7 @@ public class SeaProvinceDto
 {
     public int ID { get; set; }
 
-    /// <summary>The province's map x (pixels from the left edge of <c>provinces.bmp</c>).</summary>
+    /// <summary>The province's map x (pixels from the left edge of <c>provinces.bmp</c>; the truncated mean pixel, 0x140a3c0).</summary>
     public double X { get; set; }
 
     /// <summary>The province's map y (pixels from the bottom edge, as the game's map coordinates run).</summary>

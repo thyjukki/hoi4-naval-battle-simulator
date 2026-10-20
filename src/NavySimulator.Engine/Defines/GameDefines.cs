@@ -11,6 +11,11 @@ public sealed class GameDefines
     public NMilitaryDefines NMilitary { get; init; } = new();
     public NDoctrinesDefines NDoctrines { get; init; } = new();
 
+    /// <summary>A-COVERAGE: the map scale and air base capacity of land-based wings' coverage and crowding.</summary>
+    public NGameDefines NGame { get; init; } = new();
+
+    public NBuildingsDefines NBuildings { get; init; } = new();
+
     /// <summary>S-NIGHT: the day/night terminator's map constants.</summary>
     public NGraphicsDefines NGraphics { get; init; } = new();
 

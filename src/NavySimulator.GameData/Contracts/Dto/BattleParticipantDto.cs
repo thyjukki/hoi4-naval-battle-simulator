@@ -50,6 +50,9 @@ public class BattleParticipantDto
     /// <summary>A-REGION-SYNC: the carrier wings' supply ratio and fuel in their mission effectiveness (null: 1).</summary>
     public double? CarrierMissionEfficiency { get; set; }
 
+    /// <summary>A-COVERAGE: the side's air bases (level, other planes there, supply); a land wing's base not listed has none of these.</summary>
+    public List<AirBaseSetupDto> AirBases { get; set; } = [];
+
     /// <summary>A-DETECT-RAD: share of the battle region's provinces the side's radars cover, 0..1 (null: 0).</summary>
     public double? RadarCoverage { get; set; }
 }

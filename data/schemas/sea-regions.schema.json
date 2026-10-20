@@ -103,6 +103,22 @@
                 }
               }
             }
+          },
+          "boxX": {
+            "type": "integer",
+            "description": "A-COVERAGE: left edge of the union of the provinces' even-snapped boxes, pixels."
+          },
+          "boxY": {
+            "type": "integer",
+            "description": "Bottom edge of the box, pixels from the bottom."
+          },
+          "boxWidth": {
+            "type": "integer",
+            "description": "Box width, pixels; absent: not imported."
+          },
+          "boxHeight": {
+            "type": "integer",
+            "description": "Box height, pixels."
           }
         }
       }

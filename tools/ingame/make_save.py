@@ -388,6 +388,37 @@ LAND_MISSIONS = {"naval_bomber": 16, "air_superiority": 1}
 DEFAULT_AIR_BASES = {"BUL": 329, "ROM": 350}
 
 
+def air_base_of_state(save, state):
+    """A-COVERAGE: (air base id, level, planes stationed there) of the template's air base in `state`, or None."""
+    air = save.top_level("strategic_air")
+    air_end = save.block_end(air)
+    for key, i in save.children(air, air_end):
+        if key != "air_base":
+            continue
+        fields = {k: save.text(j).strip() for k, j in save.children(i)}
+        if fields.get("state") == f"state={state}":
+            base_id = int(MIO_HANDLE_65.search(fields["id"]).group(1))
+            level = int(fields.get("level", "level=0").split("=", 1)[1])
+            planes = 0
+            for k, c in save.children(air, air_end):
+                if k == "air_base":
+                    continue
+                for pool_key, pool in save.children(c):
+                    if pool_key != "air_wing_pool":
+                        continue
+                    pool_fields = {k2: save.text(j).strip() for k2, j in save.children(pool)}
+                    if pool_fields.get("air_base") != f"air_base={{ id={base_id} type=65 }}":
+                        continue
+                    for wing_key, wing in save.children(pool):
+                        if wing_key == "air_wings":
+                            planes += int(next(save.text(j).strip().split("=", 1)[1] for k3, j in save.children(wing) if k3 == "count"))
+            return base_id, level, planes
+    return None
+
+
+MIO_HANDLE_65 = re.compile(r"id=(\d+) type=65")
+
+
 def write_land_wings(save, country, entries, variants, ids, base_id, region):
     """A-MISSION-SAVE: per land-based entry one wing of the country's variant of the plane (count = planes) at the air
     base, flying its mission over `region`; wings of a sub-unit go into the country's pool of that sub-unit at the base
@@ -1101,7 +1132,16 @@ def main():
         write_stockpile(save, tf.country, side["planeStockpile"], planes)
         write_carrier_stance(save, tf, side.get("carrierStanceIndex"))
         if side["landBasedAirwings"]:
-            base_id = args.air_base.get(tf.country) or DEFAULT_AIR_BASES.get(tf.country)
+            states = {entry.get("airBase") for entry in side["landBasedAirwings"]} - {None}
+            if len(states) > 1:
+                sys.exit(f"{role}: land-based wings from several air bases ({sorted(states)}); one base per side is supported")
+            found = air_base_of_state(save, next(iter(states))) if states else None
+            if states and found is None:
+                sys.exit(f"{role}: the template has no air base in state {next(iter(states))}")
+            if found is not None:
+                print(f"  {role}: air base {found[0]} (state {next(iter(states))}): level {found[1]}, {found[2]} planes stationed before the scenario's "
+                      "(set the side's airBases level and otherPlanes to these)")
+            base_id = found[0] if found else args.air_base.get(tf.country) or DEFAULT_AIR_BASES.get(tf.country)
             if base_id is None:
                 sys.exit(f"{role}: no air base for {tf.country}'s land-based planes; pass --air-base {tf.country}=<air base id>")
             side["landWings"] = (write_land_wings(save, tf.country, side["landBasedAirwings"], planes, ids, base_id, args.air_region), base_id)

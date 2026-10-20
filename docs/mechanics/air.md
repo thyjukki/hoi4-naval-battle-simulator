@@ -107,14 +107,31 @@ joined = 0                                                   (each side; the cou
 cap    = max(NAVAL_COMBAT_EXTERNAL_PLANES_MIN_CAP,
              floor(Σ enemy warship current HP × JOIN_RATIO × (1 + JOIN_RATIO_PER_DAY × floor(hour / 24))))
 for each wing, in listed order [ASSUMED] while joined < cap:
-    budget  = round(wing planes × missionEfficiency)
+    budget  = round(wing planes × effectiveness)        (A-COVERAGE)
     add     = min(budget, cap − joined);  joined += add
     the wing is in the battle from now on; it may lose at most add planes in its strikes until its next join
 ```
 - A wing that has joined strikes at every air hour with **all its planes**, not only the joined count (read from code; worth an in-game check).
-- `missionEfficiency` is the mission's efficiency (air base, range, coverage, none simulated; an input): it only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless set; the region's air war computes the disruption itself (A-REGION), so leave it at 1 when the scenario has the enemy's air superiority wings.
+- The effectiveness is the wing's mission effectiveness (A-COVERAGE): with an `airBase` it is computed from the coverage of the region, the base's crowding and supply, with `missionEfficiency` only the rest (default 1); without one `missionEfficiency` is all of it. It only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless set; the region's air war computes the disruption itself (A-REGION), so leave it at 1 when the scenario has the enemy's air superiority wings.
 - [LOG] The disruption counts **twice**: the mission efficiency 0xf78160 weighs each wing's attack inside the strike average (A-DMG), and the air object's `airfx+0xc0`, the same value, multiplies the result again. In 10 logged TFB battles (`air_land_vs_fleet`: 100 land tactical bombers against cruisers covered by 100 land fighters on air superiority) the game's damage per hit was the undisrupted value × factor² in every strike (factor 0.45–0.51); the replays match within 0.5 % with it.
-- [LOG] Only wings in range join: in game, land CAS from Burgas or Dobrogea never joined a battle in province 7906, tactical bombers did (mission efficiency 0.6 from Burgas, 1.0 from Dobrogea). The simulator has no range or coverage model; leave out-of-range wings out of the scenario and set `missionEfficiency` to the game's.
+- [LOG] Only wings in range join: in game, land CAS from Burgas or Dobrogea never joined a battle in province 7906, tactical bombers did (effectiveness 0.6 from Burgas, 1.0 from Dobrogea). With an `airBase` the coverage gives this (a wing that covers none of the region's provinces gets effectiveness 0 and does not join).
+
+## A-COVERAGE: a land wing's mission effectiveness from its air base [RE + LOG]
+
+From [A-COVERAGE](../reverse-engineering/findings/A-COVERAGE-land-mission-effectiveness.md) (0xf78500 land branch). A land wing names its air base by state (`landBasedAirwings[].airBase`); the side's `airBases` give each base's air base building level, the planes stationed there besides the scenario's wings and its air supply ratio. Code: `AirCoverageRules`, `AirPhase.LandEffectiveness`.
+```
+R        = trunc(trunc(air_range / MAP_SCALE_PIXEL_TO_KM) × (1 + air_range_factor))   whole map pixels (7.114 km per pixel)
+coverage = min(1, trunc(provinces of the region with dx² + dy² ≤ R² / the region's provinces))
+           from the centre of the box of the base's state's provinces (not the air base building), dx wrapped around the
+           map; 0 unless d²(base, centre of the region's box) ≤ R² + (W/2)² + (H/2)²
+crowding = planes at the base ≤ level × AIRBASE_CAPACITY_MULT (vanilla 200, TFB 100) ? 1
+           : r = trunc(over / capacity) > 0.9 ? 0 : clamp(1 − trunc(CAPACITY_PENALTY × r), 0, 1)
+           (every plane at the base: the side's wings flying from it, now, and `otherPlanes`)
+e        = clamp(coverage × crowding × supplyRatio × missionEfficiency × (1 + air_mission_efficiency), 0, 1)
+```
+Positions are the game's: each province's truncated mean pixel in `map/provinces.bmp` and its box snapped to even pixels (0x140a3c0, 0x140a610), imported by `import-regions` together with `air-bases/air-bases.json` (every state's base point). The supply ratio needs the game's supply network (an input; the air base tooltip shows it); the region change penalty (0 in generated saves) and fuel are left to `missionEfficiency`.
+
+[LOG] In the CL3 template the 0.6 at Burgas is crowding: the save keeps 10 BUL fighter wings (1,000 planes) at the level-10 base (capacity 1,000), so with the scenario's 100 fighters and 100 bombers 1,200 planes give 1 − 2 × 0.2 = 0.6, and the logged effectiveness follows the wing's losses (0.626 at 1,187 planes). Fighter II (900 km, 126 px) covers 4 of region 30's 7 provinces from Burgas, so its effectiveness is 4/7 × 0.6 = 0.343 (`air_cv_land_mix`) or 4/7 × 0.8 = 0.457 (`air_land_vs_fleet`), the values fitted before; `air_land_vs_fleet` replays the disruption within 1 % in 596 of 600 air hours with them computed.
 - Each entry has a `mission`: `naval_bomber` (naval strike, the default) or `air_superiority`. Air superiority wings never join the naval battle (A-WINGS-EXT); they fight in the region's air war (A-REGION), which disrupts and shoots down the enemy's strike wings.
 - Land-based planes skip the sortie step and get no carrier multiplier.
 - Not modelled: port strikes, naval patrol wings (they join but have no strike wings), carrier wings of task forces outside the battle joining it (their budget also takes the stance ratio).
@@ -316,6 +333,7 @@ Leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-spee
 | `carrierWingsOnRegionMission` | participant | A-REGION-SYNC: the carrier wings fly a mission over the region (all fight in the region's air war and can be disrupted); default: the attacker yes, the defender no |
 | `carrierMissionEfficiency` | participant | A-REGION-SYNC: the carrier wings' supply ratio and fuel in their effectiveness (default 1; the logged CL3 attacker had 0.734); crowding and `air_mission_efficiency` are computed |
 | `radarCoverage` | participant | A-DETECT: radar-covered share of the battle region's provinces (0..1, default 0) |
+| `airBases`, `landBasedAirwings[].airBase` | participant | A-COVERAGE: a land wing's air base (state) and the side's bases: level, other planes stationed, supply ratio |
 | `doctrines`, `spiritIDs` | participant | S-DOCTRINE, S-SPIRIT: naval and air doctrines; sortie, strike, night traffic, region war and detection modifiers, plane stat bonuses (A-STATS) |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
 | `rules.weatherEnabled` | scenario | weather off as with `disable_weather`, which also means no night (S-WEATHER, S-NIGHT) |

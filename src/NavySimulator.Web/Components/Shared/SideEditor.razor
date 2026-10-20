@@ -338,13 +338,13 @@
                     {
                         <div style="overflow-x: auto">
                         <table class="data compact" style="width: 100%">
-                            <thead><tr><th>Plane</th><th title="naval strike joins the naval battle; air superiority fights in the region's air war only (not simulated)">Mission</th><th class="num">Planes</th><th class="num" title="The air mission's efficiency (air base, range, coverage; not simulated): scales the planes offered to the battle each air hour">Mission eff.</th><th class="num" title="The mission's disruption factor: multiplies their attack; 1 when no enemy interceptors disrupt it">Disruption</th><th></th></tr></thead>
+                            <thead><tr><th>Plane</th><th title="naval strike joins the naval battle; air superiority fights in the region's air war only (not simulated)">Mission</th><th class="num">Planes</th><th title="A-COVERAGE: the state whose air base the wing flies from; the coverage of the battle's region from it (by the plane's range), the base's crowding and supply then set its effectiveness">Air base</th><th class="num" title="The air mission's efficiency: scales the planes offered to the battle each air hour. With an air base only the part not computed (region change penalty, fuel)">Mission eff.</th><th class="num" title="The mission's disruption factor: multiplies their attack; 1 when no enemy interceptors disrupt it">Disruption</th><th></th></tr></thead>
                             <tbody>
                                 @foreach (var landBased in Side.LandBasedAirwings)
                                 {
                                     <tr>
                                         <td>
-                                            <select @bind="landBased.PlaneID" @bind:after="Changed" style="width: 100%; max-width: 240px">
+                                            <select @bind="landBased.PlaneID" @bind:after="Changed" style="width: 100%; min-width: 170px; max-width: 240px">
                                                 @if (Workspace.Catalog.Planes.All(plane => plane.ID != landBased.PlaneID))
                                                 {
                                                     <option value="@landBased.PlaneID">@landBased.PlaneID (unknown)</option>
@@ -367,6 +367,20 @@
                                             </select>
                                         </td>
                                         <td class="num"><input type="number" min="0" @bind="landBased.Planes" @bind:after="Changed" style="width: 70px" /></td>
+                                        <td>
+                                            <select @bind:get="landBased.AirBase?.ToString() ?? string.Empty" @bind:set="value => SetAirBase(landBased, value)" aria-label="Air base" style="max-width: 180px">
+                                                <option value="">None (efficiency only)</option>
+                                                @foreach (var group in AirBaseChoices(landBased.AirBase))
+                                                {
+                                                    <optgroup label="@group.Key">
+                                                        @foreach (var airBase in group)
+                                                        {
+                                                            <option value="@airBase.State">@airBase.Name (@airBase.State)</option>
+                                                        }
+                                                    </optgroup>
+                                                }
+                                            </select>
+                                        </td>
                                         <td class="num"><input type="number" min="0" step="0.05" placeholder="1" @bind="landBased.MissionEfficiency" @bind:after="Changed" style="width: 64px" /></td>
                                         <td class="num"><input type="number" min="0" max="1" step="0.05" placeholder="1" @bind="landBased.DisruptionFactor" @bind:after="Changed" style="width: 64px" /></td>
                                         <td><button class="small icon danger" title="Remove" @onclick="() => RemoveLandBased(landBased)">✕</button></td>
@@ -374,6 +388,16 @@
                                 }
                             </tbody>
                         </table>
+                        </div>
+                    }
+                    @foreach (var state in Side.LandBasedAirwings.Where(entry => entry.AirBase is not null).Select(entry => entry.AirBase!.Value).Distinct())
+                    {
+                        var setup = Side.AirBases.FirstOrDefault(entry => entry.State == state);
+                        <div class="row" style="margin-top: 6px; gap: 10px; flex-wrap: wrap">
+                            <span class="small" title="A-COVERAGE: the base's crowding (planes above level × AIRBASE_CAPACITY_MULT) and air supply ratio">@AirBaseName(state)</span>
+                            <label class="small">Level <input type="number" min="0" placeholder="no crowding" style="width: 90px" @bind:get="setup?.Level" @bind:set="value => EditAirBase(state, entry => entry.Level = value)" /></label>
+                            <label class="small" title="Planes at the base besides this side's land-based wings (other wings, other countries)">Other planes <input type="number" min="0" placeholder="0" style="width: 80px" @bind:get="setup?.OtherPlanes" @bind:set="value => EditAirBase(state, entry => entry.OtherPlanes = value)" /></label>
+                            <label class="small" title="Received / asked air supply (the game's supply network; the air base tooltip shows it)">Supply <input type="number" min="0" max="1" step="0.05" placeholder="1" style="width: 70px" @bind:get="setup?.SupplyRatio" @bind:set="value => EditAirBase(state, entry => entry.SupplyRatio = value)" /></label>
                         </div>
                     }
                 </div>
@@ -712,6 +736,42 @@
         var striker = Workspace.Catalog.Planes.LastOrDefault(plane => plane.Archetype == "nav_bomber_equipment") ??
                       Workspace.Catalog.Planes.FirstOrDefault(plane => IsStriker(plane.ID));
         Side.LandBasedAirwings.Add(new LandBasedAirwingDto { PlaneID = striker?.ID ?? string.Empty, Planes = 100 });
+        await Changed();
+    }
+
+    // A-COVERAGE: the country's own air bases first, then every other.
+    private IEnumerable<IGrouping<string, AirBaseDto>> AirBaseChoices(int? selected)
+    {
+        var country = Side.Country;
+        return Workspace.Catalog.AirBases
+            .Where(airBase => string.IsNullOrEmpty(country) || airBase.Owner == country || airBase.State == selected)
+            .OrderBy(airBase => airBase.Name, StringComparer.Ordinal)
+            .GroupBy(airBase => !string.IsNullOrEmpty(country) && airBase.Owner == country ? $"{country}'s" : string.IsNullOrEmpty(country) ? "All" : "Selected");
+    }
+
+    private string AirBaseName(int state)
+    {
+        return Workspace.Catalog.AirBases.LastOrDefault(airBase => airBase.State == state) is { } airBase ? $"{airBase.Name} ({state})" : $"State {state}";
+    }
+
+    private async Task SetAirBase(LandBasedAirwingDto landBased, string value)
+    {
+        landBased.AirBase = int.TryParse(value, out var state) ? state : null;
+        Side.AirBases.RemoveAll(entry => Side.LandBasedAirwings.All(wing => wing.AirBase != entry.State));
+        await Changed();
+    }
+
+    private async Task EditAirBase(int state, Action<AirBaseSetupDto> edit)
+    {
+        var setup = Side.AirBases.FirstOrDefault(entry => entry.State == state);
+
+        if (setup is null)
+        {
+            setup = new AirBaseSetupDto { State = state };
+            Side.AirBases.Add(setup);
+        }
+
+        edit(setup);
         await Changed();
     }
 

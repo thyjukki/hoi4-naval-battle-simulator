@@ -288,6 +288,38 @@ public class AirRulesTests
     }
 
     [Fact]
+    public void LandCoverage_CountsTheRegionsProvincesInRangeOfTheStateCentre()
+    {
+        // A-COVERAGE [RE + LOG]: Burgas (state centre 3229, 1377) to region 30 (TFB): Fighter II, 900 km = 126 px, covers 4 of 7
+        // provinces (d² 986, 1745, 5077, 6205 ≤ 15876); Fighter 0, 550 km = 77 px, 3 of 7; Tactical Bomber II, 2000 km, all.
+        var region = new SeaRegion(30, "Black Sea", null,
+            [new(7906, 3260, 1382), new(5412, 3260, 1349), new(8256, 3300, 1371), new(8131, 3295, 1420), new(8308, 3359, 1389),
+             new(8282, 3378, 1440), new(8334, 3414, 1367)], [], 5632, 2048, 252, 3234, 1330, 224, 134);
+        var burgas = new AirBase(211, "Burgas", 3229, 1377);
+
+        Assert.Equal(126, AirCoverageRules.RangePixels(900, 0, defines));
+        Assert.Equal(77, AirCoverageRules.RangePixels(550, 0, defines));
+        Assert.Equal(0.57142, AirCoverageRules.Coverage(burgas, region, 126), 9);
+        Assert.Equal(0.42857, AirCoverageRules.Coverage(burgas, region, 77), 9);
+        Assert.Equal(1, AirCoverageRules.Coverage(burgas, region, AirCoverageRules.RangePixels(2000, 0, defines)), 9);
+        // Out of the precheck's reach: nothing is covered.
+        Assert.Equal(0, AirCoverageRules.Coverage(new AirBase(1, "far", 100, 100), region, 126), 9);
+    }
+
+    [Fact]
+    public void BaseCrowding_PenalisesPlanesAboveTheCapacity()
+    {
+        // A-COVERAGE [RE + LOG]: TFB AIRBASE_CAPACITY_MULT 100, level 10: 1200 planes → 1 − 2 × 0.2 = 0.6; 1187 → 0.626.
+        var tfb = GameDefines.Vanilla();
+        tfb.NBuildings.AIRBASE_CAPACITY_MULT = 100;
+
+        Assert.Equal(1, AirCoverageRules.Crowding(1000, 10, tfb), 9);
+        Assert.Equal(0.6, AirCoverageRules.Crowding(1200, 10, tfb), 9);
+        Assert.Equal(0.626, AirCoverageRules.Crowding(1187, 10, tfb), 9);
+        Assert.Equal(0, AirCoverageRules.Crowding(1950, 10, tfb), 9);
+    }
+
+    [Fact]
     public void MissionEffectiveness_IsSupplyTimesCrowdingTimesAirMissionEfficiency_AtMostOne()
     {
         // A-REGION-SYNC 0xf78500: the logged CL3 attacker (supply 0.734) in light rain (air_mission_efficiency −0.1).

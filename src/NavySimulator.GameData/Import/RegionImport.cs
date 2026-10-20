@@ -8,6 +8,9 @@ public sealed class RegionImport
     /// <summary>The strategic regions with sea provinces.</summary>
     public List<SeaRegionDto> Regions { get; } = [];
 
+    /// <summary>A-COVERAGE: every state's air base position (<c>map/buildings.txt</c>).</summary>
+    public List<AirBaseDto> AirBases { get; } = [];
+
     /// <summary>The terrains with <c>naval_terrain = yes</c>.</summary>
     public List<NavalTerrainDto> Terrains { get; } = [];
 

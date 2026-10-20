@@ -29,6 +29,16 @@ public class SeaRegionDto
     /// <summary>The region's sea provinces (<c>map/definition.csv</c> type <c>sea</c>).</summary>
     public List<SeaProvinceDto> Provinces { get; set; } = [];
 
+    /// <summary>
+    /// A-COVERAGE [RE] 0x15a43c0: the union of the region's provinces' boxes (even-snapped), pixels from the left and the
+    /// bottom; land wings' coverage prechecks against its centre and half diagonal. 0 width: not imported.
+    /// </summary>
+    public int BoxX { get; set; }
+
+    public int BoxY { get; set; }
+    public int BoxWidth { get; set; }
+    public int BoxHeight { get; set; }
+
     /// <summary>The weather periods of the region's <c>weather</c> block, in script order.</summary>
     public List<WeatherPeriodDto> Weather { get; set; } = [];
 }

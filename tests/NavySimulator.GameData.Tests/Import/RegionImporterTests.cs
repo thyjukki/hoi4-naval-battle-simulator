@@ -134,7 +134,7 @@ public sealed class RegionImporterTests : IDisposable
         var files = RegionWriter.Write(data, RegionImporter.Read(new GameFileSystem(game, [mod])));
         var catalog = new SetupLoader().ReadCatalog(data);
 
-        Assert.Equal(["naval-terrains/naval-terrains.json", "sea-regions/sea-regions.json"], files);
+        Assert.Equal(["air-bases/air-bases.json", "naval-terrains/naval-terrains.json", "sea-regions/sea-regions.json"], files);
         Assert.Equal([30, 40], catalog.SeaRegions.Select(region => region.ID));
         Assert.Equal(2, catalog.NavalTerrains.Count);
     }

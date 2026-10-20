@@ -5,14 +5,15 @@ using System.Text.Json.Nodes;
 namespace NavySimulator.GameData.Import;
 
 /// <summary>
-/// Writes a <see cref="RegionImport"/> to a data directory: <c>sea-regions/sea-regions.json</c> and
-/// <c>naval-terrains/naval-terrains.json</c>. These folders belong to the import: their old JSON files are deleted first.
+/// Writes a <see cref="RegionImport"/> to a data directory: <c>sea-regions/sea-regions.json</c>,
+/// <c>naval-terrains/naval-terrains.json</c> and <c>air-bases/air-bases.json</c>. These folders belong to the import: their old JSON files are deleted first.
 /// Empty lists and blocks are left out.
 /// </summary>
 public static class RegionWriter
 {
     public const string RegionsFolder = "sea-regions";
     public const string TerrainsFolder = "naval-terrains";
+    public const string AirBasesFolder = "air-bases";
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -35,10 +36,15 @@ public static class RegionWriter
             {
                 ["$schema"] = "../schemas/naval-terrains.schema.json",
                 ["terrains"] = new JsonArray(import.Terrains.Select(terrain => CatalogWriter.Serialize(terrain)).ToArray())
+            },
+            [$"{AirBasesFolder}/air-bases.json"] = new()
+            {
+                ["$schema"] = "../schemas/air-bases.schema.json",
+                ["airBases"] = new JsonArray(import.AirBases.Select(airBase => CatalogWriter.Serialize(airBase)).ToArray())
             }
         };
 
-        foreach (var folder in new[] { RegionsFolder, TerrainsFolder })
+        foreach (var folder in new[] { RegionsFolder, TerrainsFolder, AirBasesFolder })
         {
             var directory = Path.Combine(dataDirectory, folder);
             Directory.CreateDirectory(directory);

@@ -183,6 +183,10 @@ public static class LocationLoader
                 period.Blizzard, period.ArcticWater, period.Sandstorm)).ToList(),
             dto.MapWidth,
             dto.MapHeight,
-            dto.WeatherStates);
+            dto.WeatherStates,
+            dto.BoxX,
+            dto.BoxY,
+            dto.BoxWidth,
+            dto.BoxHeight);
     }
 }

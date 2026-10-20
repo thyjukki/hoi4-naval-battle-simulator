@@ -12,7 +12,7 @@ public static class ImportRegionsCommand
 
           --game <dir>        HOI4 install folder
           --mod <dir>         Mod folder applied over the game, as the launcher loads it (repeatable, in load order)
-          --data <dir>        Data directory to write (default: ./data). Replaces every file in sea-regions/ and naval-terrains/.
+          --data <dir>        Data directory to write (default: ./data). Replaces every file in sea-regions/, naval-terrains/ and air-bases/.
           --language <name>   Localisation language for names (default: english)
         """;
 
@@ -90,7 +90,7 @@ public static class ImportRegionsCommand
         }
 
         var files = RegionWriter.Write(data, import);
-        Console.WriteLine($"Imported {import.Regions.Count} sea regions and {import.Terrains.Count} naval terrains into {Path.GetFullPath(data)}:");
+        Console.WriteLine($"Imported {import.Regions.Count} sea regions, {import.Terrains.Count} naval terrains and {import.AirBases.Count} air bases into {Path.GetFullPath(data)}:");
         files.ToList().ForEach(file => Console.WriteLine($"  {file}"));
         return 0;
     }
