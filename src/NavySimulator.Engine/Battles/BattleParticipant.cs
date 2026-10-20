@@ -135,6 +135,18 @@ public class BattleParticipant
     /// </summary>
     public readonly double CarrierNightTraffic;
 
+    /// <summary>
+    /// A-REGION-LISTS [RE + LOG]: the side's carrier wings fly a mission over the battle's region (they are on the
+    /// region's mission list): every wing then fights in the region's air war and can be disrupted. Otherwise they are
+    /// only scrambled: their fighters attack, every wing defends, and none is disrupted. In the logged TFB battles the
+    /// combat's attacker's carrier wings were on the list and the defender's were not.
+    /// </summary>
+    public readonly bool CarrierWingsOnRegionMission;
+
+    /// <summary>A-REGION: the carrier wings' mission effectiveness (wing mission+0xd8; logged 0.734 or 1.0), which sets
+    /// their effective planes in the region's air war.</summary>
+    public readonly double CarrierMissionEfficiency;
+
     public BattleParticipant(
         Fleet fleet,
         Admiral? admiral,
@@ -150,7 +162,9 @@ public class BattleParticipant
         IReadOnlyDictionary<string, Mio?>? designMios = null,
         Ship? prideOfTheFleet = null,
         IReadOnlyList<LandBasedAirwing>? landBasedAirwings = null,
-        IReadOnlyDictionary<string, int>? planeStockpile = null)
+        IReadOnlyDictionary<string, int>? planeStockpile = null,
+        bool carrierWingsOnRegionMission = false,
+        double carrierMissionEfficiency = 1.0)
     {
         if (prideOfTheFleet is not null && !fleet.Ships.Contains(prideOfTheFleet))
         {
@@ -167,6 +181,8 @@ public class BattleParticipant
         LandBasedAirwings = landBasedAirwings ?? [];
         PlaneStockpile = planeStockpile ?? new Dictionary<string, int>(StringComparer.Ordinal);
         CarrierStanceIndex = carrierStanceIndex;
+        CarrierWingsOnRegionMission = carrierWingsOnRegionMission;
+        CarrierMissionEfficiency = carrierMissionEfficiency;
         Doctrines = doctrines ?? [];
         Mios = mios ?? [];
         DesignMios = designMios ?? new Dictionary<string, Mio?>();

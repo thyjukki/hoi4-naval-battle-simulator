@@ -11,6 +11,7 @@ namespace NavySimulator.GameData.Import;
 public static class PlaneWriter
 {
     public const string Folder = "planes";
+    public const string AceFolder = "aces";
 
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -38,6 +39,23 @@ public static class PlaneWriter
 
         DoctrineWriter.Prune(document);
         File.WriteAllText(Path.Combine(dataDirectory, file), document.ToJsonString(Options) + "\n");
-        return [file];
+
+        // A-ACE: the ace templates belong to the same import, in their own folder.
+        var aceFile = $"{AceFolder}/aces.json";
+        var aceDirectory = Path.Combine(dataDirectory, AceFolder);
+        Directory.CreateDirectory(aceDirectory);
+
+        foreach (var old in Directory.GetFiles(aceDirectory, "*.json"))
+        {
+            File.Delete(old);
+        }
+
+        var aces = new JsonObject
+        {
+            ["$schema"] = "../schemas/aces.schema.json",
+            ["aces"] = new JsonArray(import.Aces.Select(ace => CatalogWriter.Serialize(ace)).ToArray())
+        };
+        File.WriteAllText(Path.Combine(dataDirectory, aceFile), aces.ToJsonString(Options) + "\n");
+        return [file, aceFile];
     }
 }

@@ -7,6 +7,9 @@ public sealed class PlaneImport
 {
     public List<PlaneDto> Planes { get; } = [];
 
+    /// <summary>A-ACE: the air ace templates of <c>common/aces</c>.</summary>
+    public List<AceTemplateDto> Aces { get; } = [];
+
     /// <summary>Script problems: unreadable files, duplicate definitions.</summary>
     public List<string> Warnings { get; } = [];
 }

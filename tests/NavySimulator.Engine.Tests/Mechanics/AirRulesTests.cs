@@ -171,4 +171,96 @@ public class AirRulesTests
         Assert.Equal(50, AirRules.ExternalJoinCap(enemy, 23, defines), 9);
         Assert.Equal(70, AirRules.ExternalJoinCap(enemy, 48, defines), 9);
     }
+
+    [Fact]
+    public void PickTarget_WalksTheListInOrderOnAnIntegerDraw()
+    {
+        // [RE] 0x24f04f0: p = trunc(U × Σw); the first candidate whose running sum exceeds p, in list order.
+        var a = TestEntityFactory.Capital("a");
+        var b = TestEntityFactory.Capital("b");
+        (Ship, double)[] candidates = [(a, 1), (b, 3)];
+
+        Assert.Same(a, AirRules.PickTarget(candidates, new ScriptedRandomSource(0.24)));
+        Assert.Same(b, AirRules.PickTarget(candidates, new ScriptedRandomSource(0.25)));
+        Assert.Null(AirRules.PickTarget([(a, 0.0)], new ScriptedRandomSource(0.5)));
+    }
+
+    [Fact]
+    public void Interception_RollsWhenTheDefendersHaveNoPlanes()
+    {
+        // [RE + LOG] 0x197b380 returns early only without defending wings; empty wings still make the roll.
+        AirWing[] bombers = [new(Bomber(), 10, defines.Hardcoded)];
+        AirWing[] empty = [new(Fighter(), 0, defines.Hardcoded)];
+        // No damage: x = max(0.001, 0), so a roll below 0.001 still takes one plane.
+        Assert.Equal(1, AirRules.Interception(bombers, empty, 0.5, defines, new ScriptedRandomSource(0.0005)));
+    }
+
+    [Fact]
+    public void FleetAntiAir_CountsEscapedShipsButNotSunkOnes()
+    {
+        var afloat = TestEntityFactory.Capital("a");
+        var escaped = TestEntityFactory.Capital("e");
+        var sunk = TestEntityFactory.Capital("s");
+        escaped.CurrentStatus = ShipStatus.Retreated;
+        sunk.CurrentHP = 0;
+
+        var one = AirRules.FleetAntiAir([afloat], 1, defines);
+        Assert.Equal(2 * one, AirRules.FleetAntiAir([afloat, escaped, sunk], 1, defines), 9);
+    }
+
+    [Fact]
+    public void AceChances_FollowTheDecodedFormula()
+    {
+        // earn: 0.01 + trunc(trunc(30 × 0.005) × 0.1) = 0.025; death: 0.005 + trunc(trunc(4 × 0.001) × 0.1) = 0.0054.
+        Assert.Equal(0.025, AirRules.AceEarnChance(30, 0, defines), 9);
+        Assert.Equal(0.0375, AirRules.AceEarnChance(30, 0.5, defines), 9);
+        Assert.Equal(0.0054, AirRules.AceDeathChance(4, defines), 9);
+    }
+
+    [Fact]
+    public void StrikeAverages_AddTheWingsAceAndWeighAttackByMissionEfficiency()
+    {
+        var ace = new AceTemplate("support_good", new HashSet<string> { "naval_bomber" }, 0.9,
+            new Dictionary<string, double> { ["naval_strike_targetting_factor"] = 0.05 });
+        var withAce = new AirWing(Bomber(), 10, defines.Hardcoded) { Ace = new AirAce(ace, 0) };
+        var plain = new AirWing(Bomber(), 10, defines.Hardcoded);
+
+        // A 10-plane wing doubles the ace (ACE_WING_SIZE 100, at most ×2): targeting 1 × (1 + 0.1) on half the planes.
+        var (attack, targeting, _) = AirRules.StrikeAverages([withAce, plain], defines, efficiency: 0.5);
+        Assert.Equal(1.05, targeting, 9);
+        Assert.Equal(2 * 0.5, attack, 9);
+
+        withAce.Ace.Alive = false;
+        Assert.Equal(1.0, AirRules.StrikeAverages([withAce, plain], defines).Targeting, 9);
+    }
+
+    [Fact]
+    public void RegionStrikeEfficiency_FollowsTheDecodedFormula()
+    {
+        // [RE + LOG] 0xf78160 with vanilla defines: den = 10 × (1 + 0.1 × 0.5) × (1 + 0.05 × 0.5) × (1 + 0.5 × 1) = 16.14375.
+        var wing = new AirWing(Bomber(), 10, defines.Hardcoded);
+        var den = 10 * 1.05 * 1.025 * 1.5;
+
+        Assert.Equal(1 - Math.Truncate(Math.Sqrt(20 / den) * 0.316228 * 1e5) / 1e5, RegionAirWarRules.StrikeEfficiency(20, 10, wing, defines), 9);
+        Assert.Equal(1, RegionAirWarRules.StrikeEfficiency(0, 10, wing, defines), 9);
+    }
+
+    [Fact]
+    public void RegionLosses_AreRolledBelowTheCapAndTakenWholeAboveIt()
+    {
+        Assert.Equal(1, RegionAirWarRules.Losses(0.4, 5, new ScriptedRandomSource(0.3)));
+        Assert.Equal(0, RegionAirWarRules.Losses(0.4, 5, new ScriptedRandomSource(0.5)));
+        Assert.Equal(3, RegionAirWarRules.Losses(7.2, 3, new ScriptedRandomSource(0.0)));
+        Assert.Equal(0, RegionAirWarRules.Losses(7.2, 0, new ScriptedRandomSource(0.0)));
+    }
+
+    [Fact]
+    public void RegionDisruption_IsCancelledByTheVictimsEscortsOnlyWhenTheyAreStrongEnough()
+    {
+        var fighter = RegionAirWarRules.Stats(new AirWing(Fighter(), 10, defines.Hardcoded), defines);
+
+        // Vanilla: disruption 6 × 10 × (1 + 500/800); escort 2 × 10 × (1 + 500/800) × (1 + 0.5) × (1 + 0.3).
+        Assert.Equal(6 * 10 * 1.625, RegionAirWarRules.Disruption(10, fighter, true, defines), 6);
+        Assert.Equal(2 * 10 * 1.625 * 1.5 * 1.3, RegionAirWarRules.Escort(10, fighter, defines), 6);
+    }
 }

@@ -39,14 +39,13 @@
       "carrierStanceIndex": 4,
       "landBasedAirwings": [
         {
-          "planeID": "CAS_equipment_2",
-          "planes": 100
-        },
-        {
           "planeID": "tac_bomber_equipment_2",
-          "planes": 100
+          "planes": 100,
+          "disruptionFactor": 0.48
         }
-      ]
+      ],
+      "carrierWingsOnRegionMission": true,
+      "carrierMissionEfficiency": 0.734
     },
     "defender": {
       "fleetID": "air_test_cl_b",

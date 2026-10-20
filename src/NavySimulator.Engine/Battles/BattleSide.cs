@@ -19,7 +19,8 @@ public sealed class BattleSide
 
     public BattleLines Lines { get; set; }
     public double Positioning { get; set; } = 1;
-    public ScreeningSummary Screening { get; set; } = new(1, 1);
+    /// <summary>[LOG] A new battle's side starts with no screening until its first side update (S-HOUR creation update).</summary>
+    public ScreeningSummary Screening { get; set; } = new(0, 0);
 
     /// <summary>A-AA-REDUCE: the side's fleet AA term, set with positioning at the start of each hour (game side+0x170).</summary>
     public double FleetAntiAir { get; set; }

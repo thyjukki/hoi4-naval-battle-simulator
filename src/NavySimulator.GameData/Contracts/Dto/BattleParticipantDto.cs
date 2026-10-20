@@ -43,6 +43,12 @@ public class BattleParticipantDto
 
     public int? CarrierStanceIndex { get; set; }
     public double? CarrierNightTraffic { get; set; }
+
+    /// <summary>A-REGION-LISTS: the carrier wings fly a mission over the battle's region (null: no, only scrambled).</summary>
+    public bool? CarrierWingsOnRegionMission { get; set; }
+
+    /// <summary>A-REGION: the carrier wings' mission effectiveness in the region's air war (null: 1).</summary>
+    public double? CarrierMissionEfficiency { get; set; }
 }
 
 

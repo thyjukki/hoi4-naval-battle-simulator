@@ -25,6 +25,7 @@ const RVA = {
   airTarget: 0x197a700, // A-TARGET (airfx, enemyGroup, ...): returns the target member
   airIntercept: 0x197b380, // A-INTERCEPT: returns the planes shot down by enemy carrier fighters
   airPreempt: 0x197c8b0, // A-AA-PREEMPT (airfx, target, agility, aaPlanes): returns the planes shot down by the target
+  airAverages: 0x1978e30, // A-DMG stat averages (airfx, ?, &attack, &targeting, &agility, ...) of the strike's wings
   carrierRatio: 0x161eeb0, // S-POS carrier-ratio helper (side, &A, &B): sortie x planes over the side's air objects
   airHits: 0x197ac80, // A-HIT / A-DMG (..., strikers in r9d, ...): returns the HP damage dealt, truncated to an integer
 };
@@ -347,6 +348,17 @@ function wingHandles(fx, off) {
         // the wing's mission object at +0x90: +0xa8 disruption taken, +0xd8 effectiveness (A-WINGS-EXT)
         rec.disruption = s64(w.add(0x90 + 0xa8));
         rec.effectiveness = s64(w.add(0x90 + 0xd8));
+        // A-ACE: the wing's ace handle at +0x2e8; ace +0x158 alive, +0x170 its common/aces template (+0x30 chance, fx5)
+        const aceHandle = w.add(0x2e8);
+        if (aceHandle.readU32() !== 0 || aceHandle.add(4).readU32() !== 0) {
+          const ace = resolveHandle(aceHandle);
+          rec.ace = { handle: [aceHandle.readU32(), aceHandle.add(4).readU32()] };
+          if (!ace.isNull()) {
+            rec.ace.alive = ace.add(0x158).readU8();
+            const template = ace.add(0x170).readPointer();
+            if (!template.isNull()) rec.ace.chance = s64(template.add(0x30));
+          }
+        }
       }
     } catch (e) { rec.error = String(e); }
     out.push(rec);
@@ -365,7 +377,7 @@ function airObjectsUnsafe(side) {
   for (const group of list(side, 0xe8)) {
     for (const fx of list(group, 0x58)) {
       const member = fx.add(0x10).readPointer();
-      out.push({ carrier: member.isNull() ? null : member.add(0xc).readU32(), external: fx.add(0x81).readU8(),
+      out.push({ fx: fx.toString(), carrier: member.isNull() ? null : member.add(0xc).readU32(), external: fx.add(0x81).readU8(),
         planes: fx.add(0x5c).readS32(), wings: wingHandles(fx, 0x40) });
     }
   }
@@ -427,6 +439,12 @@ Interceptor.attach(base.add(RVA.carrierRatio), {
     this.call.b = s64(this.b);
     ratioLog.push(this.call);
     ratioCall = null;
+  }),
+});
+Interceptor.attach(base.add(RVA.airAverages), {
+  onEnter(args) { this.out = striking ? [args[2], args[3], args[4]] : null; },
+  onLeave: guard(function averagesLeave() {
+    if (this.out && striking) striking.averages = this.out.map(p => s64(p)); // [attack, targeting, agility], fx5
   }),
 });
 Interceptor.attach(base.add(RVA.airTarget), {

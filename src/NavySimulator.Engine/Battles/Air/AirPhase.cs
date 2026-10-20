@@ -2,6 +2,7 @@ using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Air;
 
@@ -33,6 +34,9 @@ public sealed class AirPhase
 
     public BattleSide Attacker { get; }
     public List<string> Notes { get; } = [];
+
+    /// <summary>Hourly log lines of the air step (aces earned and lost); the session moves them into its log.</summary>
+    public List<string> Log { get; } = [];
 
     public IReadOnlyList<AirGroup> GroupsOf(BattleSide side)
     {
@@ -90,14 +94,9 @@ public sealed class AirPhase
         }
 
         // A-EXTERNAL: one air object per land-based entry (the game's per air base AirFX); it strikes once it has joined.
-        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0 && !entry.JoinsNavalBattle))
-        {
-            // [RE] A-WINGS-EXT: air superiority and interception wings are never run through the naval join (0xf82110).
-            Notes.Add($"{side.Label}: {landBased.Planes} land-based {landBased.PlaneID} on {landBased.Mission} fight in the region's air war, " +
-                      "which is not simulated; they do not join the naval battle.");
-        }
-
-        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0 && entry.JoinsNavalBattle))
+        // [RE] A-WINGS-EXT: air superiority wings are never run through the naval join (0xf82110); they fight only in the
+        // region's air war (A-REGION). Their groups never strike (no strike wings) and never join.
+        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0))
         {
             if (scenario.PlanesByID.TryGetValue(landBased.PlaneID, out var plane))
             {
@@ -129,7 +128,9 @@ public sealed class AirPhase
     /// </summary>
     public (double A, double B) CarrierAirStrength(BattleSide side, int hour, double darkness)
     {
-        var carrierGroups = groups[side].Where(group => group.Carrier is { IsInBattle: true }).ToList();
+        // [RE + LOG] 0x161eeb0 walks every carrier air object of the side's groups: a sunk carrier's stay (sortie 0, but
+        // they count in B's mean); an escaped carrier's leave with it.
+        var carrierGroups = groups[side].Where(group => group.Carrier is { } carrier && (carrier.IsSunk || carrier.IsInBattle)).ToList();
 
         if (carrierGroups.Count == 0)
         {
@@ -141,8 +142,8 @@ public sealed class AirPhase
 
         foreach (var group in carrierGroups)
         {
-            var efficiency = SortieEfficiency(group, side, hour, darkness);
-            a += efficiency * group.Planes;
+            var efficiency = group.Carrier!.IsSunk ? 0 : SortieEfficiency(group, side, hour, darkness);
+            a += efficiency * group.PlanesCounted;
             b += efficiency * Math.Min(1.0, CarrierPlanes(group.Carrier!) / defines.NAir.CARRIER_PLANES_AMOUNT_FOR_POSITIONING);
         }
 
@@ -164,11 +165,13 @@ public sealed class AirPhase
             return results;
         }
 
-        var ownCarrierPlanes = ownGroups.Where(group => !group.IsExternal).Sum(group => group.Planes);
+        // [RE + LOG] The stacking factor is taken before the air objects recount their planes (0x1c6c580).
+        var ownCarrierPlanes = ownGroups.Where(group => !group.IsExternal).Sum(group => group.PlanesCounted);
         var stacking = AirRules.StackingFactor(ownCarrierPlanes, AirRules.PlaneCap(enemy.Ships, defines), defines);
 
         foreach (var group in ownGroups)
         {
+            group.CountedPlanes = group.Planes;
             var strikeWings = group.StrikeWings.ToList();
 
             if (strikeWings.Count == 0 || !group.HasJoined || group.Carrier is { IsInBattle: false })
@@ -180,7 +183,10 @@ public sealed class AirPhase
             var selected = strikeWings.Take(Math.Max(1, (int)Math.Round(strikeWings.Count * stacking, MidpointRounding.AwayFromZero)))
                 .Where(wing => wing.ExecutesNavalStrike)
                 .ToList();
-            var (attack, targeting, agility) = AirRules.StrikeAverages(selected, defines, own.Participant.CountryModifiers, !group.IsExternal);
+            // [RE + LOG] A land-based group's mission efficiency (its disruption) weighs each wing's attack in the average,
+            // and the group's own factor (airfx+0xc0, the same disruption) multiplies the result again (A-DMG).
+            var (attack, targeting, agility) = AirRules.StrikeAverages(selected, defines, own.Participant.CountryModifiers, !group.IsExternal,
+                group.Planes, group.IsExternal ? group.DisruptionFactor : 1.0);
             var flying = group.IsExternal
                 ? group.Planes
                 : (int)Math.Round(group.Planes * Math.Clamp(SortieEfficiency(group, own, hour, darkness), 0, 1), MidpointRounding.AwayFromZero);
@@ -213,6 +219,7 @@ public sealed class AirPhase
             var inReach = (int)Math.Ceiling(Math.Max(0, flying - intercepted) * stacking);
             var shotDown = Math.Min(flying - intercepted, AirRules.PreemptiveAntiAir(targetAntiAir, agility, inReach, defines, random));
             RemoveLosses(group, shotDown);
+            group.CountedPlanes = group.Planes;
 
             var strikers = flying - intercepted - shotDown;
             var hits = strikers > 0 ? AirRules.Hits(strikers, targeting, defines, random) : 0;
@@ -222,6 +229,7 @@ public sealed class AirPhase
             {
                 results.Add((new AirStrikeRecord(hour, own.Label, source, target.ID, flying, intercepted, shotDown, 0, reduction, false, 0, 0, false),
                     target, default));
+                RollAces(own, group, intercepted + shotDown, 0, hour, random);
                 continue;
             }
 
@@ -236,9 +244,71 @@ public sealed class AirPhase
 
             results.Add((new AirStrikeRecord(hour, own.Label, source, target.ID, flying, intercepted, shotDown, hits, reduction, critical,
                 applied.HpDamage, applied.OrganizationDamage, applied.Sunk), target, applied));
+            RollAces(own, group, intercepted + shotDown, (int)Math.Floor(applied.HpDamage + 1e-9), hour, random);
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// [RE] A-ACE-ROLLS (0x197c830, 0xf80f60): after a strike that reached its target, every wing of the group's strike
+    /// list, in pool order, with the group's losses (intercepted + AA) and the target's HP lost (truncated): a live ace
+    /// may die if planes were lost; a wing without a live ace may earn one if it did damage and lost fewer planes than
+    /// that. A new ace's template is drawn by <c>chance</c> among the templates whose types meet the wing's sub-unit's.
+    /// </summary>
+    private void RollAces(BattleSide own, AirGroup group, int losses, int damage, int hour, IRandomSource random)
+    {
+        if (scenario.AceTemplates.Count == 0)
+        {
+            return;
+        }
+
+        var generation = own.Participant.CountryModifiers.Get(StaticModifiers.AirAceGenerationChanceFactor);
+
+        foreach (var wing in group.StrikeWings)
+        {
+            if (wing.Ace is { Alive: true } ace)
+            {
+                if (losses > 0 && random.NextDouble(RollKind.AirAceDeath) <= AirRules.AceDeathChance(losses, defines))
+                {
+                    ace.Alive = false;
+                    Log.Add($"Hour {hour}: {own.Label} {group.Source}: the {ace.Template.ID} ace of a {wing.Plane.ID} wing died.");
+                }
+
+                continue;
+            }
+
+            if (damage <= 0 || losses >= damage || random.NextDouble(RollKind.AirAceEarn) > AirRules.AceEarnChance(damage, generation, defines))
+            {
+                continue;
+            }
+
+            var types = wing.Plane.SubUnitTypes.Count > 0 ? wing.Plane.SubUnitTypes : wing.Plane.Types;
+            var candidates = scenario.AceTemplates.Where(template => template.Types.Overlaps(types) && template.Chance > 0).ToList();
+
+            if (candidates.Count == 0)
+            {
+                continue;
+            }
+
+            var point = random.NextDouble(RollKind.AirAceTemplate) * candidates.Sum(template => template.Chance);
+            var chosen = candidates[^1];
+
+            foreach (var template in candidates)
+            {
+                point -= template.Chance;
+
+                if (point < 0)
+                {
+                    chosen = template;
+                    break;
+                }
+            }
+
+            // [ASSUMED] A new ace replaces a dead one (attaching 0xf5b320 detaches the old ace).
+            wing.Ace = new AirAce(chosen, hour);
+            Log.Add($"Hour {hour}: {own.Label} {group.Source}: a {wing.Plane.ID} wing earned a {chosen.ID} ace.");
+        }
     }
 
     private Ship? PickTarget(BattleSide enemy, IRandomSource random)
@@ -314,7 +384,7 @@ public sealed class AirPhase
             externalJoined[own] = 0;
             var cap = (int)AirRules.ExternalJoinCap(enemy.Ships, hour, defines);
 
-            foreach (var external in groups[own].Where(group => group.LandBased is not null))
+            foreach (var external in groups[own].Where(group => group.LandBased is { JoinsNavalBattle: true }))
             {
                 if (cap <= 0 || externalJoined[own] >= cap)
                 {
@@ -326,6 +396,234 @@ public sealed class AirPhase
                 externalJoined[own] += add;
                 external.Offered = Math.Min(add, external.Planes);
                 external.HasJoined = true;
+
+                // [RE] 0x197a6a0: airfx+0xc0 = 0xf78160 of the mission's disruption with the offered planes (A-REGION-DISRUPT),
+                // times the scenario's own factor.
+                if (RegionAirWarEnabled && external.Wings.Count > 0)
+                {
+                    external.DisruptionFactor = external.LandBased.DisruptionFactor *
+                                                RegionAirWarRules.StrikeEfficiency(external.Wings[0].Disruption, budget, external.Wings[0], defines);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// A-REGION: whether the region's air war runs (a replay turns it off and takes each wing's planes and disruption from
+    /// the game's log instead).
+    /// </summary>
+    public bool RegionAirWarEnabled { get; set; } = true;
+
+    private sealed class RegionEntry(AirWing wing, AirGroup group, bool carrier, bool strike, bool airSuperiority, int planes)
+    {
+        public AirWing Wing { get; } = wing;
+        public AirGroup Group { get; } = group;
+        public bool Carrier { get; } = carrier;
+        public bool Strike { get; } = strike;
+        public bool AirSuperiority { get; } = airSuperiority;
+
+        /// <summary>effective_planes_count: the mission's planes this hour, and its loss budget.</summary>
+        public int Planes { get; } = planes;
+
+        public int Left { get; set; }
+    }
+
+    /// <summary>
+    /// [RE + LOG] A-REGION (0xc57d30 → 0xc5f4c0, 0xf77360, 0xc4c570, 0xf87550): the region's air war of an air hour, before
+    /// the naval combat hour. Every wing's disruption and losses are reset; each side in turn (the combat's attacker
+    /// first, [ASSUMED]) attacks the other's wings with its region missions (all its wings, when its carrier wings fly a
+    /// region mission, and its land-based wings) and its scrambled carrier fighters; then escorts cancel their side's
+    /// disruption, and the losses are taken off the wings (a carrier wing left without planes is deleted, [LOG]).
+    /// Not modelled: detection (0, HardcodedValues.RegionAirDetection), weather, night and mission efficiency modifiers of
+    /// the stats, the distance weight, accidents, aces in air-to-air combat. Spec: air.md A-REGION.
+    /// </summary>
+    public void RegionAirWar(int hour, IRandomSource random)
+    {
+        if (!RegionAirWarEnabled)
+        {
+            return;
+        }
+
+        foreach (var wing in groups.Values.SelectMany(list => list).SelectMany(group => group.Wings))
+        {
+            wing.RegionLosses = 0;
+            wing.DisruptionTaken = 0;
+            wing.Disruption = 0;
+        }
+
+        var lists = new Dictionary<BattleSide, (List<RegionEntry> RegionList, List<RegionEntry> Scrambled)>();
+
+        foreach (var side in new[] { Attacker, Defender })
+        {
+            var regionList = new List<RegionEntry>();
+            var scrambled = new List<RegionEntry>();
+            var ratios = defines.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
+            var ratio = ratios.Length == 0 ? 1.0 : ratios[Math.Clamp(StanceIndex(side), 0, ratios.Length - 1)];
+
+            foreach (var group in groups[side])
+            {
+                if (group.Carrier is { } carrier)
+                {
+                    // 0xc66480: every wing on a carrier whose task force is in combat (escaped carriers' too).
+                    if (carrier.IsSunk)
+                    {
+                        continue;
+                    }
+
+                    foreach (var wing in group.Wings.Where(wing => wing.Planes > 0))
+                    {
+                        var strike = wing.ExecutesNavalStrike;
+                        var airSuperiority = !strike && wing.IsFighter;
+                        // 0xf78360: trunc(round(planes × effectiveness) × CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance]).
+                        var planes = (int)Math.Truncate(Math.Round(wing.Planes * side.Participant.CarrierMissionEfficiency, MidpointRounding.AwayFromZero) * ratio);
+
+                        if ((!strike && !airSuperiority) || planes <= 0)
+                        {
+                            continue;
+                        }
+
+                        scrambled.Add(new RegionEntry(wing, group, true, strike, airSuperiority, planes));
+
+                        if (side.Participant.CarrierWingsOnRegionMission)
+                        {
+                            regionList.Add(new RegionEntry(wing, group, true, strike, airSuperiority, planes));
+                        }
+                    }
+                }
+                else if (group.LandBased is { } landBased)
+                {
+                    foreach (var wing in group.Wings.Where(wing => wing.Planes > 0))
+                    {
+                        var planes = (int)Math.Round(wing.Planes * landBased.MissionEfficiency, MidpointRounding.AwayFromZero);
+
+                        if (planes > 0)
+                        {
+                            regionList.Add(new RegionEntry(wing, group, false, landBased.JoinsNavalBattle, !landBased.JoinsNavalBattle, planes));
+                        }
+                    }
+                }
+            }
+
+            lists[side] = (regionList, scrambled);
+        }
+
+        foreach (var (own, enemy) in new[] { (Attacker, Defender), (Defender, Attacker) })
+        {
+            FightRegion(own, lists[own], lists[enemy], random);
+        }
+
+        // 0xf77360 / 0xc4c570: escorts of the side's air superiority missions cancel its disruption; only its region
+        // missions keep what is left (scrambled-only wings are never disrupted).
+        foreach (var side in new[] { Attacker, Defender })
+        {
+            var (regionList, scrambled) = lists[side];
+            var wings = regionList.Concat(scrambled).GroupBy(entry => entry.Wing).Select(entries => entries.First()).ToList();
+            var taken = wings.Sum(entry => entry.Wing.DisruptionTaken);
+            var escorts = wings.Where(entry => entry.AirSuperiority)
+                .Sum(entry => RegionAirWarRules.Escort(entry.Planes, RegionAirWarRules.Stats(entry.Wing, defines, side.Participant.CountryModifiers),
+                    defines, side.Participant.CountryModifiers));
+
+            if (taken <= 0)
+            {
+                continue;
+            }
+
+            var left = 1 - Math.Min(1, escorts / taken);
+
+            foreach (var entry in regionList.Where(entry => entry.Strike).DistinctBy(entry => entry.Wing))
+            {
+                entry.Wing.Disruption = FixedPoint.Truncate(left * entry.Wing.DisruptionTaken);
+            }
+        }
+
+        // 0xf87550: the losses come off the wings after the whole air war.
+        foreach (var side in new[] { Attacker, Defender })
+        {
+            foreach (var group in groups[side])
+            {
+                foreach (var wing in group.Wings.Where(wing => wing.RegionLosses > 0).ToList())
+                {
+                    var removed = Math.Min(wing.Planes, wing.RegionLosses);
+                    wing.Planes -= removed;
+                    Log.Add($"Hour {hour}: {side.Label} {group.Source} lost {removed} {wing.Plane.ID} in the region's air war");
+
+                    // [LOG] A carrier wing emptied in the region's air war is deleted from its pool.
+                    if (wing.Planes == 0 && group.Carrier is not null)
+                    {
+                        group.Wings.Remove(wing);
+                    }
+                }
+            }
+        }
+    }
+
+    // [RE] 0xc5f4c0 → 0xf81a20 → 0xf7be70 → 0xf862a0: one side's turn as the attacking country.
+    private void FightRegion(BattleSide own, (List<RegionEntry> RegionList, List<RegionEntry> Scrambled) ownLists,
+        (List<RegionEntry> RegionList, List<RegionEntry> Scrambled) enemyLists, IRandomSource random)
+    {
+        var enemy = ReferenceEquals(own, Attacker) ? Defender : Attacker;
+        var defenders = enemyLists.RegionList.Concat(enemyLists.Scrambled).ToList();
+        var attackers = ownLists.RegionList.Concat(ownLists.Scrambled.Where(entry => entry.AirSuperiority)).ToList();
+
+        if (defenders.Count == 0 || attackers.Count == 0)
+        {
+            return;
+        }
+
+        var ownCountry = own.Participant.CountryModifiers;
+        var enemyCountry = enemy.Participant.CountryModifiers;
+        var detection = Math.Clamp(defines.Hardcoded.RegionAirDetection, 0, 1);
+        var anyStrike = defenders.Any(entry => entry.Strike);
+
+        // 0xf80540: the defenders' weights; a carrier wing in combat counts fully, a land wing by the detection.
+        foreach (var defender in defenders)
+        {
+            var seen = (int)Math.Truncate(defender.Planes * (defender.Carrier ? 1 : detection));
+            defender.Left = defender.AirSuperiority && anyStrike
+                ? defender.Planes
+                : Math.Max(1, (int)Math.Round((double)seen, MidpointRounding.AwayFromZero));
+        }
+
+        var stats = new Dictionary<AirWing, RegionAirWarRules.WingStats>();
+        RegionAirWarRules.WingStats StatsOf(RegionEntry entry, ModifierSet country) =>
+            stats.TryGetValue(entry.Wing, out var known) ? known : stats[entry.Wing] = RegionAirWarRules.Stats(entry.Wing, defines, country);
+
+        foreach (var attacker in attackers.OrderByDescending(entry => StatsOf(entry, ownCountry).AttackShare * StatsOf(entry, ownCountry).AgilityShare).ToList())
+        {
+            var s = StatsOf(attacker, ownCountry);
+
+            if (s.Attack <= 0 || attacker.Planes <= 0)
+            {
+                continue;
+            }
+
+            var total = defenders.Sum(entry => entry.Left);
+
+            if (total <= 0)
+            {
+                return;
+            }
+
+            var sameStrike = defenders.Where(entry => entry.Strike).Sum(entry => entry.Left);
+            var engaged = Math.Min(total * defines.NAir.COMBAT_MULTIPLANE_CAP, attacker.Planes);
+            var potential = engaged * s.Attack;
+
+            foreach (var defender in defenders.Where(entry => entry.Left > 0))
+            {
+                var share = (double)defender.Left / total;
+                var bothCarriers = defender.Carrier && attacker.Carrier;
+                var d = StatsOf(defender, enemyCountry);
+                var expected = RegionAirWarRules.ExpectedLosses(Math.Max(0.001, share * potential), s, d, bothCarriers, defines);
+                var cap = Math.Min(defender.Left, defender.Planes - defender.Wing.RegionLosses);
+                defender.Left = Math.Max(0, defender.Left - (int)Math.Round(Math.Max(0.001, share * engaged) / defines.NAir.COMBAT_MULTIPLANE_CAP,
+                    MidpointRounding.AwayFromZero));
+                defender.Wing.RegionLosses += RegionAirWarRules.Losses(expected, cap, random);
+
+                if (defender.Strike && sameStrike > 0)
+                {
+                    var disruption = RegionAirWarRules.Disruption(attacker.Planes, s, bothCarriers, defines);
+                    defender.Wing.DisruptionTaken += FixedPoint.Truncate(FixedPoint.Truncate((double)defender.Left / sameStrike * disruption));
+                }
             }
         }
     }

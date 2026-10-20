@@ -266,20 +266,22 @@ public sealed class BattleSession
         attacker.Lines = new BattleLines(attacker.Ships);
         defender.Lines = new BattleLines(defender.Ships);
 
-        // Carrier air strength uses the previous hour's screening, as the game computes positioning first.
-        var attackerAir = airPhase.CarrierAirStrength(attacker, hour, Darkness(hour));
-        var defenderAir = airPhase.CarrierAirStrength(defender, hour, Darkness(hour));
-        attacker.Positioning = PositioningRules.Calculate(attacker.Lines, defender.Lines, defines, attackerAir.A, defenderAir,
-            SideModifier(attacker, StaticModifiers.Positioning), FleetSizePenaltyFactor(defender));
-        defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines, defenderAir.A, attackerAir,
-            SideModifier(defender, StaticModifiers.Positioning), FleetSizePenaltyFactor(attacker));
-        // [RE + LOG] A-AA-REDUCE: the fleet AA term is fixed here for the hour, so ships sunk during it still count.
-        attacker.FleetAntiAir = AirRules.FleetAntiAir(attacker.Ships, attacker.Positioning, defines);
-        defender.FleetAntiAir = AirRules.FleetAntiAir(defender.Ships, defender.Positioning, defines);
-        attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines,
-            SideModifier(attacker, StaticModifiers.ScreeningEfficiency), Country(attacker, StaticModifiers.ScreeningWithoutScreens));
-        defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines,
-            SideModifier(defender, StaticModifiers.ScreeningEfficiency), Country(defender, StaticModifiers.ScreeningWithoutScreens));
+        // [RE + LOG] The game updates the sides in turn: the attacker's positioning, then its screening, then the
+        // defender's positioning and screening. Carrier sorties read their side's screening, so the carrier-ratio
+        // positioning (S-POS) sees the defender's previous screening and the attacker's new one. In the logged TFB
+        // carrier battles the carrier-ratio helper's sums (0x161eeb0) showed this order in every hour.
+        foreach (var (own, enemy) in new[] { (attacker, defender), (defender, attacker) })
+        {
+            var enemyAir = airPhase.CarrierAirStrength(enemy, hour, Darkness(hour));
+            var ownAir = enemyAir.A > 0 ? airPhase.CarrierAirStrength(own, hour, Darkness(hour)).A : 0;
+            own.Positioning = PositioningRules.Calculate(own.Lines, enemy.Lines, defines, ownAir, enemyAir,
+                SideModifier(own, StaticModifiers.Positioning), FleetSizePenaltyFactor(enemy));
+            // [RE + LOG] A-AA-REDUCE: the fleet AA term is fixed here for the hour, so ships sunk during it still count.
+            own.FleetAntiAir = AirRules.FleetAntiAir(own.Ships, own.Positioning, defines);
+            own.Screening = ScreeningRules.Calculate(own.Lines, own.Positioning, defines,
+                SideModifier(own, StaticModifiers.ScreeningEfficiency), Country(own, StaticModifiers.ScreeningWithoutScreens));
+        }
+
         attacker.SubmarineDetection = SubmarineRules.Detection(attacker.Ships, defines);
         defender.SubmarineDetection = SubmarineRules.Detection(defender.Ships, defines);
 
@@ -371,6 +373,8 @@ public sealed class BattleSession
         }
 
         var strikes = airPhase.Strike(own, enemy, hour, darkness, random);
+        log.AddRange(airPhase.Log);
+        airPhase.Log.Clear();
 
         foreach (var (record, target, applied) in strikes)
         {
@@ -627,6 +631,10 @@ public sealed class BattleSession
     {
         if (airPhase.HasAir && AirRules.IsAirHour(HourOfDay(hour), rules.AirRegionPhase, defines))
         {
+            // A-REGION [RE]: the region's air war comes first in the hourly air update, then the land-based joins.
+            airPhase.RegionAirWar(hour, random);
+            log.AddRange(airPhase.Log);
+            airPhase.Log.Clear();
             airPhase.JoinLandBased(hour);
         }
     }

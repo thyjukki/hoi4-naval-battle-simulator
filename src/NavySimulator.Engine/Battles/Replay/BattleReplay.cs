@@ -1,3 +1,4 @@
+using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
 
@@ -37,10 +38,14 @@ public static class BattleReplay
         Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<AirStrikeRecord>>? onAirHour = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
-        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts);
+        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate });
         var session = new BattleSession(scenario, random);
+        // The region's air war happens outside the logged combat update: the wings' planes and disruption come from the log.
+        session.AirPhase.RegionAirWarEnabled = false;
         var shipsById = session.Ships.ToDictionary(ship => ship.ID, StringComparer.Ordinal);
         var reports = new List<ReplayHourReport>();
+        var wingIds = new Dictionary<AirGroup, List<uint>>();
+        var airObjects = new Dictionary<string, AirGroup>(StringComparer.Ordinal);
 
         foreach (var hour in hours.OrderBy(entry => entry.Hour))
         {
@@ -58,8 +63,16 @@ public static class BattleReplay
             }
 
             var air = hour.Air ?? [];
-            ApplyAir(session, shipsById, air);
+            ApplyAir(session, shipsById, air, wingIds, airObjects);
             ApplySides(session, hour.StartSides);
+
+            foreach (var (pointer, planes) in hour.StartAirObjectPlanes ?? new Dictionary<string, int>())
+            {
+                if (airObjects.TryGetValue(pointer, out var group))
+                {
+                    group.CountedPlanes = planes;
+                }
+            }
 
             var shotsBefore = session.Shots.Count;
             var strikesBefore = session.AirStrikes.Count;
@@ -91,7 +104,8 @@ public static class BattleReplay
 
     // A-WINGS: each carrier's air objects in the game's order are its wing pools in the engine's order (both by first
     // wing); the game's wing planes at the start of the strike are the hour's start (only its own strike removes planes).
-    private static void ApplyAir(BattleSession session, IReadOnlyDictionary<string, Ship> shipsById, IReadOnlyList<ReplayAirStrike> air)
+    private static void ApplyAir(BattleSession session, IReadOnlyDictionary<string, Ship> shipsById, IReadOnlyList<ReplayAirStrike> air,
+        Dictionary<AirGroup, List<uint>> wingIds, Dictionary<string, AirGroup> airObjects)
     {
         foreach (var byCarrier in air.Where(strike => strike.CarrierId is not null).GroupBy(strike => strike.CarrierId!))
         {
@@ -103,11 +117,106 @@ public static class BattleReplay
             var side = session.SideOf(carrier) == session.Attacker.Label ? session.Attacker : session.Defender;
             var groups = session.AirPhase.GroupsOf(side).Where(group => group.Carrier == carrier).ToList();
 
-            foreach (var (strike, group) in byCarrier.Zip(groups))
+            // An air object keeps its pointer for the battle; it is matched by order the first hour all of the carrier's
+            // pools are logged (a pool emptied by the region's air war has no air object any more).
+            if (byCarrier.Count() == groups.Count)
             {
-                for (var i = 0; i < group.Wings.Count && i < strike.WingPlanes.Count; i++)
+                foreach (var (strike, group) in byCarrier.Zip(groups))
                 {
-                    group.Wings[i].Planes = strike.WingPlanes[i];
+                    if (strike.AirObject is { } pointer)
+                    {
+                        airObjects.TryAdd(pointer, group);
+                    }
+                }
+            }
+
+            foreach (var strike in byCarrier)
+            {
+                if (strike.AirObject is { } pointer && airObjects.TryGetValue(pointer, out var group))
+                {
+                    SetPlanes(group, strike, wingIds, session.Scenario.AceTemplates);
+                }
+            }
+        }
+
+        // A-EXTERNAL: the game's land-based air objects of a side in joining order are the side's land-based entries that
+        // join; the side is the one whose enemy the strike targets. Their attack factor (the disruption) is the game's.
+        foreach (var side in new[] { session.Attacker, session.Defender })
+        {
+            var enemyIds = (ReferenceEquals(side, session.Attacker) ? session.Defender : session.Attacker).Ships.Select(ship => ship.ID).ToHashSet();
+            var logged = air.Where(strike => strike.External && strike.TargetId is { } target && enemyIds.Contains(target));
+            var groups = session.AirPhase.GroupsOf(side).Where(group => group.LandBased is { JoinsNavalBattle: true });
+
+            foreach (var (strike, group) in logged.Zip(groups))
+            {
+                SetPlanes(group, strike, wingIds, session.Scenario.AceTemplates);
+                group.DisruptionFactor = strike.ExternalFactor ?? group.DisruptionFactor;
+            }
+        }
+    }
+
+    // The game's wings by handle: the first time a group is seen its wings are the game's in order; a wing the game has
+    // deleted since (the region's air war empties and removes wings) is removed from the engine's group too.
+    private static void SetPlanes(AirGroup group, ReplayAirStrike strike, Dictionary<AirGroup, List<uint>> wingIds,
+        IReadOnlyList<AceTemplate>? aceTemplates = null)
+    {
+        if (strike.WingIds is { } ids)
+        {
+            if (!wingIds.TryGetValue(group, out var known))
+            {
+                wingIds[group] = known = ids.Take(group.Wings.Count).ToList();
+            }
+
+            for (var i = known.Count - 1; i >= 0; i--)
+            {
+                if (!ids.Contains(known[i]) && i < group.Wings.Count)
+                {
+                    group.Wings.RemoveAt(i);
+                    known.RemoveAt(i);
+                }
+            }
+        }
+
+        for (var i = 0; i < group.Wings.Count && i < strike.WingPlanes.Count; i++)
+        {
+            group.Wings[i].Planes = strike.WingPlanes[i];
+        }
+
+        // A-REGION-DISRUPT: the disruption each wing's mission took in the game's region air war this hour.
+        if (strike.WingDisruption is { } disruption)
+        {
+            for (var i = 0; i < group.Wings.Count && i < disruption.Count; i++)
+            {
+                group.Wings[i].Disruption = disruption[i];
+            }
+        }
+
+        // A-ACE: the game's aces, when logged (an ace can move to another wing of the pool when its wing is deleted).
+        if (strike.Aces is { } aces && aceTemplates is not null)
+        {
+            for (var i = 0; i < group.Wings.Count && i < aces.Count; i++)
+            {
+                var wing = group.Wings[i];
+                var logged = aces[i];
+
+                if (logged is null)
+                {
+                    wing.Ace = null;
+                    continue;
+                }
+
+                var types = wing.Plane.SubUnitTypes.Count > 0 ? wing.Plane.SubUnitTypes : wing.Plane.Types;
+                var template = aceTemplates.FirstOrDefault(candidate => candidate.Types.Overlaps(types) &&
+                                                                        Math.Abs(candidate.Chance - (logged.TemplateChance ?? -1)) < 1e-5);
+
+                if (template is not null && wing.Ace?.Template != template)
+                {
+                    wing.Ace = new AirAce(template, -1);
+                }
+
+                if (wing.Ace is { } ace)
+                {
+                    ace.Alive = logged.Alive;
                 }
             }
         }

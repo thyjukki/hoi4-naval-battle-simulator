@@ -15,6 +15,9 @@ public class BattleScenario
     public readonly GameDefines Defines;
     public readonly BattleRules Rules;
 
+    /// <summary>A-ACE: the air ace templates (<c>common/aces</c>) aces are drawn from; empty: no aces.</summary>
+    public readonly IReadOnlyList<AceTemplate> AceTemplates;
+
     public BattleScenario(
         string id,
         string terrain,
@@ -25,7 +28,8 @@ public class BattleScenario
         BattleParticipant defender,
         IReadOnlyDictionary<string, PlaneEquipment> planesById,
         GameDefines defines,
-        BattleRules rules)
+        BattleRules rules,
+        IReadOnlyList<AceTemplate>? aceTemplates = null)
     {
         ID = id;
         Terrain = terrain;
@@ -37,5 +41,6 @@ public class BattleScenario
         PlanesByID = planesById;
         Defines = defines;
         Rules = rules;
+        AceTemplates = aceTemplates ?? [];
     }
 }

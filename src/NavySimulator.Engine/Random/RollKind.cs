@@ -54,8 +54,27 @@ public enum RollKind
     AirCritical,
 
     /// <summary>
-    /// Rolls the game makes after each strike for every strike wing (airmission.cpp lines 0xb52, 0xb54, 0xb68, 0xb72:
-    /// plane experience and aces) and once per strike (integer draw, line 0x1c9); no combat effect, the engine makes none.
+    /// A-REGION: the roll that rounds the planes one wing shoots down of another in the region's air war (airmission.cpp
+    /// line 0xacf). The game makes it outside the naval combat update, so it is not in a battle's roll log.
+    /// </summary>
+    RegionAirLoss,
+
+    /// <summary>A-ACE: whether a strike wing earns an ace after a strike (airmission.cpp line 0xb68).</summary>
+    AirAceEarn,
+
+    /// <summary>A-ACE: whether a wing's ace dies after a strike that lost planes (line 0xb52).</summary>
+    AirAceDeath,
+
+    /// <summary>
+    /// A-ACE: which template a new ace gets. The game draws it from its own hash generator (seeded by the wing and the
+    /// date), outside the logged rolls; a replay serves it from its fallback.
+    /// </summary>
+    AirAceTemplate,
+
+    /// <summary>
+    /// Rolls the game makes around the ace rolls with no combat effect: an ace killed by an enemy ace (line 0xb54, only
+    /// after air-to-air combat), the promotion event seed (integer draw, line 0xb72) and once per strike (integer draw,
+    /// line 0x1c9); the engine makes none.
     /// </summary>
     AirBookkeeping,
 

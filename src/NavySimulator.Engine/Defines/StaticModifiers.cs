@@ -50,6 +50,13 @@ public sealed class StaticModifiers
     public const string NavalStrikeAttackFactor = "naval_strike_attack_factor";
     public const string NavalStrikeTargettingFactor = "naval_strike_targetting_factor";
     public const string NavalStrikeAgilityFactor = "naval_strike_agility_factor";
+    public const string AceEffectivenessFactor = "ace_effectiveness_factor";
+    public const string AirAttackFactor = "air_attack_factor";
+    public const string AirDefenceFactor = "air_defence_factor";
+    public const string AirAgilityFactor = "air_agility_factor";
+    public const string AirMaximumSpeedFactor = "air_maximum_speed_factor";
+    public const string AirEscortEfficiency = "air_escort_efficiency";
+    public const string AirAceGenerationChanceFactor = "air_ace_generation_chance_factor";
     public const string NavyCarrierAirAttackFactor = "navy_carrier_air_attack_factor";
     public const string NavyCarrierAirTargettingFactor = "navy_carrier_air_targetting_factor";
     public const string NavyCarrierAirAgilityFactor = "navy_carrier_air_agility_factor";

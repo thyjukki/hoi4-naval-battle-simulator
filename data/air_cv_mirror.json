@@ -36,7 +36,9 @@
       "spiritIDs": [],
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
-      "carrierStanceIndex": 4
+      "carrierStanceIndex": 4,
+      "carrierWingsOnRegionMission": true,
+      "carrierMissionEfficiency": 0.734
     },
     "defender": {
       "fleetID": "air_test_cv_std_b",

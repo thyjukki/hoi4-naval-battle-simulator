@@ -284,6 +284,15 @@
         "carrierNightTraffic": {
           "type": "number",
           "description": "Extra carrier_night_traffic, e.g. 0.15, on top of the side's doctrines and spirits. Added to the night sortie factor while dark."
+        },
+        "carrierWingsOnRegionMission": {
+          "type": "boolean",
+          "description": "A-REGION: the carrier wings fly a mission over the battle's region: all of them fight in the region's air war and can be disrupted (default false: only scrambled; their fighters attack, nobody is disrupted)."
+        },
+        "carrierMissionEfficiency": {
+          "type": "number",
+          "minimum": 0,
+          "description": "A-REGION: the carrier wings' mission effectiveness, which sets how many of their planes fight in the region's air war (default 1)."
         }
       },
       "additionalProperties": false

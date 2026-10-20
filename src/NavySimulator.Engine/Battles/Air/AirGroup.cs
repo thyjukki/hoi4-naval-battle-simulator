@@ -24,7 +24,7 @@ public sealed class AirGroup
     public string Pool { get; }
 
     /// <summary>[RE] External groups multiply their attack by this factor (airfx+0xc0, the mission's disruption; an input).</summary>
-    public double DisruptionFactor { get; }
+    public double DisruptionFactor { get; set; }
 
     /// <summary>A-EXTERNAL: the land-based planes this group stands for; null for a carrier group.</summary>
     public LandBasedAirwing? LandBased { get; }
@@ -40,6 +40,15 @@ public sealed class AirGroup
 
     /// <summary>All planes of the pool's wings.</summary>
     public int Planes => Wings.Sum(wing => wing.Planes);
+
+    /// <summary>
+    /// [RE + LOG] airfx+0x5c: the planes as the air object last counted them, at its side's air step (0x1976ca0) and
+    /// less its strike losses; planes lost between air steps (the region's air war) show only at the next one. The
+    /// carrier-ratio positioning (S-POS) and the stacking factor (A-STACK) read it. Null until first counted: all planes.
+    /// </summary>
+    public int? CountedPlanes { get; set; }
+
+    public int PlanesCounted => CountedPlanes ?? Planes;
 
     /// <summary>
     /// [RE + LOG] The strike list (airfx+0x28) and the fighter-type wings; a wing stays in them with no planes left, so it

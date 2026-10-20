@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Air ace templates",
+  "description": "A-ACE: the game's common/aces templates, written by NavySimulator import-planes (do not edit by hand).",
+  "type": "object",
+  "required": ["aces"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "aces": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string" },
+          "types": { "type": "array", "items": { "type": "string" }, "description": "Plane sub-unit type keywords the ace can come to." },
+          "chance": { "type": "number", "description": "Weight among the templates a wing can get." },
+          "effects": { "type": "object", "additionalProperties": { "type": "number" }, "description": "The ace's modifiers." }
+        }
+      }
+    }
+  }
+}

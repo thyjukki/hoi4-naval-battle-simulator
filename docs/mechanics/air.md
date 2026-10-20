@@ -57,6 +57,7 @@ flying  = round(poolPlanes × clamp(sortie, 0, 1))
 ```
 - The clamp comes only at the end, so a sortie efficiency above 1 offsets low org.
 - The crowding counts every plane on the carrier; `flying` only the air object's pool (A-WINGS).
+- [RE + LOG] `hour` is the game's combat hour counter, which is one ahead of the battle hour during the update (S-HOUR): the stance base ends after battle hour `SELECTED_SORTIE_INITIAL_TIME − 2` (22). In logged TFB carrier battles the carrier-ratio positioning switched to the base efficiency at battle hour 23, not 24.
 - The stance does not split planes into offence and defence (A-STANCE).
 - `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the side's doctrines' and spirits' plus the participant input `carrierNightTraffic`.
 - Not modelled: weather `carrier_traffic`, `carrier_capacity_penalty_reduction`, leader modifiers.
@@ -93,12 +94,16 @@ for each wing, in listed order [ASSUMED] while joined < cap:
 ```
 - A wing that has joined strikes at every air hour with **all its planes**, not only the joined count (read from code; worth an in-game check).
 - `missionEfficiency` is the mission's efficiency (air base, range, coverage, none simulated; an input): it only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless enemy interceptors disrupted the mission (an input; the disruption formula is in the finding).
+- [LOG] The disruption counts **twice**: the mission efficiency 0xf78160 weighs each wing's attack inside the strike average (A-DMG), and the air object's `airfx+0xc0`, the same value, multiplies the result again. In 10 logged TFB battles (`air_land_vs_fleet`: 100 land tactical bombers against cruisers covered by 100 land fighters on air superiority) the game's damage per hit was the undisrupted value × factor² in every strike (factor 0.45–0.51); the replays match within 0.5 % with it.
+- [LOG] Only wings in range join: in game, land CAS from Burgas or Dobrogea never joined a battle in province 7906, tactical bombers did (mission efficiency 0.6 from Burgas, 1.0 from Dobrogea). The simulator has no range or coverage model; leave out-of-range wings out of the scenario and set `missionEfficiency` to the game's.
+- Each entry has a `mission`: `naval_bomber` (naval strike, the default) or `air_superiority`. Air superiority wings never join the naval battle (A-WINGS-EXT); they fight in the region's air war (A-REGION), which disrupts and shoots down the enemy's strike wings.
 - Land-based planes skip the sortie step and get no carrier multiplier.
 - Not modelled: port strikes, naval patrol wings (they join but have no strike wings), carrier wings of task forces outside the battle joining it (their budget also takes the stance ratio).
 
 ## A-INTERCEPT: carrier fighters vs strike planes [RE]
 
-`0x197b380`. The defenders are all fighter-type wings (A-WINGS, by sub-unit) on the target side's carriers that are still in the battle; land-based fighters are not used.
+`0x197b380`. The defenders are all fighter-type wings (A-WINGS, by sub-unit) on every carrier of the target's group that is still afloat (0x197bb9d: escaped carriers and wings without planes included, sunk carriers not); land-based fighters are not used. The roll is made whenever that list is not empty [RE + LOG: in logged battles the game rolled the interception (line 0x27d) for strikes whose defenders were only escaped carriers' or empty wings].
+- [LOG] With TFB's stance ratios of 1.0, `defShare = 0`, so carrier fighters never shoot down strike planes in TFB (in 40 logged battles not one plane was intercepted); they still matter for the region's air war (A-REGION).
 ```
 D       = CARRIER_PERCENTAGE_DEFEND × Σ defender planes × defShare
 engaged = min(D, Σ attacking strike-wing planes × COMBAT_MULTIPLANE_CAP)
@@ -108,7 +113,7 @@ spdInc  = dSpd > aSpd ? (min(dSpd/aSpd, BIGGEST_SPEED_FACTOR_DIFF) − 1) × dmg
 x       = max(0.001, (dmg + spdInc − agiRed) × 0.01 / avg attacker air defence)
 losses  = floor(x) + (frac(x) > U ? 1 : 0)
 ```
-- The averages are unweighted means per wing.
+- The averages are unweighted means per wing (wings without planes count).
 - Defenders take no losses, and there is no disruption.
 - The top-speed term of the speed helper is not decoded and not modelled. [RE, partial]
 - `COMBAT_DAMAGE_SCALE_CARRIER` and `DISRUPTION_FACTOR_CARRIER` are not read in naval combat.
@@ -122,6 +127,8 @@ weight = maxHP × t × (1 + NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE × (1 − HP/
        + NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE × clamp(5 − AA, 0, 5)
 ```
 The low-AA term is additive and, at real weights, negligible. Each group picks one target per strike.
+
+[RE + LOG] The pick (0x197ac19 → 0x24f04f0) is an **integer** draw `n` (random int31, line 0x43f, the same generator as the other rolls; logged since 2026-10-20): `p = trunc(n / 2^31 × Σw)` over the fx5 weights, and the target is the first candidate **in list order** whose running sum exceeds `p` (the surface pick puts the heaviest first; this one does not). Each product of the weight is truncated to fx5. Code: `AirRules.PickTarget`. In 40 replayed TFB battles every air target matched.
 
 ## A-AA-PREEMPT: preemptive shoot-down [RE]
 
@@ -144,6 +151,7 @@ reduction = min(MAX_ANTI_AIR_REDUCTION_EFFECT_ON_INCOMING_AIR_DAMAGE,
                 ANTI_AIR_MULT_ON_INCOMING_AIR_DAMAGE × (fleetAA + targetAA)^ANTI_AIR_POW_ON_INCOMING_AIR_DAMAGE)
 ```
 Convoys add nothing, either to the side total or as the target.
+- [LOG] The side term counts every warship of the side that is afloat, **escaped ones included** (they stay in the group's member list); sunk ships drop out. It is set in the side update with positioning at the start of the hour (S-HOUR), so ships sunk during the hour still count. In the logged `jukki_usa_vs_bc_japan_ingame` battles the game's side value matched "in battle + escaped" in every hour; counting only ships in battle made late strikes up to 15 % too strong. Code: `BattleSide.FleetAntiAir`.
 
 ## A-HIT: how many planes hit [RE]
 
@@ -159,11 +167,15 @@ hits     = round(strikers × clamp(avgTargeting × NAVAL_STRIKE_TARGETTING_TO_AM
 ## A-DMG: strike damage [RE]
 
 ```
-attack = 0.1 × plane-weighted naval attack of the selected strike wings executing naval strike × A-STRIKE-MODS (attack)
+n_i    = round(planes_i × pool planes / Σ planes of the selected wings)          per selected wing i
+attack = Σ(attack_i × n_i × e_i) / Σ n_i   × (1 + navy_carrier_air_attack_factor for a carrier group)
+         attack_i = 0.1 × naval attack × (1 + naval_strike_attack_factor + the wing's ace bonus)    (A-STRIKE-MODS, A-ACE)
+         e_i      = the wing's mission efficiency 0xf78160 (1 unless its mission is disrupted, A-REGION)
        × (NAVAL_STRIKE_CARRIER_MULTIPLIER for a carrier group | disruptionFactor for land-based)
 base   = hits × attack × (1 − reduction)
 HP    -= base × NAVAL_STRIKE_DAMAGE_TO_STR;  org -= base × NAVAL_STRIKE_DAMAGE_TO_ORG
 ```
+Targeting and agility are averaged the same way, without `e_i`. [LOG] The logger records the game's three averages per strike (0x1978e30, `averages` in raw.jsonl).
 There is no damage randomness and no HP-scaled org damage. Sinking and retreat follow the surface rules (`DamageRules.Apply`).
 
 ## A-STRIKE-MODS: country modifiers of the strike stats [RE]
@@ -178,8 +190,25 @@ chance = base > 0 ? max(0.001, base × max(0, 1 − critical_receive_chance)) : 
 mult   = 1 + COMBAT_CRITICAL_DAMAGE_MULT × (1 − rel) / hits
 ```
 - Air crits use the gun crit defines, not the torpedo ones.
-- In the game, a part hit (`CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR / rel`) replaces the multiplier. No part data is loaded, so the simulator always applies the multiplier and consumes the roll.
+- [RE] A part hit replaces the multiplier (0x1975150): the same path as gun crits (S-CRIT-PART: chance × the ship type's `critical_part_damage_chance_mult` / reliability, roll line 0x2f4, part pick 0x78f, the part's multipliers and additions), with `CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR` as the base. Simulated since 2026-10-20 (`CriticalPartRules` with the air chance).
 - [RE] (0x197af20) The base chance is multiplied by `max(0, 1 − critical_receive_chance)` of the target, read through its member getter, before the 0.001 floor (which applies only when the base chance is positive). The sign is the opposite of the surface rule (S-CRIT), so a negative value (damage control, the pride of the fleet's −0.5) raises the chance: the game's behaviour, reproduced. Code: `AirRules.CriticalChance`.
+
+## A-ACE: aces [RE + LOG]
+
+From [A-ACE](../reverse-engineering/findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md). After a strike that reached its target (also when no striker survived the AA), every wing of the air object's strike list, in pool order, gets one call with the air object's losses (intercepted + AA) and the target's HP lost, truncated (`damage`):
+```
+wing with a live ace:     if losses > 0: dies if U(line 0xb52) ≤ ACE_DEATH_CHANCE_BASE + trunc(trunc(losses × ACE_DEATH_CHANCE_PLANES_MULT) × 0.1)
+otherwise:                if damage > 0 and losses < damage:
+                              earns one if U(line 0xb68) ≤ trunc((ACE_EARN_CHANCE_BASE + trunc(trunc(damage × ACE_EARN_CHANCE_PLANES_MULT) × 0.1))
+                                                               × (1 + air_ace_generation_chance_factor))
+ace bonus (per modifier) = trunc(trunc(effect × min(ACE_WING_SIZE / wing planes, ACE_WING_SIZE_MAX_BONUS)) × (1 + ace_effectiveness_factor))
+```
+- The template is drawn by `chance` among the `common/aces` templates whose `type` meets the wing's sub-unit's (TFB carrier naval bombers: `support_good` / `unique` / `genius` at 0.9 / 0.4 / 0.05: naval targeting +0.05 / +0.10 / +0.15, doubled on wings of 50 planes or fewer). The game draws it from its own hash generator, outside the logged rolls; a replay takes the logged ace (the logger reads each wing's ace and its template's chance since 2026-10-20).
+- The bonus counts only for its wing's term in the strike averages (A-DMG): naval attack, targeting and agility keys only, so TFB support aces raise naval targeting and nothing else at sea.
+- Wings gain no experience in naval strikes; experience levels have no naval effect.
+- [LOG] The roll order matches the logged battles (0xb68 per wing without a live ace, 0xb52 per wing with one when planes were lost, 0xb72 after an ace is earned: the promotion event, no effect).
+- [ASSUMED] A new ace replaces a dead one on its wing. [LOG] When the region's air war deletes a wing, its ace can move to another wing of the pool (the game then skips that wing's earn roll); the free-running engine drops it.
+- Data: `aces/aces.json`, written by `NavySimulator import-planes` from `common/aces`.
 
 ## A-LOSSES [RE + ASSUMED]
 
@@ -197,7 +226,7 @@ From [A-WINGS-REINFORCE](../reverse-engineering/findings/A-WINGS-carrier-wings-a
 
 ## Experience from sorties [RE]
 
-Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from the sortie efficiency of their first air object.
+Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from the sortie efficiency of their first air object. [LOG] The efficiency is **not clamped** to 1: TFB carriers at a sortie efficiency of 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit), the engine clamped to 0.16. The game's counter-0 update before battle hour 0 (S-HOUR) already gives one hour of it.
 
 ## Not modelled
 
@@ -208,7 +237,7 @@ The weather terms (`carrier_traffic`, `naval_strike`), leader modifiers, air doc
 | Field | Where | Meaning |
 |---|---|---|
 | `carrierAirwings` | force composition | wings per carrier: per design, one loadout per ship (plane ID, wings, planes per wing) |
-| `landBasedAirwings` | participant | land-based planes, one entry per air base: plane ID, planes, mission efficiency (offered planes), disruption factor (attack) |
+| `landBasedAirwings` | participant | land-based planes, one entry per air base: plane ID, planes, mission (`naval_bomber` or `air_superiority`), mission efficiency (offered planes), disruption factor (attack) |
 | `planeStockpile` | participant | planes in stock by plane ID (A-REINFORCE) |
 | `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
 | `carrierNightTraffic` | participant | extra `carrier_night_traffic` on top of the side's doctrines and spirits |

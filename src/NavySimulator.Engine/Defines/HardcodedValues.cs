@@ -69,6 +69,20 @@ public sealed class HardcodedValues
     // allow_mission_type) have naval strike, naval kamikaze or port strike (& 0x190).
     public HashSet<string> StrikeListMissions { get; set; } = new(["naval_bomber", "naval_kamikaze", "port_strike"], StringComparer.Ordinal);
 
+    // [RE] A-ACE-ROLLS (0xf80f60, imul 0x2710): the per-plane (per HP) terms of the ace earn and death chances are scaled by 0.1.
+    public double AceChancePlanesScale { get; set; } = 0.1;
+
+    // [RE] A-REGION (0xf862a0, imul 0x3e8): the region air war's losses are trunc(scale × damage) × 0.01 / defence.
+    public double AirCombatLossScale { get; set; } = 0.01;
+
+    // [RE] A-REGION-DISRUPT (0xf78160, divisor 316200): e = 1 − sqrt(disruption / den) × 0.316228.
+    public double DisruptionEfficiencyScale { get; set; } = 0.316228;
+
+    // [ASSUMED + LOG] A-REGION: the attacker's air detection in the region (0xf77730, not decoded). 0 fits the logged
+    // disruption of carrier bombers (22.4 predicted, 22.0 logged in a TFB carrier battle); it also makes land wings count
+    // as one plane when defending (their weight is trunc(planes × detection)).
+    public double RegionAirDetection { get; set; } = 0;
+
     // [RE] A-WINGS-STRIKE: only strike wings executing naval strike or naval kamikaze (& 0x90) enter the strike averages
     // and take losses; a wing can execute only a mission its plane allows.
     public HashSet<string> NavalStrikeMissions { get; set; } = new(["naval_bomber", "naval_kamikaze"], StringComparer.Ordinal);

@@ -44,6 +44,23 @@ public static class PlaneImporter
         }
 
         import.Planes.Sort((a, b) => string.CompareOrdinal(a.ID, b.ID));
+
+        // A-ACE: common/aces modifiers = { id = { type = { ... } chance = x effect = { modifier = value } } }.
+        foreach (var (id, block) in ReadEntries(files, "common/aces", "modifiers", import))
+        {
+            import.Aces.Add(new AceTemplateDto
+            {
+                ID = id,
+                Types = Words(block.GetAll("type")),
+                Chance = block.GetDouble("chance") ?? 0,
+                Effects = (block.GetBlock("effect")?.KeyedEntries ?? [])
+                    .Where(entry => entry.Value.TryGetDouble(out _))
+                    .GroupBy(entry => entry.Key!, StringComparer.Ordinal)
+                    .ToDictionary(group => group.Key, group => group.Sum(entry => entry.Value.TryGetDouble(out var value) ? value : 0), StringComparer.Ordinal)
+            });
+        }
+
+        import.Aces.Sort((a, b) => string.CompareOrdinal(a.ID, b.ID));
         return import;
     }
 

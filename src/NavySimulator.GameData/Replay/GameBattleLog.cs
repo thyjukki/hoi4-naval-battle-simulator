@@ -31,15 +31,15 @@ public sealed class GameBattleLog
         [0x21c] = RollKind.AirAntiAirKills,
         [0x45d] = RollKind.AirHits,
         [0x487] = RollKind.AirCritical,
-        [0xb52] = RollKind.AirBookkeeping,
+        [0xb52] = RollKind.AirAceDeath,
         [0xb54] = RollKind.AirBookkeeping,
-        [0xb68] = RollKind.AirBookkeeping
+        [0xb68] = RollKind.AirAceEarn
     };
 
     /// <summary>
     /// Source lines of the integer draws (random int31, the same generator) in the combat update ([LOG], logged since
     /// 2026-10-20): 0x43f the air target pick (naval_fire_exchange_air.cpp), 0x96 with the sinking rolls, 0x1c9 once per
-    /// air strike and 0xb72 per strike wing (plane experience); only the target pick decides anything in the battle.
+    /// air strike and 0xb72 after an ace is earned (the promotion event); only the target pick decides anything in the battle.
     /// </summary>
     public static IReadOnlyDictionary<int, RollKind> IntegerRollLines { get; } = new Dictionary<int, RollKind>
     {
@@ -158,6 +158,8 @@ public sealed class GameBattleLog
     /// </summary>
     public IReadOnlyList<ReplayHour> Hours(IReadOnlyDictionary<uint, string> map)
     {
+        var counted = CountedPlanes();
+
         return hours.Select((record, i) => new ReplayHour(
                 record.GetProperty("hourAtUpdate").GetInt32() - 1,
                 States(record.GetProperty("start"), map),
@@ -168,11 +170,89 @@ public sealed class GameBattleLog
                     : States(record.GetProperty("sides"), map),
                 Air(record, map),
                 SideStates(record.GetProperty("sides")),
-                SideStates(record.GetProperty("start"))))
+                SideStates(record.GetProperty("start")),
+                i > 0 ? counted[i - 1] : null))
             .ToList();
     }
 
+    /// <summary>
+    /// airfx+0x5c of every air object at the end of each hour (raw.jsonl <c>airObjects</c>, logged since 2026-10-20), by
+    /// the air object's pointer. Logs without the pointer there are matched by carrier and pool position to the
+    /// pointers of the strike records seen so far.
+    /// </summary>
+    private List<Dictionary<string, int>?> CountedPlanes()
+    {
+        var pointers = new Dictionary<(uint Carrier, int Index), string>();
+        var result = new List<Dictionary<string, int>?>();
+
+        foreach (var record in hours)
+        {
+            if (record.TryGetProperty("air", out var air) && air.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var group in air.EnumerateArray().Where(entry => entry.GetProperty("carrier").ValueKind == JsonValueKind.Number)
+                             .GroupBy(entry => entry.GetProperty("carrier").GetUInt32()))
+                {
+                    var k = 0;
+
+                    foreach (var entry in group)
+                    {
+                        pointers[(group.Key, k++)] = entry.GetProperty("fx").GetString()!;
+                    }
+                }
+            }
+
+            if (!record.TryGetProperty("airObjects", out var sides) || sides.ValueKind != JsonValueKind.Array)
+            {
+                result.Add(null);
+                continue;
+            }
+
+            var planes = new Dictionary<string, int>(StringComparer.Ordinal);
+
+            foreach (var side in sides.EnumerateArray())
+            {
+                foreach (var group in side.EnumerateArray().Where(entry => entry.TryGetProperty("carrier", out var c) && c.ValueKind == JsonValueKind.Number)
+                             .GroupBy(entry => entry.GetProperty("carrier").GetUInt32()))
+                {
+                    var k = 0;
+
+                    foreach (var entry in group)
+                    {
+                        var pointer = entry.TryGetProperty("fx", out var fx) ? fx.GetString() : pointers.GetValueOrDefault((group.Key, k));
+                        k++;
+
+                        if (pointer is not null && entry.TryGetProperty("planes", out var count))
+                        {
+                            planes[pointer] = count.GetInt32();
+                        }
+                    }
+                }
+            }
+
+            result.Add(planes);
+        }
+
+        return result;
+    }
+
     // Null for logs without the side values (written before 2026-10-19).
+    // A-ACE: each wing's ace; null when the log predates ace logging (2026-10-20 03:40).
+    private static List<ReplayAce?>? Aces(JsonElement wings)
+    {
+        var list = wings.EnumerateArray().ToList();
+
+        if (list.Count == 0 || !list.Any(wing => wing.TryGetProperty("disruption", out _)) || list.Any(wing => !wing.TryGetProperty("planes", out _)))
+        {
+            return null;
+        }
+
+        return list.Select(wing => wing.TryGetProperty("ace", out var ace)
+                ? new ReplayAce(ace.TryGetProperty("alive", out var alive) && alive.GetInt32() != 0,
+                    ace.TryGetProperty("chance", out var chance) ? chance.GetInt64() / Fx : null)
+                : null)
+            .ToList();
+    }
+
     private static List<ReplaySideState>? SideStates(JsonElement sides)
     {
         if (sides.ValueKind != JsonValueKind.Array || sides.EnumerateArray().Any(side => !side.TryGetProperty("fleetAa", out _)))
@@ -241,7 +321,15 @@ public sealed class GameBattleLog
 
             strikes.Add(new ReplayAirStrike(Id("carrier"), wings, struck,
                 entry.TryGetProperty("sortie", out var sortie) ? sortie.GetInt64() / Fx : null,
-                Id("target"), Int("intercepted"), Int("shotDown"), Int("strikers"), hp, org));
+                Id("target"), Int("intercepted"), Int("shotDown"), Int("strikers"), hp, org,
+                entry.TryGetProperty("external", out var external) && external.GetInt32() != 0,
+                entry.TryGetProperty("efficiency", out var factor) ? factor.GetInt64() / Fx : null,
+                entry.GetProperty("wings").EnumerateArray().Select(wing => wing.GetProperty("handle")[1].GetUInt32()).ToList(),
+                entry.TryGetProperty("fx", out var fx) ? fx.GetString() : null,
+                Aces(entry.GetProperty("wings")),
+                entry.GetProperty("wings").EnumerateArray().All(wing => wing.TryGetProperty("disruption", out _))
+                    ? entry.GetProperty("wings").EnumerateArray().Select(wing => wing.GetProperty("disruption").GetInt64() / Fx).ToList()
+                    : null));
         }
 
         return strikes;

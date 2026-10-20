@@ -311,31 +311,78 @@ public static class AirRules
     }
 
     /// <summary>
-    /// [RE] Per-plane naval strike stats: the plane stat getters (0xf60f10, 0xf61280, 0xf60bc0) include a x0.1 (agility:
-    /// AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY) and x (1 + naval_strike_attack/targetting/agility_factor) of the planes'
-    /// country; planes from a carrier also take x (1 + navy_carrier_air_attack/targetting/agility_factor) (A-DMG, A-HIT,
-    /// A-AA-PREEMPT). Leader and plane experience terms are not modelled.
+    /// [RE] Naval strike stat averages (0x1978e30) over the selected wings. Per wing, the plane stat getters (0xf60f10,
+    /// 0xf61280, 0xf60bc0) give 0.1 x the stat (agility: AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY) x (1 + the country's
+    /// naval_strike_attack/targetting/agility_factor + the wing's live ace bonus, A-ACE-STATS); each wing weighs
+    /// n = round(planes x poolPlanes / selected planes), and its attack also its mission efficiency (0xf78160:
+    /// 1 unless disrupted; <paramref name="efficiency"/>). Planes from a carrier then take x (1 +
+    /// navy_carrier_air_attack/targetting/agility_factor) (A-DMG, A-HIT, A-AA-PREEMPT). Leader terms, the weather and
+    /// night region terms and air doctrines are not modelled.
     /// </summary>
     public static (double Attack, double Targeting, double Agility) StrikeAverages(
         IReadOnlyList<AirWing> wings,
         GameDefines defines,
         ModifierSet? country = null,
-        bool fromCarrier = false)
+        bool fromCarrier = false,
+        int? poolPlanes = null,
+        double efficiency = 1.0)
     {
-        var planes = wings.Sum(wing => wing.Planes);
+        var selected = wings.Sum(wing => wing.Planes);
 
-        if (planes <= 0)
+        if (selected <= 0)
         {
             return (0, 0, 0);
         }
 
         var modifiers = country ?? ModifierSet.Empty;
-        double Factor(string strike, string carrier) => (1 + modifiers.Get(strike)) * (fromCarrier ? 1 + modifiers.Get(carrier) : 1);
-        double Average(Func<PlaneStats, double> stat) => wings.Sum(wing => stat(wing.Plane.Stats) * wing.Planes) / planes;
-        return (0.1 * Average(stats => stats.NavalAttack) * Factor(StaticModifiers.NavalStrikeAttackFactor, StaticModifiers.NavyCarrierAirAttackFactor),
-            0.1 * Average(stats => stats.NavalTargeting) * Factor(StaticModifiers.NavalStrikeTargettingFactor, StaticModifiers.NavyCarrierAirTargettingFactor),
-            defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * Average(stats => stats.Agility) *
-            Factor(StaticModifiers.NavalStrikeAgilityFactor, StaticModifiers.NavyCarrierAirAgilityFactor));
+        var aceFactor = modifiers.Get(StaticModifiers.AceEffectivenessFactor);
+        var total = poolPlanes ?? selected;
+        double weights = 0, attack = 0, targeting = 0, agility = 0;
+
+        foreach (var wing in wings)
+        {
+            double Stat(double value, string modifier) =>
+                value * (1 + modifiers.Get(modifier) + wing.AceBonus(modifier, defines, aceFactor));
+
+            var n = Math.Round((double)wing.Planes * total / selected, MidpointRounding.AwayFromZero);
+            var stats = wing.Plane.Stats;
+            // A-REGION-DISRUPT: a disrupted mission strikes at the efficiency of 0xf78160 with the wing's weight as planes.
+            var wingEfficiency = wing.Disruption > 0 ? RegionAirWarRules.StrikeEfficiency(wing.Disruption, n, wing, defines) : efficiency;
+            attack += Stat(0.1 * stats.NavalAttack, StaticModifiers.NavalStrikeAttackFactor) * n * wingEfficiency;
+            targeting += Stat(0.1 * stats.NavalTargeting, StaticModifiers.NavalStrikeTargettingFactor) * n;
+            agility += Stat(defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * stats.Agility, StaticModifiers.NavalStrikeAgilityFactor) * n;
+            weights += n;
+        }
+
+        if (weights <= 0)
+        {
+            return (0, 0, 0);
+        }
+
+        double Carrier(string modifier) => fromCarrier ? 1 + modifiers.Get(modifier) : 1;
+        return (attack / weights * Carrier(StaticModifiers.NavyCarrierAirAttackFactor),
+            targeting / weights * Carrier(StaticModifiers.NavyCarrierAirTargettingFactor),
+            agility / weights * Carrier(StaticModifiers.NavyCarrierAirAgilityFactor));
+    }
+
+    /// <summary>
+    /// [RE] A-ACE-ROLLS (0xf80f60): the chance a wing without a live ace earns one after a strike that dealt
+    /// <paramref name="damage"/> (HP lost, truncated) while losing fewer planes: trunc((ACE_EARN_CHANCE_BASE +
+    /// trunc(trunc(damage × ACE_EARN_CHANCE_PLANES_MULT) × 0.1)) × (1 + air_ace_generation_chance_factor)).
+    /// </summary>
+    public static double AceEarnChance(int damage, double generationFactor, GameDefines defines)
+    {
+        var air = defines.NAir;
+        var perDamage = FixedPoint.Truncate(FixedPoint.Truncate(damage * air.ACE_EARN_CHANCE_PLANES_MULT) * defines.Hardcoded.AceChancePlanesScale);
+        return FixedPoint.Truncate((air.ACE_EARN_CHANCE_BASE + perDamage) * (1 + generationFactor));
+    }
+
+    /// <summary>[RE] A-ACE-ROLLS: the chance a live ace dies after a strike that lost planes.</summary>
+    public static double AceDeathChance(int losses, GameDefines defines)
+    {
+        var air = defines.NAir;
+        return air.ACE_DEATH_CHANCE_BASE +
+               FixedPoint.Truncate(FixedPoint.Truncate(losses * air.ACE_DEATH_CHANCE_PLANES_MULT) * defines.Hardcoded.AceChancePlanesScale);
     }
 
     /// <summary>[ASSUMED] Removes lost planes from the wings in order (strike wings first); the game's split is not decoded.</summary>

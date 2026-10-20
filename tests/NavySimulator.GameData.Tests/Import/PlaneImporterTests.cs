@@ -36,6 +36,12 @@ public sealed class PlaneImporterTests : IDisposable
                 cv_cas = { type = { cas strategic_bomber } need = { cv_CAS_equipment = 1 } }
             }
             """);
+        Write(game, "common/aces/00_aces.txt", """
+            modifiers = {
+                support_good = { type = { cas tactical_bomber naval_bomber } chance = 0.9 effect = { naval_strike_targetting_factor = 0.05 air_agility_factor = 0.05 } }
+                fighter_good = { type = { fighter interceptor } chance = 0.9 effect = { air_attack_factor = 0.05 } }
+            }
+            """);
         Write(game, "localisation/english/equipment_l_english.yml", """
             l_english:
              cv_nav_bomber_equipment_2: "Carrier Naval Bomber II"
@@ -128,9 +134,21 @@ public sealed class PlaneImporterTests : IDisposable
 
         var files = PlaneWriter.Write(data, PlaneImporter.Read(new GameFileSystem(game, [mod])));
 
-        Assert.Equal(["planes/planes.json"], files);
+        Assert.Equal(["planes/planes.json", "aces/aces.json"], files);
         Assert.False(File.Exists(Path.Combine(data, "planes", "old.json")));
         Assert.Contains("\"cv_nav_bomber_equipment_2\"", File.ReadAllText(Path.Combine(data, "planes", "planes.json")));
+    }
+
+    [Fact]
+    public void Read_TakesTheAceTemplates()
+    {
+        var import = PlaneImporter.Read(new GameFileSystem(game, [mod]));
+
+        var support = Assert.Single(import.Aces, ace => ace.ID == "support_good");
+        Assert.Equal(["cas", "tactical_bomber", "naval_bomber"], support.Types);
+        Assert.Equal(0.9, support.Chance);
+        Assert.Equal(0.05, support.Effects["naval_strike_targetting_factor"]);
+        Assert.Equal(2, import.Aces.Count);
     }
 
     private static void Write(string folder, string relativePath, string text)

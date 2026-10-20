@@ -37,6 +37,9 @@ public sealed class ContentCatalog
     public List<ResearchDto> Researches { get; } = [];
     public List<SpiritDto> Spirits { get; } = [];
     public List<PlaneDto> Planes { get; } = [];
+
+    /// <summary>A-ACE: air ace templates (<c>aces/</c>, imported with the planes).</summary>
+    public List<AceTemplateDto> Aces { get; } = [];
     public List<FleetDto> Fleets { get; } = [];
 
     /// <summary>S-ADMIRAL: the admirals of <c>admirals/</c> (imported by <c>NavySimulator import-leaders</c>), empty when the folder does not exist.</summary>

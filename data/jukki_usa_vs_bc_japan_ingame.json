@@ -110,7 +110,9 @@
         "dd_3_la": "JAP_maizuru_naval_arsenal_organization"
       },
       "aggressiveness": "AlwaysEngage",
-      "repairPriority": "NeverRepair"
+      "repairPriority": "NeverRepair",
+      "carrierWingsOnRegionMission": true,
+      "carrierMissionEfficiency": 0.734
     },
     "defender": {
       "fleetID": "Jukki_bb_fleet_usa",

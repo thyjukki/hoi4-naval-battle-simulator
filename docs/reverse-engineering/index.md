@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS], MSAVE = [A-MISSION-SAVE][MSAVE].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS], MSAVE = [A-MISSION-SAVE][MSAVE], ACE = [A-ACE][ACE], REG = [A-REGION][REG].
 
 ## 1. Functions
 
@@ -215,7 +215,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xf78160 | wing efficiency (fuel?). **disagrees**: WINGS decodes it as the disruption efficiency `clamp(1 − sqrt(disruption / (planes × (1+def·DDD)(1+atk·DDA)(1+spd·DDS)))/3.162, 0.001, 1)`, 1 without disruption; the source of `airfx+0xc0` | A-DMG, A-LOSSES, A-EXTERNAL | [AIR/dmg], [WINGS/ext] |
 | 0xf7ad60 | better-speed damage increase (top-speed term ?) | A-INTERCEPT | [AIR/intercept] |
 | 0xf7be70 | generic air combat (reads DISRUPTION_FACTOR_CARRIER) | A-INTERCEPT | [AIR/intercept] |
-| 0xf80f60 | per-wing losses and damage (experience; not decoded) | A-LOSSES | [AIR/losses] |
+| 0xf80f60 | per-wing losses and damage (experience; not decoded). **disagrees**: ACE decodes it as the ace death roll (live ace, losses > 0, line 0xb52 [0xb54]) or the ace earn roll (damage > 0 and losses < damage, line 0xb68, then create 0x618860 and int roll 0xb72); no experience | A-LOSSES, A-ACE | [AIR/losses], [ACE/rolls] |
 | 0xf862a0 | generic air combat (reads COMBAT_DAMAGE_SCALE_CARRIER) | A-INTERCEPT | [AIR/intercept] |
 | 0xf88330 | sub-unit `type` keyword → bit: 0 convoy, 6 capital_ship, 7 submarine, 8 screen_ship, 22 carrier, 37 missile_launcher, 39 support_ship (leaf; also in the S-DOCTRINE table); full map incl. 10 fighter, 11 interceptor, 15 naval_bomber, 32 heavy_fighter in [WINGS/types] | S-STATS-COMBAT, S-TARGET, A-WINGS | [STATS/getter], [DOC/effects], [WINGS/types] |
 | 0xf8b070 | `type` keyword → bit, error "incorrect type category" | — | [STATS/getter] |
@@ -761,6 +761,86 @@ From [A-MISSION-SAVE-air-mission-save-format.md][MSAVE]: the mission's save keys
 | 0xf87480 | UpdateCoverage(mission, force): range `+0x78`, in-range province list `+0x38` / `+0x44`, coverage `+0x50 = min(1, count / region+0x24)` | A-WINGS, A-EXTERNAL | [MSAVE/read] |
 | 0xf87820 | air mission writer: `type`, `period`, `active`, [`executing_mission` keyword], [`effectiveness`], [`effective_planes_count`], [`effective_air_superiority`], [`strategic_region` = region+0x58, `region_change_penalty`], `missions_done`, [`aggressiveness`], `priority`*, [`stop_training_at_max_xp`] | A-WINGS | [MSAVE/write] |
 
+### Air aces in naval strikes (A-ACE)
+
+From [A-ACE-aces-and-wing-experience-in-naval-strikes.md][ACE]: ace death and earn rolls after a naval strike, the ace template pick, and how aces and wing experience enter the plane stat getters. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1e1120 | `gamestate+0x720 = random_int(gamestate.cpp, 0x980)` (caller 0xdd6a30); a term of the ace seed (meaning ?) | A-ACE | [ACE/rolls] |
+| 0x221ef50 | hash of a `{type, id}` handle: `x = (w0 << 32) + w1; m = x × 0x49631a45; (m >> 32) ^ (uint32)m` (leaf) | A-ACE | [ACE/rolls] |
+| 0x2234110 | `LightRandomLog(value, file, line, …)`: logs "random_state: %s:%d = %d", draws nothing | A-ACE | [ACE/rolls] |
+| 0x534fe0 | script scope ctor with a random seed (light random mixA / mixB of the seed) | A-ACE | [ACE/rolls] |
+| 0x6176c0 | CAce ctor (0x178 bytes, vtable 0x27de2a0): `+0xe0` country, `+0x158` alive = 1 | A-ACE | [ACE/objects] |
+| 0x6182d0 | ace wing-size factor: `min(ACE_WING_SIZE / wing planes, ACE_WING_SIZE_MAX_BONUS)`; 1 without a wing or with 0 planes | A-ACE | [ACE/stats] |
+| 0x618860 | create an ace `(aceDb, seed, country, &country.aces, wing)`: own hash generator from `seed` (no game RNG); template by `chance` among those whose `type` overlaps the wing's sub-unit type; names; attach (0xf5b320) only if the wing has no ace handle | A-ACE | [ACE/create] |
+| 0x619b50 | ace → its template's effect holder (`[ace+0x170]+0x38`; leaf) | A-ACE | [ACE/stats] |
+| 0x61a5c0 | ace → its country's tag (`[ace+0xe0]+8`; leaf) | A-ACE | [ACE/rolls] |
+| 0x61a930 | ace modifier value `(ace, out, id, −1)`: `effect[id] × 0x6182d0 × (1 + country(ace+0xe0).ace_effectiveness_factor 0x25a)` | A-ACE | [ACE/stats] |
+| 0x61bba0 | ace dies `(ace, kill type, killer handle, &killer country)`: `+0x158 = 0`, `+0x15c`, `+0x160`, `+0x168` | A-ACE | [ACE/death] |
+| 0x61bc70 | set the ace's wing (`ace+0xe8`) | A-ACE | [ACE/objects] |
+| 0x61bd30 | CAce writer (vt+0x10): id, `modifier`, `name`, `surname`, [`callsign`], [`is_female`], `portrait`, [`alive = no`], [`handled`], [`kill_type`], [`killer_name`], [`killer_country`] | A-ACE | [ACE/save] |
+| 0x7191b0 (0x719ab0) | CCountry::Write: one `ace = { … }` (token 0x31e2) per `country+0x12d8` entry | A-ACE | [ACE/save] |
+| 0xc61f80 | from the country reader 0x705ce0: re-attach loaded aces to their wings (0x61bc70) | A-ACE | [ACE/save] |
+| 0xf5aab0 | wing → its ace (`wing+0x2e8` resolved; null if none; leaf + tail jump) | A-ACE | [ACE/objects] |
+| 0xf5b320 | wing SetAce: detach the old ace, set `wing+0x2e8`, 0x61bc70(new, wing) | A-ACE | [ACE/objects] |
+| 0xf5bc80 | wing night factor `clamp(1 + air_night_penalty (country, xp holder +0x238, ace) + stat 0x4c + strat-bomber night (region, type & 8) − carrier night reduction, 0, 2)` | A-ACE | [ACE/stats] |
+| 0xf5c9d0 | wing weather factor `clamp(1 + air_weather_penalty (country, xp holder +0x238, ace), 0, 2)` | A-ACE | [ACE/stats] |
+| 0xf5d3b0 | generic air combat: ace and holders' `air_attack/defence/agility_factor` (+ `air_ace_bonuses_factor` per ace entry); not used by naval combat | A-ACE | [ACE/stats] |
+| 0xf5df48 (chunk of 0xf5ddd5) | accident: kill planes, ace dies if the roll ≤ ACE_DEATH_CHANCE_BASE (kill type 2); from strategic air 0xc60334 | A-ACE | [ACE/death] |
+| 0xf5dfa0 | wing XP gain (FIELD_EXPERIENCE_FACTOR, AIR_WING_XP_MAX, air_mission_xp_factor); callers 0xf81a20, 0xf82110, 0xf83ed0 only (not naval combat) | A-ACE | [ACE/stats] |
+| 0xf60760 | interception speed `stat(+0x580) × (1 + ace air_maximum_speed_factor + [ace has it] air_ace_bonuses_factor)` | A-ACE, A-INTERCEPT | [ACE/stats] |
+| 0xf60bc0 / 0xf60f10 / 0xf61280 | naval agility / attack / targeting per plane: `base × (1 + ace(0x18/0x16/0x17) + country + [region: mission efficiency (not targeting) + region weather × weatherF + night × nightF])` | A-ACE, A-HIT, A-DMG, A-AA-PREEMPT | [ACE/stats] |
+| 0xf65f20 | rebuild the wing experience holder `+0x238` from experience (static struct +0xc8 / +0xd0, `air_untrained_pilots_penalty_factor`) | A-ACE | [ACE/stats] |
+| 0xf661e0 | wing stat cache `+0x390` from the equipment (no ace) | A-ACE | [ACE/stats] |
+| 0xf7ed40 | mission efficiency by mission `type`: &4 intercept (0xd), &1 superiority (0xb), &2 CAS (0xf), &0x110 naval (0x10) | A-ACE | [ACE/stats] |
+| 0xf80f60 | after a naval strike, per strike wing `(mission, losses, damage)`: live ace → death roll 0xb52 [0xb54]; else earn roll 0xb68 → 0x618860 → int roll 0xb72 + `on_ace_promoted` | A-ACE, A-LOSSES | [ACE/rolls] |
+| 0xf87550 | apply pending air-to-air losses: ace death roll (lines 0xa50 / 0xa53); clears mission `+0x98 / +0x9c / +0xa4`; strategic air only | A-ACE | [ACE/death] |
+| 0x197c830..0x197c882 | strike tail: 0xf80f60 for every strike wing of the AirFX with the AirFX's losses and integer HP damage | A-ACE | [ACE/rolls] |
+
+### Region air war (A-REGION)
+
+From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings of a task force in a naval combat fight in the region air war (air hours only, before the naval hour), the loss and disruption formulas, and how disruption becomes the naval strike efficiency. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1962420 | air-war context: `flag[r] = region+0x24 > 0 and 0xe24530(region)` (air hour) and the flagged region id list (`+0x30`); 0x1961fe0 / 0x1962300 allocate it and copy the active countries | A-CADENCE, A-REGION | [REG/order] |
+| 0x15c4500 | naval combat: add region-war plane losses of a carrier wing to its side (attacker side `+0x98`, then `+0xa0`) → 0x161fe00 | A-LOSSES | [REG/losses] |
+| 0x161fe00 | side: find the AirFX holding a wing (externals `+0x100`, then the groups' AirFX via 0x1c6c070) → 0x1976b00 | A-LOSSES | [REG/losses] |
+| 0x1976b00 | AirFX `+0x60 += losses` (loss tally; leaf) | A-LOSSES | [REG/losses] |
+| 0xc43580 / 0xc43b80 | sort the air-war attackers by `S18 × S28` (0xf5e890 without province) descending (insertion ≤ 32 / merge) | A-REGION | [REG/war] |
+| 0xc46030 | hourly per-country job (vtable 0x2959f80, built in 0xc57d30 at 0xc57f93): region records reset, 0xc64ee0, 0xc66480, 0xf62a50 per pool. **disagrees**: MSAVE lists it under the daily air manager | A-REGION, A-WINGS | [REG/order] |
+| 0xc46ac0 | job 0x2959fa0 body: escort value 0xf77360 for the missions on `+0x98[r]` / `+0x140[r]` of flagged regions | A-REGION | [REG/disrupt] |
+| 0xc46ea0 / 0xc4a2f0 | job 0x2959f00 (from 0xc58660): mission `+0xa8 = +0xb0 = 0` for `+0x98[r]` / `+0x140[r]`; interception re-chosen (0xf796e0 / 0xf7ac80); region superiority records `+0x78 / +0x80 / +0x98` | A-REGION | [REG/order] |
+| 0xc47130 / 0xc4c570 | job 0x2959fc0: per flagged region `f = 1 − min(1, Σ+0xb8 / Σ+0xb0)` over `+0x110` (self and allies?), then land-list strike missions `+0xa8 = f × +0xb0` ("TotalDisruptionTaken", "TotalDisruptionReduction") | A-REGION, A-DMG | [REG/disrupt] |
+| 0xc57d30 | hourly strategic-air update: full step order (jobs, accidents 0xc5efc0, air war 0xc5f4c0 per country, escorts, disruption, 0xf87550, join reset, 0xf82110) | A-REGION | [REG/order] |
+| 0xc591c0 | `hostile(selfTag, otherTag)`: 0x700570 (at war), else a fallback list (0x6f7a80; not decoded) | A-REGION | [REG/war] |
+| 0xc5cb60 | air loss statistics `(airMgr, wing, n, killer tag, entry, flag, kind)` → 0xc5c8c0; removes no planes | A-REGION | [REG/combat] |
+| 0xc5efc0 | every hour: random_int(strategicair.cpp, 0x1be8) seeds a local hash generator; per base entry 0xc60290 accident | A-REGION | [REG/accident] |
+| 0xc5f4c0 | region air war with one country as attacker: per flagged region, defenders (hostile missions with the region on `+0x58`, hostile `+0x140[r]`), attackers (own `+0x98[r]` executing ≠ 0, own `+0x140[r]` AS / interception), random_int 0x12c9 province pick, 0xf81a20 | A-REGION | [REG/war] |
+| 0xc60290 | accident per base: 90 % of hours none (`u ≥ 10000`); else first wing with `0xf61d70 × ACCIDENT_CHANCE_BALANCE_MULT > 0.1 × u2` → 0xf5dd80 | A-REGION | [REG/accident] |
+| 0xc647b0 | carrier region sync `(base, oldRegion, newRegion)`: wings whose mission region == old get SetRegion(new) (from the task force code 0xd70032) | A-REGION | [REG/lists] |
+| 0xc64ee0 | per country: `+0x110` = self + list A, `+0x128` = list B of 0xc53270 (allies / enemies, medium) | A-REGION | [REG/order] |
+| 0xc66480 | rebuild scrambled carrier lists `+0x140[r]`: wings on carriers whose task force is in combat, `r` = the fleet's region (flagged), unless the mission has a region and `type ≠ 0` | A-REGION, A-WINGS | [REG/lists] |
+| 0xf5e890 | generic air-combat wing stats `(wing, out, prov, missionBits)`: +0 attack, +8 defence, +0x10 agility (× (M + 1 + Σ air_*_factor + region weather / night + home defence / power projection)), +0x18 / +0x20 / +0x28 the same ÷ AIR_WING_MAX_STATS_* | A-REGION, A-WINGS-EXT | [REG/combat] |
+| 0xf60860 | speed ÷ AIR_WING_MAX_STATS_SPEED (0xf60760) | A-REGION | [REG/combat] |
+| 0xf63580 | RemovePlanes(wing, n, killer tag): from the wing's equipment entries in order (also SAM use, accidents) | A-REGION | [REG/losses] |
+| 0xf75690 | targeted modifier slot 0xd of the attacker's country against a tag (cached; 0 by default): disruption × (1 + it) | A-REGION | [REG/combat] |
+| 0xf75820 | defender plane factor `k`: `cv ? clamp(1 + T1, 0, 1) : clamp(det + T1, 0, 1)` (targeted modifier slot 1) | A-REGION | [REG/war] |
+| 0xf77360 | escort value `+0xb8` of an AS mission: `planes × (1+spd·ESF)(1+S28·EAgF)(1+S18·EAtF)(1+det·DDF) × ESCORT_FACTOR × (1 + air_escort_efficiency)`, else 0 | A-REGION | [REG/disrupt] |
+| 0xf775d0 | `effective_air_superiority (+0xe8) = effective_planes_count × stat 0x33` unless executing is only 0x904 bits | A-REGION | [REG/order] |
+| 0xf78160 | naval strike `e_i = clamp(1 − sqrt(+0xa8 / den) × 0.316228, 0.001, 1)`, `den = planes(1+S20·DDD)(1+S18·DDA)(1+spd·DDS)` (stats of 0xf5e890 with the battle province); 1 when `+0xa8 == 0` | A-DMG, A-REGION | [REG/disrupt] |
+| 0xf78360 | effective planes `round(planes × eff)`, carrier `× CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[tf+0x4ec]` (also the per-hour loss budget of 0xf862a0) | A-REGION | [REG/lists] |
+| 0xf79c10 | carrier CanExecute: available missions, not busy, planes, no training, `period` vs night, AGGRESSION_THRESHOLD; `+0xd8 = 0xf78500(isCarrier = 1)`, `+0xe0 = 0xf78360` | A-REGION, A-WINGS | [REG/lists] |
+| 0xf7ad60 | speed damage bonus `(out, vDef, vAtk, dmg)`: `vAtk > vDef > 0 ? (min(ratio, BIGGEST_SPEED_FACTOR_DIFF) − 1) × dmg × COMBAT_BETTER_SPEED_DAMAGE_INCREASE + trunc(vAtk/100) × TOP_SPEED_DAMAGE_BONUS_FACTOR × dmg : 0` | A-REGION, A-INTERCEPT | [REG/combat] |
+| 0xf7be70 | one attacker vs the defenders: engaged `min(Σleft × MULTIPLANE_CAP, n)`, per defender 0xf862a0 with shares, disruption `+0xb0`, ace earn rolls 0x82b / 0x833 / 0x834 / int 0x83f | A-REGION | [REG/combat] |
+| 0xf7ee40 | mission region: `+0x30`, else the carrier location's region | A-REGION | [REG/lists] |
+| 0xf80540 | defender weights `n`, `left`: `max(1, round(trunc(n × k) × (1 + stat37) × w))`, w CAS 2 / port 100 / strategic 1 + mod 4 / else 1; AS defenders `n` when a strike mission is present | A-REGION | [REG/war] |
+| 0xf81a20 | region air combat `(region, prov, tag, attackers, defenders)`: planes = `effective_planes_count`, detection, 0xf80540, attacker XP, 0xf7be70 per attacker | A-REGION | [REG/war] |
+| 0xf81ce0 | per defending country sums → war support / statistics (0xd026f0); no combat effect | A-REGION | [REG/war] |
+| 0xf862a0 | defender losses: `dmg = pot × COMBAT_DAMAGE_STATS_MULTILPIER + speed bonus − agility reduction`; `x = max(0.001, scale × dmg × 0.01 / defence)`, scale `COMBAT_DAMAGE_SCALE_CARRIER` if both carrier, random rounding U 0xacf below the cap; `+0x98 += losses`; killer rolls 0xade / 0xae5 | A-REGION | [REG/combat] |
+| 0xf87550 | apply the hour's air-war losses: ace death 0xa50 / 0xa53, 0xf63580, carrier in combat → 0x15c4500 (naval combat tally) | A-REGION, A-LOSSES | [REG/losses] |
+
 ## 2. Struct fields
 
 ### Ship (ship.cpp object)
@@ -1196,6 +1276,52 @@ From [A-MISSION-SAVE-air-mission-save-format.md][MSAVE]. Save keys in backticks.
 | gamestate | +0x2e0 / +0x2ec | strategic regions by id / count | [MSAVE/read] |
 | province | +0x170 / +0xf8 | combats in the province / units (fleets) in it | [MSAVE/exec] |
 
+### Aces (A-ACE)
+
+From [A-ACE-aces-and-wing-experience-in-naval-strikes.md][ACE].
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| ace | +0x18 | type mask of its template | [ACE/objects] |
+| ace | +0x30 | modifier container (copy of the template's `effect`) | [ACE/objects] |
+| ace | +0xe0 / +0xe8 | country / its wing (handle) | [ACE/objects] |
+| ace | +0xf0 / +0x110 / +0x130 | `name` / `surname` / `callsign` | [ACE/save] |
+| ace | +0x150 / +0x154 | `is_female` / `portrait` | [ACE/save] |
+| ace | +0x158 | alive (ctor 1; 0 after 0x61bba0; every stat getter checks it) | [ACE/objects] |
+| ace | +0x15c / +0x160 / +0x168 / +0x16c | `kill_type` / `killer_name` (ace handle) / `killer_country` / `handled` | [ACE/save] |
+| ace | +0x170 | template (`common/aces` entry): +0x28 type mask, +0x30 `chance`, +0x38 / +0x48 `effect` | [ACE/create] |
+| wing | +0x218 | experience | [ACE/stats] |
+| wing | +0x238 | experience modifier holder (0xf65f20); read in naval strikes only for `air_weather_penalty` / `air_night_penalty` | [ACE/stats] |
+| wing | +0x2e8 | ace handle; saved as `ace = { id type }` | [ACE/objects], [ACE/save] |
+| wing | +0x390 / +0x968 | raw stat cache (equipment; no ace) / per-mission stat tables | [ACE/stats] |
+| air mission | +0x30 | strategic region (enables the region terms of the naval strike getters) | [ACE/stats], [MSAVE/read] |
+| air mission | +0x98 / +0x9c / +0xa4 | pending air-to-air losses / enemy ace that hit the wing / its country (set by 0xf862a0, cleared by 0xf87550) | [ACE/rolls] |
+| country | +0x12d8 / +0x12e4 | aces / count | [ACE/save] |
+| gamestate | +0x720 | int from `random_int(gamestate.cpp, 0x980)`; ace seed term (meaning ?) | [ACE/rolls] |
+
+### Region air war (A-REGION)
+
+From [A-REGION-carrier-wings-in-the-region-air-war.md][REG].
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| air mission | +0x58 / +0x64 | regions the mission flies through: 8-byte `{region id, distance in region}` entries (built by 0xf7a760); a mission is an air-war defender in each | [REG/war] |
+| air mission | +0x98 | air-war losses of this hour (capped by `effective_planes_count`), applied by 0xf87550 | [REG/combat] |
+| air mission | +0xa8 | disruption after escorts (0xc4c570; land list only); read by 0xf78160 (`e_i`) and 0xf846c6 | [REG/disrupt] |
+| air mission | +0xb0 | disruption taken this air hour (0xf7be70 adds) | [REG/disrupt] |
+| air mission | +0xb8 | escort value (0xf77360; AS missions) | [REG/disrupt] |
+| air mission | +0xc8 | tag of the last country that disrupted it | [REG/combat] |
+| air mission | +0xe8 | `effective_air_superiority` (0xf775d0) | [REG/order] |
+| air-war entry | +0 / +8 / +0xc / +0x10 | 24 bytes: mission, planes `n`, capacity left, carrier-in-combat flag `cv` | [REG/war] |
+| strategic air | +0x10 / +0x1c | the country's air bases (0xc66480) | [REG/lists] |
+| strategic air | +0x110 / +0x11c | self and list A of 0xc53270 (allies?); escort / disruption sums | [REG/disrupt] |
+| strategic air | +0x128 / +0x134 | list B of 0xc53270 (enemies?) | [REG/order] |
+| strategic air | +0x140[r] | scrambled carrier missions per region, rebuilt hourly (0xc66480) | [REG/lists] |
+| strategic air | +0xe0[r] (0xa0 each) | region record: +0x78 Σ air superiority, +0x80 ratio, +0x98 count, +0x9a strike flag | [REG/order] |
+| task force | +0x1f0 → +0xc8 → +0x60 | location → region → region id (0xc66480) | [REG/lists] |
+| AirFX | +0x60 | planes lost (region-war losses of its wings added by 0x1976b00) | [REG/losses] |
+| wing | +0x548 | raw equipment stat 0x37 (`wing+0x390 + 8 × 0x37`; name not mapped): defender weight × (1 + it) | [REG/war] |
+
 ## 3. Modifier ids and read sites
 
 ### Modifier ids
@@ -1204,6 +1330,9 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 
 | Id | Name | Reader | Finding |
 |---|---|---|---|
+| 0x2 | `air_maximum_speed_factor` (ace) | 0xf60760 (interception speed) | [ACE/stats] |
+| 0x7 | `air_ace_generation_chance_factor` (country) | 0xf80f60 (`× (1 + v)` on the earn chance) | [ACE/rolls] |
+| 0xb / 0xd / 0xf / 0x10 | `air_superiority_efficiency` / `air_intercept_efficiency` / `air_cas_efficiency` / `air_nav_efficiency` (country) | 0xf7ed40 (naval attack and agility, with a mission region) | [ACE/stats] |
 | 0x15 | NAVAL_STRIKE (weather `naval_strike`) | 0x197b890 targeting mult | [AIR/conv], [AIR/hit] |
 | 0x16 / 0x17 / 0x18 | NAVAL_STRIKE_ATTACK / TARGETTING / AGILITY_FACTOR | plane stat getters | [AIR/conv] |
 | 0x19 | `naval_coordination` | no read through the modifier getters in combat code | [STC/names] |
@@ -1223,6 +1352,9 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x5b | naval_retreat_speed (confirmed in-game: TFB `smoke_generator`'s country value, +0.2/day) | 0x196fe80 via 0x1972570 | [ACT/speed], [LOG] |
 | 0x5c | `sub_retreat_speed` (confirmed) | 0x196fe80 | [ACT/speed], [STC/names] |
 | 0x5d | `convoy_retreat_speed` (confirmed) | 0x196fe80 | [ACT/speed], [STC/names] |
+| 0x6f / 0x70 / 0x71 | `air_attack_factor` / `air_defence_factor` / `air_agility_factor`: generic air combat only (0xf5e890, 0xf5d3b0); not read by naval strikes or naval interception | 0xf5d3b0, 0xf5e890 | [ACE/stats] |
+| 0x72 | `air_ace_bonuses_factor` (country): flat add per nonzero ace entry | 0xf60760, 0xf5d3b0, 0xf5e5c0 | [ACE/stats] |
+| 0x73 | `air_untrained_pilots_penalty_factor` | 0xf65f20 (experience holder) | [ACE/stats] |
 | 0x7e / 0x7f | NAVAL_MORALE / NAVAL_MORALE_FACTOR | 0xc395a0 (organization regain) | [LOG] |
 | 0x88 / 0x89 | `navy_anti_air_attack` / `navy_anti_air_attack_factor` | 0xc3a470 only (per-ship AA) | [STATS/getter], [STC/names] |
 | 0xc2 / 0xc3 | `navy_submarine_attack_factor` / `navy_submarine_defence_factor` (type bit 7) | 0xc34a50 | [STATS/getter] |
@@ -1230,8 +1362,10 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0xc6 / 0xc7 | `navy_screen_attack_factor` / `navy_screen_defence_factor` (type bit 8) | 0xc34a50 | [STATS/getter] |
 | 0xc8 | `navy_submarine_detection_factor` | 0xc3a950 | [STC/names] |
 | 0xc9 / 0xca / 0xcb | NAVAL_CARRIER_AIR_ATTACK / TARGETTING / AGILITY_FACTOR; in 0x1978e30 read from the country container only (an admiral's value has no effect) | 0x1978e30, 0x197ac80, 0x197c8b0 | [AIR/conv], [AIR/dmg], [ADM/subunit] |
+| 0x104 / 0x105 / 0x106 | `air_strat_bomber_night_penalty` / `air_night_penalty` / `air_weather_penalty` | 0xf5bc80 / 0xf5c9d0 (night and weather factors) | [ACE/stats] |
 | 0x107 | `naval_night_attack` × darkness of the task force's province (the former "—" row; HOUR/DMG disagreement settled: read) | 0xc34de4 | [STATS/getter], [HOUR/night], [DMG/dmg] |
 | 0x10c | CARRIER_CAPACITY_PENALTY_REDUCTION | 0xc579f0 chain | [AIR/sortie] |
+| 0x10d | `air_carrier_night_penalty_reduction_factor` (subtracted for carrier-based wings whose task force has a mission) | 0xf5bc80 | [ACE/stats] |
 | 0x168 | `skill_bonus_factor` (unit leader); B only (country values have no effect); the only read in the executable | leader efficiency, `leader+0x298` (0xc2179e) | [STC/leader], [ADM/eff] |
 | 0x181 | `reassignment_duration_factor` (flags 1); B only | 0xc0fdb0 (cooldown days) | [ADM/eff] |
 | 0x18c | NAVAL_CRITICAL_RECEIVE_CHANCE_FACTOR (script `critical_receive_chance`; confirmed in-game: TFB damage_control × 0.8) | 0x19740c0; air 0x197ac80 as `(1 − v)` | [HIT/crit], [AIR/crit], [LOG], [POTF/air] |
@@ -1262,6 +1396,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x1d1 / 0x1d2 | `naval_has_potf_in_combat_attack` / `_defense`: own commanding admiral's `+0x418` only, when the owner country's PotF is afloat and its task force's combat is the same (any member state; ends when it sinks); tokens 0x3b59 / 0x3b5a, flags 3 | 0xc34a50 (0xc351b5) | [DMG/dmg], [STATS/getter], [POTF/combat] |
 | 0x1d3 | NAVAL_CRITICAL_SCORE_CHANCE_FACTOR_AGAINST_A_COUNTRY | 0x19740c0 | [HIT/crit] |
 | 0x248 | `navy_weather_penalty` (country only) | 0xd67310 | [STC/sum] |
+| 0x25a | `ace_effectiveness_factor` (the ace's country): `× (1 + v)` on every ace value | 0x61a930 | [ACE/stats] |
 | `[ship+0x664 / +0x668 / +0x66c]` | dynamic `experience_gain_<sub-unit>_training_factor` / `_mission_factor` / `_combat_factor` | 0xc3b240 (country container only) | [POTF/xp] |
 
 ### Static modifiers
@@ -1392,6 +1527,22 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | NAir.MISSILE_LAUNCHER_SLOTS | 0xc54e73 | missile base budget | [WINGS/ext] |
 | NAir.DISRUPTION_DEFENCE_ATTACK_FACTOR / _DEFENCE_FACTOR / _SPEED_FACTOR | 0xf781f1 / 0xf781f9 / 0xf78278 | external efficiency (disruption) | [WINGS/ext] |
 | NAir.GIE_EXILE_AIR_START_EXPERIENCE | 0xf6410b | experience of planes added to an exile wing | [WINGS/reinforce] |
+| NAir.ACE_EARN_CHANCE_BASE, ACE_EARN_CHANCE_PLANES_MULT | 0xf81117, 0xf810cf (also 0xf7c674, air combat) | earn chance `(BASE + 0.1 × damage × MULT) × (1 + gen factor)` | [ACE/rolls] |
+| NAir.ACE_DEATH_CHANCE_BASE, ACE_DEATH_CHANCE_PLANES_MULT | 0xf81008, 0xf80fbd; 0xf875f3 / 0xf875a0 (air-to-air); 0xf5df61 (accident) | death chance `BASE + 0.1 × losses × MULT` | [ACE/rolls], [ACE/death] |
+| NAir.ACE_DEATH_BY_OTHER_ACE_CHANCE | 0xf8105a, 0xf8762b | killed by the recorded enemy ace | [ACE/rolls] |
+| NAir.ACE_WING_SIZE, ACE_WING_SIZE_MAX_BONUS | 0x61832b, 0x618315 (also 0x61a1a5, not decoded) | ace size factor `min(SIZE / planes, MAX)` | [ACE/stats] |
+| NAir.DAY_NIGHT_COVERAGE_FACTOR | 0xf61503, 0xf60e62, 0xf611de (also 0xf5ec2b) | province night term in the plane stat getters | [ACE/stats] |
+| NAir.COMBAT_DAMAGE_SCALE / COMBAT_DAMAGE_SCALE_CARRIER | 0xf86563 / 0xf8656d | region air-war losses; CARRIER when attacker and defender are carrier wings in combat | [REG/combat] |
+| NAir.DISRUPTION_FACTOR / DISRUPTION_FACTOR_CARRIER | 0xf7c500 / 0xf7c50c | region air-war disruption (carrier between carrier wings) | [REG/combat] |
+| NAir.DISRUPTION_SPEED_FACTOR / _AGILITY_FACTOR / _ATTACK_FACTOR / _DETECTION_FACTOR | 0xf7c0d7 / 0xf7c108 / 0xf7c12f / 0xf7c159 (DETECTION also 0xf77450) | disruption power of an attacker; escort | [REG/combat] |
+| NAir.ESCORT_FACTOR, ESCORT_SPEED_FACTOR, ESCORT_AGILITY_FACTOR, ESCORT_ATTACK_FACTOR | 0xf7756a, 0xf77438, 0xf77440, 0xf77448 | escort value `+0xb8` | [REG/disrupt] |
+| NAir.COMBAT_MULTIPLANE_CAP | 0xf7c094, 0xf864e2, 0xf81bcb | engaged planes, capacity use, XP ratio | [REG/combat] |
+| NAir.COMBAT_DAMAGE_STATS_MULTILPIER, BIGGEST_AGILITY_FACTOR_DIFF, COMBAT_BETTER_AGILITY_DAMAGE_REDUCTION | 0xf863be, 0xf8641a, 0xf8642e | region air-war damage | [REG/combat] |
+| NAir.COMBAT_BETTER_SPEED_DAMAGE_INCREASE, AIR_WING_MAX_STATS_SPEED | 0xf7ae3e, 0xf7ad6a / 0xf60873 | speed bonus, normalised speed | [REG/combat] |
+| NAir.AIR_WING_MAX_STATS_ATTACK / _DEFENCE / _AGILITY | 0xf5ef01 / 0xf5ef66 / 0xf5efb2 | normalised stats `+0x18 / +0x20 / +0x28` of 0xf5e890 | [REG/combat] |
+| NAir.INTERCEPTION_DISTANCE_SCALE, INTERCEPTION_DAMAGE_SCALE | 0xf7c372, 0xf7c3c5 | defender weight when it flies through another region | [REG/combat] |
+| NAir.AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN | 0xf81c26 | attacker XP | [REG/war] |
+| NAir.ACCIDENT_CHANCE_BALANCE_MULT | 0xc605a9 | accident chance | [REG/accident] |
 
 ## 4. Helpers and conventions
 
@@ -1448,13 +1599,15 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - ~~`0xf78160` (fuel?); `airfx+0xc0` source; caller and 5th argument of 0x16205c0~~ settled: disruption efficiency, caller 0xf82ca0 with 0 ([WINGS/ext]). [AIR/open]
 - ~~Who sets `executing_mission` (`wing+0xa4`) of carrier wings~~ settled: 0xc49e80 → 0xf7acc0 from the available missions ([MSAVE/exec]); whether two pools of one sub-unit can sit on a carrier; bit 23 of the type map (token id 0); `variant+0x42c` / `wing+0xa28`; the two wing stats in the disruption formula (0xf5e890); priority among distributables (0xd0bdd0 / 0xd0c650) and stockpile order (0xbd2420); the variant test 0xbd7dc0 of the swap path. [WINGS/open]
 - Port-strike branch (`combat+0x10c`, PORT_STRIKE_DAMAGE_FACTOR). [AIR/open]
-- `0xf80f60` per-wing losses/experience. [AIR/losses]
+- ~~`0xf80f60` per-wing losses/experience~~ decoded: ace death / earn rolls, no experience ([ACE/rolls]). [AIR/losses]
+- `gamestate+0x720` (ace template seed term); whether a dead ace is ever detached from its wing; the content of the region weather / province night holders in the naval strike getters (`R` term); accident checks for carrier wings in battle; static blocks behind struct +0xc8 / +0xd0. [ACE/open]
 - Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
 - How a non-instant equipment bonus first reaches a variant (new variants copy the parent's, 0x1492ac0); the documented `modifiers = {}` block; ~~key match `+0x4e8` and 0x22f740~~ settled: `family` and the equipment group database ([MIO/match]); the unit mastery gain (`track+0x28`) and the attaché, leader and gain-factor terms; effect re-application on save load; the idea slot reader (spirit slots are from the scripts, [DOC/spirit]); on load, whether country modifiers exist before the ships' InitPostRead and whether `deployment` may be moved before `units` ([DOC/load]). [DOC/open]
 - ~~Country MIO `+0x134`~~ settled: trait points ([MIO/map]); the other arguments of `CanUnlockTrait` 0x13af360; chained includes (one pass in database order; no script uses one); ~~whether a `limit_to_equipment_type` naming only unknown equipment counts as empty~~ settled: not empty, it matches nothing ([MIO/match]). [MIOI/open]
 - MIO matching: 0xbd3a50 in full (variant role mask); the roster's use of `allowed`/`visible`/`available`; when the create-variant command carries its own snapshot; production mode 0xdb7a30 consumers; the policy template base shift (map read at `+0x40`, written at `+0x50`); 0x9f8570. [MIO/open]
 - Pride of the fleet: whether any order moves a task force out of a running naval combat (the escaped case assumes not); bit 37 in the eligibility test; which medal holder is `ship_modifiers`; `country+0x484`; the AI weight in 0x1310de0. [POTF/open]
 - Air missions: how often the wing update 0xf62750 runs (penalty decay hourly or daily); the coverage term of 0xf78500; 0xc58660's region filter; `region+0xa0`; the combat tests 0x13e27f0 / 0x161f620; `mission+0x58` (0xf7a760); the carrier list `strategicAir+0x140` and 0xf79c10; `priority` entries. [MSAVE/open]
+- Region air war: the detection value 0xf77730; `strategicAir+0x110 / +0x128` membership (0xc53270); the mission `+0x58` list of a carrier wing (double entries?); the trigger of 0xc647b0 for a task force that does not move; `stat37`; targeted modifier slots 1 / 0xd; the isCarrier branch of 0xf78500; accident chance 0xf61d70 and amount 0xf5dd80; jobs 0x2959ee0 / f20 / f40. [REG/open]
 
 [README]: findings/README.md
 [LOG]: findings/LOG-ingame-logging.md
@@ -1629,3 +1782,22 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [MSAVE/eff]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-eff-effectiveness-is-recomputed
 [MSAVE/example]: findings/A-MISSION-SAVE-air-mission-save-format.md#what-to-write-one-naval-strike-wing-and-one-air-superiority-wing-over-region-30
 [MSAVE/open]: findings/A-MISSION-SAVE-air-mission-save-format.md#unresolved
+[ACE]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md
+[ACE/objects]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#objects
+[ACE/rolls]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#a-ace-rolls-what-0xf80f60-does-after-each-naval-strike
+[ACE/create]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#a-ace-create-which-ace-0x618860
+[ACE/stats]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#a-ace-stats-how-an-ace-and-wing-experience-enter-the-naval-strike-and-interception-stats
+[ACE/death]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#a-ace-death-can-an-ace-die-in-naval-combat
+[ACE/save]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#a-ace-save-aces-in-a-save
+[ACE/sum]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#summary-what-the-simulator-must-do
+[ACE/open]: findings/A-ACE-aces-and-wing-experience-in-naval-strikes.md#unresolved
+[REG]: findings/A-REGION-carrier-wings-in-the-region-air-war.md
+[REG/order]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-order-the-hourly-strategic-air-update-0xc57d30
+[REG/lists]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-lists-which-carrier-wings-are-in-the-region
+[REG/war]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-war-pairing-0xc5f4c0--0xf81a20
+[REG/combat]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-combat-one-attacker-against-the-defenders-0xf7be70--0xf862a0
+[REG/disrupt]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-disrupt-from-disruption-to-the-naval-strike-efficiency-e_i
+[REG/losses]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-losses-when-the-planes-go-and-the-naval-combats-count
+[REG/accident]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-accident-the-other-hourly-plane-loss
+[REG/other]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-other-other-effects-on-the-naval-battle
+[REG/open]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#unresolved

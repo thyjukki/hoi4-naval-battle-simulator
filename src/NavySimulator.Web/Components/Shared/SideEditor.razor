@@ -424,6 +424,17 @@
                     <input type="number" step="0.05" placeholder="0" @bind="Side.CarrierNightTraffic" @bind:after="Changed" />
                     <span class="hint">Country modifier added to the night sortie factor.</span>
                 </div>
+                <div class="field">
+                    <label title="A-REGION: carrier wings with a mission over the battle's region all fight in its air war and can be disrupted; otherwise only their fighters attack">
+                        <input type="checkbox" @bind="CarrierWingsOnRegionMission" /> Carrier wings on a region mission
+                    </label>
+                    <span class="hint">In the logged test battles: on for the combat's attacker.</span>
+                </div>
+                <div class="field">
+                    <label>Carrier mission efficiency</label>
+                    <input type="number" min="0" step="0.01" placeholder="1" @bind="Side.CarrierMissionEfficiency" @bind:after="Changed" />
+                    <span class="hint">Share of carrier planes in the region's air war.</span>
+                </div>
             </div>
         </details>
     </div>
@@ -470,6 +481,17 @@
     {
         Refresh();
         await OnChanged.InvokeAsync();
+    }
+
+    // A-REGION-LISTS: stored as null when off, as the other optional inputs.
+    private bool CarrierWingsOnRegionMission
+    {
+        get => Side.CarrierWingsOnRegionMission == true;
+        set
+        {
+            Side.CarrierWingsOnRegionMission = value ? true : null;
+            _ = Changed();
+        }
     }
 
     private void Refresh()

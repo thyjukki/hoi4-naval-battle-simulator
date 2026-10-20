@@ -122,6 +122,12 @@ public class SetupLoader
         catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
         catalog.Spirits.AddRange(ReadCollectionFromFolderOrFile<SpiritDto>(catalog, "spirits", "spirits.json", "spirits"));
         catalog.Planes.AddRange(ReadCollectionFromFolderOrFile<PlaneDto>(catalog, "planes", "planes.json", "planes"));
+
+        // A-ACE: optional; data imported before aces existed has none (no aces are earned).
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, "aces")))
+        {
+            catalog.Aces.AddRange(ReadCollectionFromFolderOrFile<AceTemplateDto>(catalog, "aces", "aces.json", "aces"));
+        }
         catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
         ReadDoctrineFolders(catalog);
         ValidateCountryModifierWarnings(catalog);
@@ -427,7 +433,11 @@ public class SetupLoader
             defender,
             library.Planes,
             defines,
-            rules);
+            rules,
+            catalog.Aces.Where(ace => !string.IsNullOrWhiteSpace(ace.ID))
+                .Select(ace => new AceTemplate(ace.ID, new HashSet<string>(ace.Types ?? [], StringComparer.Ordinal), ace.Chance,
+                    new Dictionary<string, double>(ace.Effects ?? [], StringComparer.Ordinal)))
+                .ToList());
     }
 
     private GameDefines LoadDefines(
@@ -1237,7 +1247,9 @@ public class SetupLoader
             pride,
             participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0,
                 string.IsNullOrEmpty(entry.Mission) ? LandBasedAirwing.NavalStrike : entry.Mission)).ToList(),
-            new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal));
+            new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal),
+            participant.CarrierWingsOnRegionMission ?? false,
+            participant.CarrierMissionEfficiency ?? 1.0);
     }
 
     /// <summary>S-POTF: the first ship of the named design in the fleet (ships of one design are alike); null when none.</summary>

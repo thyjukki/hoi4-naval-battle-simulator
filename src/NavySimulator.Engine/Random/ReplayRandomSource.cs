@@ -6,8 +6,11 @@ namespace NavySimulator.Engine.Random;
 /// over. At the first mismatch the hour's <see cref="Divergence"/> is recorded and the rest of the hour draws from
 /// <paramref name="fallbackSeed"/>, so the hour still completes.
 /// </summary>
-public sealed class ReplayRandomSource(IReadOnlySet<RollKind> skippable, int fallbackSeed = 0) : IRandomSource
+public sealed class ReplayRandomSource(IReadOnlySet<RollKind> skippable, int fallbackSeed = 0, IReadOnlySet<RollKind>? unlogged = null) : IRandomSource
 {
+    // Kinds the game draws from a generator the log does not record: served from the fallback, the log untouched.
+    private readonly IReadOnlySet<RollKind> unlogged = unlogged ?? new HashSet<RollKind>();
+
     private readonly System.Random fallback = new(fallbackSeed);
     private IReadOnlyList<ReplayRoll> rolls = [];
     private int position;
@@ -43,7 +46,7 @@ public sealed class ReplayRandomSource(IReadOnlySet<RollKind> skippable, int fal
 
     public double NextDouble(RollKind kind)
     {
-        if (Divergence is not null)
+        if (Divergence is not null || unlogged.Contains(kind))
         {
             return fallback.NextDouble();
         }

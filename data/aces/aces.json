@@ -1,0 +1,122 @@
+{
+  "$schema": "../schemas/aces.schema.json",
+  "aces": [
+    {
+      "id": "bomber_genius",
+      "types": [
+        "strategic_bomber",
+        "tactical_bomber"
+      ],
+      "chance": 0.05,
+      "effects": {
+        "air_strategic_bomber_bombing_factor": 0.15,
+        "air_bombing_targetting": 0.15
+      }
+    },
+    {
+      "id": "bomber_good",
+      "types": [
+        "strategic_bomber",
+        "tactical_bomber"
+      ],
+      "chance": 0.9,
+      "effects": {
+        "air_strategic_bomber_bombing_factor": 0.05,
+        "air_bombing_targetting": 0.05
+      }
+    },
+    {
+      "id": "bomber_unique",
+      "types": [
+        "strategic_bomber",
+        "tactical_bomber"
+      ],
+      "chance": 0.4,
+      "effects": {
+        "air_strategic_bomber_bombing_factor": 0.1,
+        "air_bombing_targetting": 0.1
+      }
+    },
+    {
+      "id": "fighter_genius",
+      "types": [
+        "fighter",
+        "interceptor"
+      ],
+      "chance": 0.05,
+      "effects": {
+        "air_attack_factor": 0.15,
+        "air_maximum_speed_factor": 0.15,
+        "air_agility_factor": 0.15
+      }
+    },
+    {
+      "id": "fighter_good",
+      "types": [
+        "fighter",
+        "interceptor"
+      ],
+      "chance": 0.9,
+      "effects": {
+        "air_attack_factor": 0.05,
+        "air_maximum_speed_factor": 0.05,
+        "air_agility_factor": 0.05
+      }
+    },
+    {
+      "id": "fighter_unique",
+      "types": [
+        "fighter",
+        "interceptor"
+      ],
+      "chance": 0.4,
+      "effects": {
+        "air_attack_factor": 0.1,
+        "air_maximum_speed_factor": 0.1,
+        "air_agility_factor": 0.1
+      }
+    },
+    {
+      "id": "support_genius",
+      "types": [
+        "cas",
+        "tactical_bomber",
+        "naval_bomber"
+      ],
+      "chance": 0.05,
+      "effects": {
+        "naval_strike_targetting_factor": 0.15,
+        "ground_attack_factor": 0.15,
+        "air_agility_factor": 0.15
+      }
+    },
+    {
+      "id": "support_good",
+      "types": [
+        "cas",
+        "tactical_bomber",
+        "naval_bomber"
+      ],
+      "chance": 0.9,
+      "effects": {
+        "naval_strike_targetting_factor": 0.05,
+        "ground_attack_factor": 0.05,
+        "air_agility_factor": 0.05
+      }
+    },
+    {
+      "id": "support_unique",
+      "types": [
+        "cas",
+        "tactical_bomber",
+        "naval_bomber"
+      ],
+      "chance": 0.4,
+      "effects": {
+        "naval_strike_targetting_factor": 0.1,
+        "ground_attack_factor": 0.1,
+        "air_agility_factor": 0.1
+      }
+    }
+  ]
+}

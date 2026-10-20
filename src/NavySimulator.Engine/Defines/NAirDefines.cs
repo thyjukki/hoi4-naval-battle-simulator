@@ -27,6 +27,24 @@ public sealed class NAirDefines
     /// <summary>Balancing value to convert damage ( naval_strike_attack * hits ) to Organisation reduction.</summary>
     public double NAVAL_STRIKE_DAMAGE_TO_ORG { get; set; } = 1.5;
 
+    /// <summary>Base chance % for ace pilot die when an airplane is shot down in the Ace wing.</summary>
+    public double ACE_DEATH_CHANCE_BASE { get; set; } = 0.005;
+
+    /// <summary>The more airplanes was lost in a single airplanes (more bloody it was) the higher chance of Ace to die.</summary>
+    public double ACE_DEATH_CHANCE_PLANES_MULT { get; set; } = 0.001;
+
+    /// <summary>Base chance % for ace pilot creation roll to happen.</summary>
+    public double ACE_EARN_CHANCE_BASE { get; set; } = 0.01;
+
+    /// <summary>Ace generation chance per aircraft (A-ACE: per point of HP damage in a naval strike).</summary>
+    public double ACE_EARN_CHANCE_PLANES_MULT { get; set; } = 0.005;
+
+    /// <summary>size of wing ace bonuses are set up for. if lower more bonus, if higher less bonus</summary>
+    public double ACE_WING_SIZE { get; set; } = 100;
+
+    /// <summary>biggest bonus we can get from having a small wing with an ace on</summary>
+    public double ACE_WING_SIZE_MAX_BONUS { get; set; } = 2;
+
     /// <summary>damage bonus when planes are in naval combat where their carrier is present (and can thus sortie faster and more effectively)</summary>
     public double NAVAL_STRIKE_CARRIER_MULTIPLIER { get; set; } = 12.0;
 
@@ -106,8 +124,21 @@ public sealed class NAirDefines
     /// <summary>Eyeballed average amount of airplanes in wing. Used when calculating air volunteer.</summary>
     public double AIR_WING_AVERAGE_SIZE { get; set; } = 100.0;
 
+    /// <summary>multiplier on disruption damage to scale its effects on planes</summary>
+    public double DISRUPTION_FACTOR { get; set; } = 4.0;
+
     /// <summary>multiplier on disruption damage to scale its effects on carrier vs carrier planes</summary>
     public double DISRUPTION_FACTOR_CARRIER { get; set; } = 6.0;
+
+    public double DISRUPTION_SPEED_FACTOR { get; set; } = 1.0;
+
+    public double DISRUPTION_ATTACK_FACTOR { get; set; } = 0.0;
+
+    public double DISRUPTION_DEFENCE_DEFENCE_FACTOR { get; set; } = 0.5;
+
+    public double DISRUPTION_DEFENCE_SPEED_FACTOR { get; set; } = 1.0;
+
+    public double DISRUPTION_DEFENCE_ATTACK_FACTOR { get; set; } = 0.5;
 
     public double DISRUPTION_AGILITY_FACTOR { get; set; } = 0.0;
 
