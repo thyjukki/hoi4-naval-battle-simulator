@@ -35,7 +35,8 @@ public static class BattleReplay
     /// </summary>
     public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours,
         Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null,
-        Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<AirStrikeRecord>>? onAirHour = null)
+        Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<AirStrikeRecord>>? onAirHour = null,
+        Action<IReadOnlyList<ReplayRegionWing>>? onRegionHour = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
         var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate });
@@ -63,6 +64,12 @@ public static class BattleReplay
             }
 
             var air = hour.Air ?? [];
+
+            if (onRegionHour is not null && air.Count > 0 && hour.StartWingPlanes is { } startWings)
+            {
+                onRegionHour(CheckRegion(session, hour, startWings, wingIds));
+            }
+
             ApplyAir(session, shipsById, air, wingIds, airObjects);
             ApplySides(session, hour.StartSides);
 
@@ -220,6 +227,60 @@ public static class BattleReplay
                 }
             }
         }
+    }
+
+    // A-REGION check: the engine's region air war as a dry run from the game's wings at the start of the hour, against the
+    // game's wings at their strike (disruption after escorts, planes lost since the start of the hour).
+    private static List<ReplayRegionWing> CheckRegion(BattleSession session, ReplayHour hour, IReadOnlyDictionary<uint, int> startWings,
+        Dictionary<AirGroup, List<uint>> wingIds)
+    {
+        var result = new List<ReplayRegionWing>();
+        var game = new Dictionary<uint, (int Planes, double Disruption)>();
+
+        foreach (var strike in hour.Air ?? [])
+        {
+            for (var i = 0; strike.WingIds is { } ids && i < ids.Count && i < strike.WingPlanes.Count; i++)
+            {
+                game[ids[i]] = (strike.WingPlanes[i], strike.WingDisruption is { } d && i < d.Count ? d[i] : 0);
+            }
+        }
+
+        var wingsById = new Dictionary<uint, (AirWing Wing, AirGroup Group, BattleSide Side)>();
+
+        foreach (var side in new[] { session.Attacker, session.Defender })
+        {
+            foreach (var group in session.AirPhase.GroupsOf(side))
+            {
+                if (!wingIds.TryGetValue(group, out var ids))
+                {
+                    continue;
+                }
+
+                for (var i = 0; i < ids.Count && i < group.Wings.Count; i++)
+                {
+                    if (startWings.TryGetValue(ids[i], out var planes))
+                    {
+                        group.Wings[i].Planes = planes;
+                        wingsById[ids[i]] = (group.Wings[i], group, side);
+                    }
+                }
+            }
+        }
+
+        session.AirPhase.RegionAirWarEnabled = true;
+        session.AirPhase.RegionAirWar(hour.Hour, new SeededRandomSource(hour.Hour), applyLosses: false);
+        session.AirPhase.RegionAirWarEnabled = false;
+
+        foreach (var (id, (wing, group, side)) in wingsById)
+        {
+            if (game.TryGetValue(id, out var logged))
+            {
+                result.Add(new ReplayRegionWing(hour.Hour, side.Label, group.Source, wing.Plane.ID, id, startWings[id], wing.Disruption, logged.Disruption,
+                    Math.Min(wing.RegionLosses, startWings[id]), startWings[id] - logged.Planes));
+            }
+        }
+
+        return result;
     }
 
     // The side values the hour starts from (the previous hour's): carrier sorties, and so positioning, read screening.

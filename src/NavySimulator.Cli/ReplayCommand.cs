@@ -15,7 +15,7 @@ public static class ReplayCommand
     public const string Name = "replay";
 
     public const string Usage = """
-        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>] [--air <file>]
+        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>] [--air <file>] [--region <file>]
 
           --log <dir>         A run folder of tools/ingame/run_battles.py (meta.json, raw.jsonl), logged with rolls
           --data <dir>        Data directory (default: ./data)
@@ -25,6 +25,7 @@ public static class ReplayCommand
           --shots <file>      Write every shot, game and engine side by side, as CSV
           --states <file>     Write every end-of-hour ship value that differs, as CSV
           --air <file>        Write every air strike, game and engine side by side, as CSV
+          --region <file>     Write the region air war check per wing and air hour (engine from the game's start, game), as CSV
 
         Each hour starts from the game's logged state and is fought with the game's rolls; the attacker is the game's.
         """;
@@ -39,6 +40,7 @@ public static class ReplayCommand
         string? shotsFile = null;
         string? statesFile = null;
         string? airFile = null;
+        string? regionFile = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -80,6 +82,9 @@ public static class ReplayCommand
                     break;
                 case "--air":
                     airFile = args[++i];
+                    break;
+                case "--region":
+                    regionFile = args[++i];
                     break;
                 default:
                     Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
@@ -148,6 +153,18 @@ public static class ReplayCommand
                     e?.Critical, e?.HpDamage.ToString("R", invariant), e?.OrganizationDamage.ToString("R", invariant)));
             }
         };
+        using var region = regionFile is null ? null : new StreamWriter(regionFile);
+        region?.WriteLine("hour,side,source,plane,wing,startPlanes,engineDisruption,gameDisruption,engineLosses,gameLosses");
+        Action<IReadOnlyList<ReplayRegionWing>>? onRegion = region is null ? null : wings =>
+        {
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+            foreach (var w in wings)
+            {
+                region.WriteLine(string.Join(",", w.Hour, w.Side, w.Source, w.Plane, w.WingId, w.StartPlanes,
+                    w.EngineDisruption.ToString("R", invariant), w.GameDisruption.ToString("R", invariant), w.EngineLosses, w.GameLosses));
+            }
+        };
         var reports = BattleReplay.Run(scenario, log.Hours(map), shots is null ? null : (hour, game, engine) =>
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;
@@ -163,7 +180,7 @@ public static class ReplayCommand
                     e?.ProfileFactor.ToString("R", invariant), e?.HitModifier.ToString("R", invariant), e?.Damage.ToString("R", invariant),
                     e?.PiercingTier, e?.HpDamage.ToString("R", invariant)));
             }
-        }, onAir);
+        }, onAir, onRegion);
         if (statesFile is not null)
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;

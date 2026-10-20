@@ -171,8 +171,35 @@ public sealed class GameBattleLog
                 Air(record, map),
                 SideStates(record.GetProperty("sides")),
                 SideStates(record.GetProperty("start")),
-                i > 0 ? counted[i - 1] : null))
+                i > 0 ? counted[i - 1] : null,
+                i > 0 ? WingPlanes(hours[i - 1]) : null))
             .ToList();
+    }
+
+    // Every wing's planes at the end of an hour (airObjects), by wing handle.
+    private static Dictionary<uint, int>? WingPlanes(JsonElement record)
+    {
+        if (!record.TryGetProperty("airObjects", out var sides) || sides.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+
+        var planes = new Dictionary<uint, int>();
+
+        foreach (var airObject in sides.EnumerateArray().SelectMany(side => side.EnumerateArray()))
+        {
+            if (!airObject.TryGetProperty("wings", out var wings))
+            {
+                continue;
+            }
+
+            foreach (var wing in wings.EnumerateArray().Where(wing => wing.TryGetProperty("planes", out _)))
+            {
+                planes[wing.GetProperty("handle")[1].GetUInt32()] = wing.GetProperty("planes").GetInt32();
+            }
+        }
+
+        return planes;
     }
 
     /// <summary>

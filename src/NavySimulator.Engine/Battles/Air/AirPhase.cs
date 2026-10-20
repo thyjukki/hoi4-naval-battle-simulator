@@ -437,7 +437,7 @@ public sealed class AirPhase
     /// Not modelled: detection (0, HardcodedValues.RegionAirDetection), weather, night and mission efficiency modifiers of
     /// the stats, the distance weight, accidents, aces in air-to-air combat. Spec: air.md A-REGION.
     /// </summary>
-    public void RegionAirWar(int hour, IRandomSource random)
+    public void RegionAirWar(int hour, IRandomSource random, bool applyLosses = true)
     {
         if (!RegionAirWarEnabled)
         {
@@ -534,6 +534,11 @@ public sealed class AirPhase
             {
                 entry.Wing.Disruption = FixedPoint.Truncate(left * entry.Wing.DisruptionTaken);
             }
+        }
+
+        if (!applyLosses)
+        {
+            return;
         }
 
         // 0xf87550: the losses come off the wings after the whole air war.
