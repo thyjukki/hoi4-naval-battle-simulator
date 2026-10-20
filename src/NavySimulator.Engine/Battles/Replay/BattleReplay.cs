@@ -40,7 +40,7 @@ public static class BattleReplay
         Action<IReadOnlyList<ReplayRegionWing>>? onRegionHour = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
-        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate });
+        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate, RollKind.AirAccident });
         var session = new BattleSession(scenario, random);
         // The region's air war happens outside the logged combat update: the wings' planes and disruption come from the log.
         session.AirPhase.RegionAirWarEnabled = false;

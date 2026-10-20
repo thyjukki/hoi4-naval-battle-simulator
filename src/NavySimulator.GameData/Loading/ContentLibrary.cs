@@ -226,10 +226,10 @@ public sealed class ContentLibrary
             }
         }
 
-        foreach (var plane in catalog.Planes.Where(plane => !string.IsNullOrWhiteSpace(plane.ID)))
+        foreach (var (plane, order) in catalog.Planes.Where(plane => !string.IsNullOrWhiteSpace(plane.ID)).Select((plane, order) => (plane, order)))
         {
             planes.TryAdd(plane.ID, new PlaneEquipment(plane.ID, plane.Stats.ToDomain(), plane.Types, plane.Missions, plane.CarrierCapable,
-                plane.SubUnit, plane.SubUnitTypes, plane.SubUnitCategories));
+                plane.SubUnit, plane.SubUnitTypes, plane.SubUnitCategories, plane.Year ?? 0, order));
         }
 
         var leaderTraits = new Dictionary<string, LeaderTrait>(StringComparer.Ordinal);

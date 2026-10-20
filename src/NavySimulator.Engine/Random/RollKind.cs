@@ -65,6 +65,13 @@ public enum RollKind
     /// </summary>
     RegionAirLoss,
 
+    /// <summary>
+    /// A-ACCIDENT: a draw of the hourly air accident pass (the gate, the start pool, each wing's roll, the effect). The game
+    /// draws them from a local generator seeded once an hour (strategicair.cpp 0x1be8), outside the logged rolls; a replay
+    /// serves them from its fallback.
+    /// </summary>
+    AirAccident,
+
     /// <summary>A-ACE: whether a strike wing earns an ace after a strike (airmission.cpp line 0xb68).</summary>
     AirAceEarn,
 

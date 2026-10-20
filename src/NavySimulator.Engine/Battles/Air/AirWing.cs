@@ -3,26 +3,102 @@ using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Air;
 
-/// <summary>One air wing in a naval battle; planes are removed as they are shot down.</summary>
+/// <summary>
+/// One air wing in a naval battle; planes are removed as they are shot down. A-MIXED: a wing can hold planes of several
+/// variants of its sub-unit (refilled from the stockpile); its stats are their plane-share mix.
+/// </summary>
 public sealed class AirWing
 {
-    public AirWing(PlaneEquipment plane, int planes, HardcodedValues values, bool executesNavalStrike = true, PlaneStats? stats = null)
+    // A-MIXED [RE] 0xbd1f20: the wing's variants in the game's order, the oldest type first.
+    private readonly List<(PlaneEquipment Plane, int Planes)> variants = [];
+    private readonly ModifierSet bonus;
+
+    public AirWing(PlaneEquipment plane, int planes, HardcodedValues values, bool executesNavalStrike = true, ModifierSet? bonus = null)
     {
         Plane = plane;
-        Stats = stats ?? plane.Stats;
-        Planes = planes;
+        this.bonus = bonus ?? ModifierSet.Empty;
+        variants.Add((plane, planes));
         Size = planes;
+        RefreshStats();
         IsStrikeWing = plane.IsInStrikeList(values);
         ExecutesNavalStrike = IsStrikeWing && executesNavalStrike && plane.IsNavalStriker(values);
         IsFighter = plane.IsFighterType(values);
         IsSortieFighter = plane.IsSortieFighterType(values);
     }
 
+    /// <summary>The wing's own plane: its sub-unit, missions and fighter tests are the wing's.</summary>
     public PlaneEquipment Plane { get; }
 
-    /// <summary>A-STATS: the plane's stats with its side's sub-unit bonuses (doctrines, spirits).</summary>
-    public PlaneStats Stats { get; }
-    public int Planes { get; set; }
+    /// <summary>
+    /// A-STATS / A-MIXED [RE] 0xf661e0: the plane-share mix of the wing's variants with its side's sub-unit bonuses
+    /// (doctrines, spirits), as cached at the start of the hour (<see cref="RefreshStats"/>).
+    /// </summary>
+    public PlaneStats Stats { get; private set; } = new();
+
+    /// <summary>The wing's variants and their planes, the oldest type first.</summary>
+    public IReadOnlyList<(PlaneEquipment Plane, int Planes)> Variants => variants;
+
+    /// <summary>
+    /// The wing's planes. Lowering it removes the oldest type's planes first (A-MIXED, RemovePlanes 0xf63580); raising it
+    /// adds planes of the wing's own plane.
+    /// </summary>
+    public int Planes
+    {
+        get => variants.Sum(variant => variant.Planes);
+        set
+        {
+            var change = value - Planes;
+
+            if (change > 0)
+            {
+                Add(Plane, change);
+            }
+
+            for (var i = 0; i < variants.Count && change < 0; i++)
+            {
+                var removed = Math.Min(variants[i].Planes, -change);
+                variants[i] = (variants[i].Plane, variants[i].Planes - removed);
+                change += removed;
+            }
+
+            variants.RemoveAll(variant => variant.Planes <= 0);
+
+            if (variants.Count == 0)
+            {
+                variants.Add((Plane, 0));
+            }
+        }
+    }
+
+    /// <summary>A-MIXED: adds planes of a variant, keeping the variants in the game's order (the oldest type first).</summary>
+    public void Add(PlaneEquipment plane, int planes)
+    {
+        if (planes <= 0)
+        {
+            return;
+        }
+
+        var index = variants.FindIndex(variant => variant.Plane.ID == plane.ID);
+
+        if (index >= 0)
+        {
+            variants[index] = (plane, variants[index].Planes + planes);
+            return;
+        }
+
+        variants.RemoveAll(variant => variant.Planes <= 0);
+        var position = variants.FindIndex(variant => variant.Plane.Order > plane.Order);
+        variants.Insert(position < 0 ? variants.Count : position, (plane, planes));
+    }
+
+    /// <summary>
+    /// A-STATS-CACHE [RE + LOG] 0xf661e0: recomputes the stats from the current mix. The game does this once an hour, at the
+    /// start of the hourly air update, so losses and refills during the hour count from the next one.
+    /// </summary>
+    public void RefreshStats()
+    {
+        Stats = PlaneStatRules.Mix(variants.Select(variant => (variant.Plane.Stats, variant.Planes)).ToList(), bonus);
+    }
 
     /// <summary>The wing's planes when the battle started: its full strength.</summary>
     public int Size { get; set; }

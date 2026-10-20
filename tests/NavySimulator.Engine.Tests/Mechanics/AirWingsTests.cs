@@ -91,13 +91,32 @@ public class AirWingsTests
 
         var lines = phase.ReinforceDaily(phase.Attacker);
 
-        // 70 missing: 25 of its own plane, then 40 of the other naval bomber of its sub-unit.
+        // 70 missing: the stock in the game's order (newest first; equal here, so as listed): 25 of its own plane, then 40 of
+        // the other naval bomber of its sub-unit, kept as a second variant (A-MIXED).
         Assert.Equal(95, groups[1].Planes);
         Assert.Equal(4, groups[0].Planes);
         Assert.Equal(0, phase.StockpileOf(phase.Attacker)["nb"]);
         Assert.Equal(0, phase.StockpileOf(phase.Attacker)["nb2"]);
         Assert.Equal(50, phase.StockpileOf(phase.Attacker)["cv_nb"]);
         Assert.Equal(["attacker land-based nb refilled 65 planes from the stockpile"], lines);
+    }
+
+    [Fact]
+    public void Accidents_HitOneWingPerBaseInAPassedHour_AndAccumulateTheScore()
+    {
+        // A-ACCIDENT [RE]: reliability 0 → trunc(0.1 × 2) × (1 + 0.5 experience malus) = 0.3; the gate passes (5,000 <
+        // 10,000), the wing's draw 0 is below it, and the effect 0.99999 adds trunc(1000 × 0.99999 × 0.007) = 6.99993: 6 lost.
+        var phase = Phase([TestEntityFactory.Capital("bb")], landBased: [new LandBasedAirwing("nb", 1000)]);
+        var wing = phase.GroupsOf(phase.Attacker)[0].Wings[0];
+
+        var lines = phase.Accidents(5, new ScriptedRandomSource(0.05, 0.0, 0.0, 0.99999, 0.5));
+
+        Assert.Equal(994, wing.Planes);
+        Assert.Equal(["Hour 5: attacker land-based nb lost 6 nb in an accident"], lines);
+
+        // An hour whose gate draw is 10 % or more has none.
+        Assert.Empty(phase.Accidents(6, new ScriptedRandomSource(0.2)));
+        Assert.Equal(994, wing.Planes);
     }
 
     [Fact]

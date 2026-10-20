@@ -54,7 +54,11 @@
           "state": 77,
           "level": 10
         }
-      ]
+      ],
+      "planeStockpile": {
+        "fighter_equipment_0": 10023,
+        "tac_bomber_equipment_0": 3
+      }
     },
     "defender": {
       "fleetID": "air_test_cv_std_b",
@@ -99,7 +103,11 @@
           "level": 10,
           "otherPlanes": 1000
         }
-      ]
+      ],
+      "planeStockpile": {
+        "fighter_equipment_0": 10011,
+        "tac_bomber_equipment_0": 18
+      }
     }
   }
 }

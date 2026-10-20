@@ -89,6 +89,9 @@ public sealed class HardcodedValues
     // [RE] A-REGION-DISRUPT (0xf78160, divisor 316200): e = 1 − sqrt(disruption / den) × 0.316228.
     public double DisruptionEfficiencyScale { get; set; } = 0.316228;
 
+    // [RE] A-ACCIDENT 0xc60290: an air base entry has an accident pass in an hour when its first draw (of 100,000) is below this.
+    public int AirAccidentGate { get; set; } = 10000;
+
     // [RE] A-DETECT 0xf77730: the floor of a country's air detection in a region (0x3e8 in fixed point).
     public double MinimumRegionAirDetection { get; set; } = 0.01;
 

@@ -263,12 +263,16 @@ public class BattleParticipant
     {
         if (!planeStats.TryGetValue(plane.ID, out var stats))
         {
-            var bonus = PlaneBonuses.Where(entry => entry.AppliesTo(plane))
-                .Aggregate(ModifierSet.Empty, (current, entry) => current.Add(entry.Values));
-            stats = planeStats[plane.ID] = PlaneStatRules.WithBonuses(plane.Stats, bonus);
+            stats = planeStats[plane.ID] = PlaneStatRules.WithBonuses(plane.Stats, PlaneBonusOf(plane));
         }
 
         return stats;
+    }
+
+    /// <summary>A-STATS: the sum of the side's plane bonus blocks for the plane's sub-unit and categories.</summary>
+    public ModifierSet PlaneBonusOf(PlaneEquipment plane)
+    {
+        return PlaneBonuses.Where(entry => entry.AppliesTo(plane)).Aggregate(ModifierSet.Empty, (current, entry) => current.Add(entry.Values));
     }
 
     /// <summary>

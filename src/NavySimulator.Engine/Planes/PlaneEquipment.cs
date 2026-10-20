@@ -29,6 +29,15 @@ public class PlaneEquipment
     /// <summary>The sub-unit's <c>categories</c> (e.g. <c>category_carrier_nav_bomber</c>), which doctrine bonuses name.</summary>
     public IReadOnlySet<string> SubUnitCategories;
 
+    /// <summary>A-MIXED: the equipment's year, which orders the stockpile (newest first).</summary>
+    public int Year;
+
+    /// <summary>
+    /// A-MIXED: the equipment's place in the equipment database (the import's order of <c>common/units/equipment</c>), which
+    /// orders a wing's variants (0xbd1f20: the oldest type first, lost first).
+    /// </summary>
+    public int Order;
+
     public PlaneEquipment(
         string id,
         PlaneStats stats,
@@ -37,7 +46,9 @@ public class PlaneEquipment
         bool carrierCapable = false,
         string? subUnit = null,
         IEnumerable<string>? subUnitTypes = null,
-        IEnumerable<string>? subUnitCategories = null)
+        IEnumerable<string>? subUnitCategories = null,
+        int year = 0,
+        int order = 0)
     {
         ID = id;
         Stats = stats;
@@ -47,6 +58,8 @@ public class PlaneEquipment
         SubUnit = subUnit;
         SubUnitTypes = new HashSet<string>(subUnitTypes ?? [], StringComparer.Ordinal);
         SubUnitCategories = new HashSet<string>(subUnitCategories ?? [], StringComparer.Ordinal);
+        Year = year;
+        Order = order;
     }
 
     /// <summary>The wing pool the plane's wings join on a base: its sub-unit, else the plane itself.</summary>

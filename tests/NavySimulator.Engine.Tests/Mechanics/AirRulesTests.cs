@@ -288,6 +288,26 @@ public class AirRulesTests
     }
 
     [Fact]
+    public void MixedWing_TakesThePlaneShareMix_AndLosesItsOldestPlanesFirst()
+    {
+        // A-MIXED [RE + LOG]: a wing of 75 new and 25 old fighters; stats are Σ trunc(trunc((1 + bonus) × share) × stat),
+        // cached until the next refresh; losses take the oldest type first.
+        var old = new PlaneEquipment("fighter_0", new PlaneStats(AirAttack: 20, Agility: 40), ["fighter"], ["air_superiority"], subUnit: "fighter", year: 1933, order: 1);
+        var young = new PlaneEquipment("fighter_2", new PlaneStats(AirAttack: 40, Agility: 60), ["fighter"], ["air_superiority"], subUnit: "fighter", year: 1940, order: 3);
+        var wing = new AirWing(young, 75, defines.Hardcoded, bonus: new ModifierSet([new("air_attack", 0.1)]));
+
+        wing.Add(old, 25);
+        Assert.Equal(44, wing.Stats.AirAttack, 9);
+        wing.RefreshStats();
+        Assert.Equal(FixedPoint.Truncate(1.1 * 0.75) * 40 + FixedPoint.Truncate(1.1 * 0.25) * 20, wing.Stats.AirAttack, 9);
+        Assert.Equal(0.75 * 60 + 0.25 * 40, wing.Stats.Agility, 9);
+        Assert.Equal(["fighter_0", "fighter_2"], wing.Variants.Select(variant => variant.Plane.ID));
+
+        wing.Planes -= 30;
+        Assert.Equal([("fighter_2", 70)], wing.Variants.Select(variant => (variant.Plane.ID, variant.Planes)));
+    }
+
+    [Fact]
     public void LandCoverage_CountsTheRegionsProvincesInRangeOfTheStateCentre()
     {
         // A-COVERAGE [RE + LOG]: Burgas (state centre 3229, 1377) to region 30 (TFB): Fighter II, 900 km = 126 px, covers 4 of 7

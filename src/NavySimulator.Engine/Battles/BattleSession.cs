@@ -229,6 +229,10 @@ public sealed class BattleSession
         var tick = hour + 1;
         var hourStartShots = shots.Count;
         var hourStartStrikes = airStrikes.Count;
+        // A-STATS-CACHE [RE]: the hourly air update caches every wing's stats from its mix before anything else.
+        airPhase.RefreshWingStats();
+        // A-ACCIDENT [RE]: then every hour the accident pass, before the region's air war.
+        log.AddRange(airPhase.Accidents(hour, random));
         JoinLandBasedPlanes(hour);
         BeginHour(hour);
         SideTurn(attacker, defender, hour, tick);

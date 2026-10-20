@@ -83,7 +83,7 @@ public sealed class AirPhase
 
                 for (var i = 0; i < assignment.Airwings; i++)
                 {
-                    wings.Add(new AirWing(plane, assignment.PlaneCount, defines.Hardcoded, executes, side.Participant.PlaneStatsOf(plane)));
+                    wings.Add(new AirWing(plane, assignment.PlaneCount, defines.Hardcoded, executes, side.Participant.PlaneBonusOf(plane)));
                 }
             }
 
@@ -101,7 +101,7 @@ public sealed class AirPhase
         {
             if (scenario.PlanesByID.TryGetValue(landBased.PlaneID, out var plane))
             {
-                result.Add(AirGroup.External([new AirWing(plane, landBased.Planes, defines.Hardcoded, stats: side.Participant.PlaneStatsOf(plane))], landBased.DisruptionFactor, landBased));
+                result.Add(AirGroup.External([new AirWing(plane, landBased.Planes, defines.Hardcoded, bonus: side.Participant.PlaneBonusOf(plane))], landBased.DisruptionFactor, landBased));
             }
             else
             {
@@ -728,50 +728,142 @@ public sealed class AirPhase
     }
 
     /// <summary>
-    /// [RE] A-REINFORCE (0xd10310, 0xc5c0a0): the day change refills air wings from the side's stockpile, all missing
-    /// planes at once, the wing missing most first (equal priority and mission for all). Carrier wings get nothing while
-    /// their task force is in combat, so only land-based wings refill. A wing takes its own plane first, then [ASSUMED]
-    /// other planes of its sub-unit with the same missions, counted as its own (the game mixes variants in a wing).
-    /// Manpower is not checked. Returns a log line per refilled wing.
+    /// [RE] A-REINFORCE / A-MIXED (0xd10310, 0xbd2420): the day change refills air wings from the side's stockpile, all
+    /// missing planes at once. The stock is offered one variant at a time, the newest first (year descending, then the
+    /// later equipment), each to the wings missing most first (equal priority and mission for all); a wing takes any
+    /// variant of its sub-unit with the same missions, its own included, and keeps it as a variant (A-MIXED: its stats
+    /// become the plane-share mix from the next hour). Carrier wings get nothing while their task force is in combat, so
+    /// only land-based wings refill. Not modelled: the swap of a full wing's planes for better stock, manpower. Returns a
+    /// log line per refilled wing.
     /// </summary>
     public List<string> ReinforceDaily(BattleSide side)
     {
-        var lines = new List<string>();
         var stock = stockpiles[side];
         var wings = groups[side]
             .Where(group => group.IsExternal)
             .SelectMany(group => group.Wings.Select(wing => (group, wing)))
-            .Where(entry => entry.wing.Size > entry.wing.Planes)
-            .OrderByDescending(entry => entry.wing.Size - entry.wing.Planes)
+            .ToList();
+        var added = new Dictionary<AirWing, int>();
+        var offered = stock.Keys
+            .Where(id => stock[id] > 0 && scenario.PlanesByID.ContainsKey(id))
+            .Select(id => scenario.PlanesByID[id])
+            .OrderByDescending(plane => plane.Year)
+            .ThenByDescending(plane => plane.Order)
             .ToList();
 
-        foreach (var (group, wing) in wings)
+        foreach (var plane in offered)
         {
-            var added = 0;
-
-            foreach (var planeId in StockCandidates(wing.Plane, stock))
+            foreach (var (_, wing) in wings
+                         .Where(entry => entry.wing.Size > entry.wing.Planes && entry.wing.Plane.Pool == plane.Pool &&
+                                         entry.wing.Plane.Missions.SetEquals(plane.Missions))
+                         .OrderByDescending(entry => entry.wing.Size - entry.wing.Planes)
+                         .ToList())
             {
-                var take = Math.Min(stock[planeId], wing.Size - wing.Planes);
-                stock[planeId] -= take;
-                wing.Planes += take;
-                added += take;
+                var take = Math.Min(stock[plane.ID], wing.Size - wing.Planes);
+
+                if (take <= 0)
+                {
+                    break;
+                }
+
+                stock[plane.ID] -= take;
+                wing.Add(plane, take);
+                added[wing] = added.GetValueOrDefault(wing) + take;
             }
+        }
 
-            if (added > 0)
+        return wings.Where(entry => added.ContainsKey(entry.wing))
+            .Select(entry => $"{side.Label} {entry.group.Source} refilled {added[entry.wing]} planes from the stockpile")
+            .ToList();
+    }
+
+    private readonly Dictionary<BattleSide, double> accidentScores = new();
+
+    /// <summary>
+    /// [RE] A-ACCIDENT (0xc5efc0 → 0xc60290 → 0xf61d70 / 0xc4daf0 → 0xf5dd80): the hourly air accident pass, before the
+    /// region's air war, over the side's land-based wings per air base (carrier wings in a naval battle have no mission
+    /// type and never have one). Per base: a gate draw (10 % of hours), a random starting pool, then per wing in order a
+    /// roll against its chance; the first accident adds trunc(planes × U × ACCIDENT_EFFECT_MULT) to the side's accident
+    /// score, whose whole part is lost, the oldest planes first, and can kill the wing's ace. Not modelled: the base
+    /// region's weather term, the experience loss. Returns a log line per accident.
+    /// </summary>
+    public List<string> Accidents(int hour, IRandomSource random)
+    {
+        var lines = new List<string>();
+
+        foreach (var side in new[] { Attacker, Defender })
+        {
+            var country = side.Participant.CountryModifiers;
+            var bases = groups[side].Where(group => group.LandBased is not null && group.Wings.Count > 0)
+                .GroupBy(group => group.LandBased!.AirBase);
+
+            foreach (var entry in bases)
             {
-                lines.Add($"{side.Label} {group.Source} refilled {added} planes from the stockpile");
+                if ((int)(random.NextDouble(RollKind.AirAccident) * 100000) >= defines.Hardcoded.AirAccidentGate)
+                {
+                    continue;
+                }
+
+                var pools = entry.ToList();
+                var start = (int)(random.NextDouble(RollKind.AirAccident) * pools.Count);
+                var done = false;
+
+                for (var k = 0; k < pools.Count && !done; k++)
+                {
+                    foreach (var wing in pools[(start + k) % pools.Count].Wings.Where(wing => wing.Planes > 0))
+                    {
+                        var draw = (int)(random.NextDouble(RollKind.AirAccident) * 100000);
+                        var chance = AccidentChance(wing, country);
+
+                        if ((long)Math.Round(FixedPoint.Truncate(chance * defines.NAir.ACCIDENT_CHANCE_BALANCE_MULT) * 100000) <= draw / 10)
+                        {
+                            continue;
+                        }
+
+                        var effect = Math.Truncate(random.NextDouble(RollKind.AirAccident) * 100000) / 100000;
+                        var score = accidentScores.GetValueOrDefault(side) + FixedPoint.Truncate(wing.Planes * effect * defines.NAir.ACCIDENT_EFFECT_MULT);
+                        var lost = (int)Math.Truncate(score);
+                        accidentScores[side] = score - lost;
+
+                        if (lost > 0)
+                        {
+                            wing.Planes -= Math.Min(lost, wing.Planes);
+                            lines.Add($"Hour {hour}: {side.Label} {pools[(start + k) % pools.Count].Source} lost {lost} {wing.Plane.ID} in an accident");
+                        }
+
+                        if (wing.Ace is { Alive: true } ace && effect <= defines.NAir.ACE_DEATH_CHANCE_BASE)
+                        {
+                            ace.Alive = false;
+                        }
+
+                        done = true;
+                        break;
+                    }
+                }
             }
         }
 
         return lines;
     }
 
-    private IEnumerable<string> StockCandidates(PlaneEquipment plane, Dictionary<string, int> stock)
+    // [RE] A-ACCIDENT 0xc4daf0: trunc(trunc((ACCIDENT_CHANCE_BASE + air_accidents) × trunc((1 − min(reliability, 1)) ×
+    // ACCIDENT_CHANCE_RELIABILITY_MULT)) × (1 + air_accidents_factor of the experience holder and the country)).
+    private double AccidentChance(AirWing wing, ModifierSet country)
     {
-        var same = stock.Keys.Where(id => id == plane.ID);
-        var others = stock.Keys.Where(id => id != plane.ID && scenario.PlanesByID.TryGetValue(id, out var other) &&
-                                            other.Pool == plane.Pool && other.Missions.SetEquals(plane.Missions));
-        return same.Concat(others).Where(id => stock[id] > 0).ToList();
+        var air = defines.NAir;
+        var reliability = FixedPoint.Truncate((1 - Math.Min(wing.Stats.Reliability, 1)) * air.ACCIDENT_CHANCE_RELIABILITY_MULT);
+        var factor = 1 + RegionAirWarRules.ExperienceModifier(wing, StaticModifiers.AirAccidentsFactor, country, defines) +
+                     country.Get(StaticModifiers.AirAccidentsFactor);
+        return FixedPoint.Truncate(FixedPoint.Truncate((air.ACCIDENT_CHANCE_BASE + country.Get(StaticModifiers.AirAccidents)) * reliability) * factor);
+    }
+
+    /// <summary>A-STATS-CACHE [RE] 0xf661e0: every wing's stats from its current mix, at the start of the hour.</summary>
+    public void RefreshWingStats()
+    {
+        foreach (var wing in groups.Values.SelectMany(list => list).SelectMany(group => group.Wings))
+        {
+            wing.RefreshStats();
+        }
     }
 
     private BattleSide Defender => groups.Keys.First(side => !ReferenceEquals(side, Attacker));

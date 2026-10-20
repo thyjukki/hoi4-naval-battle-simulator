@@ -175,6 +175,21 @@ public sealed class NAirDefines
     /// <summary>Experience needed to progress to the next level</summary>
     public double[] AIR_WING_XP_LEVELS { get; set; } = [100.0, 300.0, 700.0, 900.0];
 
+    /// <summary>Base chance % (0 - 100) for accident to happen. Reduced with higher reliability stat.</summary>
+    public double ACCIDENT_CHANCE_BASE { get; set; } = 0.1;
+
+    /// <summary>The total accident chance is scaled up when it happens on the carrier ship.</summary>
+    public double ACCIDENT_CHANCE_CARRIER_MULT { get; set; } = 1.5;
+
+    /// <summary>Multiplier for balancing how often the air accident really happens. The higher mult, the more often.</summary>
+    public double ACCIDENT_CHANCE_BALANCE_MULT { get; set; } = 0.10;
+
+    /// <summary>Multiplier to accident chance per point of missing reliability.</summary>
+    public double ACCIDENT_CHANCE_RELIABILITY_MULT { get; set; } = 2.0;
+
+    /// <summary>Multiplier for balancing the effect of accidents</summary>
+    public double ACCIDENT_EFFECT_MULT { get; set; } = 0.007;
+
     /// <summary>How much the controlled provinces in area affects the air detection base value.</summary>
     public double DETECT_CHANCE_FROM_OCCUPATION { get; set; } = 0.10;
 

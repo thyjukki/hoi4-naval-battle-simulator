@@ -169,7 +169,7 @@ The stats are those of A-STATS (region war getter). Then each side's air superio
 - [LOG] Land-based bombers as defenders (2026-10-20, after A-DETECT and A-STATS): the engine read the defender's capacity after the attacker's decrement, so a lone land wing (weight 1) took no disruption; with the game's order, the decoded detection and the fresh wings' experience malus, `air_land_vs_fleet` (20 runs) matches the game's disruption of Japan's land bombers within 1 % in 596 of 600 air hours, with no hand-set `disruptionFactor` and the USA's land fighters at `missionEfficiency` 0.46 (the land effectiveness, coverage of the region from the base, is not modelled). Strikes of the disrupted wings: 422 of 620 match, air damage exact. [RE + LOG] Escaped carriers stay in the region war (A-REGION-ESCAPE): at the first air hour after a side's first escape the game's disruption follows the engine with them in, in all 13 `air_cv_bombers_vs_fighters` and 18 `air_cv_land_mix` runs with an escape. The replay's `--region` dry run takes its own region losses off escaped carriers' wings, which the logger no longer lists (their air object moved to `group+0x88`); with that, the USA's land bombers' disruption over the 18 runs is 192k against the game's 179k and Japan's carrier bombers' 139k against 141k. The land fighters' `missionEfficiency` in `air_cv_land_mix` is 0.343 (4 of the region's 7 provinces in Fighter II range from Burgas × the base's supply factor 0.6, A-DETECT-MIX), its land bombers' 0.6. For free runs the template's stockpiles refill land wings with older variants whose stats the game averages into the wing (not modelled: the simulator counts stock as the wing's own plane).
 - In the CL3 template the combat's attacker's carrier wings were on the region list (effectiveness 0.734, its supply ratio) and the defender's were not, as A-REGION-SYNC predicts. `make_save.py` puts a side's carrier wings on the list when its `carrierWingsOnRegionMission` is true (an active mission over `--air-region`); the attacker's cannot be kept off it. [LOG] Checked in game (`air_cv_doctrines`, 10 roll-logged runs, `output/ingame/air_batch7`): with the defender's wings written on the list, the replay matches the game's disruption of the attacker's bombers within 1 % in 9,314 of 9,548 wing hours (142k in all); with them off the list the engine gives 7.7k and a third of the game's losses.
 
-Not modelled: the land wings' effectiveness (coverage from their base's range, base crowding: the input `missionEfficiency`), the weather and night terms of the stats (none in TFB; vanilla night `air_attack_factor` −0.5), the distance weight for wings over other regions, accidents (a separate hourly loss of land wings; carrier wings in battle have none, A-STATS-ACCIDENT), aces in air-to-air combat, the region's air superiority, interception missions.
+Not modelled: the weather and night terms of the stats (none in TFB; vanilla night `air_attack_factor` −0.5), the distance weight for wings over other regions, aces in air-to-air combat, the region's air superiority, interception missions. Land wings' effectiveness: A-COVERAGE; accidents: A-ACCIDENT.
 
 ## A-DETECT: a side's air detection in the region [RE]
 
@@ -309,9 +309,21 @@ ace bonus (per modifier) = trunc(trunc(effect × min(ACE_WING_SIZE / wing planes
 
 From [A-WINGS-REINFORCE](../reverse-engineering/findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-reinforce-planes-from-the-stockpile): once a day, in the daily update after the 00:00 combat hour (with S-MANPOWER), the country's stockpile refills air wings, **all missing planes at once** up to the wing size, the wing with the highest `priority × 1000 + 500 (has a mission) + missing planes` first (the simulator's wings have equal priority and missions, so the one missing most).
 - **Carrier wings get no planes while their task force is in combat** (0xf5cda2), so in a battle only land-based wings refill. The new planes fly from the next air hour. Confirmed in game [LOG]: with 1000 carrier naval bombers in stock, the carriers' bomber pools only lost planes over 8 day changes in each of 10 battles.
-- A wing takes any stockpiled variant of its sub-unit with the same allowed missions. The simulator takes the wing's own plane first, then [ASSUMED] the others, counted as the wing's plane (the game mixes variants in a wing).
+- A-MIXED [RE + LOG] ([finding](../reverse-engineering/findings/A-MIXED-plane-variants-in-a-wing.md)): the stock is offered one variant at a time, **the newest first** (0xbd2420: year descending, then the later equipment; the wing's own plane has no preference), to the wings in the order above; a wing takes any variant of its sub-unit with the same allowed missions and keeps it as a variant. Its stats are the plane-share mix of its variants (`Σ trunc(trunc((1 + bonus) × share) × variant stat)`, 0xf661e0), cached at the start of each hour, so refills and losses count from the next hour. A wing **loses its oldest type first** (0xbd1f20 order; RemovePlanes 0xf63580), in the strike, the region war and accidents. [LOG] With the template's stock of old `fighter_equipment_0` / `tac_bomber_equipment_0` in the land scenarios, the replayed land strikes match in 2,655 of 3,335 (was 2,239) in `air_cv_land_mix` and 581 of 620 (was 422) in `air_land_vs_fleet`. Not modelled: a full wing swapping its planes for better stock (0xbd7dc0).
 - A land-based wing's size is its entry's planes. Manpower, the 48 h transfer timer and reinforcement preferences are not modelled.
 - Input: `planeStockpile` per side (plane ID → count); each refill is logged in the hourly log.
+
+## A-ACCIDENT: air accidents [RE + LOG]
+
+From [A-ACCIDENT](../reverse-engineering/findings/A-ACCIDENT-land-wing-accidents.md). Every hour, before the region's air war (0xc5efc0), each air base entry (here: the side's land wings per air base) has an accident pass: a gate draw lets 10 % of hours through; a random pool starts, and each wing in turn rolls against its chance; the first accident ends the base's pass.
+```
+chance = trunc(trunc((ACCIDENT_CHANCE_BASE + air_accidents) × trunc((1 − min(reliability, 1)) × ACCIDENT_CHANCE_RELIABILITY_MULT))
+         × (1 + air_accidents_factor of the experience holder and the country))          (reliability: the wing's mix)
+accident when trunc(chance × ACCIDENT_CHANCE_BALANCE_MULT) (raw) > draw / 10, draw of 100,000   (probability = chance)
+score += trunc(wing planes × U × ACCIDENT_EFFECT_MULT); the whole part is lost (oldest planes first), the rest kept per side
+the wing's ace dies when U ≤ ACE_DEATH_CHANCE_BASE
+```
+Carrier wings in a naval battle have no mission type, so no accidents. TFB tactical bomber II (reliability 0.8, fresh wing): chance 0.044, so about 0.44 % of hours, 0.35 planes per accident on the score: half a plane over a 300-hour battle. [LOG] 4 single-plane losses outside air hours in 18,066 logged land-wing hours, against about 7 expected. The game draws them from a local generator seeded once an hour (not in the roll logs); the engine uses its own rolls (`RollKind.AirAccident`), and a replay serves them from its fallback. Not modelled: the base region's weather term, the experience loss. Code: `AirPhase.Accidents`.
 
 ## Experience from sorties [RE]
 
@@ -319,7 +331,7 @@ Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from th
 
 ## Not modelled
 
-Leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, accidents (A-REGION), range and coverage of land-based missions (inputs), plane equipment upgrades and plane MIOs, wing experience other than 0 (no input yet) and its gain in battle.
+Leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, the base region's weather in accidents, a land base's supply ratio (an input), the swap of a full wing's planes for better stock, plane equipment upgrades and plane MIOs, wing experience other than 0 (no input yet) and its gain in battle.
 
 ## Inputs
 

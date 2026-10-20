@@ -404,7 +404,7 @@
                 <div>
                     <div class="row" style="margin-bottom: 6px">
                         <strong class="small">Plane stockpile</strong>
-                        <span class="muted small" title="A-REINFORCE: at each day change the stockpile refills the land-based wings (own plane first, then planes of the same sub-unit and missions). Carrier wings get no planes while their task force is in combat.">refills land-based wings at each day change</span>
+                        <span class="muted small" title="A-REINFORCE: at each day change the stockpile refills the land-based wings, newest planes first, with any plane of the same sub-unit and missions; the wing's stats become the mix of its planes and it loses its oldest first. Carrier wings get no planes while their task force is in combat.">refills land-based wings at each day change</span>
                         <select class="right" style="max-width: 200px" @bind:get="string.Empty" @bind:set="AddStockpile" aria-label="Add a plane to the stockpile">
                             <option value="">Add a plane…</option>
                             @foreach (var plane in StockpileCandidates())
