@@ -1,0 +1,102 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "air_cv_doctrines",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 720,
+    "iterations": 10,
+    "continueAfterRetreat": false,
+    "rules": {
+      "weatherEnabled": false,
+      "navalDominanceEnabled": true,
+      "startHourOfDay": 13,
+      "airRegionPhase": 6
+    },
+    "attacker": {
+      "fleetID": "air_test_cv_std",
+      "country": "JAP",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4,
+      "carrierWingsOnRegionMission": true,
+      "carrierMissionEfficiency": 0.734,
+      "doctrines": {
+        "air": {
+          "grandDoctrine": "new_battlefield_support",
+          "tracks": {
+            "fighter_aircraft": {
+              "subdoctrine": "air_subdoctrine_fighter_central_field",
+              "mastery": 500
+            },
+            "strike_aircraft": {
+              "subdoctrine": "air_subdoctrine_naval_strike_tactics",
+              "mastery": 500
+            }
+          }
+        }
+      },
+      "prideOfTheFleet": "39_carrier"
+    },
+    "defender": {
+      "fleetID": "air_test_cv_std_b",
+      "country": "USA",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4,
+      "doctrines": {
+        "air": {
+          "grandDoctrine": "new_operational_integrity",
+          "tracks": {
+            "fighter_aircraft": {
+              "subdoctrine": "air_subdoctrine_fighter_central_field",
+              "mastery": 200
+            },
+            "strike_aircraft": {
+              "subdoctrine": "air_subdoctrine_naval_torpedo_tactics",
+              "mastery": 500
+            }
+          }
+        }
+      },
+      "prideOfTheFleet": "39_carrier",
+      "carrierWingsOnRegionMission": true
+    }
+  }
+}
