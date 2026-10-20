@@ -275,6 +275,22 @@ public static class BattleReplay
         session.AirPhase.RegionAirWar(hour.Hour, new SeededRandomSource(hour.Hour), applyLosses: false);
         session.AirPhase.RegionAirWarEnabled = false;
 
+        // [RE + LOG] A-REGION-ESCAPE: an escaped carrier's wings stay in the region's air war, but the logger no longer
+        // lists them (their air object moved to group+0x88); they keep losing planes, so take the engine's own losses
+        // off the wings the log does not list.
+        var listed = wingsById.Values.Select(entry => entry.Wing).ToHashSet();
+
+        foreach (var side in new[] { session.Attacker, session.Defender })
+        {
+            foreach (var wing in session.AirPhase.GroupsOf(side).Where(group => group.Carrier is not null).SelectMany(group => group.Wings))
+            {
+                if (!listed.Contains(wing) && wing.RegionLosses > 0)
+                {
+                    wing.Planes = Math.Max(0, wing.Planes - wing.RegionLosses);
+                }
+            }
+        }
+
         foreach (var (id, (wing, group, side)) in wingsById)
         {
             if (game.TryGetValue(id, out var logged))

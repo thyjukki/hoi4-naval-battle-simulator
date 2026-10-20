@@ -475,22 +475,13 @@ public sealed class AirPhase
             {
                 if (group.Carrier is { } carrier)
                 {
-                    // 0xc66480: every wing on a carrier whose task force is in combat.
+                    // 0xc66480: every wing on a carrier whose task force is in combat. [RE + LOG] A-REGION-ESCAPE: an
+                    // escaped carrier stays in its task force, which stays in the combat, so its wings stay on both lists
+                    // (they only stop striking); a sunk carrier's are gone.
                     if (carrier.IsSunk)
                     {
                         continue;
                     }
-
-                    // [LOG, unsettled] An escaped carrier's wings per rules.EscapedCarrierWings (A-DETECT-MIX).
-                    var escaped = carrier.CurrentStatus == ShipStatus.Retreated;
-                    var escapedRule = scenario.Rules.EscapedCarrierWings;
-
-                    if (escaped && escapedRule == EscapedCarrierWings.Leave)
-                    {
-                        continue;
-                    }
-
-                    var scramble = !escaped || escapedRule == EscapedCarrierWings.Stay;
 
                     var effectiveness = CarrierEffectiveness(side, carrier, onRegionMission, conditions);
 
@@ -506,10 +497,7 @@ public sealed class AirPhase
                             continue;
                         }
 
-                        if (scramble)
-                        {
-                            scrambled.Add(new RegionEntry(wing, group, true, strike, airSuperiority, planes));
-                        }
+                        scrambled.Add(new RegionEntry(wing, group, true, strike, airSuperiority, planes));
 
                         if (onRegionMission)
                         {

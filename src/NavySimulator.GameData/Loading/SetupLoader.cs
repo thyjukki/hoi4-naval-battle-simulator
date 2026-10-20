@@ -506,7 +506,6 @@ public class SetupLoader
             WeatherEnabled = dto.WeatherEnabled ?? rules.WeatherEnabled,
             NavalDominanceEnabled = dto.NavalDominanceEnabled ?? rules.NavalDominanceEnabled,
             CarrierWingsExecuteNavalStrike = dto.CarrierWingsExecuteNavalStrike ?? rules.CarrierWingsExecuteNavalStrike,
-            EscapedCarrierWings = ParseEnum(dto.EscapedCarrierWings, rules.EscapedCarrierWings, "battleScenario.rules.escapedCarrierWings", errors),
             StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
             AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase,
             NightStartHour = dto.NightStartHour ?? rules.NightStartHour,

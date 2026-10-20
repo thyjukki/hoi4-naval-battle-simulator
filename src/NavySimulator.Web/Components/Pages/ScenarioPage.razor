@@ -241,15 +241,7 @@
                 <label class="check"><input type="checkbox" @bind:get="Rules?.CarrierWingsExecuteNavalStrike ?? DefaultRules.CarrierWingsExecuteNavalStrike" @bind:set="SetCarrierStrike" /> Carrier wings fly naval strikes</label>
                 <span class="hint">Carrier strike wings execute a naval strike mission, as logged in game battles (the game's setter is not decoded). Off: carriers do no damage.</span>
             </div>
-            <div class="field">
-                <label>Escaped carriers' wings</label>
-                <select @bind:get="Rules?.EscapedCarrierWings ?? DefaultRules.EscapedCarrierWings.ToString()" @bind:set="SetEscapedCarrierWings">
-                    <option value="Stay">Stay in the region's air war</option>
-                    <option value="Leave">Leave it</option>
-                    <option value="RegionMissionOnly">Only with a region mission</option>
-                </select>
-                <span class="hint">Unsettled: the logged battles disagree (A-REGION).</span>
-            </div>
+
         </div>
     </div>
 
@@ -544,12 +536,6 @@
     private async Task SetWeather(bool value)
     {
         EnsureRules().WeatherEnabled = value == DefaultRules.WeatherEnabled ? null : value;
-        await Edited();
-    }
-
-    private async Task SetEscapedCarrierWings(string value)
-    {
-        EnsureRules().EscapedCarrierWings = value == DefaultRules.EscapedCarrierWings.ToString() ? null : value;
         await Edited();
     }
 

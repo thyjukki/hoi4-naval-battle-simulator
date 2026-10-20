@@ -889,7 +889,7 @@ From [A-DETECT-region-air-detection.md][DET]: a country's air detection `det` in
 | 0xf7d5e4 | naval strike / naval recon detection, calls 0xf7a460 / 0xf77730 (not decoded) | — | [DET/use] |
 | 0xf80540 | (update) weight `max(1, round(n × k × (1 + stat37) × w))` with `n × k` in fixed point (not an integer truncation) | A-DETECT, A-REGION | [DET/use] |
 | 0x1012f80 | in-range province count of a region from the base position (bounding-box precheck, distance² per province) | A-EXTERNAL | [DET/mix] |
-| 0x1c6cc50 | ship escape (from 0x19739bd, carrier): moves its AirFX from group+0x58 to group+0x88 (whether the carrier's wings then leave the region war is unsettled: the logs disagree, `rules.escapedCarrierWings`) | A-REGION | [DET/mix] |
+| 0x1c6cc50 | ship escape (from 0x19739bd, carrier): moves its AirFX from group+0x58 to group+0x88 (**settled** by A-REGION-ESCAPE: the wings leave the naval strikes only and stay in the region air war) | A-REGION | [DET/mix] |
 | 0xf87480 | (adds) coverage range = trunc(wing range (0xf5e5c0) / global 0x3335f50, likely MAP_SCALE_PIXEL_TO_KM 7.114) px | A-EXTERNAL | [DET/mix] |
 | 0xf861d0 | one country's radar sum in a region: Σ radar records (country+0x1120) covered provinces × control share (+0x68) | A-DETECT | [DET/rad] |
 
@@ -988,6 +988,28 @@ From [A-REGION-SYNC-carrier-wing-region.md][SYNC]: what gives a task force's car
 |---|---|---|
 | CStrategicAir base entry (`base+0x30[country]`) +0x30 / +0xd0 / +0xd8 / +0xe0 / +0xe8 / +0xf0 | supply ratio / operational_status / capacity_penalty / fuel_consumption / base_fuel_consumption / received | [SYNC/eff] |
 | modifier 0x11 `air_mission_efficiency` | 0xf78500 (country, fleet admiral, region weather) | [SYNC/eff] |
+
+### Escaped carriers (A-REGION-ESCAPE)
+
+From [A-REGION-ESCAPE-escaped-carrier-wings.md][ESC]: an escaped carrier stays in its task force, the task force stays in the combat, and its wings stay in the region air war. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x12a2c0 | empty function (ret), called after the AirFX move on escape | A-REGION | [ESC/state] |
+| 0x13e3570 | remove a unit from a combat: RemoveCombat, unit vt+0x168, both sides vt+0x80; callers 0xbb93c1 (join a combat elsewhere), 0xbfb4a0 (unit movement), 0xc04170, 0x12bab70 | A-REGION | [ESC/tf] |
+| 0x1973a27 | second write of member state 0x10 (joining member, task force's naval mission 0xfb4390 ≤ 0) | A-REGION | [ESC/state] |
+| 0x19739bd | escape: member state 0x10; carrier → 0x1c6cc50; no task force or air call | A-REGION | [ESC/state] |
+| 0x1c6a2ba | per-group member count that skips escaped (0x10) members | A-REGION | [ESC/state] |
+| 0xc03e00 | RemoveCombat: the only remover of unit+0x1a8 / +0x1b4; callers 0x15c2980, 0x12ae860 (teardowns), 0x13e3570 / 0x13e35ff / 0x13e3990 | A-REGION | [ESC/tf] |
+| 0xd72580 | move ships into a new task force (0xd68d90, 0xd730b0, 0xd71e70); callers 0xd76dd0, 0xd77ff0, 0xd776a3, 0xd77870, 0xd77900, 0xd78ba0, 0xd79de0; not from the escape | A-REGION | [ESC/tf] |
+| 0xd76dd0 | repair split (`REPAIR_SPLIT_TASKFORCE_SIZE`, "pDetachedForce"), only from the mission tick 0xd79900 (out of combat) | A-REGION | [ESC/tf] |
+| 0xf78360 | (update) effective planes read no member state | A-REGION | [ESC/exec] |
+| 0xf79c10 | (update) carrier CanExecute reads no member state or AirFX list; asserts carrier base and task force in combat (0x69c–0x69f) | A-REGION | [ESC/exec] |
+| 0xf7acc0 | ChooseCarrier: wing+0x30 available missions plus the mission type (bit 7) | A-REGION | [ESC/exec] |
+
+| Field | Meaning | Finding |
+|---|---|---|
+| naval combat group +0x88 / +0x90 / +0x94 | escaped carriers' AirFX: array / capacity / count | [ESC/state] |
 
 ## 2. Struct fields
 
@@ -2018,3 +2040,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [SYNC/move]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-move-region-change-and-province-change
 [SYNC/eff]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-eff-mission-effectiveness-0xf78500mission-out-iscarrier-nosupply-tooltip
 [DET/mix]: findings/A-DETECT-region-air-detection.md#a-detect-mix-air_cv_land_mix-buls-land-bombers-as-defenders-follow-up-log--re
+[ESC]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md
+[ESC/state]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-state-the-escape-0x1973470-member-hourupdate
+[ESC/tf]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-tf-the-ship-stays-in-its-task-force-and-the-task-force-stays-in-the-combat
+[ESC/exec]: findings/A-REGION-ESCAPE-escaped-carrier-wings.md#a-region-escape-exec-nothing-in-the-air-code-reads-the-carriers-combat-state

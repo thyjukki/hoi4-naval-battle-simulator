@@ -132,11 +132,6 @@
             "carrierWingsExecuteNavalStrike": {
               "type": "boolean",
               "description": "A-WINGS-STRIKE [ASSUMED]: carrier strike wings execute naval strike (default true); false: carriers do no damage."
-            },
-            "escapedCarrierWings": {
-              "type": "string",
-              "enum": [ "Stay", "Leave", "RegionMissionOnly" ],
-              "description": "A-REGION [LOG, unsettled]: an escaped carrier's wings in the region's air war: Stay (default, as before the escape), Leave, or RegionMissionOnly (off the scramble list, keeping a region mission they had)."
             }
           },
           "additionalProperties": false

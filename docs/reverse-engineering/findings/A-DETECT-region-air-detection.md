@@ -265,6 +265,8 @@ Per side and air hour, `RegionAirWarRules.Detection(...)`:
 
 ## A-DETECT-MIX: `air_cv_land_mix`, BUL's land bombers as defenders (follow-up, LOG + RE)
 
+**Rule 1 below (escaped carriers leave the region war) is withdrawn**: [A-REGION-ESCAPE](A-REGION-ESCAPE-escaped-carrier-wings.md) shows from the code and the logs that they stay; the jump came from the replay freezing the unlisted escaped wings' plane counts. Rule 2 (land effectiveness) stands.
+
 Engine replays (A-DETECT implemented, the share read before the decrement) gave BUL's land tactical bombers about a third
 of the game's disruption (58.8k vs 179.3k over 18 runs). That gap is not a detection problem. It comes from escaped
 carriers (rule 1); a second input, the land coverage (rule 2), settles the rest.
