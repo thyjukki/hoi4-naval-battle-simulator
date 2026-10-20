@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Stats;
 
@@ -82,7 +83,7 @@ public static class TargetingRules
         BattleSide enemy,
         GameDefines defines,
         IRandomSource random,
-        double darkness = 0)
+        BattleEnvironment environment = default)
     {
         var stats = shooter.GetFinalStats();
 
@@ -94,7 +95,7 @@ public static class TargetingRules
 
         // [RE] The penetration is the shooter's modifier 0x1bd through the member getter (convoys: 0).
         var penetration = slot == WeaponSlot.Torpedo && shooter.Role != ShipRole.Convoy
-            ? MemberModifierRules.Get(shooter, StaticModifiers.NavalTorpedoScreenPenetrationFactor, own.Screening, darkness, defines)
+            ? MemberModifierRules.Get(shooter, StaticModifiers.NavalTorpedoScreenPenetrationFactor, own.Screening, environment, defines)
             : 0;
         var maxLine = MaxLine(slot, own.EnemyCounts, enemy.Screening, random, penetration);
         var minLine = MinLine(shooter, own.Participant.Aggressiveness, own.EnemyCounts);

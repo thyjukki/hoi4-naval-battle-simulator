@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Battles;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Results;
 using NavySimulator.Engine.Tests.TestSupport;
 
@@ -242,13 +243,14 @@ public class BattleEngineTests
     }
 
     [Theory]
-    [InlineData(true, "Weather 'rain_heavy' has no effect yet.")]
+    [InlineData(true, "Weather rain_heavy for the whole battle.")]
     [InlineData(false, "Weather 'rain_heavy' is ignored: weather is off.")]
     public void Simulate_NotesTheWeatherBySwitch(bool weatherEnabled, string expectedNote)
     {
         var scenario = new BattleScenario("t", "ocean", "rain_heavy", 1, null,
             TestEntityFactory.Participant("attacker_fleet", Screens("a", 2)), TestEntityFactory.Participant("defender_fleet", Screens("d", 2)),
-            new Dictionary<string, PlaneEquipment>(), Defines.GameDefines.Vanilla(), new BattleRules { MaxHours = 5, WeatherEnabled = weatherEnabled });
+            new Dictionary<string, PlaneEquipment>(), Defines.GameDefines.Vanilla(), new BattleRules { MaxHours = 5, WeatherEnabled = weatherEnabled },
+            weatherSetup: new WeatherSetup(WeatherMode.Fixed, new RegionWeather(Weather.RainHeavy)));
 
         var result = new BattleEngine().Simulate(scenario, 1);
 

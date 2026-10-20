@@ -23,6 +23,11 @@ if (args.Length > 0 && args[0] == ImportLeadersCommand.Name)
     return ImportLeadersCommand.Run(args[1..]);
 }
 
+if (args.Length > 0 && args[0] == ImportRegionsCommand.Name)
+{
+    return ImportRegionsCommand.Run(args[1..]);
+}
+
 if (args.Length > 0 && args[0] == ImportPlanesCommand.Name)
 {
     return ImportPlanesCommand.Run(args[1..]);

@@ -118,6 +118,17 @@ public class SetupLoader
             catalog.LeaderSkills.AddRange(ReadCollectionFromFolderOrFile<LeaderSkillDto>(catalog, LeaderSkillsFolder, $"{LeaderSkillsFolder}.json", "skills"));
         }
 
+        // S-REGION, S-TERRAIN: optional; data imported before regions existed has none.
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, SeaRegionsFolder)))
+        {
+            catalog.SeaRegions.AddRange(ReadCollectionFromFolderOrFile<SeaRegionDto>(catalog, SeaRegionsFolder, $"{SeaRegionsFolder}.json", "regions"));
+        }
+
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, NavalTerrainsFolder)))
+        {
+            catalog.NavalTerrains.AddRange(ReadCollectionFromFolderOrFile<NavalTerrainDto>(catalog, NavalTerrainsFolder, $"{NavalTerrainsFolder}.json", "terrains"));
+        }
+
         catalog.ShipDesigns.AddRange(ReadCollectionFromFolderOrFile<ShipDesignDto>(catalog, "ship-designs", "ship-designs.json", "shipDesigns"));
         catalog.Researches.AddRange(ReadCollectionFromFolderOrFile<ResearchDto>(catalog, "researches", "researches.json", "researches"));
         catalog.Spirits.AddRange(ReadCollectionFromFolderOrFile<SpiritDto>(catalog, "spirits", "spirits.json", "spirits"));
@@ -143,6 +154,8 @@ public class SetupLoader
     private const string AdmiralsFolder = "admirals";
     private const string LeaderTraitsFolder = "leader-traits";
     private const string LeaderSkillsFolder = "leader-skills";
+    private const string SeaRegionsFolder = "sea-regions";
+    private const string NavalTerrainsFolder = "naval-terrains";
 
     /// <summary>
     /// The files <see cref="ReadCatalog"/> reads, data-directory relative with forward slashes: each collection
@@ -169,8 +182,8 @@ public class SetupLoader
             }
         }
 
-        // S-DOCTRINE, S-MIO, S-ADMIRAL: optional, no legacy file.
-        foreach (var folder in new[] { "doctrines", MioPoliciesFolder, EquipmentGroupsFolder, CountriesFolder, AdmiralsFolder, LeaderTraitsFolder, LeaderSkillsFolder })
+        // S-DOCTRINE, S-MIO, S-ADMIRAL, S-REGION: optional, no legacy file.
+        foreach (var folder in new[] { "doctrines", MioPoliciesFolder, EquipmentGroupsFolder, CountriesFolder, AdmiralsFolder, LeaderTraitsFolder, LeaderSkillsFolder, SeaRegionsFolder, NavalTerrainsFolder })
         {
             var directory = Path.Combine(dataDirectoryPath, folder);
 
@@ -402,6 +415,7 @@ public class SetupLoader
         var fleetsById = forceCompositionsFile.Fleets.GroupBy(fleet => fleet.ID).ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
         ValidatePrideOfTheFleet("attacker", scenarioDto.Attacker, fleetsById, errors);
         ValidatePrideOfTheFleet("defender", scenarioDto.Defender, fleetsById, errors);
+        var (location, weatherSetup) = LocationLoader.Build(scenarioDto, catalog, errors, warnings);
 
         if (errors.Count > 0)
         {
@@ -437,7 +451,9 @@ public class SetupLoader
             catalog.Aces.Where(ace => !string.IsNullOrWhiteSpace(ace.ID))
                 .Select(ace => new AceTemplate(ace.ID, new HashSet<string>(ace.Types ?? [], StringComparer.Ordinal), ace.Chance,
                     new Dictionary<string, double>(ace.Effects ?? [], StringComparer.Ordinal)))
-                .ToList());
+                .ToList(),
+            location,
+            weatherSetup);
     }
 
     private GameDefines LoadDefines(
@@ -1119,16 +1135,6 @@ public class SetupLoader
         if (string.IsNullOrWhiteSpace(scenario.ID))
         {
             errors.Add("battleScenario.id must not be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scenario.Terrain))
-        {
-            errors.Add("battleScenario.terrain must not be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(scenario.Weather))
-        {
-            errors.Add("battleScenario.weather must not be empty.");
         }
 
 

@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -199,7 +200,7 @@ public class DamageRulesTests
         var target = TestEntityFactory.Screen("cl");
         target.CountryModifiers = new([new(StaticModifiers.CriticalReceiveChance, -0.2)]);
 
-        var factor = DamageRules.CriticalChanceFactor(shooter, target, new(1, 1), new(1, 1), 0, defines);
+        var factor = DamageRules.CriticalChanceFactor(shooter, target, new(1, 1), new(1, 1), BattleEnvironment.None, defines);
         var plain = DamageRules.Profile(shooter, target, WeaponSlot.Torpedo, 1.0, defines);
         var scaled = DamageRules.Profile(shooter, target, WeaponSlot.Torpedo, 1.0, defines, factor);
 

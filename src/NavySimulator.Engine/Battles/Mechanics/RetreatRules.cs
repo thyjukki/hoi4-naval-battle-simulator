@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
@@ -35,7 +36,8 @@ public static class RetreatRules
         Aggressiveness aggressiveness,
         GameDefines defines,
         IRandomSource random,
-        double enemyRetreatChance = 0)
+        double enemyRetreatChance = 0,
+        BattleEnvironment environment = default)
     {
         var navy = defines.NNavy;
 
@@ -49,7 +51,7 @@ public static class RetreatRules
             return false;
         }
 
-        if (random.NextDouble(RollKind.RetreatDecision) > RetreatDecisionChance(ship, tick, defines, enemyRetreatChance))
+        if (random.NextDouble(RollKind.RetreatDecision) > RetreatDecisionChance(ship, tick, defines, enemyRetreatChance, environment))
         {
             return false;
         }
@@ -66,14 +68,14 @@ public static class RetreatRules
     /// naval_enemy_retreat_chance, read from its traits only: container B, S-ADMIRAL-MOD), clamped to [0, 1]; a jammed
     /// rudder (S-CRIT-PART) lowers it.
     /// </summary>
-    public static double RetreatDecisionChance(Ship ship, int tick, GameDefines defines, double enemyRetreatChance = 0)
+    public static double RetreatDecisionChance(Ship ship, int tick, GameDefines defines, double enemyRetreatChance = 0, BattleEnvironment environment = default)
     {
         var navy = defines.NNavy;
-        var chance = navy.COMBAT_RETREAT_DECISION_CHANCE * (1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChance, 0, defines));
+        var chance = navy.COMBAT_RETREAT_DECISION_CHANCE * (1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChance, environment, defines));
 
         if (tick > navy.COMBAT_INITIAL_DURATION)
         {
-            chance *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChanceAfterInitialCombat, 0, defines);
+            chance *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalRetreatChanceAfterInitialCombat, environment, defines);
         }
 
         chance *= 1 + enemyRetreatChance;
@@ -86,7 +88,7 @@ public static class RetreatRules
     /// The retreat speed modifier is naval_retreat_speed for warships (plus naval_retreat_speed_after_initial_combat after
     /// COMBAT_INITIAL_DURATION), sub_retreat_speed for submarines and convoy_retreat_speed for convoys.
     /// </summary>
-    public static double EscapeSpeedPerDay(Ship ship, int tick, ScreeningSummary ownScreening, double darkness, GameDefines defines)
+    public static double EscapeSpeedPerDay(Ship ship, int tick, ScreeningSummary ownScreening, BattleEnvironment environment, GameDefines defines)
     {
         var navy = defines.NNavy;
         var speed = navy.BASE_ESCAPE_SPEED + Math.Min(tick * navy.ESCAPE_SPEED_PER_COMBAT_DAY / 24.0, navy.MAX_ESCAPE_SPEED_FROM_COMBAT_DURATION);
@@ -97,14 +99,14 @@ public static class RetreatRules
             _ => StaticModifiers.NavalRetreatSpeed
         };
 
-        speed += MemberModifierRules.Get(ship, retreatSpeedKey, ownScreening, darkness, defines);
+        speed += MemberModifierRules.Get(ship, retreatSpeedKey, ownScreening, environment, defines);
 
         if (retreatSpeedKey == StaticModifiers.NavalRetreatSpeed && tick > navy.COMBAT_INITIAL_DURATION)
         {
-            speed += MemberModifierRules.Get(ship, StaticModifiers.NavalRetreatSpeedAfterInitialCombat, ownScreening, darkness, defines);
+            speed += MemberModifierRules.Get(ship, StaticModifiers.NavalRetreatSpeedAfterInitialCombat, ownScreening, environment, defines);
         }
 
-        speed += CombatStatRules.CombatSpeed(ship, defines) * navy.SPEED_TO_ESCAPE_SPEED / 100.0;
+        speed += CombatStatRules.CombatSpeed(ship, defines, environment) * navy.SPEED_TO_ESCAPE_SPEED / 100.0;
 
         if (ship.Role == ShipRole.Submarine)
         {
@@ -115,14 +117,14 @@ public static class RetreatRules
     }
 
     /// <summary>[RE] Retreating ships add the daily escape speed / 24 each hour and escape at 1.</summary>
-    public static bool AdvanceRetreat(Ship ship, int tick, ScreeningSummary ownScreening, double darkness, GameDefines defines)
+    public static bool AdvanceRetreat(Ship ship, int tick, ScreeningSummary ownScreening, BattleEnvironment environment, GameDefines defines)
     {
         if (ship.CurrentStatus != ShipStatus.Retreating || ship.IsSunk)
         {
             return false;
         }
 
-        ship.RetreatProgress += EscapeSpeedPerDay(ship, tick, ownScreening, darkness, defines) / 24.0;
+        ship.RetreatProgress += EscapeSpeedPerDay(ship, tick, ownScreening, environment, defines) / 24.0;
 
         if (ship.RetreatProgress < 1.0)
         {

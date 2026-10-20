@@ -266,6 +266,33 @@ public sealed class Workspace
         return import;
     }
 
+    /// <summary>
+    /// Reads the sea regions (naval terrain, weather periods, province positions) and the naval terrains from the game and
+    /// the Simulate-as mods (the same sources as <see cref="ShipDataSources"/>), writes them over <c>sea-regions/</c> and
+    /// <c>naval-terrains/</c> and reloads the catalog. Scenarios keep their region and province IDs.
+    /// </summary>
+    public RegionImport ImportRegions()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-regions --game <dir>' instead.");
+        }
+
+        RegionImport import;
+
+        lock (sync)
+        {
+            import = RegionImporter.Read(new GameFileSystem(game, mods));
+            RegionWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
     /// <summary>What every battle simulates: "Vanilla 1.19.3", or the names of the GUI's define sources (e.g. the mod).</summary>
     public string RulesetName => ExtraDefineSources.Count == 0
         ? "Vanilla 1.19.3"

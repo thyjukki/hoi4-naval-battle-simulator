@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -13,17 +14,17 @@ public static class HitChanceRules
         Ship target,
         WeaponSlot slot,
         ScreeningSummary shooterScreening,
-        double darkness,
+        BattleEnvironment environment,
         GameDefines defines)
     {
         var navy = defines.NNavy;
         var againstSubmarine = target.Role == ShipRole.Submarine;
         var baseChance = navy.COMBAT_BASE_HIT_CHANCE * (againstSubmarine ? navy.DEPTH_CHARGES_HIT_CHANCE_MULT : 1.0);
-        var shipProfile = ShipHitProfile(target, defines);
+        var shipProfile = ShipHitProfile(target, defines, environment);
         var weaponProfile = WeaponHitProfile(slot, againstSubmarine, defines);
         var ratio = shipProfile / weaponProfile;
         var profileFactor = Math.Clamp(ratio * ratio, navy.MIN_HIT_PROFILE_MULT, 1.0);
-        var modifier = CrewFactor(shooter, defines) * ModifierSum(shooter, slot, shooterScreening, darkness, defines);
+        var modifier = CrewFactor(shooter, defines) * ModifierSum(shooter, slot, shooterScreening, environment, defines);
         var final = Math.Max(baseChance * profileFactor * modifier, navy.COMBAT_MIN_HIT_CHANCE);
 
         return new HitChanceBreakdown(baseChance, shipProfile, weaponProfile, profileFactor, modifier, final);
@@ -31,7 +32,7 @@ public static class HitChanceRules
 
     // S-HIT-SHIP [RE] 0xc37006: 100 * visibility / (max(0.5 * speed, 0.1) + 20); convoys use CONVOY_HIT_PROFILE. The
     // visibility is the getter's, x (1 + navy_visibility) (0xc37067).
-    public static double ShipHitProfile(Ship target, GameDefines defines)
+    public static double ShipHitProfile(Ship target, GameDefines defines, BattleEnvironment environment = default)
     {
         var navy = defines.NNavy;
 
@@ -40,8 +41,8 @@ public static class HitChanceRules
             return navy.CONVOY_HIT_PROFILE;
         }
 
-        var visibility = CombatStatRules.Visibility(target, target.Role == ShipRole.Submarine, defines);
-        var speedTerm = Math.Max(CombatStatRules.CombatSpeed(target, defines) * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
+        var visibility = CombatStatRules.Visibility(target, target.Role == ShipRole.Submarine, defines, environment);
+        var speedTerm = Math.Max(CombatStatRules.CombatSpeed(target, defines, environment) * navy.HIT_PROFILE_SPEED_FACTOR, defines.Hardcoded.MinHitProfileSpeedTerm);
         return visibility * navy.HIT_PROFILE_MULT / (speedTerm + navy.HIT_PROFILE_SPEED_BASE);
     }
 
@@ -70,10 +71,10 @@ public static class HitChanceRules
     /// screening_bonus × screening for the battle line and carrier line (TFB's has heavy 1 and light 0.3 factors,
     /// [CAL] jukki_usa_vs_bc_japan), country modifiers and the night modifier × darkness. Not clamped.
     /// </summary>
-    public static double ModifierSum(Ship shooter, WeaponSlot slot, ScreeningSummary shooterScreening, double darkness, GameDefines defines)
+    public static double ModifierSum(Ship shooter, WeaponSlot slot, ScreeningSummary shooterScreening, BattleEnvironment environment, GameDefines defines)
     {
         var stats = shooter.GetFinalStats();
-        var navalHitChance = MemberModifierRules.Get(shooter, StaticModifiers.NavalHitChance, shooterScreening, darkness, defines);
+        var navalHitChance = MemberModifierRules.Get(shooter, StaticModifiers.NavalHitChance, shooterScreening, environment, defines);
         var (weaponFactor, weaponModifier) = slot switch
         {
             WeaponSlot.Heavy => (stats.HeavyHitChanceFactor, StaticModifiers.NavalHeavyGunHitChanceFactor),
@@ -81,7 +82,7 @@ public static class HitChanceRules
             _ => (stats.LightHitChanceFactor, StaticModifiers.NavalLightGunHitChanceFactor)
         };
 
-        weaponFactor += MemberModifierRules.Get(shooter, weaponModifier, shooterScreening, darkness, defines);
+        weaponFactor += MemberModifierRules.Get(shooter, weaponModifier, shooterScreening, environment, defines);
 
         return 1.0 + navalHitChance + weaponFactor;
     }

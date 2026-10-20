@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -55,8 +56,8 @@ public class AirWingsTests
 
         // 40 planes on a 30-plane deck: crowd 1 - CAPACITY_PENALTY * (10 / 30) for every pool, the bomber pool's 20 included.
         var bombers = groups[1];
-        var crowded = phase.SortieEfficiency(bombers, phase.Attacker, 30, 0);
-        var alone = AirRules.SortieEfficiency(bombers, phase.Attacker.Screening, true, 2, 30, 0, defines);
+        var crowded = phase.SortieEfficiency(bombers, phase.Attacker, 30, BattleEnvironment.None);
+        var alone = AirRules.SortieEfficiency(bombers, phase.Attacker.Screening, true, 2, 30, BattleEnvironment.None, defines);
         Assert.Equal(alone * (1 - defines.NAir.CAPACITY_PENALTY / 3), crowded, 9);
     }
 

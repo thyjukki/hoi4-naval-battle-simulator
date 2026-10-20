@@ -80,6 +80,41 @@ public class DefinesBinderTests
     }
 
     [Fact]
+    public void Load_ReadsGraphicsDefinesAndWeatherSettings()
+    {
+        var root = Directory.CreateTempSubdirectory("hoi4-weather-");
+
+        try
+        {
+            var definesDirectory = Directory.CreateDirectory(Path.Combine(root.FullName, "common", "defines"));
+            File.WriteAllText(Path.Combine(definesDirectory.FullName, "00_graphics.lua"), "NDefines_Graphics = { NGraphics = { GMT_OFFSET = 2800, DAY_NIGHT_FEATHER = 0.03 } }");
+            File.WriteAllText(Path.Combine(root.FullName, "common", "weather.txt"), """
+                settings = {
+                    snowing = { temperature = { 2.0 -6.0 } }
+                    arctic_water = { arctic_water_temperature = { -4.0 1.0 } }
+                    duration = { no_phenomenon = { 3 9 } rain_light = { 4 8 } }
+                    performance = { regions_per_update = 5 }
+                }
+                """);
+
+            var (defines, _) = DefinesLoader.Load([root.FullName]);
+
+            Assert.Equal(2800, defines.NGraphics.GMT_OFFSET);
+            Assert.Equal(0.03, defines.NGraphics.DAY_NIGHT_FEATHER);
+            Assert.Equal((3.0, 9.0), defines.Weather.Duration[NavySimulator.Engine.Environment.Weather.None]);
+            Assert.Equal((4.0, 8.0), defines.Weather.Duration[NavySimulator.Engine.Environment.Weather.RainLight]);
+            Assert.Equal((2.0, 15.0), defines.Weather.Duration[NavySimulator.Engine.Environment.Weather.RainHeavy]);
+            Assert.Equal((2.0, -6.0), (defines.Weather.SnowingTemperatureNoRain, defines.Weather.SnowingTemperatureFull));
+            Assert.Equal((-4.0, 1.0), defines.Weather.ArcticWaterTemperature);
+            Assert.Equal(5, defines.Weather.RegionsPerUpdate);
+        }
+        finally
+        {
+            root.Delete(true);
+        }
+    }
+
+    [Fact]
     public void Load_RejectsDirectoryWithoutLuaFiles()
     {
         var root = Directory.CreateTempSubdirectory("hoi4-defines-empty-");

@@ -25,6 +25,8 @@ Map each schema to these patterns:
 - `spirits.schema.json` -> `data/spirits/*.json`
 - `doctrines.schema.json` -> `data/doctrines/*.json`
 - `planes.schema.json` -> `data/planes/*.json`
+- `sea-regions.schema.json` -> `data/sea-regions/*.json`
+- `naval-terrains.schema.json` -> `data/naval-terrains/*.json`
 
 ## Notes
 

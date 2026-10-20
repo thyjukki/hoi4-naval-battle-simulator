@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
@@ -86,8 +87,8 @@ public class AdmiralRulesTests
 
         _ = new BattleParticipant(new Fleet("fleet", [destroyer, cruiser]), Admiral(traits: [leader]), [], []);
 
-        Assert.Equal(0.03, MemberModifierRules.ShipModifier(destroyer, "naval_hit_chance", 0, defines), 9);
-        Assert.Equal(0.03, MemberModifierRules.ShipModifier(cruiser, "naval_hit_chance", 0, defines), 9);
+        Assert.Equal(0.03, MemberModifierRules.ShipModifier(destroyer, "naval_hit_chance", BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.03, MemberModifierRules.ShipModifier(cruiser, "naval_hit_chance", BattleEnvironment.None, defines), 9);
         Assert.Equal(destroyer.GetFinalStats().Speed * 1.1, CombatStatRules.CombatSpeed(destroyer, defines), 9);
         Assert.Equal(cruiser.GetFinalStats().Speed, CombatStatRules.CombatSpeed(cruiser, defines), 9);
     }
@@ -102,8 +103,8 @@ public class AdmiralRulesTests
         _ = new BattleParticipant(new Fleet("fleet", [destroyer]), Admiral(traits: [nightFighter]), [], []);
 
         // Attack and defense level 0 read level 1 (0.05 each); the adjusters reach the attack only.
-        Assert.Equal(40 * (1 + 0.05 + 0.2 * 0.5 + 0.1), CombatStatRules.CombatValue(destroyer, 40, false, 0.5, defines), 9);
-        Assert.Equal(50 * (1 + 0.05), CombatStatRules.CombatValue(destroyer, 50, true, 0.5, defines), 9);
+        Assert.Equal(40 * (1 + 0.05 + 0.2 * 0.5 + 0.1), CombatStatRules.CombatValue(destroyer, 40, false, new BattleEnvironment(0.5), defines), 9);
+        Assert.Equal(50 * (1 + 0.05), CombatStatRules.CombatValue(destroyer, 50, true, new BattleEnvironment(0.5), defines), 9);
     }
 
     [Fact]

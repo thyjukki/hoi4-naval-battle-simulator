@@ -13,6 +13,7 @@ Set `HOI4_EXE` and `HOI4_DEFINES` if the game is not in the default Steam locati
 | `who.py KEY...` | Lists the functions that read a define |
 | `ctx.py <rva> [before] [after]` | Annotated disassembly around an address |
 | `modmap.py <start> <end>` | Lists functions in an address range with their defines, strings and callees |
+| `darkness.py` | Fixed-point emulation of the province darkness (S-NIGHT), for checks against logged battles |
 | `srcfiles.py` | Lists source-file assert paths (e.g. `naval\naval_fire_exchange_member.cpp`) and the functions that use them |
 
 Typical start after a game patch: `python defmap.py`, `python uses.py`, `python srcfiles.py`, then follow the

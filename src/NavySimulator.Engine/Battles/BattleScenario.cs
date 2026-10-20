@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles;
 
@@ -18,6 +19,12 @@ public class BattleScenario
     /// <summary>A-ACE: the air ace templates (<c>common/aces</c>) aces are drawn from; empty: no aces.</summary>
     public readonly IReadOnlyList<AceTemplate> AceTemplates;
 
+    /// <summary>S-REGION: the battle's region, province, naval terrain and start date; unknown parts are missing.</summary>
+    public readonly BattleLocation Location;
+
+    /// <summary>S-WEATHER: fixed weather or a pattern simulated from the region's weather periods.</summary>
+    public readonly WeatherSetup WeatherSetup;
+
     public BattleScenario(
         string id,
         string terrain,
@@ -29,7 +36,9 @@ public class BattleScenario
         IReadOnlyDictionary<string, PlaneEquipment> planesById,
         GameDefines defines,
         BattleRules rules,
-        IReadOnlyList<AceTemplate>? aceTemplates = null)
+        IReadOnlyList<AceTemplate>? aceTemplates = null,
+        BattleLocation? location = null,
+        WeatherSetup? weatherSetup = null)
     {
         ID = id;
         Terrain = terrain;
@@ -42,5 +51,7 @@ public class BattleScenario
         Defines = defines;
         Rules = rules;
         AceTemplates = aceTemplates ?? [];
+        Location = location ?? BattleLocation.Unknown;
+        WeatherSetup = weatherSetup ?? WeatherSetup.Clear;
     }
 }

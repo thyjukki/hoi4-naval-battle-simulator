@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Battles.Air;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
 
@@ -82,6 +83,8 @@ public static class BattleReplay
             }
 
             session.DarknessOverride = hour.Darkness;
+            // S-WEATHER: the logged weather type (combat+0xa8); sandstorm and arctic water log as 0 and replay as clear.
+            session.WeatherOverride = hour.Weather is { } weatherType ? RegionWeather.FromCombatType(weatherType) : null;
             var shotsBefore = session.Shots.Count;
             var strikesBefore = session.AirStrikes.Count;
             random.Load(hour.Rolls);

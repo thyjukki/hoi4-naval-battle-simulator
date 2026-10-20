@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -8,11 +9,18 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 /// </summary>
 public static class CombatStatRules
 {
-    // [RE] 0xc3a740: speed × max(0.1, 1 + naval_speed_factor); admiral and fuel terms are not modelled. Hit profile
-    // (S-HIT-SHIP) and escape speed (S-RETREAT-SPEED) read it.
-    public static double CombatSpeed(Ship ship, GameDefines defines)
+    // [RE] 0xc3a740: speed × max(0.1, 1 + naval_speed_factor + the naval terrain's movement adjuster for the ship's
+    // sub-unit (S-TERRAIN, 0x143e4a0 +0x20)); fuel is not modelled. Hit profile (S-HIT-SHIP) and escape speed
+    // (S-RETREAT-SPEED) read it.
+    public static double CombatSpeed(Ship ship, GameDefines defines, BattleEnvironment environment = default)
     {
-        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalSpeedFactor, 0, defines);
+        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalSpeedFactor, environment, defines);
+
+        if (environment.Terrain is { } terrain)
+        {
+            factor += terrain.SubUnitAdjuster(ship.Design.ShipType.ID).Movement;
+        }
+
         return ship.GetFinalStats().Speed * Math.Max(defines.Hardcoded.MinCombatSpeedFactor, 1 + factor);
     }
 
@@ -24,12 +32,13 @@ public static class CombatStatRules
     /// naval_damage_factor (defense_factor), country, admiral and experience level; for attacks, the commanding admiral's
     /// adjusters (S-ADMIRAL-ADJUST): its traits' <c>units</c> adjuster for the ship's sub-unit and night adjuster ×
     /// darkness. The target's armor is read without them (the game passes no admiral). While the side's pride of the fleet
-    /// is afloat, the commanding admiral's naval_has_potf_in_combat_attack (armor: _defense) joins (S-POTF). Naval
-    /// terrain (and the admiral's terrain adjusters), fuel and <c>_against</c> terms are not modelled.
+    /// is afloat, the commanding admiral's naval_has_potf_in_combat_attack (armor: _defense) joins (S-POTF). The battle's
+    /// naval terrain adds its units adjuster for the ship's sub-unit, and for attacks the admiral's adjuster for that
+    /// terrain (S-TERRAIN). Fuel and <c>_against</c> terms are not modelled.
     /// </summary>
-    public static double CombatValue(Ship ship, double stat, bool isArmor, double darkness, GameDefines defines)
+    public static double CombatValue(Ship ship, double stat, bool isArmor, BattleEnvironment environment, GameDefines defines)
     {
-        double Mod(string key) => MemberModifierRules.ShipModifier(ship, key, darkness, defines);
+        double Mod(string key) => MemberModifierRules.ShipModifier(ship, key, environment, defines);
         var types = ship.Design.ShipType.UnitTypes;
         var sum = 0.0;
 
@@ -60,17 +69,27 @@ public static class CombatStatRules
 
         if (!isArmor)
         {
-            sum += Mod(StaticModifiers.NavalNightAttack) * darkness;
+            sum += Mod(StaticModifiers.NavalNightAttack) * environment.Darkness;
         }
 
         sum += isArmor
             ? ExperienceRules.NavalDefenseFactor(ship, defines) + Mod(StaticModifiers.NavalDefenseFactor)
             : ExperienceRules.NavalDamageFactor(ship, defines) + Mod(StaticModifiers.NavalDamageFactor);
 
-        // S-ADMIRAL-ADJUST [RE] 0xc34a50: the shot profile passes the commanding admiral for attacks only.
+        // S-TERRAIN [RE] 0xc34a50 (0x143e4a0): the region's naval terrain's units adjuster for the ship's sub-unit, with or
+        // without an admiral, so the target's armor gets it too.
+        if (environment.Terrain is { } terrain)
+        {
+            var adjuster = terrain.SubUnitAdjuster(ship.Design.ShipType.ID);
+            sum += isArmor ? adjuster.Defence : adjuster.Attack;
+        }
+
+        // S-ADMIRAL-ADJUST [RE] 0xc34a50: the shot profile passes the commanding admiral for attacks only: the traits'
+        // adjusters for the battle's naval terrain (0xc19c40) and night × darkness, and the sub-unit adjuster.
         if (!isArmor && ship.Admiral is { } admiral)
         {
-            sum += admiral.Adjuster(Leaders.LeaderTrait.Night).Attack * darkness + admiral.SubUnitAdjuster(ship.Design.ShipType.ID).Attack;
+            sum += (environment.Terrain is { } battleTerrain ? admiral.Adjuster(battleTerrain.ID).Attack : 0) +
+                   admiral.Adjuster(Leaders.LeaderTrait.Night).Attack * environment.Darkness + admiral.SubUnitAdjuster(ship.Design.ShipType.ID).Attack;
         }
 
         // S-POTF [RE] 0xc351ae: read from the commanding admiral of the ship's side for attacks and armor alike.
@@ -86,10 +105,10 @@ public static class CombatStatRules
     /// [RE] 0xc3a470: <c>(anti_air_attack + navy_anti_air_attack) × (1 + navy_anti_air_attack_factor)</c>, no clamp; the AA
     /// the fleet AA sum, preemptive AA and air target weights read.
     /// </summary>
-    public static double AntiAir(Ship ship, GameDefines defines)
+    public static double AntiAir(Ship ship, GameDefines defines, BattleEnvironment environment = default)
     {
-        var flat = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyAntiAirAttack, 0, defines);
-        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyAntiAirAttackFactor, 0, defines);
+        var flat = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyAntiAirAttack, environment, defines);
+        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyAntiAirAttackFactor, environment, defines);
         return (ship.GetFinalStats().AntiAir + flat) * (1 + factor);
     }
 
@@ -97,10 +116,10 @@ public static class CombatStatRules
     /// [RE] 0xc3aa20 / 0xc3ab80: sub or surface visibility <c>max(0, stat × (1 + navy_visibility))</c>, which the hit
     /// profile (S-HIT-SHIP) and the submarine reveal (S-SUB) read.
     /// </summary>
-    public static double Visibility(Ship ship, bool submerged, GameDefines defines)
+    public static double Visibility(Ship ship, bool submerged, GameDefines defines, BattleEnvironment environment = default)
     {
         var stats = ship.GetFinalStats();
-        var factor = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyVisibility, 0, defines);
+        var factor = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyVisibility, environment, defines);
         return Math.Max(0, (submerged ? stats.SubVisibility : stats.SurfaceVisibility) * factor);
     }
 
@@ -111,10 +130,10 @@ public static class CombatStatRules
 
     // [RE] 0xc3d4a3: max(0.001, (max_organisation + navy_org) × (1 + navy_org_factor)); a training mission's
     // TRAINING_ORG does not apply in battle.
-    public static double MaxOrganization(Ship ship, GameDefines defines)
+    public static double MaxOrganization(Ship ship, GameDefines defines, BattleEnvironment environment = default)
     {
-        var flat = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyOrg, 0, defines);
-        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyOrgFactor, 0, defines);
+        var flat = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyOrg, environment, defines);
+        var factor = MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyOrgFactor, environment, defines);
         return Math.Max(defines.Hardcoded.MinMaxOrganization, (ship.GetFinalStats().Organization + flat) * (1 + factor));
     }
 }

@@ -11,13 +11,19 @@ public sealed class GameDefines
     public NMilitaryDefines NMilitary { get; init; } = new();
     public NDoctrinesDefines NDoctrines { get; init; } = new();
 
+    /// <summary>S-NIGHT: the day/night terminator's map constants.</summary>
+    public NGraphicsDefines NGraphics { get; init; } = new();
+
     /// <summary>
     /// Values the combat model needs that are not in any defines file (hard-coded in the executable, or not yet located).
     /// </summary>
     public HardcodedValues Hardcoded { get; init; } = new();
 
-    /// <summary>Static modifier blocks naval combat applies directly (screening bonuses, experience, night).</summary>
+    /// <summary>Static modifier blocks naval combat applies directly (screening bonuses, experience, night, weather).</summary>
     public StaticModifiers StaticModifiers { get; init; } = new();
+
+    /// <summary>S-WEATHER-SIM: the weather simulation settings of <c>common/weather.txt</c>.</summary>
+    public WeatherSettings Weather { get; init; } = new();
 
     /// <summary>
     /// Human-readable list of the define sources applied on top of the built-in vanilla defaults, in order.

@@ -148,6 +148,13 @@
                     </span>
                 </div>
                 <div class="row">
+                    <button @onclick="ImportRegions" disabled="@(importing || ShipDataGame is null)">Import sea regions</button>
+                    <span class="small muted">
+                        From the same sources: replaces the files in <code>sea-regions/</code> (every strategic region with sea provinces: naval terrain,
+                        weather periods, province positions) and <code>naval-terrains/</code>. Scenarios keep their region and province.
+                    </span>
+                </div>
+                <div class="row">
                     <button @onclick="ImportPlanes" disabled="@(importing || ShipDataGame is null)">Import planes</button>
                     <span class="small muted">
                         From the same sources: replaces the files in <code>planes/</code> with the game's fixed plane equipment
@@ -422,6 +429,30 @@
             var import = await Task.Run(Workspace.ImportLeaders);
             message = $"Imported {import.Admirals.Count} admirals, {import.Traits.Count} admiral traits and {import.Skills.Count} navy skills from {ShipDataSourceNames()}." +
                       (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportRegions()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportRegions);
+            message = $"Imported {import.Regions.Count} sea regions and {import.Terrains.Count} naval terrains from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings.Take(10))}" : string.Empty);
             messageIsError = false;
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)

@@ -23,7 +23,7 @@ public sealed class AdmiralInfoTests : IDisposable
         var tactician = Workspace.Catalog.LeaderTraits.Single(trait => trait.ID == "superior_tactician");
 
         Assert.Equal("naval_enemy_retreat_chance +20%, navy_org +5", AdmiralInfo.Summarize(gentlemanly));
-        Assert.Equal("water_deep_ocean: attack +10%, defence +10%, movement +10% (naval terrain not simulated)", AdmiralInfo.Summarize(blueWater));
+        Assert.Equal("water_deep_ocean: attack +10%, defence +10%, movement +10% (on that naval terrain)", AdmiralInfo.Summarize(blueWater));
         Assert.Contains("naval_coordination +1.5% (no effect in battle)", AdmiralInfo.Summarize(tactician), StringComparison.Ordinal);
         Assert.Contains("ships_at_battle_start +5% (not simulated)", AdmiralInfo.Summarize(tactician), StringComparison.Ordinal);
         Assert.Equal("navy_carrier_air_targetting_factor +20% (no effect in battle), sortie_efficiency +10%",

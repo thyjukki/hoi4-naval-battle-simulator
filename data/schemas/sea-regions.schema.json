@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sea-regions.schema.json",
+  "title": "NavySimulator sea regions",
+  "description": "Strategic regions with sea provinces (map/strategicregions), written by NavySimulator import-regions (S-REGION).",
+  "type": "object",
+  "required": [
+    "regions"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string",
+            "description": "The game's name (localisation)."
+          },
+          "navalTerrain": {
+            "type": "string",
+            "description": "The region's naval_terrain (S-TERRAIN); absent when the script sets none."
+          },
+          "provinces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "x": {
+                  "type": "number"
+                },
+                "y": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "weather": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "One period of the region's weather block; days and months count from 0 (S-WEATHER-REGION).",
+              "properties": {
+                "fromDay": {
+                  "type": "number"
+                },
+                "fromMonth": {
+                  "type": "number"
+                },
+                "toDay": {
+                  "type": "number"
+                },
+                "toMonth": {
+                  "type": "number"
+                },
+                "minTemperature": {
+                  "type": "number"
+                },
+                "maxTemperature": {
+                  "type": "number"
+                },
+                "noPhenomenon": {
+                  "type": "number"
+                },
+                "rainLight": {
+                  "type": "number"
+                },
+                "rainHeavy": {
+                  "type": "number"
+                },
+                "snow": {
+                  "type": "number"
+                },
+                "blizzard": {
+                  "type": "number"
+                },
+                "arcticWater": {
+                  "type": "number"
+                },
+                "mud": {
+                  "type": "number"
+                },
+                "sandstorm": {
+                  "type": "number"
+                },
+                "minSnowLevel": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

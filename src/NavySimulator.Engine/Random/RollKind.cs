@@ -54,6 +54,12 @@ public enum RollKind
     AirCritical,
 
     /// <summary>
+    /// S-WEATHER-SIM: a draw of the simulated weather pattern (U1, U2 of the region's roll, the start phase). The game's
+    /// weather has its own hash outside the combat update; the engine draws from a separate stream, never the battle's.
+    /// </summary>
+    Weather,
+
+    /// <summary>
     /// A-REGION: the roll that rounds the planes one wing shoots down of another in the region's air war (airmission.cpp
     /// line 0xacf). The game makes it outside the naval combat update, so it is not in a battle's roll log.
     /// </summary>

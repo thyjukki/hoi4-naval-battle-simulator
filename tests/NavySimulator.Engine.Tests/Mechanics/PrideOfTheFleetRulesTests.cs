@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
@@ -21,8 +22,8 @@ public class PrideOfTheFleetRulesTests
 
         Assert.True(pride.IsPrideOfTheFleet);
         Assert.False(other.IsPrideOfTheFleet);
-        Assert.Equal(-0.5, MemberModifierRules.ShipModifier(pride, StaticModifiers.CriticalReceiveChance, 0, defines), 9);
-        Assert.Equal(0, MemberModifierRules.ShipModifier(other, StaticModifiers.CriticalReceiveChance, 0, defines));
+        Assert.Equal(-0.5, MemberModifierRules.ShipModifier(pride, StaticModifiers.CriticalReceiveChance, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0, MemberModifierRules.ShipModifier(other, StaticModifiers.CriticalReceiveChance, BattleEnvironment.None, defines));
     }
 
     [Fact]
@@ -34,19 +35,19 @@ public class PrideOfTheFleetRulesTests
         var plainAttack = CombatValueWithout(screen, false);
         var plainArmor = CombatValueWithout(screen, true);
 
-        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, 0, defines), 9);
-        Assert.Equal(40 * (plainArmor / 40 + 0.15), CombatStatRules.CombatValue(screen, 40, true, 0, defines), 9);
+        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, BattleEnvironment.None, defines), 9);
+        Assert.Equal(40 * (plainArmor / 40 + 0.15), CombatStatRules.CombatValue(screen, 40, true, BattleEnvironment.None, defines), 9);
 
         pride.CurrentStatus = ShipStatus.Retreating;
-        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, 0, defines), 9);
+        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, BattleEnvironment.None, defines), 9);
 
         // [RE] An escaped pride's task force is still in the combat.
         pride.CurrentStatus = ShipStatus.Retreated;
-        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, 0, defines), 9);
+        Assert.Equal(40 * (plainAttack / 40 + 0.1), CombatStatRules.CombatValue(screen, 40, false, BattleEnvironment.None, defines), 9);
 
         pride.CurrentStatus = ShipStatus.Active;
         pride.CurrentHP = 0;
-        Assert.Equal(plainArmor, CombatStatRules.CombatValue(screen, 40, true, 0, defines), 9);
+        Assert.Equal(plainArmor, CombatStatRules.CombatValue(screen, 40, true, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -55,7 +56,7 @@ public class PrideOfTheFleetRulesTests
         var screen = TestEntityFactory.Screen("dd");
         _ = new BattleParticipant(new Fleet("fleet", [screen]), MediaPersonality(), [], []);
 
-        Assert.Equal(CombatValueWithout(screen, false), CombatStatRules.CombatValue(screen, 40, false, 0, defines), 9);
+        Assert.Equal(CombatValueWithout(screen, false), CombatStatRules.CombatValue(screen, 40, false, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -98,7 +99,7 @@ public class PrideOfTheFleetRulesTests
     {
         var pride = ship.PrideOfTheFleet;
         ship.PrideOfTheFleet = null;
-        var value = CombatStatRules.CombatValue(ship, 40, isArmor, 0, defines);
+        var value = CombatStatRules.CombatValue(ship, 40, isArmor, BattleEnvironment.None, defines);
         ship.PrideOfTheFleet = pride;
         return value;
     }

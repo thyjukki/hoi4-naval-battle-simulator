@@ -1,0 +1,112 @@
+{
+  "$schema": "../schemas/naval-terrains.schema.json",
+  "terrains": [
+    {
+      "id": "ocean",
+      "name": "Ocean"
+    },
+    {
+      "id": "water_deep_ocean",
+      "name": "Deep Oceans",
+      "modifiers": {
+        "naval_mine_hit_chance": -0.75
+      },
+      "subUnitModifiers": {
+        "submarine": {
+          "navy_visibility": -0.15
+        }
+      },
+      "subUnitAdjusters": {
+        "destroyer": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "light_cruiser": {
+          "attack": -0.1,
+          "defence": -0.1,
+          "movement": -0.1
+        },
+        "submarine": {
+          "attack": 0,
+          "defence": 0,
+          "movement": -0.25
+        }
+      }
+    },
+    {
+      "id": "water_fjords",
+      "name": "Fjords and Archipelagos",
+      "modifiers": {
+        "navy_visibility": -0.2,
+        "positioning": -0.15,
+        "naval_mine_hit_chance": 0.25
+      },
+      "subUnitModifiers": {
+        "heavy_cruiser": {
+          "navy_fuel_consumption_factor": 0.2
+        },
+        "battle_cruiser": {
+          "navy_fuel_consumption_factor": 0.2
+        },
+        "battleship": {
+          "navy_fuel_consumption_factor": 0.2
+        },
+        "sh_battleship": {
+          "navy_fuel_consumption_factor": 0.2
+        },
+        "carrier": {
+          "navy_fuel_consumption_factor": 0.2
+        },
+        "sh_carrier": {
+          "navy_fuel_consumption_factor": 0.2
+        }
+      },
+      "subUnitAdjusters": {
+        "heavy_cruiser": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "battle_cruiser": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "battleship": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "sh_battleship": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "carrier": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        },
+        "sh_carrier": {
+          "attack": -0.2,
+          "defence": -0.2,
+          "movement": -0.2
+        }
+      }
+    },
+    {
+      "id": "water_shallow_sea",
+      "name": "Shallow Sea",
+      "modifiers": {
+        "positioning": -0.05,
+        "naval_mine_hit_chance": 0.25
+      },
+      "subUnitModifiers": {
+        "submarine": {
+          "navy_visibility": 1
+        }
+      }
+    }
+  ]
+}

@@ -79,16 +79,6 @@
                 <input type="text" @bind="Scenario.ID" @bind:after="Edited" />
             </div>
             <div class="field">
-                <label>Terrain</label>
-                <input type="text" @bind="Scenario.Terrain" @bind:after="Edited" />
-                <span class="hint">Not simulated yet.</span>
-            </div>
-            <div class="field">
-                <label>Weather</label>
-                <input type="text" @bind="Scenario.Weather" @bind:after="Edited" />
-                <span class="hint">Only "clear" is modelled.</span>
-            </div>
-            <div class="field">
                 <label>Max hours</label>
                 <input type="number" min="1" @bind="Scenario.MaxHours" @bind:after="Edited" />
                 <span class="hint">Safety stop; 0 uses @(new BattleRules().MaxHours).</span>
@@ -107,6 +97,100 @@
                 <label class="check"><input type="checkbox" @bind:get="!(Scenario.DontRetreat ?? false)" @bind:set="SetRetreat" /> Ships may retreat</label>
                 <label class="check"><input type="checkbox" @bind:get="Scenario.ContinueAfterRetreat ?? false" @bind:set="SetContinue" /> Re-engage after a side fully escaped</label>
                 <span class="hint">Both are tooling options, not game mechanics.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head"><h2>Location and weather</h2><span class="muted small">sea region, night, weather, naval terrain</span></div>
+        <div class="panel-body fields">
+            @{
+                var region = LocationInfo.Region(Workspace.Catalog, Scenario.RegionID);
+                var defines = build?.Scenario?.Defines ?? NavySimulator.Engine.Defines.GameDefines.Vanilla();
+                var weatherOff = !(Rules?.WeatherEnabled ?? DefaultRules.WeatherEnabled);
+            }
+            <div class="field span-2">
+                <label>Sea region</label>
+                @if (Workspace.Catalog.SeaRegions.Count == 0)
+                {
+                    <span class="hint">No sea regions imported (Settings → Import sea regions).</span>
+                }
+                else
+                {
+                    <select @bind:get="Scenario.RegionID?.ToString() ?? string.Empty" @bind:set="SetRegion">
+                        <option value="">None (no region weather, night window)</option>
+                        @foreach (var (id, label) in LocationInfo.Regions(Workspace.Catalog))
+                        {
+                            <option value="@id">@label</option>
+                        }
+                    </select>
+                }
+            </div>
+            @if (region is not null)
+            {
+                <div class="field">
+                    <label>Battle province</label>
+                    <select @bind:get="Scenario.ProvinceID?.ToString() ?? string.Empty" @bind:set="SetProvince">
+                        <option value="">First (@(region.Provinces.FirstOrDefault()?.ID))</option>
+                        @foreach (var province in region.Provinces)
+                        {
+                            <option value="@province.ID">@province.ID (x @province.X, y @province.Y)</option>
+                        }
+                    </select>
+                    <span class="hint">Its position on the map sets the darkness.</span>
+                </div>
+            }
+            <div class="field">
+                <label>Start date</label>
+                <input type="text" placeholder="1936.5.6" @bind="Scenario.StartDate" @bind:after="Edited" />
+                <span class="hint">Day of battle hour 0, as the game writes dates; the hour is the start hour of day.</span>
+            </div>
+            @if (region is not null && !weatherOff && (Rules?.NightEnabled ?? DefaultRules.NightEnabled) && LocationInfo.NightSummary(region, Scenario.ProvinceID, Scenario.StartDate, defines) is { } night)
+            {
+                <div class="field span-2"><span class="hint">Night on the start day: @night.</span></div>
+            }
+            <div class="field">
+                <label>Weather</label>
+                <select @bind:get="LocationInfo.WeatherChoice(Scenario)" @bind:set="SetWeatherChoice" disabled="@weatherOff">
+                    @foreach (var (value, label) in LocationInfo.WeatherChoices)
+                    {
+                        <option value="@value">@label</option>
+                    }
+                </select>
+                <span class="hint">@(weatherOff ? "Weather is off in the rules (no night either)." : "One weather for the whole battle, or a pattern from the region's weather periods.")</span>
+            </div>
+            @if (string.Equals(Scenario.Weather, LocationLoader.Simulated, StringComparison.OrdinalIgnoreCase))
+            {
+                <div class="field">
+                    <label>Weather seed</label>
+                    <input type="number" placeholder="battle seed" @bind="Scenario.WeatherSeed" @bind:after="Edited" />
+                    <span class="hint">Empty: each battle's own seed, so every run gets its own weather.</span>
+                </div>
+                @if (region is not null && LocationInfo.PeriodSummary(region, Scenario.StartDate, defines) is { } period)
+                {
+                    <div class="field span-2"><span class="hint">@period. A chance to change every @LocationInfo.VisitHours(region, defines) h.</span></div>
+                }
+            }
+            else
+            {
+                <div class="field">
+                    <label class="check"><input type="checkbox" @bind:get="Scenario.ArcticWater ?? false" @bind:set="SetArcticWater" disabled="@weatherOff" /> Arctic water</label>
+                    <span class="hint">weather_arctic_water on top of the weather.</span>
+                </div>
+            }
+            <div class="field span-2">
+                <label>Naval terrain</label>
+                <select @bind:get="Scenario.Terrain ?? string.Empty" @bind:set="SetTerrain">
+                    <option value="">Region's (@LocationInfo.RegionTerrainLabel(region))</option>
+                    @foreach (var terrain in Workspace.Catalog.NavalTerrains)
+                    {
+                        <option value="@terrain.ID">@(terrain.Name ?? terrain.ID)</option>
+                    }
+                </select>
+                @if (LocationInfo.Terrain(Workspace.Catalog, Scenario) is { } chosen)
+                {
+                    <span class="hint">@LocationInfo.TerrainSummary(chosen)</span>
+                }
             </div>
         </div>
     </div>
@@ -135,7 +219,7 @@
                     <input type="number" min="0" max="23" style="width: 60px" placeholder="@NightDefaults.Start" @bind:get="Rules?.NightStartHour" @bind:set="SetNightStart" />
                     <input type="number" min="0" max="23" style="width: 60px" placeholder="@NightDefaults.End" @bind:get="Rules?.NightEndHour" @bind:set="SetNightEnd" />
                 </span>
-                <span class="hint">Hours of day the province is dark (it follows its longitude and the season; province 7906 in May: 17 to 4).</span>
+                <span class="hint">Only without a sea region and start date: the hours of day that are dark. With them, the darkness follows the battle province and the date.</span>
             </div>
             <div class="field">
                 <label>Air region phase</label>
@@ -392,6 +476,43 @@
 
     private static (int Start, int End) NightDefaults => (new NavySimulator.Engine.Defines.HardcodedValues().NightStartHour,
         new NavySimulator.Engine.Defines.HardcodedValues().NightEndHour);
+
+    private async Task SetRegion(string? value)
+    {
+        Scenario.RegionID = int.TryParse(value, out var id) ? id : null;
+        Scenario.ProvinceID = null;
+        await Edited();
+    }
+
+    private async Task SetProvince(string? value)
+    {
+        Scenario.ProvinceID = int.TryParse(value, out var id) ? id : null;
+        await Edited();
+    }
+
+    private async Task SetWeatherChoice(string? value)
+    {
+        Scenario.Weather = string.IsNullOrWhiteSpace(value) ? "clear" : value;
+
+        if (string.Equals(Scenario.Weather, LocationLoader.Simulated, StringComparison.OrdinalIgnoreCase))
+        {
+            Scenario.ArcticWater = null;
+        }
+
+        await Edited();
+    }
+
+    private async Task SetArcticWater(bool value)
+    {
+        Scenario.ArcticWater = value ? true : null;
+        await Edited();
+    }
+
+    private async Task SetTerrain(string? value)
+    {
+        Scenario.Terrain = value ?? string.Empty;
+        await Edited();
+    }
 
     private async Task SetNightStart(int? value)
     {

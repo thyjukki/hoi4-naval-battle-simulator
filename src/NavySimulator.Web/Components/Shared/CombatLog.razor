@@ -39,7 +39,7 @@
                         <Virtualize Items="HourRows" Context="hour" ItemSize="27" SpacerElement="tr">
                             <tr class="clickable @(hour.Hour == View.Hour ? "selected" : "")" @onclick="() => OnSelectHour.InvokeAsync(hour.Hour)" title="Click to view the battle at the end of this hour">
                                 <td class="num">@hour.Hour</td>
-                                <td class="nowrap">@($"{hour.HourOfDay:D2}:00") @if (hour.Night) { <span class="badge night">night</span> }</td>
+                                <td class="nowrap">@($"{hour.HourOfDay:D2}:00") @if (hour.Night) { <span class="badge night" title="Darkness @hour.Darkness.ToString("P0")">@(hour.Darkness < 1 ? "dusk" : "night")</span> } @if (hour.Weather is { } weather) { <span class="badge weather" title="The region's weather">@weather.Replace('_', ' ')</span> }</td>
                                 <td class="mono small">@Lines(hour.Attacker)</td>
                                 <td class="num">@hour.Attacker.Positioning.ToString("P0")</td>
                                 <td class="num">@hour.Attacker.ScreeningEfficiency.ToString("P0") <span class="faint">(@hour.Attacker.CarrierScreeningEfficiency.ToString("P0"))</span></td>

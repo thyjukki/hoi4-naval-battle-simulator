@@ -1,7 +1,8 @@
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
-using NavySimulator.Engine.Stats;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Air;
 
@@ -20,8 +21,9 @@ public static class AirRules
     /// <summary>
     /// [RE] A-SORTIE (0x1976db0, 0x19786c0): carrier sortie efficiency before the final clamp. During the first
     /// SELECTED_SORTIE_INITIAL_TIME hours the stance ratio replaces BASE_CARRIER_SORTIE_EFFICIENCY (the defender uses
-    /// 1 - ratio). Weather carrier traffic is not modelled. The group is one wing pool; deck crowding counts all planes
-    /// on the carrier (<paramref name="carrierPlanes"/>, A-WINGS-STRIKE).
+    /// 1 - ratio). The region's weather and the night are separate clamped factors (S-WEATHER: carrier_traffic of the
+    /// region's weather holder, whole). The group is one wing pool; deck crowding counts all planes on the carrier
+    /// (<paramref name="carrierPlanes"/>, A-WINGS-STRIKE).
     /// </summary>
     public static double SortieEfficiency(
         AirGroup group,
@@ -29,7 +31,7 @@ public static class AirRules
         bool isAttacker,
         int stanceIndex,
         int hour,
-        double darkness,
+        BattleEnvironment environment,
         GameDefines defines,
         double carrierNightTraffic = 0,
         int? carrierPlanes = null)
@@ -51,20 +53,22 @@ public static class AirRules
 
         // [RE] sortie_efficiency through the member getter: capital_screening_bonus for the carrier line (screening_bonus
         // has none in vanilla), country modifiers (doctrines, spirits) and damaged parts (damaged_flight_deck, S-CRIT-PART).
-        baseEfficiency += MemberModifierRules.Get(carrier, StaticModifiers.SortieEfficiency, ownScreening, darkness, defines);
+        baseEfficiency += MemberModifierRules.Get(carrier, StaticModifiers.SortieEfficiency, ownScreening, environment, defines);
 
         // [RE] With a fighter wing first, fighter_sortie_efficiency (modifier 0x1b6) through the same getter, and the
         // carrier experience level's.
         if (group.Wings.Count > 0 && group.Wings[0].IsSortieFighter)
         {
             baseEfficiency += CarrierExperienceFighterSortie(carrier, defines) +
-                              MemberModifierRules.Get(carrier, StaticModifiers.FighterSortieEfficiency, ownScreening, darkness, defines);
+                              MemberModifierRules.Get(carrier, StaticModifiers.FighterSortieEfficiency, ownScreening, environment, defines);
         }
 
         // [RE] night = clamp(1 + darkness * night.carrier_traffic + (dark ? country carrier_night_traffic : 0), 0, 1).
-        var night = Math.Clamp(1.0 + darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic) +
-                               (darkness > 0 ? carrierNightTraffic : 0), 0, 1);
-        var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, carrierPlanes ?? group.Planes, defines) * night);
+        var night = Math.Clamp(1.0 + environment.Darkness * modifiers.Get(StaticModifiers.Night, StaticModifiers.CarrierTraffic) +
+                               (environment.IsDark ? carrierNightTraffic : 0), 0, 1);
+        // [RE] 0x1976f84: weather = clamp(1 + carrier_traffic of the region's weather holder, 0, 1).
+        var weather = Math.Clamp(1.0 + environment.WeatherModifier(StaticModifiers.CarrierTraffic), 0, 1);
+        var sortie = Math.Max(0, baseEfficiency * CrowdFactor(carrier, carrierPlanes ?? group.Planes, defines) * weather * night);
         var orgRatio = carrier.CurrentOrganization / CombatStatRules.MaxOrganization(carrier, defines);
         return Math.Max(0, sortie * orgRatio);
     }
@@ -274,11 +278,25 @@ public static class AirRules
                defines.NNavy.SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning;
     }
 
-    /// <summary>[RE] A-HIT: hits = round(strikers * clamp(targeting * NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1) * U).</summary>
-    public static int Hits(int strikers, double averageTargeting, GameDefines defines, IRandomSource random)
+    /// <summary>
+    /// [RE] A-HIT: hits = round(strikers * clamp(targeting * tMult * NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1) * U), tMult
+    /// from <see cref="TargetingMultiplier"/>.
+    /// </summary>
+    public static int Hits(int strikers, double averageTargeting, GameDefines defines, IRandomSource random, double targetingMultiplier = 1.0)
     {
-        var fraction = Math.Clamp(averageTargeting * defines.NAir.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
+        var fraction = Math.Clamp(averageTargeting * targetingMultiplier * defines.NAir.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
         return (int)Math.Round(strikers * fraction * random.NextDouble(RollKind.AirHits), MidpointRounding.AwayFromZero);
+    }
+
+    /// <summary>
+    /// [RE] A-HIT 0x197bf38: <c>tMult = 1 + naval_strike(region weather holder) + (1 + airfx+0xe8) × naval_strike(night
+    /// holder)</c>, both whole (S-WEATHER: rain light −0.2). airfx+0xe8 (a plane-weighted equipment field) is not
+    /// identified and taken as 0 [ASSUMED]; neither vanilla's nor TFB's night block has naval_strike.
+    /// </summary>
+    public static double TargetingMultiplier(BattleEnvironment environment, GameDefines defines)
+    {
+        return 1.0 + environment.WeatherModifier(StaticModifiers.NavalStrike) +
+               environment.Darkness * defines.StaticModifiers.Get(StaticModifiers.Night, StaticModifiers.NavalStrike);
     }
 
     /// <summary>

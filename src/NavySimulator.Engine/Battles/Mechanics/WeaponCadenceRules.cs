@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -58,7 +59,7 @@ public static class WeaponCadenceRules
 
         if (slot == WeaponSlot.Torpedo && ship is not null)
         {
-            cooldown *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalTorpedoCooldownFactor, 0, defines);
+            cooldown *= 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalTorpedoCooldownFactor, BattleEnvironment.None, defines);
         }
 
         return Math.Max(navy.MIN_GUN_COOLDOWN, cooldown);

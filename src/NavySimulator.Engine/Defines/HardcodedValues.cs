@@ -54,10 +54,21 @@ public sealed class HardcodedValues
         "navy_casualty_on_hit", "navy_casualty_on_sink", "naval_enemy_retreat_chance", "reassignment_duration_factor"
     ], StringComparer.Ordinal);
 
-    // [ASSUMED] S-NIGHT: province darkness is 1 from NightStartHour to NightEndHour and 0 otherwise. The game computes
-    // darkness per province from the day/night terminator; that model is not decoded.
+    // [ASSUMED] S-NIGHT: without a battle province, darkness is 1 from NightStartHour to NightEndHour and 0 otherwise.
+    // With one, the decoded terminator below is used.
     public int NightStartHour { get; set; } = 20;
     public int NightEndHour { get; set; } = 6;
+
+    // [RE] S-NIGHT 0xf15eb0: the sun's tilt runs from −SunTiltDegrees at the summer solstice (day of year 172, 22 June) to
+    // +SunTiltDegrees at the winter solstice (355, 22 December), linearly, over 365-day years.
+    public int SummerSolsticeDay { get; set; } = 172;
+    public int WinterSolsticeDay { get; set; } = 355;
+    public int DaysPerYear { get; set; } = 365;
+    public double SunTiltDegrees { get; set; } = 5;
+
+    // [RE] S-NIGHT 0xf14fe0: the hour angle is DarknessDayAngle (0x9965e, one fx5 step below the 2π of sin/cos) × the
+    // fraction of the day.
+    public double DarknessDayAngle { get; set; } = 6.28318;
 
     // [RE] A-WINGS-TYPES: the sub-unit type keywords of the fighter-type test 0xf63100 (flags & 0x100000c00: fighter,
     // interceptor, heavy_fighter), which picks the defending carrier fighters (A-INTERCEPT), and of the sortie test

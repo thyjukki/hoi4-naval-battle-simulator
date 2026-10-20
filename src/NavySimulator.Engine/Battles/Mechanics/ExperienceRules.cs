@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -144,7 +145,7 @@ public static class ExperienceRules
         }
 
         // [RE] 0xc3e305: the loss ratio is x (1 + navy_casualty_on_hit); none at all when that is <= 0.
-        var casualty = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyCasualtyOnHit, 0, defines);
+        var casualty = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavyCasualtyOnHit, BattleEnvironment.None, defines);
 
         if (casualty <= 0)
         {
@@ -209,16 +210,16 @@ public static class ExperienceRules
     /// NAVAL_DOMINANCE_ORG_RECOVERY for the side with naval dominance (S-DOMINANCE), else 0. Not modelled: a ship value at
     /// +0x120 in the same factor.
     /// </summary>
-    public static double HourlyOrganizationRegain(Ship ship, GameDefines defines, double dominance = 0)
+    public static double HourlyOrganizationRegain(Ship ship, GameDefines defines, double dominance = 0, BattleEnvironment environment = default)
     {
         if (ship.IsSunk || ship.CurrentStatus == ShipStatus.Active)
         {
             return 0;
         }
 
-        var maximum = CombatStatRules.MaxOrganization(ship, defines);
-        var regain = (defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMorale, 0, defines)) *
-                     Math.Max(0, 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMoraleFactor, 0, defines) + dominance);
+        var maximum = CombatStatRules.MaxOrganization(ship, defines, environment);
+        var regain = (defines.NMilitary.SHIP_MORALE_TO_ORG_REGAIN_BASE + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMorale, environment, defines)) *
+                     Math.Max(0, 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalMoraleFactor, environment, defines) + dominance);
         var gain = Math.Max(0, Math.Min(regain, maximum - ship.CurrentOrganization));
         ship.CurrentOrganization += gain;
         return gain;

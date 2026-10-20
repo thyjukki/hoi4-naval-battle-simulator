@@ -51,6 +51,12 @@ public sealed class ContentCatalog
     /// <summary>S-ADMIRAL-SKILL: the navy skill levels of <c>leader-skills/</c>, empty when the folder does not exist.</summary>
     public List<LeaderSkillDto> LeaderSkills { get; } = [];
 
+    /// <summary>S-REGION: the sea regions of <c>sea-regions/</c> (imported by <c>NavySimulator import-regions</c>), empty when the folder does not exist.</summary>
+    public List<SeaRegionDto> SeaRegions { get; } = [];
+
+    /// <summary>S-TERRAIN: the naval terrains of <c>naval-terrains/</c>, empty when the folder does not exist.</summary>
+    public List<NavalTerrainDto> NavalTerrains { get; } = [];
+
     /// <summary>S-DOCTRINE: the doctrine folders of <c>doctrines/</c> (imported), empty when the folder does not exist.</summary>
     public List<DoctrineFolderDto> DoctrineFolders { get; } = [];
 

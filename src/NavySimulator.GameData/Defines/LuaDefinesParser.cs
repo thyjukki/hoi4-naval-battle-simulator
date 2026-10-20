@@ -5,13 +5,17 @@ namespace NavySimulator.GameData.Defines;
 
 /// <summary>
 /// Minimal Lua reader for HOI4 define files. Supports the vanilla layout
-/// (<c>NDefines = { NNavy = { KEY = value, ... } }</c>) and mod override statements
+/// (<c>NDefines = { NNavy = { KEY = value, ... } }</c>, and <c>NDefines_Graphics</c>, which 00_graphics.lua merges into
+/// <c>NDefines</c>) and mod override statements
 /// (<c>NDefines.NNavy.KEY = value</c>, also <c>NDefines.NNavy.ARRAY[2] = value</c>). Only the subset of Lua used by
 /// define files is evaluated; other statements (loops, locals, references to other defines) are skipped with a warning.
 /// </summary>
 public static class LuaDefinesParser
 {
     private const string RootPrefix = "NDefines";
+
+    // 00_graphics.lua defines its categories (NGraphics, ...) under NDefines_Graphics and merges them into NDefines.
+    private const string GraphicsRootPrefix = "NDefines_Graphics";
 
     public static DefinesTable ParseFile(string path)
     {
@@ -49,7 +53,7 @@ public static class LuaDefinesParser
                 reader.Expect('=');
                 var value = reader.ReadValue();
 
-                if (path.Count == 0 || path[0] != RootPrefix)
+                if (path.Count == 0 || (path[0] != RootPrefix && path[0] != GraphicsRootPrefix))
                 {
                     continue;
                 }

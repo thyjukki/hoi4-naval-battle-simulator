@@ -3,7 +3,10 @@
   "battleScenario": {
     "id": "air_cv_mirror_weather",
     "terrain": "ocean",
-    "weather": "clear",
+    "weather": "rain_light",
+    "regionID": 30,
+    "provinceID": 7906,
+    "startDate": "1936.5.6",
     "maxHours": 720,
     "iterations": 10,
     "continueAfterRetreat": false,
@@ -11,9 +14,7 @@
       "weatherEnabled": true,
       "navalDominanceEnabled": true,
       "startHourOfDay": 13,
-      "airRegionPhase": 6,
-      "nightStartHour": 17,
-      "nightEndHour": 4
+      "airRegionPhase": 6
     },
     "attacker": {
       "fleetID": "air_test_cv_std",

@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
 
@@ -42,7 +43,7 @@ public class RetreatAndSubmarineTests
         // 30 kn capital, tick 10, full screening: 0.05 + 10 * 0.015 / 24 + 0.2 + 30 * 0.5 / 100.
         var capital = TestEntityFactory.CreateShip("bb", ShipRole.Capital, TestEntityFactory.CapitalStats() with { Speed = 30 });
 
-        Assert.Equal(0.05 + 0.00625 + 0.2 + 0.15, RetreatRules.EscapeSpeedPerDay(capital, 10, new ScreeningSummary(1, 1), 0, defines), 9);
+        Assert.Equal(0.05 + 0.00625 + 0.2 + 0.15, RetreatRules.EscapeSpeedPerDay(capital, 10, new ScreeningSummary(1, 1), BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -53,8 +54,8 @@ public class RetreatAndSubmarineTests
         revealed.RevealTimer = 3;
         var baseSpeed = 0.05 + 15 * 0.5 / 100;
 
-        Assert.Equal(baseSpeed + 0.35, RetreatRules.EscapeSpeedPerDay(hidden, 0, new ScreeningSummary(1, 1), 0, defines), 9);
-        Assert.Equal(baseSpeed + 0.1, RetreatRules.EscapeSpeedPerDay(revealed, 0, new ScreeningSummary(1, 1), 0, defines), 9);
+        Assert.Equal(baseSpeed + 0.35, RetreatRules.EscapeSpeedPerDay(hidden, 0, new ScreeningSummary(1, 1), BattleEnvironment.None, defines), 9);
+        Assert.Equal(baseSpeed + 0.1, RetreatRules.EscapeSpeedPerDay(revealed, 0, new ScreeningSummary(1, 1), BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -75,9 +76,9 @@ public class RetreatAndSubmarineTests
         convoy.CountryModifiers = countryModifiers;
         var noScreening = new ScreeningSummary(0, 0);
 
-        Assert.Equal(0.05 + 0.2 + 30 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(screen, 0, noScreening, 0, defines), 9);
-        Assert.Equal(0.05 + 0.3 + 15 * 0.5 / 100 + 0.35, RetreatRules.EscapeSpeedPerDay(submarine, 0, noScreening, 0, defines), 9);
-        Assert.Equal(0.05 + 0.4 + 10 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(convoy, 0, noScreening, 0, defines), 9);
+        Assert.Equal(0.05 + 0.2 + 30 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(screen, 0, noScreening, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.05 + 0.3 + 15 * 0.5 / 100 + 0.35, RetreatRules.EscapeSpeedPerDay(submarine, 0, noScreening, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.05 + 0.4 + 10 * 0.5 / 100, RetreatRules.EscapeSpeedPerDay(convoy, 0, noScreening, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -87,8 +88,8 @@ public class RetreatAndSubmarineTests
         screen.CountryModifiers = new ModifierSet(new Dictionary<string, double> { ["naval_retreat_speed_after_initial_combat"] = 0.1 });
         var noScreening = new ScreeningSummary(0, 0);
 
-        Assert.Equal(0.05 + 6 * 0.015 / 24 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 6, noScreening, 0, defines), 9);
-        Assert.Equal(0.05 + 7 * 0.015 / 24 + 0.15 + 0.1, RetreatRules.EscapeSpeedPerDay(screen, 7, noScreening, 0, defines), 9);
+        Assert.Equal(0.05 + 6 * 0.015 / 24 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 6, noScreening, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.05 + 7 * 0.015 / 24 + 0.15 + 0.1, RetreatRules.EscapeSpeedPerDay(screen, 7, noScreening, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -103,7 +104,7 @@ public class RetreatAndSubmarineTests
 
         Assert.Equal(0.25, participant.CountryModifiers.Get("naval_retreat_speed"), 9);
         Assert.Equal(0.25, screen.CountryModifiers.Get("naval_retreat_speed"), 9);
-        Assert.Equal(0.05 + 0.25 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 0, new ScreeningSummary(0, 0), 0, defines), 9);
+        Assert.Equal(0.05 + 0.25 + 0.15, RetreatRules.EscapeSpeedPerDay(screen, 0, new ScreeningSummary(0, 0), BattleEnvironment.None, defines), 9);
     }
 
     [Fact]

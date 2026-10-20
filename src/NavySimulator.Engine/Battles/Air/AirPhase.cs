@@ -1,5 +1,6 @@
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
 using NavySimulator.Engine.Stats;
@@ -111,9 +112,9 @@ public sealed class AirPhase
         return result;
     }
 
-    public double SortieEfficiency(AirGroup group, BattleSide side, int hour, double darkness)
+    public double SortieEfficiency(AirGroup group, BattleSide side, int hour, BattleEnvironment environment)
     {
-        return AirRules.SortieEfficiency(group, side.Screening, ReferenceEquals(side, Attacker), StanceIndex(side), hour, darkness, defines,
+        return AirRules.SortieEfficiency(group, side.Screening, ReferenceEquals(side, Attacker), StanceIndex(side), hour, environment, defines,
             side.Participant.CarrierNightTraffic, CarrierPlanes(group.Carrier!));
     }
 
@@ -126,7 +127,7 @@ public sealed class AirPhase
     /// [RE] S-POS carrier-ratio inputs (0x161eeb0), over the carrier air objects (wing pools): A = sum of sortie
     /// efficiency * pool planes, B = mean of sortie efficiency * min(1, carrier planes / CARRIER_PLANES_AMOUNT_FOR_POSITIONING).
     /// </summary>
-    public (double A, double B) CarrierAirStrength(BattleSide side, int hour, double darkness)
+    public (double A, double B) CarrierAirStrength(BattleSide side, int hour, BattleEnvironment environment)
     {
         // [RE + LOG] 0x161eeb0 walks every carrier air object of the side's groups: a sunk carrier's stay (sortie 0, but
         // they count in B's mean); an escaped carrier's leave with it.
@@ -142,7 +143,7 @@ public sealed class AirPhase
 
         foreach (var group in carrierGroups)
         {
-            var efficiency = group.Carrier!.IsSunk ? 0 : SortieEfficiency(group, side, hour, darkness);
+            var efficiency = group.Carrier!.IsSunk ? 0 : SortieEfficiency(group, side, hour, environment);
             a += efficiency * group.PlanesCounted;
             b += efficiency * Math.Min(1.0, CarrierPlanes(group.Carrier!) / defines.NAir.CARRIER_PLANES_AMOUNT_FOR_POSITIONING);
         }
@@ -154,7 +155,7 @@ public sealed class AirPhase
         BattleSide own,
         BattleSide enemy,
         int hour,
-        double darkness,
+        BattleEnvironment environment,
         IRandomSource random)
     {
         var results = new List<(AirStrikeRecord, Ship, AppliedDamage)>();
@@ -189,7 +190,7 @@ public sealed class AirPhase
                 group.Planes, group.IsExternal ? group.DisruptionFactor : 1.0);
             var flying = group.IsExternal
                 ? group.Planes
-                : (int)Math.Round(group.Planes * Math.Clamp(SortieEfficiency(group, own, hour, darkness), 0, 1), MidpointRounding.AwayFromZero);
+                : (int)Math.Round(group.Planes * Math.Clamp(SortieEfficiency(group, own, hour, environment), 0, 1), MidpointRounding.AwayFromZero);
 
             if (flying <= 0)
             {
@@ -222,7 +223,7 @@ public sealed class AirPhase
             group.CountedPlanes = group.Planes;
 
             var strikers = flying - intercepted - shotDown;
-            var hits = strikers > 0 ? AirRules.Hits(strikers, targeting, defines, random) : 0;
+            var hits = strikers > 0 ? AirRules.Hits(strikers, targeting, defines, random, AirRules.TargetingMultiplier(environment, defines)) : 0;
             var reduction = AirRules.AntiAirReduction(targetAntiAir, enemy.FleetAntiAir, defines);
 
             if (hits <= 0)
@@ -238,7 +239,7 @@ public sealed class AirPhase
             var strDamage = damage * defines.NAir.NAVAL_STRIKE_DAMAGE_TO_STR;
             var orgDamage = damage * defines.NAir.NAVAL_STRIKE_DAMAGE_TO_ORG;
             // [RE] 0x197af20: the target's critical_receive_chance through the member getter (its side's screening bonuses).
-            var receive = MemberModifierRules.Get(target, StaticModifiers.CriticalReceiveChance, enemy.Screening, darkness, defines);
+            var receive = MemberModifierRules.Get(target, StaticModifiers.CriticalReceiveChance, enemy.Screening, environment, defines);
             var critical = RollCritical(target, hits, receive, ref strDamage, ref orgDamage, random);
             var applied = DamageRules.Apply(target, strDamage, orgDamage, defines);
 

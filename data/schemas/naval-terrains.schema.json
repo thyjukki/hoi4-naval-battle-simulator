@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "naval-terrains.schema.json",
+  "title": "NavySimulator naval terrains",
+  "description": "Terrains with naval_terrain = yes (common/terrain), written by NavySimulator import-regions (S-TERRAIN).",
+  "type": "object",
+  "required": [
+    "terrains"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "terrains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "modifiers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "subUnitModifiers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "subUnitAdjusters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "attack": {
+                  "type": "number"
+                },
+                "defence": {
+                  "type": "number"
+                },
+                "movement": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

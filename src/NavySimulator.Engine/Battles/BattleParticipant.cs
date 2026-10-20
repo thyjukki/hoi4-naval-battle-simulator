@@ -35,7 +35,7 @@ public class BattleParticipant
         StaticModifiers.NavyScreenAttackFactor, StaticModifiers.NavyScreenDefenceFactor, StaticModifiers.NavalNightAttack,
         StaticModifiers.NavalDamageFactor, StaticModifiers.NavalDefenseFactor, StaticModifiers.NavyAntiAirAttack,
         StaticModifiers.NavyAntiAirAttackFactor, StaticModifiers.NavyVisibility, StaticModifiers.NavyCasualtyOnHit,
-        StaticModifiers.ExperienceGainNavyUnit, StaticModifiers.ExperienceGainNavyUnitFactor
+        StaticModifiers.ExperienceGainNavyUnit, StaticModifiers.ExperienceGainNavyUnitFactor, StaticModifiers.NavyWeatherPenalty
     ], StringComparer.Ordinal);
 
     /// <summary>

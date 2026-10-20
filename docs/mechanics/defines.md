@@ -1,8 +1,9 @@
 # Defines: sources and versions
 
 The engine reads every numeric combat constant from a `GameDefines` instance (`src/NavySimulator.Engine/Defines/`):
-- `NNavy`, `NAir`, `NMilitary`, `NDoctrines`: properties named exactly like the game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), bound by name from any defines file;
-- `StaticModifiers`: the blocks of `common/modifiers/00_static_modifiers.txt` that naval combat applies directly (`screening_bonus`, `capital_screening_bonus`, `ship_experience_bonus_max`, `ship_experience_malus_min`, `carrier_experience_*`, `night`, `pride_of_the_fleet`);
+- `NNavy`, `NAir`, `NMilitary`, `NDoctrines`, `NGraphics` (the four day/night terminator keys of `00_graphics.lua`, S-NIGHT): properties named exactly like the game keys (`NNavy.COMBAT_BASE_HIT_CHANCE`), bound by name from any defines file;
+- `StaticModifiers`: the blocks of `common/modifiers/00_static_modifiers.txt` that naval combat applies directly (`screening_bonus`, `capital_screening_bonus`, `ship_experience_bonus_max`, `ship_experience_malus_min`, `carrier_experience_*`, `night`, `pride_of_the_fleet`, the region weather blocks `weather_rain_light` … `weather_arctic_water`);
+- `Weather`: the `settings` of `common/weather.txt` the region weather roll reads (durations, the snowing and arctic water temperatures, `regions_per_update`; S-WEATHER-SIM);
 - `HardcodedValues`: constants that are in no script file, tagged [RE] (read from hoi4.exe) or [ASSUMED].
 
 ## Loading order
@@ -11,7 +12,7 @@ The engine reads every numeric combat constant from a `GameDefines` instance (`s
 2. The scenario's `"defines"` list, in order.
 3. Each `--defines <path>` on the command line, in order.
 
-A source is a `.lua` file, a folder of `.lua` files, or a game/mod root. For a root, every `common/defines/*.lua` is applied in file-name order (as the game does), and the static modifier blocks above are taken from `common/modifiers/*.txt`; a block found later replaces the earlier one completely. Later sources override earlier ones, so list the game first and mods after it in load order:
+A source is a `.lua` file, a folder of `.lua` files, or a game/mod root. For a root, every `common/defines/*.lua` is applied in file-name order (as the game does), the static modifier blocks above are taken from `common/modifiers/*.txt` (a block found later replaces the earlier one completely), and the weather settings from `common/weather.txt` (each key found replaces the earlier value). `00_graphics.lua` defines its categories under `NDefines_Graphics`, which the game merges into `NDefines`; the parser reads both roots. Later sources override earlier ones, so list the game first and mods after it in load order:
 
 ```powershell
 dotnet run --project src/NavySimulator.Cli -- `
@@ -19,7 +20,7 @@ dotnet run --project src/NavySimulator.Cli -- `
   --defines "C:\Program Files (x86)\Steam\steamapps\workshop\content\394360\2559317737"
 ```
 
-The CLI prints how many values were applied. Type mismatches, unreadable statements and bad array shapes (S-COOLDOWN and S-DMG-PIERCE index into arrays) are reported; Lua control flow such as the loop in `00_graphics.lua` is skipped silently.
+The CLI prints how many values were applied. Type mismatches, unreadable statements and bad array shapes (S-COOLDOWN and S-DMG-PIERCE index into arrays) are reported; Lua control flow such as the merge loop at the end of `00_graphics.lua` is skipped silently.
 
 ## How the game stores defines
 

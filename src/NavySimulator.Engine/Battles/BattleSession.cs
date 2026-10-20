@@ -1,9 +1,11 @@
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles;
 
@@ -22,6 +24,9 @@ namespace NavySimulator.Engine.Battles;
 public sealed class BattleSession
 {
     private static readonly WeaponSlot[] SlotOrder = [WeaponSlot.Heavy, WeaponSlot.Torpedo, WeaponSlot.Light];
+
+    // S-WEATHER-SIM: keeps the simulated weather's stream apart from the battle's dice for the same seed.
+    private const int WeatherStreamSalt = 0x57454154;
 
     private readonly BattleScenario scenario;
     private readonly GameDefines defines;
@@ -42,6 +47,10 @@ public sealed class BattleSession
     private readonly List<HourSummary> timeline = [];
     private readonly List<ShipHourState[]>? shipHistory;
     private readonly AirPhase airPhase;
+    private readonly (long X, long Y, long Z)[]? provinceVectors;
+    private readonly WeatherPattern? weatherPattern;
+    private readonly Dictionary<RegionWeather, ModifierSet> weatherModifiers = [];
+    private BattleEnvironment environment;
     private int reengagements;
     private int hoursFought;
     private bool over;
@@ -62,6 +71,21 @@ public sealed class BattleSession
         if (ReferenceEquals(scenario.Attacker.Fleet, scenario.Defender.Fleet))
         {
             throw new ArgumentException("Attacker and defender must not share the same Fleet instance.");
+        }
+
+        // S-NIGHT, S-WEATHER-SIM: the battle province's directions and the simulated weather, from the scenario's location.
+        var location = scenario.Location;
+
+        if (location.HasTerminator)
+        {
+            provinceVectors = DarknessRules.ProvinceVectors(location.Province!.X, location.Province.Y, location.Region!.MapWidth,
+                location.Region.MapHeight, defines);
+        }
+
+        if (scenario.WeatherSetup.Mode == WeatherMode.Simulated && location is { Region: { } region, StartDate: not null })
+        {
+            weatherPattern = new WeatherPattern(region, BattleClock(0), defines,
+                new SeededRandomSource(unchecked((scenario.WeatherSetup.Seed ?? seed) * 31 + WeatherStreamSalt)));
         }
 
         attacker = new BattleSide("attacker", scenario.Attacker);
@@ -121,6 +145,51 @@ public sealed class BattleSession
     {
         return (rules.StartHourOfDay + hour) % 24;
     }
+
+    /// <summary>
+    /// The game date and hour of battle hour <paramref name="hour"/>: the scenario's start date at
+    /// <c>rules.startHourOfDay</c>, plus the hours; null without a start date.
+    /// </summary>
+    public GameDate? DateOf(int hour)
+    {
+        return scenario.Location.StartDate is not null ? BattleClock(hour) : null;
+    }
+
+    /// <summary>The location the battle reads in battle hour <paramref name="hour"/>: darkness, weather, naval terrain.</summary>
+    public BattleEnvironment EnvironmentAt(int hour)
+    {
+        var weather = WeatherAt(hour);
+
+        if (!weatherModifiers.TryGetValue(weather, out var modifiers))
+        {
+            modifiers = weather.Modifiers(defines.StaticModifiers);
+            weatherModifiers[weather] = modifiers;
+        }
+
+        return new BattleEnvironment(Darkness(hour), scenario.Location.Terrain, weather, modifiers.Values.Count == 0 ? null : modifiers);
+    }
+
+    /// <summary>
+    /// S-WEATHER: the region's weather in battle hour <paramref name="hour"/>: none with weather off (the game after
+    /// <c>disable_weather</c> [RE]), the logged one in a replay, the simulated pattern, or the scenario's fixed weather.
+    /// </summary>
+    public RegionWeather WeatherAt(int hour)
+    {
+        if (!rules.WeatherEnabled)
+        {
+            return RegionWeather.Clear;
+        }
+
+        if (WeatherOverride is { } logged)
+        {
+            return logged;
+        }
+
+        return weatherPattern?.At(Math.Max(0, hour)) ?? scenario.WeatherSetup.Fixed;
+    }
+
+    /// <summary>S-REPLAY: the weather of the next hour, as the game logged it; null uses the scenario's.</summary>
+    public RegionWeather? WeatherOverride { get; set; }
 
     public bool IsNight(int hour)
     {
@@ -258,6 +327,8 @@ public sealed class BattleSession
     // level the combat modifiers use is taken here too (S-XP).
     private void BeginHour(int hour)
     {
+        environment = EnvironmentAt(hour);
+
         foreach (var ship in allShips)
         {
             ship.LevelExperience = ship.Experience;
@@ -272,8 +343,8 @@ public sealed class BattleSession
         // carrier battles the carrier-ratio helper's sums (0x161eeb0) showed this order in every hour.
         foreach (var (own, enemy) in new[] { (attacker, defender), (defender, attacker) })
         {
-            var enemyAir = airPhase.CarrierAirStrength(enemy, hour, Darkness(hour));
-            var ownAir = enemyAir.A > 0 ? airPhase.CarrierAirStrength(own, hour, Darkness(hour)).A : 0;
+            var enemyAir = airPhase.CarrierAirStrength(enemy, hour, environment);
+            var ownAir = enemyAir.A > 0 ? airPhase.CarrierAirStrength(own, hour, environment).A : 0;
             own.Positioning = PositioningRules.Calculate(own.Lines, enemy.Lines, defines, ownAir, enemyAir,
                 SideModifier(own, StaticModifiers.Positioning), FleetSizePenaltyFactor(enemy));
             // [RE + LOG] A-AA-REDUCE: the fleet AA term is fixed here for the hour, so ships sunk during it still count.
@@ -295,7 +366,6 @@ public sealed class BattleSession
     {
         // [RE] Reach decisions use the enemy's visible line counts taken at the start of this side's turn.
         own.EnemyCounts = EnemyLineCounts.Of(enemy.Ships);
-        var darkness = Darkness(hour);
 
         foreach (var ship in own.Ships)
         {
@@ -306,7 +376,7 @@ public sealed class BattleSession
 
             if (ship.Role == ShipRole.Submarine)
             {
-                SubmarineRules.HourlyReveal(ship, enemy.SubmarineDetection, own.Positioning, defines, random);
+                SubmarineRules.HourlyReveal(ship, enemy.SubmarineDetection, own.Positioning, defines, random, environment);
             }
 
             switch (ship.CurrentStatus)
@@ -343,7 +413,7 @@ public sealed class BattleSession
                 case ShipStatus.Retreating:
                     FireSlots(ship, own, enemy, hour);
 
-                    if (RetreatRules.AdvanceRetreat(ship, tick, own.Screening, darkness, defines))
+                    if (RetreatRules.AdvanceRetreat(ship, tick, own.Screening, environment, defines))
                     {
                         tallies[ship].RetreatedHour = hour;
                         log.Add($"Hour {hour}: {own.Label} {ship.ID} escaped the battle");
@@ -354,7 +424,7 @@ public sealed class BattleSession
             }
         }
 
-        var airActed = ResolveAirStep(own, enemy, hour, darkness);
+        var airActed = ResolveAirStep(own, enemy, hour);
 
         if (!airActed)
         {
@@ -363,7 +433,7 @@ public sealed class BattleSession
     }
 
     // A-* [RE]: the side's air groups strike after its surface fire, in air hours only.
-    private bool ResolveAirStep(BattleSide own, BattleSide enemy, int hour, double darkness)
+    private bool ResolveAirStep(BattleSide own, BattleSide enemy, int hour)
     {
         var hourOfDay = HourOfDay(hour);
 
@@ -372,7 +442,7 @@ public sealed class BattleSession
             return false;
         }
 
-        var strikes = airPhase.Strike(own, enemy, hour, darkness, random);
+        var strikes = airPhase.Strike(own, enemy, hour, environment, random);
         log.AddRange(airPhase.Log);
         airPhase.Log.Clear();
 
@@ -429,7 +499,7 @@ public sealed class BattleSession
                 continue;
             }
 
-            var target = TargetingRules.SelectTarget(shooter, slot, own, enemy, defines, random, Darkness(hour));
+            var target = TargetingRules.SelectTarget(shooter, slot, own, enemy, defines, random, environment);
 
             if (target is null)
             {
@@ -441,7 +511,7 @@ public sealed class BattleSession
 
             if (slot == WeaponSlot.Torpedo && shooter.Role == ShipRole.Submarine)
             {
-                SubmarineRules.RevealAfterFiring(shooter, enemy.SubmarineDetection, own.Positioning, defines, random, Darkness(hour));
+                SubmarineRules.RevealAfterFiring(shooter, enemy.SubmarineDetection, own.Positioning, defines, random, environment);
             }
         }
     }
@@ -449,10 +519,10 @@ public sealed class BattleSession
     // [RE] 0x19740c0: one profile per slot and target; shoot while the slot has charge, stop when the target sinks.
     private void FireAt(Ship shooter, Ship target, WeaponSlot slot, BattleSide own, BattleSide enemy, int hour)
     {
-        var criticalChanceFactor = DamageRules.CriticalChanceFactor(shooter, target, own.Screening, enemy.Screening, Darkness(hour), defines);
-        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines, criticalChanceFactor, Darkness(hour), own.Screening,
+        var criticalChanceFactor = DamageRules.CriticalChanceFactor(shooter, target, own.Screening, enemy.Screening, environment, defines);
+        var profile = DamageRules.Profile(shooter, target, slot, own.Positioning, defines, criticalChanceFactor, environment, own.Screening,
             enemy.Screening);
-        var hitChance = HitChanceRules.Calculate(shooter, target, slot, own.Screening, Darkness(hour), defines);
+        var hitChance = HitChanceRules.Calculate(shooter, target, slot, own.Screening, environment, defines);
         var weapon = profile.IsDepthCharge ? WeaponType.DepthCharge : slot switch
         {
             WeaponSlot.Heavy => WeaponType.Heavy,
@@ -565,7 +635,7 @@ public sealed class BattleSession
             return;
         }
 
-        var efficiency = Math.Max(0, airPhase.SortieEfficiency(group, side, hour, Darkness(hour)));
+        var efficiency = Math.Max(0, airPhase.SortieEfficiency(group, side, hour, environment));
         var navy = defines.NNavy;
         var gain = navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN;
         ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
@@ -590,7 +660,7 @@ public sealed class BattleSession
         foreach (var ship in allShips)
         {
             var dominance = sideByShip[ship].HasNavalDominance ? defines.NNavy.NAVAL_DOMINANCE_ORG_RECOVERY : 0;
-            ExperienceRules.HourlyOrganizationRegain(ship, defines, dominance);
+            ExperienceRules.HourlyOrganizationRegain(ship, defines, dominance, environment);
         }
     }
 
@@ -687,8 +757,10 @@ public sealed class BattleSession
         return true;
     }
 
-    // S-NIGHT [ASSUMED darkness model]: 1 during night hours, 0 otherwise. [CAL] With weather off the game's darkness
-    // stays 0 (it comes from the weather manager), so there is no night.
+    // S-NIGHT [RE + LOG]: the battle province's darkness by the terminator (DarknessRules), read one game hour late: the
+    // weather manager updates it after the combat update, so battle hour h sees the value of the hour before (the logged
+    // darkness of every TFB weather battle). Without a province and a start date, the rules' night window [ASSUMED].
+    // [CAL] With weather off the game's darkness stays 0 (the weather manager's update is skipped), so there is no night.
     private double Darkness(int hour)
     {
         if (!rules.NightEnabled || !rules.WeatherEnabled)
@@ -701,6 +773,12 @@ public sealed class BattleSession
             return logged;
         }
 
+        if (provinceVectors is not null)
+        {
+            var date = BattleClock(hour - 1);
+            return DarknessRules.Darkness(provinceVectors, date.DayOfYear, date.Hour, defines);
+        }
+
         var start = rules.NightStartHour ?? defines.Hardcoded.NightStartHour;
         var end = rules.NightEndHour ?? defines.Hardcoded.NightEndHour;
         var timeOfDay = HourOfDay(hour);
@@ -708,6 +786,12 @@ public sealed class BattleSession
             ? timeOfDay >= start || timeOfDay < end
             : timeOfDay >= start && timeOfDay < end;
         return night ? 1 : 0;
+    }
+
+    private GameDate BattleClock(int hour)
+    {
+        var start = scenario.Location.StartDate ?? new GameDate(1936, 1, 1);
+        return new GameDate(start.Year, start.Month, start.Day).AddHours(rules.StartHourOfDay + hour);
     }
 
     /// <summary>S-REPLAY: the darkness of the next hour, as the game logged it; null uses the night window.</summary>
@@ -723,7 +807,8 @@ public sealed class BattleSession
         var hourShots = shots.Skip(hourStartShots).ToList();
         var timeOfDay = HourOfDay(hour);
         log.Add(
-            $"Hour {hour} ({timeOfDay:D2}:00{(Darkness(hour) > 0 ? ", night" : string.Empty)}): " +
+            $"Hour {hour} ({timeOfDay:D2}:00{(environment.IsDark ? ", night" : string.Empty)}" +
+            $"{(environment.Weather == RegionWeather.Clear ? string.Empty : $", {environment.Weather}")}): " +
             $"{DescribeSide(attacker)} | {DescribeSide(defender)} | " +
             $"shots {hourShots.Count}, hits {hourShots.Count(shot => shot.Hit)}, " +
             $"HP dmg attacker->defender {hourShots.Where(shot => shot.ShooterSide == attacker.Label).Sum(shot => shot.HpDamage):F1}, " +
@@ -735,9 +820,11 @@ public sealed class BattleSession
         timeline.Add(new HourSummary(
             hour,
             HourOfDay(hour),
-            Darkness(hour) > 0,
+            environment.IsDark,
             DescribeHour(attacker, hourStartShots, hourStartStrikes),
-            DescribeHour(defender, hourStartShots, hourStartStrikes)));
+            DescribeHour(defender, hourStartShots, hourStartStrikes),
+            environment.Darkness,
+            environment.Weather == RegionWeather.Clear ? null : environment.Weather.ToString()));
 
         shipHistory?.Add(allShips
             .Select(ship => new ShipHourState(ship.CurrentHP, ship.CurrentOrganization, ship.CurrentStatus, ship.Experience))
@@ -798,12 +885,13 @@ public sealed class BattleSession
                $"pos {side.Positioning:P0} screen {side.Screening.ScreeningEfficiency:P0} cvscreen {side.Screening.CarrierScreeningEfficiency:P0}";
     }
 
-    // S-POS-MOD, S-SCREEN [RE] 0x15c70b0: side-level reads of a modifier, Mod(id; country, location, admiral): the country
-    // and the side's commanding admiral's container A (S-ADMIRAL-MOD); the location part (region weather, naval terrain)
-    // is not modelled.
-    private static double SideModifier(BattleSide side, string key)
+    // S-POS-MOD, S-SCREEN [RE] 0x15c70b0: side-level reads of a modifier, Mod(id; country, location, admiral): the country,
+    // the region's weather holder and the naval terrain's own keys, both whole (S-WEATHER, S-TERRAIN), and the side's
+    // commanding admiral's container A (S-ADMIRAL-MOD).
+    private double SideModifier(BattleSide side, string key)
     {
-        return side.Participant.CountryModifiers.Get(key) + (side.Participant.Admiral?.CombatModifiers.Get(key) ?? 0);
+        return side.Participant.CountryModifiers.Get(key) + environment.LocationModifier(key) +
+               (side.Participant.Admiral?.CombatModifiers.Get(key) ?? 0);
     }
 
     // [RE] 0x161d2d6: screening_without_screens is Mod with no location and no admiral, the country alone.
@@ -823,6 +911,54 @@ public sealed class BattleSession
         return ship.IsPrideOfTheFleet ? ", the pride of the fleet" : string.Empty;
     }
 
+    // S-WEATHER, S-NIGHT, S-TERRAIN: where the battle's weather, darkness and terrain come from.
+    private void AddLocationNotes()
+    {
+        var location = scenario.Location;
+        var setup = scenario.WeatherSetup;
+
+        if (location.Region is { } region)
+        {
+            notes.Add($"Region {region.ID} {region.Name}" +
+                      (location.Province is { } province ? $", province {province.ID}" : string.Empty) +
+                      (location.StartDate is { } date ? $", from {date.Year}.{date.Month}.{date.Day} {rules.StartHourOfDay:D2}:00" : string.Empty) + ".");
+        }
+
+        if (location.Terrain is { } terrain)
+        {
+            notes.Add($"Naval terrain {terrain.ID}.");
+        }
+
+        if (!rules.WeatherEnabled)
+        {
+            if (setup.Mode == WeatherMode.Simulated || setup.Fixed != RegionWeather.Clear)
+            {
+                notes.Add($"Weather '{scenario.Weather}' is ignored: weather is off.");
+            }
+
+            notes.Add("Weather is off, so there is no night either (the game's darkness stays 0).");
+            return;
+        }
+
+        if (setup.Mode == WeatherMode.Simulated)
+        {
+            notes.Add(weatherPattern is not null
+                ? $"Weather is simulated from the region's weather periods (a chance to change every {weatherPattern.VisitHours} h)."
+                : "Simulated weather needs a region with weather periods and a start date; the battle has none.");
+        }
+        else if (setup.Fixed != RegionWeather.Clear)
+        {
+            notes.Add($"Weather {setup.Fixed} for the whole battle.");
+        }
+
+        if (rules.NightEnabled)
+        {
+            notes.Add(provinceVectors is not null
+                ? "Darkness follows the battle province, the date and the hour (S-NIGHT)."
+                : $"Night is {rules.NightStartHour ?? defines.Hardcoded.NightStartHour:D2}:00 to {rules.NightEndHour ?? defines.Hardcoded.NightEndHour:D2}:00 (no battle province and start date).");
+        }
+    }
+
     private void AddInputNotes()
     {
         notes.AddRange(airPhase.Notes);
@@ -834,13 +970,7 @@ public sealed class BattleSession
                       (holders.Count == 0 ? "neither side has it." : $"{string.Join(" and ", holders)} regain{(holders.Count == 1 ? "s" : "")} organization with it."));
         }
 
-        // S-WEATHER [RE toggle]: weather terms are not modelled yet.
-        if (!string.IsNullOrWhiteSpace(scenario.Weather) && !scenario.Weather.Equals("clear", StringComparison.OrdinalIgnoreCase))
-        {
-            notes.Add(rules.WeatherEnabled
-                ? $"Weather '{scenario.Weather}' has no effect yet."
-                : $"Weather '{scenario.Weather}' is ignored: weather is off.");
-        }
+        AddLocationNotes();
 
         foreach (var side in new[] { attacker, defender })
         {

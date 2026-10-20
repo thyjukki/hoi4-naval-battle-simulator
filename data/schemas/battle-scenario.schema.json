@@ -14,8 +14,6 @@
       "type": "object",
       "required": [
         "id",
-        "terrain",
-        "weather",
         "attacker",
         "defender"
       ],
@@ -25,11 +23,43 @@
         },
         "terrain": {
           "type": "string",
-          "minLength": 1
+          "description": "S-TERRAIN: naval terrain ID of naval-terrains/ (e.g. water_fjords); empty or 'region': the region's own (ocean when it sets none)."
         },
         "weather": {
           "type": "string",
-          "minLength": 1
+          "enum": [
+            "",
+            "clear",
+            "no_phenomenon",
+            "rain_light",
+            "rain_heavy",
+            "snow",
+            "blizzard",
+            "sandstorm",
+            "simulated"
+          ],
+          "description": "S-WEATHER: clear, one weather for the whole battle, or simulated from the region's weather periods (S-WEATHER-SIM)."
+        },
+        "arcticWater": {
+          "type": "boolean",
+          "description": "S-WEATHER: arctic water on top of a fixed weather."
+        },
+        "weatherSeed": {
+          "type": "integer",
+          "description": "S-WEATHER-SIM: the simulated weather's own seed; absent: the battle's seed."
+        },
+        "regionID": {
+          "type": "integer",
+          "description": "S-REGION: strategic region ID of sea-regions/ (its weather periods and naval terrain)."
+        },
+        "provinceID": {
+          "type": "integer",
+          "description": "S-NIGHT: the battle province, a sea province of the region (default its first); its map position sets the darkness."
+        },
+        "startDate": {
+          "type": "string",
+          "pattern": "^\\d+[.-]\\d{1,2}[.-]\\d{1,2}([.-]\\d{1,2})?$",
+          "description": "S-NIGHT, S-WEATHER-SIM: the day of battle hour 0 as the game writes dates (1936.5.6); the hour is rules.startHourOfDay."
         },
         "maxHours": {
           "type": "integer",
@@ -91,13 +121,13 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 23,
-              "description": "S-NIGHT: hour of day (game clock) when the province gets dark (default 20; province 7906 in May: 17)."
+              "description": "S-NIGHT: without a region province and a start date, the hour of day (game clock) when it gets dark (default 20)."
             },
             "nightEndHour": {
               "type": "integer",
               "minimum": 0,
               "maximum": 23,
-              "description": "S-NIGHT: hour of day when it gets light again (default 6; province 7906 in May: 4)."
+              "description": "S-NIGHT: without a region province and a start date, the hour of day when it gets light again (default 6)."
             },
             "carrierWingsExecuteNavalStrike": {
               "type": "boolean",
@@ -268,13 +298,16 @@
                 "description": "The air mission's efficiency: scales the planes offered to the join cap (default 1)."
               },
               "mission": {
-                "enum": ["naval_bomber", "air_superiority"],
+                "enum": [
+                  "naval_bomber",
+                  "air_superiority"
+                ],
                 "description": "The game's mission over the battle's region: naval_bomber (naval strike, default) joins the naval battle; air_superiority fights in the region's air war only (not simulated)."
               },
               "disruptionFactor": {
                 "type": "number",
                 "minimum": 0,
-                "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors).
+                "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors)."
               }
             },
             "additionalProperties": false

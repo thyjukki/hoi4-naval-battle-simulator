@@ -15,6 +15,14 @@ public sealed class StaticModifiers
     public const string CarrierExperienceMalusMin = "carrier_experience_malus_min";
     public const string Night = "night";
 
+    /// <summary>S-WEATHER: the region weather blocks (<c># on Region</c>), by the phenomenon of the battle's region.</summary>
+    public const string WeatherRainLight = "weather_rain_light";
+    public const string WeatherRainHeavy = "weather_rain_heavy";
+    public const string WeatherSnow = "weather_snow";
+    public const string WeatherBlizzard = "weather_blizzard";
+    public const string WeatherSandstorm = "weather_sandstorm";
+    public const string WeatherArcticWater = "weather_arctic_water";
+
     /// <summary>S-POTF: the block the pride of the fleet ship itself carries in every modifier read.</summary>
     public const string PrideOfTheFleet = "pride_of_the_fleet";
 
@@ -28,6 +36,8 @@ public sealed class StaticModifiers
     public const string NavalDefenseFactor = "naval_defense_factor";
     public const string FighterSortieEfficiency = "fighter_sortie_efficiency";
     public const string CarrierTraffic = "carrier_traffic";
+    public const string NavalStrike = "naval_strike";
+    public const string NavyWeatherPenalty = "navy_weather_penalty";
     public const string CarrierNightTraffic = "carrier_night_traffic";
     public const string Positioning = "positioning";
     public const string ScreeningEfficiency = "screening_efficiency";
@@ -83,7 +93,8 @@ public sealed class StaticModifiers
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [
         ScreeningBonus, CapitalScreeningBonus, ShipExperienceBonusMax, ShipExperienceMalusMin,
-        CarrierExperienceBonusMax, CarrierExperienceMalusMin, Night, PrideOfTheFleet
+        CarrierExperienceBonusMax, CarrierExperienceMalusMin, Night, PrideOfTheFleet,
+        WeatherRainLight, WeatherRainHeavy, WeatherSnow, WeatherBlizzard, WeatherSandstorm, WeatherArcticWater
     ];
 
     public Dictionary<string, Dictionary<string, double>> Blocks { get; } = new(StringComparer.Ordinal)
@@ -95,8 +106,30 @@ public sealed class StaticModifiers
         [CarrierExperienceBonusMax] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = 0.2 },
         [CarrierExperienceMalusMin] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = -0.1 },
         [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1, [CarrierTraffic] = -1.0 },
-        [PrideOfTheFleet] = new(StringComparer.Ordinal) { [ExperienceGainNavyUnitFactor] = 0.25, [CriticalReceiveChance] = -0.5 }
+        [PrideOfTheFleet] = new(StringComparer.Ordinal) { [ExperienceGainNavyUnitFactor] = 0.25, [CriticalReceiveChance] = -0.5 },
+        [WeatherRainLight] = Block(("air_accidents", 0.1), ("air_detection", -0.1), ("air_mission_efficiency", -0.1), ("local_org_regain", -0.05),
+            ("naval_detection", -0.1), (NavalHitChance, -0.05), (NavalRetreatSpeed, 0.05), (NavalSpeedFactor, -0.05), (NavalStrike, -0.2),
+            ("org_loss_when_moving", 0.05)),
+        [WeatherRainHeavy] = Block(("air_accidents", 0.3), ("air_bombing_targetting", -0.5), ("air_detection", -0.2), ("air_mission_efficiency", -0.3),
+            (CarrierTraffic, -0.8), ("local_org_regain", -0.15), ("naval_detection", -0.2), (NavalHitChance, -0.2), (NavalRetreatSpeed, 0.1),
+            (NavalSpeedFactor, -0.1), (NavalStrike, -0.4), ("org_loss_when_moving", 0.1), (Positioning, -0.1), ("supply_consumption_factor", 0.1),
+            ("supply_factor", -0.05)),
+        [WeatherSnow] = Block(("air_accidents", 0.1), ("air_detection", -0.15), ("air_mission_efficiency", -0.1), ("naval_detection", -0.15),
+            (NavalHitChance, -0.05), (NavalRetreatSpeed, 0.05), (NavalSpeedFactor, -0.05), (NavalStrike, -0.3), ("org_loss_when_moving", 0.1),
+            (Positioning, -0.1), ("supply_factor", -0.10), ("truck_attrition_factor", 0.3)),
+        [WeatherBlizzard] = Block(("air_accidents", 0.3), ("air_bombing_targetting", -0.7), ("air_detection", -0.3), ("air_mission_efficiency", -0.3),
+            (CarrierTraffic, -1.0), ("local_org_regain", -0.1), ("naval_detection", -0.3), (NavalHitChance, -0.1), (NavalRetreatSpeed, 0.15),
+            (NavalSpeedFactor, -0.1), (NavalStrike, -0.4), ("org_loss_when_moving", 0.25), (Positioning, -0.2), ("supply_consumption_factor", 0.15),
+            ("supply_factor", -0.25), ("truck_attrition_factor", 1.0), ("army_attack_speed_factor", -0.25)),
+        [WeatherSandstorm] = Block(("air_accidents", 0.6), ("air_bombing_targetting", -1), ("air_detection", -0.9), ("air_mission_efficiency", -0.5),
+            ("local_org_regain", -0.2), (NavalStrike, -0.9), ("org_loss_when_moving", 0.25), ("supply_factor", -0.15), ("truck_attrition_factor", 3.0)),
+        [WeatherArcticWater] = Block(("naval_attrition", 0.1), (NavalRetreatSpeed, -0.05), ("navy_casualty_on_sink", 0.2), (Positioning, -0.2))
     };
+
+    private static Dictionary<string, double> Block(params (string Key, double Value)[] values)
+    {
+        return values.ToDictionary(value => value.Key, value => value.Value, StringComparer.Ordinal);
+    }
 
     public double Get(string block, string modifier)
     {

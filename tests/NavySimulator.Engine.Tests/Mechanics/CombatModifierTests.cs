@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
 
@@ -20,8 +21,8 @@ public class CombatModifierTests
     {
         var ship = Ship(unitType, Modifiers());
 
-        Assert.Equal(40 * (1 + attackFactor), CombatStatRules.CombatValue(ship, 40, false, 0, defines), 9);
-        Assert.Equal(50 * (1 + defenceFactor), CombatStatRules.CombatValue(ship, 50, true, 0, defines), 9);
+        Assert.Equal(40 * (1 + attackFactor), CombatStatRules.CombatValue(ship, 40, false, BattleEnvironment.None, defines), 9);
+        Assert.Equal(50 * (1 + defenceFactor), CombatStatRules.CombatValue(ship, 50, true, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -30,9 +31,9 @@ public class CombatModifierTests
         var submarine = Ship("submarine", new ModifierSet([new("submarine_attack", 2), new("naval_night_attack", 0.1)]));
         var screen = Ship("screen_ship", new ModifierSet([new("submarine_attack", 2), new("naval_night_attack", 0.1)]));
 
-        Assert.Equal((20 + 2) * 1.05, CombatStatRules.CombatValue(submarine, 20, false, 0.5, defines), 9);
-        Assert.Equal(20 * 1.05, CombatStatRules.CombatValue(screen, 20, false, 0.5, defines), 9);
-        Assert.Equal(10, CombatStatRules.CombatValue(screen, 10, true, 1, defines), 9);
+        Assert.Equal((20 + 2) * 1.05, CombatStatRules.CombatValue(submarine, 20, false, new BattleEnvironment(0.5), defines), 9);
+        Assert.Equal(20 * 1.05, CombatStatRules.CombatValue(screen, 20, false, new BattleEnvironment(0.5), defines), 9);
+        Assert.Equal(10, CombatStatRules.CombatValue(screen, 10, true, new BattleEnvironment(1), defines), 9);
     }
 
     [Fact]

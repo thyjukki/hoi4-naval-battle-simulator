@@ -60,7 +60,8 @@ flying  = round(poolPlanes × clamp(sortie, 0, 1))
 - [RE + LOG] `hour` is the game's combat hour counter, which is one ahead of the battle hour during the update (S-HOUR): the stance base ends after battle hour `SELECTED_SORTIE_INITIAL_TIME − 2` (22). In logged TFB carrier battles the carrier-ratio positioning switched to the base efficiency at battle hour 23, not 24.
 - The stance does not split planes into offence and defence (A-STANCE).
 - `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the side's doctrines' and spirits' plus the participant input `carrierNightTraffic`.
-- Not modelled: weather `carrier_traffic`, `carrier_capacity_penalty_reduction`, leader modifiers.
+- Weather: × `clamp(1 + carrier_traffic, 0, 1)` of the region's weather holder, whole (0x1976f84; S-WEATHER: heavy rain −0.8, blizzard −1), beside the night factor.
+- Not modelled: `carrier_capacity_penalty_reduction`, leader modifiers.
 
 ## A-STANCE [RE]
 
@@ -195,7 +196,7 @@ hits     = round(strikers × clamp(avgTargeting × NAVAL_STRIKE_TARGETTING_TO_AM
 - `avgTargeting` is `0.1 × naval targeting`, plane-weighted over the selected strike wings that execute naval strike (A-WINGS), × A-STRIKE-MODS (targeting).
 - The uniform U halves the expected hits.
 - `flying` counts the air object's pool, so carrier fighters (their own pool) are not strikers.
-- Weather `naval_strike` is not modelled.
+- `tMult = 1 + naval_strike(region weather) + (1 + airfx+0xe8) × naval_strike(night holder)` (0x197bf38; `AirRules.TargetingMultiplier`): the weather's whole (light rain −0.2, heavy rain −0.4); no vanilla or TFB night block has `naval_strike`, and `airfx+0xe8` is taken as 0 [ASSUMED]. [LOG] With the logged weather the replayed air damage of the TFB rain battles matches the game's (it was 20 % high without it).
 
 ## A-DMG: strike damage [RE]
 
@@ -263,7 +264,7 @@ Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from th
 
 ## Not modelled
 
-The weather terms (`carrier_traffic`, `naval_strike`), leader modifiers, air doctrines (S-DOCTRINE: recorded, not simulated), `carrier_capacity_penalty_reduction`, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, the region's air detection and accidents (A-REGION), range and coverage of land-based missions (inputs), plane equipment upgrades and plane MIOs.
+Leader modifiers, air doctrines (S-DOCTRINE: recorded, not simulated), `carrier_capacity_penalty_reduction`, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, the region's air detection and accidents (A-REGION), range and coverage of land-based missions (inputs), plane equipment upgrades and plane MIOs.
 
 ## Inputs
 
@@ -278,7 +279,8 @@ The weather terms (`carrier_traffic`, `naval_strike`), leader modifiers, air doc
 | `carrierMissionEfficiency` | participant | A-REGION: the carrier wings' mission effectiveness in the region's air war (default 1; the logged CL3 attacker had 0.734) |
 | `doctrines`, `spiritIDs` | participant | S-DOCTRINE, S-SPIRIT: sortie, strike and night traffic modifiers |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
-| `rules.weatherEnabled` | scenario | weather off as with `disable_weather`, which also means no night (weather terms not modelled; S-WEATHER, S-NIGHT) |
+| `rules.weatherEnabled` | scenario | weather off as with `disable_weather`, which also means no night (S-WEATHER, S-NIGHT) |
+| `weather`, `regionID`, `provinceID`, `startDate` | scenario | the region's weather (`carrier_traffic`, `naval_strike`) and the province's darkness (S-WEATHER, S-NIGHT) |
 | `rules.carrierWingsExecuteNavalStrike` | scenario | A-WINGS [LOG]: carrier strike wings execute naval strike (default true) |
 | `rules.navalDominanceEnabled` | scenario | S-DOMINANCE: the side with more naval dominance at the start regains organization faster (not used by air) |
 

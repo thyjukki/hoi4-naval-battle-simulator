@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS], MSAVE = [A-MISSION-SAVE][MSAVE], ACE = [A-ACE][ACE], REG = [A-REGION][REG].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS], MSAVE = [A-MISSION-SAVE][MSAVE], ACE = [A-ACE][ACE], REG = [A-REGION][REG], NIGHT = [S-NIGHT darkness][NIGHT], TER = [S-TERRAIN][TER], WTT = [S-WEATHER terms][WTT], WSIM = [S-WEATHER-REGION][WSIM].
 
 ## 1. Functions
 
@@ -20,6 +20,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 |---|---|---|---|
 | 0x36f0 | console command registration (`weather`, `enable_weather`, `disable_weather`, `reloadweather`, `set_weather`, …) | S-WEATHER | [WTH/cmd] |
 | 0x120540 | CNavyLeader vt+0x78: returns 0 (leaf) | S-ADMIRAL | [ADM/map] |
+| 0x1772c0 | date → 0-based day of the month (365-day years, month lengths at 0x3085210) | S-NIGHT | [NIGHT/sun] |
 | 0x1a5630 | "Resetting game": clears HasGameStarted (gamestate+0xa39) via 0x1edff0 | S-MANPOWER | [XP/mp] |
 | 0x1aeb50 | feature (DLC) flag by index (jump table): 0xf = bit 4 of 0x332f248 gates pride of the fleet (eligibility, history flag, AI); 0x3a gates the captain XP of 0xc31840 | S-POTF | [POTF/assign] |
 | 0x1d4810 | `gamestate.daily`: runs `country.daily` 0x6e76a0 for every country (0x1d59eb) | S-MANPOWER | [XP/mp] |
@@ -31,7 +32,8 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x243be0 | console `combat_analyzer`: loads two OOBs, runs hourly updates until the combat ends; walks armies only (land-only) | — | [LOG] |
 | 0x25d2e0 | console `gamespeed <0-5>` handler (0 pauses) | — | [LOG] |
 | 0x27e220 | console `run <file>`: feeds each line through the console input | — | [LOG] |
-| 0x2874b0 | console `set_weather` ("Weather was set to '"); not decoded | S-WEATHER | [WTH/open] |
+| 0x2874b0 | console `set_weather` (clear, rain, storm, snow, blizzard, sandstorm) for the selected province's region: setters 0xf20b60 / 0xf20b90 / 0xf20c20 / 0xf20bf0 / 0xf20b30 / 0xf20bc0 (flags +0x108 rain, +0x110 storm, +0x118 snow, +0x120 blizzard, +0x128 sandstorm) | S-WEATHER | [WSIM/roll] |
+| 0x533c60 | date: move to day-of-month `n` (0-based) of the same month | S-NIGHT | [NIGHT/sun] |
 | 0x535c40 | resolves member+0x10 convoy reference | S-TARGET | [TGT/bb] |
 | 0x5570f0 | add a modifier container into another (copy into a cleared one) | — | [STC/leader] |
 | 0x5574b0 | static modifier struct accessor (global 0x3330098, after 0x558710); same struct as 0x55b160 | S-POTF | [POTF/sink] |
@@ -178,12 +180,13 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xd5a170 | fleet SetAdmiral: old admiral → 0xc25db0(old, 0); `fleet+0xb0 = new`; new → 0xc25b30(new, fleet, 1) | S-ADMIRAL-MOD | [ADM/eff] |
 | 0xd5ebc0 | fleet save writer: id, `leader={ id type=4713 }` when set (`fleet+0xb0`), `name`, `color`, `icon`, `task_force`s, …, `home_base`, `automated_homebase` | S-ADMIRAL-SAVE | [ADM/save] |
 | 0xd64510 | task force's fleet admiral (`tf+0x340` → 0xd50ee0; leaf) | S-STATS-COMBAT | [STC/sum] |
-| 0xd67310 | weather factor `clamp(1 + country navy_weather_penalty, 0, 1)` | S-WEATHER | [STC/sum] |
+| 0xd67310 | weather factor `clamp(1 + country navy_weather_penalty, 0, 1)`; 0xc38760 multiplies the region block by `ship stat 0x2a (naval_weather_penalty_factor, hull base 1) − 1 + this` | S-WEATHER | [STC/sum], [WTT/sum] |
 | 0xd69090 | CTaskForce::DailyUpdate (vtable slot 19): first calls 0xd7a7e0(tf, false), before and regardless of the in-combat test | S-MANPOWER | [XP/mp] |
-| 0xd6b1b0 / 0xd6b590 | task-force naval-terrain attack / defence fallback when the sub-unit index is < 0 (not decoded) | S-STATS-COMBAT | [STATS/getter] |
+| 0xd6b1b0 / 0xd6b590 | task-force naval-terrain attack / defence fallback when the sub-unit index is < 0: mean of 0x143e4a0 over the task force's ships (`tf+0x348`, count `+0x354`), never used for a ship | S-STATS-COMBAT, S-TERRAIN | [STATS/getter], [TER/terrain] |
 | 0xd6c6f0 | task-force fuel ratio `tf+0x4f8 / tf+0x500`, ≥ 0 (leaf) | S-STATS-COMBAT | [STATS/getter] |
 | 0xd6d0c0 | task force's current naval combat (first combat of type 2) | S-STATS-COMBAT | [STATS/getter] |
 | 0xd6eeb0 | unit ship list | S-POS | [POS/joined] |
+| 0xd6eee0 | task-force naval-terrain movement fallback (as 0xd6b1b0, for speed) | S-TERRAIN | [TER/terrain] |
 | 0xd6fa50 | task-force modifiers | S-DMG | [DMG/dmg] |
 | 0xd70270 | task force holds its owner's PotF: `resolve(country(tf+0x1d8)+0x250)+0x728 == tf` (UI and AI only) | S-POTF | [POTF/readers] |
 | 0xd705f0 | CTaskForce update (vtable slot 18): per-ship XP | S-XP-GAIN | [XP/gain], [HOUR/hour] |
@@ -196,15 +199,29 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xdda5d0 | "LOADING_SAVEGAME": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
 | 0xe23bb0 | strategic region init: `region+0x140 = region+0x60 mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT)` | A-CADENCE | [AIR/cadence] |
 | 0xe24530 | air clock: is this an air hour for the region | A-CADENCE | [AIR/cadence] |
+| 0xf11390 | weather cell (per province) hourly update: period temperature mid + random walk (`temperature_variation`, clamp `max_temperature_change`), snow depth from the region's snow / blizzard flag | S-WEATHER | [WSIM/hourly] |
+| 0xf14fe0 | province darkness set-up: per province `tz` (+0x248), polar terms (+0x250, +0x258) and 24 hourly unit vectors (+0x00..+0x23f) from its map position, GMT_OFFSET and the pole offsets (caller 0xf13500) | S-NIGHT | [NIGHT/vec] |
+| 0xf15b40 | weather weight multiplier `1 + Σ terrain share × weather.txt terrain_modifiers[k]` (leaf; 1 at sea) | S-WEATHER | [WSIM/roll] |
+| 0xf15c50 | weather duration in hours `24 × (min + min(U1, U2) × (max − min))`, settings.duration of the current weather (wm+0x290..+0x2e8) | S-WEATHER | [WSIM/roll] |
+| 0xf15eb0 | night direction for the date: `(0, sin θ, cos θ)` at wm+0x350..+0x360, θ = ±5° between 22 June and 22 December; season fraction wm+0x368 | S-NIGHT | [NIGHT/sun] |
 | 0xf185a0 | weather manager reset: cells, region states, seed, +0x348 = 1, +0x34a = 0 | S-WEATHER | [WTH/cmd] |
-| 0xf19660 | province darkness | S-NIGHT | [HOUR/night] |
-| 0xf197d0 | province modifier holder by province id (content not decoded) | S-HIT-MODS | [STC/sum] |
+| 0xf18800 | hourly darkness update (from HourlyUpdate 0xf1c6e0): 0xf15eb0, feather constants, 0xf20c50 for every province (threaded when many) | S-NIGHT | [NIGHT/dark] |
+| 0xf18ad0 | DoUpdatePasses: per pass the next 584 cells (cursor wm+0x58) and 7 region states (cursor wm+0x5c, 0xf20ef0); all of them in the 14 init passes | S-WEATHER | [WSIM/hourly] |
+| 0xf191f0 | region weather period for a date: first period (region+0x30 → +0xb0, 0xe0 bytes) holding the day of year; "No weather period found" | S-WEATHER | [WSIM/roll] |
+| 0xf19660 | province darkness: read of the weather manager's province record +0x240 (leaf; computed by 0xf20c50) | S-NIGHT | [HOUR/night], [NIGHT/dark] |
+| 0xf19690 | darkness of a province at a given hour `(wm, out, province, hour)` without storing (caller 0xe21593) | S-NIGHT | [NIGHT/dark] |
+| 0xf197b0 | province local hour (record+0x260; leaf) | S-NIGHT | [NIGHT/dark] |
+| 0xf197d0 | province modifier holder by province id: record+0x270, holding static `night` × darkness (written by 0xf20c50) | S-HIT-MODS, S-NIGHT | [STC/sum], [NIGHT/dark] |
+| 0xf19f00 | weather hash `U1 = H(wm+0x308 + x)` mod 100000 (leaf; same U1 as the roll and the duration) | S-WEATHER | [WSIM/roll] |
 | 0xf19fd0 | region weather modifier holder by region index | S-WEATHER | [STC/sum], [STC/mod] |
 | 0xf1a000 | region weather state `wm+0x40 + i × 0x160` (null out of range; leaf) | S-WEATHER | [WTH/combat] |
-| 0xf1c6e0 | CWeatherManager::HourlyUpdate; skipped while +0x349 or +0x34a | S-WEATHER | [WTH/cmd] |
+| 0xf1c6e0 | CWeatherManager::HourlyUpdate; skipped while +0x349 or +0x34a; `advanceSeed` (1 from the hourly tick 0x1dfcfb): seed += random_int 0x2233fa0; cells 0xf11390, passes 0xf18ad0 | S-WEATHER | [WTH/cmd], [WSIM/hourly] |
 | 0xf1cb90 | rebuild weather cells (+0x10) and region states (+0x40) | S-WEATHER | [WTH/cmd], [WTH/open] |
 | 0xf1f710 | weather on: log seed, run HourlyUpdate | S-WEATHER | [WTH/cmd] |
+| 0xf20c50 | province darkness `clamp((n·v[hour] + F/2) / F, 0, 1)` → record+0x240, local hour +0x260; on change rebuilds the province holder (+0x270) with static `night` × darkness | S-NIGHT, S-HIT-MODS | [NIGHT/dark] |
+| 0xf20ef0 | region weather roll: period weights, temperature rule, one roll for rain light / heavy / snow / blizzard, sandstorm, arctic water, next change `+0x150`; returns at once before `+0x150`; random `H(seed + region + pass)` | S-WEATHER | [WTT/fill], [WSIM/roll] |
 | 0xf218a0 | mark every weather cell dirty (+0x3a8) for the map | S-WEATHER | [WTH/cmd] |
+| 0xf220d0 | region weather holder refill: clear `state+0x58`, add each active block whole, then the region's triggered `static_modifiers` | S-WEATHER | [WTT/fill] |
 | 0xf60760 | plane speed with modifiers | A-INTERCEPT | [AIR/conv] |
 | 0xf60970 | raw plane stat `(wing, out, idx, missionFlags)` | A-* | [AIR/conv] |
 | 0xf60bc0 | naval strike agility per plane | A-AA-PREEMPT | [AIR/conv] |
@@ -248,12 +265,15 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x13e28c0 | CCombat::Update: the eight side virtual calls | S-HOUR, S-ORDER | [HOUR/hour], [POS/recompute] |
 | 0x13e2ba0 | combat validity: checks both sides' country lists | S-HOUR | [HOUR/chain] |
 | 0x143c720 | minimum dominance to control a region: `own value × t / (1 − t)` (t ≥ 1 as 0.99); also the convoy-escort bonus | S-DOMINANCE, S-POS | [DOM], [POS/convoy] |
-| 0x143d340 | naval terrain: per-sub-unit modifier holder (by sub-unit index), added in 0xc38760 | S-STATS-COMBAT | [STC/sum] |
-| 0x143e4a0 | naval terrain: per-sub-unit record {+0x10 attack, +0x18 defence} (map terrain+0x1b8, default +0x168; leaf) | S-STATS-COMBAT | [STATS/getter] |
+| 0x143d340 | naval terrain: per-sub-unit modifier holder (block +0x28 by sub-unit index; miss → the terrain's own holder +0xa8; leaf), added in 0xc38760 | S-STATS-COMBAT, S-TERRAIN | [STC/sum], [TER/terrain] |
+| 0x143e4a0 | naval terrain: per-sub-unit `units` adjuster {+0x10 attack, +0x18 defence, +0x20 movement} (block +0xe8 via map terrain+0x1b8; miss → the terrain's own +0x168; leaf) | S-STATS-COMBAT, S-TERRAIN | [STATS/getter], [TER/terrain] |
+| 0x143e980 | terrain post-load (vtable): adds the terrain's own `units` (+0x168) and modifiers (+0xa8) into every sub-unit block | S-TERRAIN | [TER/terrain] |
+| 0x143eb40 | terrain post-load: resolves each sub-unit block's name (0xac4e60; "sub unit not found for terrain "), fills the map +0x1b0 | S-TERRAIN | [TER/terrain] |
 | 0x1445e00 | CUnitHistory constructor (`ship+0x8d8`): `+0x20` = medal object from 0xf9e530 | S-XP-GAIN | [POTF/xp] |
 | 0x14463a0 | unit-medals object constructor (0x268 bytes; character+0xd0): holders +0x20 / +0xe0 / +0x1a0, medal list +8; for a ship it is behind `ship+0x8f8`, holder +0x1a0 read by 0xc38760 and 0xc3b240 | — | [STC/leader], [POTF/xp] |
 | 0x1446450 | CUnitHistory destructor (RTTI `.?AVCUnitHistory@@`, vtable 0x29c1868) | — | [POTF/xp] |
-| 0x15a5560 | combat location modifier container: `region+0x30` → the strategic region's naval terrain (+0x88 index, +0xb8 container, +0x1b8 per-sub-unit records) | S-POS, S-STATS-COMBAT | [POS/pos], [STC/mod] |
+| 0x15a5560 | NavalTerrain(region template `region+0x30`): `template+0x130` if a valid naval terrain (+0x10), else the terrain `ocean` (cached) | S-POS, S-STATS-COMBAT, S-TERRAIN | [POS/pos], [STC/mod], [TER/terrain] |
+| 0x15a6a10 | strategic region template post-load: `naval_terrain` name (+0x110) → terrain (+0x130); "invalid naval terrain type for " | S-TERRAIN | [TER/terrain] |
 | 0x15c28e0 | CNavalCombat::CanRetreat (vt+0x60): `hours >= COMBAT_MIN_DURATION` | S-RETREAT | [ACT/retreat], [README/disagree] |
 | 0x15c28f0 | CNavalCombat constructor area (sets combatant+0xd8; sites 0x15c2913/0x15c2941) | — | [AIR/conv], [POS/top] |
 | 0x15c2980 | CNavalCombat vt+0x38 teardown: 0xc03e00 for every unit of both sides | S-END | [POTF/combat] |
@@ -264,6 +284,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x15c3600 | CNavalCombat::Update (vt+0x78) | S-HOUR | [HOUR/hour], [POS/recompute] |
 | 0x15c3690 | CNavalCombat::EndHour (vt+0x80): hours++, distance, end check. **disagrees**: ACT says hours++ first, then both combatants update | S-HOUR, S-END | [HOUR/end], [ACT/bg] |
 | 0x15c44e0 | CNavalCombat validity (vt+0x48) → 0x13e2ba0 | S-HOUR | [HOUR/chain] |
+| 0x15c4ba0 | CNavalCombat::SetProvince: combat+0x38 = province, combat+0x48 = NavalTerrain(province+0xc8) | S-TERRAIN | [TER/terrain] |
 | 0x15c52b0 | merge unpaired groups (HOUR); "per-side joins" (POS) | S-HOUR | [HOUR/hour], [POS/recompute] |
 | 0x15c55d0 | pair fire-exchange groups | FEX | [HOUR/fex] |
 | 0x15c5820 | refresh environment: weather type (+0xa8) and region weather holder (+0xb0) from 0xf1a000, darkness (+0xb8) | S-HOUR, S-NIGHT, S-WEATHER | [HOUR/hour], [WTH/combat] |
@@ -389,7 +410,11 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x24ed580 | fx15 → fx5 | — | [XP/top] |
 | 0x24ed730 | fixed → int, round half away from zero | — | see §4 |
 | 0x24ef6f0 | store `-x` (negate) | — | [DMG/conv], [XP/effect] |
+| 0x24ef700 | fx5 sin on [0, π/2]: Taylor `x − x³/6 + x⁵/120` (leaf) | — | [NIGHT/fx] |
+| 0x24ef840 | fx5 cos: sin(x + π/2) with range reduction (2π = 6.28319) | — | [NIGHT/fx] |
+| 0x24efd30 | fx5 sin with range reduction | — | [NIGHT/fx] |
 | 0x24f08a0 | weighted random draw | A-TARGET | [AIR/target] |
+| 0x24fc2f0 | fx5 3-vector normalize (integer Newton sqrt of the raw squares) | — | [NIGHT/fx] |
 
 ### Vtables and RTTI
 
@@ -945,7 +970,8 @@ From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings o
 | +0x28 / +0x30 | attacker / defender combatant (CCombat) | [HOUR/chain] |
 | +0x44 | hours: 1 during the first hour's Update, incremented in EndHour (observed) | [HOUR/chain], [ACT/bg], [POS/recompute], [LOG] |
 | +0x98 / +0xa0 | the same two sides, typed | [HOUR/chain] |
-| +0x38 | → +0xc8 strategic region of the battle (medium) | [WTH/combat] |
+| +0x38 | province of the battle (0x15c4ba0) → +0xc8 strategic region | [WTH/combat], [TER/terrain] |
+| +0x48 | naval terrain of the battle's region (`ocean` without `naval_terrain`) | [TER/terrain] |
 | +0xa8, +0xb0 | weather type (0 none; 2/3/4/5 from region-state flags +0x108/+0x110/+0x118/+0x120); +0xb0 = region weather state +0x48, the weather modifier holder (0 without a state) | [HOUR/hour], [AIR/conv], [WTH/combat] |
 | +0xb8 | province darkness (> 0 = dark); always 0 with weather off (observed) | [HOUR/night], [AIR/conv], [LOG] |
 | +0x10c / +0x10d | convoy-type / special combat flags (HOUR, ACT). **disagrees**: AIR calls +0x10c the port-strike flag | [HOUR/hour], [ACT/sub], [AIR/conv] |
@@ -1052,10 +1078,30 @@ From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings o
 | gamestate | +0x688 | weather manager | [WTH/cmd] |
 | weather manager | +0x10 | weather cells (0x180 bytes each; +0x28 active) | [WTH/cmd] |
 | weather manager | +0x40 / +0x4c | region weather states (0x160 bytes each) / count | [WTH/combat] |
-| weather manager | +0x308 | random seed | [WTH/cmd] |
+| weather manager | +0x308 | random seed; += random_int every hour (save `seed`) | [WTH/cmd], [WSIM/hourly] |
+| weather manager | +0x58 / +0x5c | cell cursor / region-state cursor of the round robin (save `current_province` / `current_region`) | [WSIM/hourly] |
+| weather manager | +0x228 / +0x230 | settings.snowing.temperature upper (1.0) / lower (−4.0) | [WSIM/roll] |
+| weather manager | +0x260..+0x278 | settings.arctic_water temperature pairs (start, end) | [WSIM/roll] |
+| weather manager | +0x290 … +0x2e8 | settings.duration min / max pairs: none, rain light, rain heavy, snow, blizzard, sandstorm | [WSIM/roll] |
+| weather manager | +0x2f0 / +0x2f4 / +0x2f8 | provinces_per_update / regions_per_update / init_run_passes | [WSIM/hourly] |
 | weather manager | +0x348 / +0x349 / +0x34a | init passes pending / second skip flag ? / weather disabled | [WTH/cmd] |
+| weather manager | +0x350 / +0x358 / +0x360 | night direction x / y / z (fx5), set hourly by 0xf15eb0 | [NIGHT/sun] |
+| weather manager | +0x368 | season fraction, 0 at 22 June, 1 at 22 December | [NIGHT/sun] |
+| weather manager | +0x370 / +0x37c | province records (0x330 bytes each, index = province id) / count | [NIGHT/vec] |
+| weather province record | +0x00..+0x23f | 24 hourly unit vectors (x, y, z fx5) of the province | [NIGHT/vec] |
+| weather province record | +0x240 / +0x268 | darkness / darkness last applied to the holder | [NIGHT/dark] |
+| weather province record | +0x248 / +0x250 / +0x258 | `(x − GMT_OFFSET) / W + 1` / `1 − abs(cos φ)` / `−cos φ` | [NIGHT/vec] |
+| weather province record | +0x260 | local hour 1..24 | [NIGHT/dark] |
+| weather province record | +0x270 (container +0x280) | province modifier holder (`night` × darkness) | [NIGHT/dark] |
+| province | +0xb8 → +0xb8 / +0xbc | map position x / y (y from the bottom; = truncated mean pixel = `unitstacks.txt` type 0) | [NIGHT/vec] |
+| map settings (0x3339d28) | +0x40 / +0x44 | map width / height | [NIGHT/vec] |
 | region weather state | +0x48 | weather modifier holder | [WTH/combat] |
-| region weather state | +0x108 / +0x110 / +0x118 / +0x120 | weather flags → combat type 2 / 3 / 4 / 5 (which weather is which ?) | [WTH/combat], [WTH/open] |
+| region weather state | +0x108 / +0x110 / +0x118 / +0x120 | weather flags rain light / rain heavy / snow / blizzard → combat type 2 / 3 / 4 / 5 | [WTH/combat], [WTT/fill] |
+| region weather state | +0x128 / +0x130 | sandstorm / arctic water flags (combat type 0) | [WTT/fill] |
+| region weather state | +0x138 / +0x150 / +0x30 | mean temperature / hour of the next weather change / active flags of the region's `static_modifiers` | [WTT/fill] |
+| region weather state | +0x8 / +0x140 | region id (roll hash input) / active in the round robin | [WSIM/roll] |
+| weather period | +0x40 / +0x48, +0x58 … +0xd8 | temperature min / max; no_phenomenon, rain_light, rain_heavy, snow, blizzard, arctic_water, mud, sandstorm, min_snow_level (stride 0x10) | [WSIM/roll] |
+| static modifiers | +0x28 / +0x30 / +0x38 / +0x40 / +0x48 / +0x50 / +0x3a0 | `weather_rain_light` / `_rain_heavy` / `_snow` / `_blizzard` / `_sandstorm` / `_arctic_water` / `_mud` (loader 0x60d830) | [WTT/fill] |
 | strategic region | +0x58 | index into the weather manager's region states | [WTH/combat] |
 | country | +0x5b8 | modifiers | [POS/pos], [XP/gain] |
 | admiral | +0x418 | modifiers | [POS/pos] |
@@ -1066,7 +1112,11 @@ From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings o
 | country | +0xf88 | targeted-modifier table by target country index (entry holder +0x130) | [STATS/getter] |
 | country | +0x15b8 / +0x15c4 | leader-bound timed entries, 0x58 bytes (+0 obj, +0x10 leader, +0x18 count, +0x48 expired; obj +0x3b8 / +0x478 holders, +0xa8 start, +0xac duration) | [STC/leader] |
 | province | +0xa4 / +0xc8 / +0x188 | id / strategic region / controller tag (saved as `controller`) | [STATS/getter] |
-| strategic region | +0x30 | naval terrain (via 0x15a5560) | [STC/mod] |
+| strategic region | +0x30 | its template; naval terrain via 0x15a5560 | [STC/mod], [TER/terrain] |
+| strategic region template | +0x110 / +0x130 | `naval_terrain` name / resolved terrain (0x15a6a10) | [TER/terrain] |
+| terrain | +0x10 | `naval_terrain = yes` | [TER/terrain] |
+| terrain | +0xa8 / +0x168 | own modifier holder (container +0xb8) / own `units` adjuster {+0x10 attack, +0x18 defence, +0x20 movement} | [TER/terrain] |
+| terrain | +0x198 / +0x1a4, +0x1b0 / +0x1b8 | per-sub-unit blocks (0x110 each: +0x20 sub-unit index, +0x28 modifier holder, +0xe8 `units`; the own block merged in by 0x143e980) / count, map sub-unit index → block | [TER/terrain] |
 | naval terrain | +0x88 / +0xb8 / +0x168 / +0x1b8 | terrain index / modifier container / default sub-unit record / per-sub-unit records | [STATS/getter], [STC/mod] |
 | character | +0xa8 / +0xd0 | unit-leader role / `unit_medals` object (holder +0x10) | [STC/leader] |
 | trait | +0x360 / +0x420 / +0x4e0 / +0x5a0 | `modifier` / `non_shared_modifier` / `corps_commander_modifier` / `field_marshal_modifier` | [STC/leader] |
@@ -1532,6 +1582,9 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | NAir.ACE_DEATH_BY_OTHER_ACE_CHANCE | 0xf8105a, 0xf8762b | killed by the recorded enemy ace | [ACE/rolls] |
 | NAir.ACE_WING_SIZE, ACE_WING_SIZE_MAX_BONUS | 0x61832b, 0x618315 (also 0x61a1a5, not decoded) | ace size factor `min(SIZE / planes, MAX)` | [ACE/stats] |
 | NAir.DAY_NIGHT_COVERAGE_FACTOR | 0xf61503, 0xf60e62, 0xf611de (also 0xf5ec2b) | province night term in the plane stat getters | [ACE/stats] |
+| NGraphics.GMT_OFFSET (int, 0x3333468) | 0xf15086 | province `tz` | [NIGHT/vec] |
+| NGraphics.SOUTH_POLE_OFFSET, NORTH_POLE_OFFSET (0x33335d0, 0x3333690) | 0xf15112, 0xf15119, 0xf15138 | map y → polar angle | [NIGHT/vec] |
+| NGraphics.DAY_NIGHT_FEATHER (0x3333508) | 0xf188d4 | ramp width: globals 0x333d3f0 = F/2, 0x333d3f8 = −F/2, 0x30b1dc8 = 1/F | [NIGHT/dark] |
 | NAir.COMBAT_DAMAGE_SCALE / COMBAT_DAMAGE_SCALE_CARRIER | 0xf86563 / 0xf8656d | region air-war losses; CARRIER when attacker and defender are carrier wings in combat | [REG/combat] |
 | NAir.DISRUPTION_FACTOR / DISRUPTION_FACTOR_CARRIER | 0xf7c500 / 0xf7c50c | region air-war disruption (carrier between carrier wings) | [REG/combat] |
 | NAir.DISRUPTION_SPEED_FACTOR / _AGILITY_FACTOR / _ATTACK_FACTOR / _DETECTION_FACTOR | 0xf7c0d7 / 0xf7c108 / 0xf7c12f / 0xf7c159 (DETECTION also 0xf77450) | disruption power of an attacker; escort | [REG/combat] |
@@ -1572,7 +1625,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 Cross-file disagreements are flagged "**disagrees**" in the tables above; the three settled ones are in [findings/README.md][README/disagree].
 
 - Aggressiveness-check strength score 0x1989c60 internals. [ACT/open], [README-RE]
-- Darkness value computation (with weather on; it is 0 with weather off [LOG]). (`naval_night_attack` is read: [STATS/getter].) [HOUR/night], [HIT/mods]
+- ~~Darkness value computation~~ settled: terminator per province, date and hour, reproduced exactly in 10 logged battles; open: whether the province position comes from `provinces.bmp` or `unitstacks.txt`, and how the battle province is chosen. [NIGHT], [HOUR/night]
 - How the design's slot list is ordered (calibrated: slot names in first-appearance order of the equipment files). [DMG/part], [LOG]
 - The fixed-point rounding of `0xc3ac60` and the weight products (calibrated: quotient rounded half up, products truncated; 120,090 logged picks). [TGT/weight], [LOG]
 - Shooter "arg4" stat (`ship+0x228`, modifier 0x29) gating sub targets. [TGT/dc]
@@ -1601,7 +1654,9 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - Port-strike branch (`combat+0x10c`, PORT_STRIKE_DAMAGE_FACTOR). [AIR/open]
 - ~~`0xf80f60` per-wing losses/experience~~ decoded: ace death / earn rolls, no experience ([ACE/rolls]). [AIR/losses]
 - `gamestate+0x720` (ace template seed term); whether a dead ace is ever detached from its wing; the content of the region weather / province night holders in the naval strike getters (`R` term); accident checks for carrier wings in battle; static blocks behind struct +0xc8 / +0xd0. [ACE/open]
-- Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
+- Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder? (Which weather each flag is: settled, [WTT/fill]; `set_weather`: decoded, [WSIM/roll].) [WTH/open]
+- Weather cell temperature model (0xf22730, 0xf22420, 0xf21c60), the arctic water ramp direction. [WSIM/open]
+- Weather roll temperature thresholds (`wm+0x228` / `+0x230`, read as `settings.snowing.temperature`), duration unit. [WTT/open]
 - How a non-instant equipment bonus first reaches a variant (new variants copy the parent's, 0x1492ac0); the documented `modifiers = {}` block; ~~key match `+0x4e8` and 0x22f740~~ settled: `family` and the equipment group database ([MIO/match]); the unit mastery gain (`track+0x28`) and the attaché, leader and gain-factor terms; effect re-application on save load; the idea slot reader (spirit slots are from the scripts, [DOC/spirit]); on load, whether country modifiers exist before the ships' InitPostRead and whether `deployment` may be moved before `units` ([DOC/load]). [DOC/open]
 - ~~Country MIO `+0x134`~~ settled: trait points ([MIO/map]); the other arguments of `CanUnlockTrait` 0x13af360; chained includes (one pass in database order; no script uses one); ~~whether a `limit_to_equipment_type` naming only unknown equipment counts as empty~~ settled: not empty, it matches nothing ([MIO/match]). [MIOI/open]
 - MIO matching: 0xbd3a50 in full (variant role mask); the roster's use of `allowed`/`visible`/`available`; when the create-variant command carries its own snapshot; production mode 0xdb7a30 consumers; the policy template base shift (map read at `+0x40`, written at `+0x50`); 0x9f8570. [MIO/open]
@@ -1695,9 +1750,26 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [AIR/losses]: findings/A-air-combat.md#a-losses
 [AIR/open]: findings/A-air-combat.md#open-questions--unresolved
 [WTH]: findings/S-WEATHER-weather-toggle.md
+[NIGHT]: findings/S-NIGHT-darkness.md
+[NIGHT/vec]: findings/S-NIGHT-darkness.md#province-vectors-once-0xf14fe0-called-from-0xf13500-at-map-set-up
+[NIGHT/sun]: findings/S-NIGHT-darkness.md#night-direction-every-hour-0xf15eb0-called-from-0xf18800
+[NIGHT/dark]: findings/S-NIGHT-darkness.md#darkness-every-hour-0xf18800--0xf20c50-per-province-threaded-when-there-are-many-provinces
+[NIGHT/fx]: findings/S-NIGHT-darkness.md#fixed-point
+[TER]: findings/S-TERRAIN-naval-terrain.md
+[TER/terrain]: findings/S-TERRAIN-naval-terrain.md#naval-terrain
 [WTH/cmd]: findings/S-WEATHER-weather-toggle.md#console-commands
 [WTH/combat]: findings/S-WEATHER-weather-toggle.md#what-a-battle-reads
 [WTH/open]: findings/S-WEATHER-weather-toggle.md#unresolved
+[WTT]: findings/S-WEATHER-weather-terms.md
+[WTT/sum]: findings/S-WEATHER-weather-terms.md#1-the-weather-term-in-the-ship-modifier-sum-0xc38760
+[WTT/fill]: findings/S-WEATHER-weather-terms.md#2-how-the-regions-holder-is-filled
+[WTT/read]: findings/S-WEATHER-weather-terms.md#3-which-combat-readers-see-the-region-weather
+[WTT/night]: findings/S-WEATHER-weather-terms.md#4-the-province-holder-0xf197d0-is-night--darkness
+[WTT/open]: findings/S-WEATHER-weather-terms.md#unresolved
+[WSIM]: findings/S-WEATHER-region-simulation.md
+[WSIM/hourly]: findings/S-WEATHER-region-simulation.md#the-hourly-update
+[WSIM/roll]: findings/S-WEATHER-region-simulation.md#the-roll-at-a-visit-0xf20ef0
+[WSIM/open]: findings/S-WEATHER-region-simulation.md#unresolved
 [STATS]: findings/S-STATS-design-stats.md
 [STATS/getter]: findings/S-STATS-design-stats.md#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded
 [STC]: findings/S-STATS-COUNTRY-modifier-sources.md

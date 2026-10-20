@@ -132,7 +132,7 @@ public static class AdmiralInfo
 
         foreach (var (key, adjuster) in trait.Adjusters ?? [])
         {
-            parts.Add(key == LeaderTrait.Night ? $"night: {Adjuster(adjuster)} × darkness" : $"{key}: {Adjuster(adjuster)} (naval terrain not simulated)");
+            parts.Add(key == LeaderTrait.Night ? $"night: {Adjuster(adjuster)} × darkness" : $"{key}: {Adjuster(adjuster)} (on that naval terrain)");
         }
 
         foreach (var (skill, add) in trait.Skills ?? [])

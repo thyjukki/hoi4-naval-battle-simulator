@@ -84,7 +84,8 @@ public class LuaDefinesParserTests
         Assert.Equal(1, table.Get("NNavy", "X")!.Number);
         Assert.Equal(4, table.Get("NNavy", "W")!.Number);
         Assert.Null(table.Get("NNavy", "Z")!.Number);
-        Assert.Null(table.Get("NGraphics", "X"));
+        // S-NIGHT: NGraphics is read from NDefines_Graphics, which the loop merges into NDefines.
+        Assert.Equal(1, table.Get("NGraphics", "X")!.Number);
         Assert.Contains(table.Warnings, warning => warning.Contains("bad.lua:3"));
         Assert.Contains(table.Warnings, warning => warning.Contains("NDefines.NNavy.X * 2"));
         Assert.Equal(2, table.Warnings.Count);

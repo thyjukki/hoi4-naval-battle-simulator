@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -37,9 +38,9 @@ public class AirRulesTests
         var fullScreening = new ScreeningSummary(1, 1);
 
         // Stance index 4 (ratio 1.0): attacker uses it, defender 1 - 1.0; both get +0.1 from capital_screening_bonus.
-        Assert.Equal(1.1, AirRules.SortieEfficiency(group, fullScreening, true, 4, 0, 0, defines), 9);
-        Assert.Equal(0.1, AirRules.SortieEfficiency(group, fullScreening, false, 4, 0, 0, defines), 9);
-        Assert.Equal(0.6, AirRules.SortieEfficiency(group, fullScreening, true, 4, 30, 0, defines), 9);
+        Assert.Equal(1.1, AirRules.SortieEfficiency(group, fullScreening, true, 4, 0, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.1, AirRules.SortieEfficiency(group, fullScreening, false, 4, 0, BattleEnvironment.None, defines), 9);
+        Assert.Equal(0.6, AirRules.SortieEfficiency(group, fullScreening, true, 4, 30, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -49,10 +50,10 @@ public class AirRulesTests
         var group = AirGroup.ForCarrier(carrier, [new AirWing(Bomber(), 30, defines.Hardcoded)]);
         var noScreening = new ScreeningSummary(0, 0);
 
-        Assert.Equal(0, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, defines), 9);
+        Assert.Equal(0, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, new BattleEnvironment(1), defines), 9);
 
         carrier.CurrentOrganization = carrier.GetFinalStats().Organization / 2;
-        Assert.Equal(0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 0, defines), 9);
+        Assert.Equal(0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, BattleEnvironment.None, defines), 9);
     }
 
     [Fact]
@@ -64,9 +65,9 @@ public class AirRulesTests
         var group = AirGroup.ForCarrier(Carrier(), [new AirWing(Bomber(), 30, defines.Hardcoded)]);
         var noScreening = new ScreeningSummary(0, 0);
 
-        Assert.Equal(0.5 * 0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, tfb), 9);
-        Assert.Equal(0.5 * 0.40, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 1, tfb, carrierNightTraffic: 0.15), 9);
-        Assert.Equal(0.5, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, 0, tfb, carrierNightTraffic: 0.15), 9);
+        Assert.Equal(0.5 * 0.25, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, new BattleEnvironment(1), tfb), 9);
+        Assert.Equal(0.5 * 0.40, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, new BattleEnvironment(1), tfb, carrierNightTraffic: 0.15), 9);
+        Assert.Equal(0.5, AirRules.SortieEfficiency(group, noScreening, true, 2, 30, BattleEnvironment.None, tfb, carrierNightTraffic: 0.15), 9);
     }
 
     [Theory]
