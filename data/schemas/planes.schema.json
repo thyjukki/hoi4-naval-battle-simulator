@@ -63,6 +63,13 @@
             },
             "description": "The sub-unit's type keywords (the game's fighter tests read these)."
           },
+          "subUnitCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The sub-unit's categories (e.g. category_carrier_nav_bomber), which doctrine bonuses name."
+          },
           "carrierWingSize": {
             "type": "integer"
           },

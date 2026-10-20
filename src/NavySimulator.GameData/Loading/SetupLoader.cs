@@ -506,6 +506,7 @@ public class SetupLoader
             WeatherEnabled = dto.WeatherEnabled ?? rules.WeatherEnabled,
             NavalDominanceEnabled = dto.NavalDominanceEnabled ?? rules.NavalDominanceEnabled,
             CarrierWingsExecuteNavalStrike = dto.CarrierWingsExecuteNavalStrike ?? rules.CarrierWingsExecuteNavalStrike,
+            EscapedCarrierWings = ParseEnum(dto.EscapedCarrierWings, rules.EscapedCarrierWings, "battleScenario.rules.escapedCarrierWings", errors),
             StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
             AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase,
             NightStartHour = dto.NightStartHour ?? rules.NightStartHour,
@@ -1201,6 +1202,11 @@ public class SetupLoader
             }
         }
 
+        if (participant.RadarCoverage is < 0 or > 1)
+        {
+            errors.Add($"battleScenario.{role}.radarCoverage must be between 0 and 1.");
+        }
+
         foreach (var (planeId, count) in participant.PlaneStockpile)
         {
             if (!planeIds.Contains(planeId))
@@ -1256,8 +1262,9 @@ public class SetupLoader
             participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0,
                 string.IsNullOrEmpty(entry.Mission) ? LandBasedAirwing.NavalStrike : entry.Mission)).ToList(),
             new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal),
-            participant.CarrierWingsOnRegionMission ?? false,
-            participant.CarrierMissionEfficiency ?? 1.0);
+            participant.CarrierWingsOnRegionMission,
+            participant.CarrierMissionEfficiency ?? 1.0,
+            participant.RadarCoverage ?? 0);
     }
 
     /// <summary>S-POTF: the first ship of the named design in the fleet (ships of one design are alike); null when none.</summary>

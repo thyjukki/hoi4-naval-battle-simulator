@@ -175,8 +175,23 @@ public sealed class NAirDefines
     /// <summary>Experience needed to progress to the next level</summary>
     public double[] AIR_WING_XP_LEVELS { get; set; } = [100.0, 300.0, 700.0, 900.0];
 
+    /// <summary>How much the controlled provinces in area affects the air detection base value.</summary>
+    public double DETECT_CHANCE_FROM_OCCUPATION { get; set; } = 0.10;
+
+    /// <summary>How much the radars in area affects detection chance.</summary>
+    public double DETECT_CHANCE_FROM_RADARS { get; set; } = 0.5;
+
+    /// <summary>Max amount of aircrafts in region to give full detection bonus.</summary>
+    public double DETECT_CHANCE_FROM_AIRCRAFTS_EFFECTIVE_COUNT { get; set; } = 3000;
+
+    /// <summary>How much aircrafts in region improves air detection (up to effective count).</summary>
+    public double DETECT_CHANCE_FROM_AIRCRAFTS { get; set; } = 0.8;
+
     /// <summary>How much the night can reduce the air detection. (see static modifiers to check how weather affects it too.)</summary>
     public double DETECT_CHANCE_FROM_NIGHT { get; set; } = -0.2;
+
+    /// <summary>value of planes not on active search missions for detection</summary>
+    public double NO_SEARCH_MISSION_DETECT_FACTOR { get; set; } = -0.5;
 
     /// <summary>The max night coverage in a region that is still considered to be day-time when determining if day/night air missions shall run.</summary>
     public double DAY_NIGHT_COVERAGE_FACTOR { get; set; } = 0.5;

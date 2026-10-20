@@ -73,7 +73,10 @@ public static class AirRules
         return Math.Max(0, sortie * orgRatio);
     }
 
-    /// <summary>[RE] Deck overcrowding: 1 within capacity, then 1 - CAPACITY_PENALTY * overfill, 0 above 90% overfill.</summary>
+    /// <summary>
+    /// [RE] Deck overcrowding: 1 within capacity, then 1 - CAPACITY_PENALTY × (1 + the country's
+    /// carrier_capacity_penalty_reduction) × overfill (A-STATS-MODS 0xc57a89), 0 above 90% overfill.
+    /// </summary>
     public static double CrowdFactor(Ship carrier, int planes, GameDefines defines)
     {
         var capacity = carrier.GetFinalStats().CarrierSize * defines.NAir.CARRIER_SIZE_STAT_INCREMENT;
@@ -89,7 +92,8 @@ public static class AirRules
         }
 
         var overfill = (planes - capacity) / capacity;
-        return overfill > 0.9 ? 0 : Math.Clamp(1.0 - defines.NAir.CAPACITY_PENALTY * overfill, 0, 1);
+        var penalty = defines.NAir.CAPACITY_PENALTY * (1 + carrier.CountryModifiers.Get(StaticModifiers.CarrierCapacityPenaltyReduction));
+        return overfill > 0.9 ? 0 : Math.Clamp(1.0 - penalty * overfill, 0, 1);
     }
 
     // [RE] carrier_experience_bonus_max / malus_min fighter_sortie_efficiency, scaled like the ship experience modifiers.
@@ -209,12 +213,12 @@ public static class AirRules
         var roll = random.NextDouble(RollKind.AirInterception);
         var defending = air.CARRIER_PERCENTAGE_DEFEND * defendingPlanes * defendingShare;
         var engaged = Math.Min(defending, attackingPlanes * air.COMBAT_MULTIPLANE_CAP);
-        var defenderAttack = defenders.Average(wing => wing.Plane.Stats.AirAttack);
-        var defenderAgility = defenders.Average(wing => wing.Plane.Stats.Agility);
-        var defenderSpeed = defenders.Average(wing => wing.Plane.Stats.Speed);
-        var attackerDefence = Math.Max(attackers.Average(wing => wing.Plane.Stats.AirDefense), 0.001);
-        var attackerAgility = attackers.Average(wing => wing.Plane.Stats.Agility);
-        var attackerSpeed = attackers.Average(wing => wing.Plane.Stats.Speed);
+        var defenderAttack = defenders.Average(wing => wing.Stats.AirAttack);
+        var defenderAgility = defenders.Average(wing => wing.Stats.Agility);
+        var defenderSpeed = defenders.Average(wing => wing.Stats.Speed);
+        var attackerDefence = Math.Max(attackers.Average(wing => wing.Stats.AirDefense), 0.001);
+        var attackerAgility = attackers.Average(wing => wing.Stats.Agility);
+        var attackerSpeed = attackers.Average(wing => wing.Stats.Speed);
 
         var damage = engaged * air.CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER * defenderAttack;
         var agilityReduction = attackerAgility > defenderAgility && defenderAgility > 0
@@ -359,16 +363,19 @@ public static class AirRules
 
         foreach (var wing in wings)
         {
-            double Stat(double value, string modifier) =>
-                value * (1 + modifiers.Get(modifier) + wing.AceBonus(modifier, defines, aceFactor));
+            // A-STATS-MISSION-EFF [RE] 0xf7ed40: the mission efficiency by the wing's mission type joins attack and agility;
+            // carrier wings have no mission type (M = 0), land-based naval strike wings take air_nav_efficiency.
+            var mission = fromCarrier || !wing.ExecutesNavalStrike ? 0 : modifiers.Get(StaticModifiers.AirNavEfficiency);
+            double Stat(double value, string modifier, double missionEfficiency = 0) =>
+                value * (1 + modifiers.Get(modifier) + wing.AceBonus(modifier, defines, aceFactor) + missionEfficiency);
 
             var n = Math.Round((double)wing.Planes * total / selected, MidpointRounding.AwayFromZero);
-            var stats = wing.Plane.Stats;
+            var stats = wing.Stats;
             // A-REGION-DISRUPT: a disrupted mission strikes at the efficiency of 0xf78160 with the wing's weight as planes.
-            var wingEfficiency = wing.Disruption > 0 ? RegionAirWarRules.StrikeEfficiency(wing.Disruption, n, wing, defines) : efficiency;
-            attack += Stat(0.1 * stats.NavalAttack, StaticModifiers.NavalStrikeAttackFactor) * n * wingEfficiency;
+            var wingEfficiency = wing.Disruption > 0 ? RegionAirWarRules.StrikeEfficiency(wing.Disruption, n, wing, defines, modifiers) : efficiency;
+            attack += Stat(0.1 * stats.NavalAttack, StaticModifiers.NavalStrikeAttackFactor, mission) * n * wingEfficiency;
             targeting += Stat(0.1 * stats.NavalTargeting, StaticModifiers.NavalStrikeTargettingFactor) * n;
-            agility += Stat(defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * stats.Agility, StaticModifiers.NavalStrikeAgilityFactor) * n;
+            agility += Stat(defines.NAir.AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY * stats.Agility, StaticModifiers.NavalStrikeAgilityFactor, mission) * n;
             weights += n;
         }
 

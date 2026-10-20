@@ -2,6 +2,7 @@ using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Environment;
+using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -239,7 +240,8 @@ public class AirRulesTests
     public void RegionStrikeEfficiency_FollowsTheDecodedFormula()
     {
         // [RE + LOG] 0xf78160 with vanilla defines: den = 10 × (1 + 0.1 × 0.5) × (1 + 0.05 × 0.5) × (1 + 0.5 × 1) = 16.14375.
-        var wing = new AirWing(Bomber(), 10, defines.Hardcoded);
+        // A wing at the first experience level (no experience malus).
+        var wing = new AirWing(Bomber(), 10, defines.Hardcoded) { Experience = defines.NAir.AIR_WING_XP_LEVELS[0] };
         var den = 10 * 1.05 * 1.025 * 1.5;
 
         Assert.Equal(1 - Math.Truncate(Math.Sqrt(20 / den) * 0.316228 * 1e5) / 1e5, RegionAirWarRules.StrikeEfficiency(20, 10, wing, defines), 9);
@@ -258,10 +260,64 @@ public class AirRulesTests
     [Fact]
     public void RegionDisruption_IsCancelledByTheVictimsEscortsOnlyWhenTheyAreStrongEnough()
     {
-        var fighter = RegionAirWarRules.Stats(new AirWing(Fighter(), 10, defines.Hardcoded), defines);
+        var fighter = RegionAirWarRules.Stats(new AirWing(Fighter(), 10, defines.Hardcoded) { Experience = defines.NAir.AIR_WING_XP_LEVELS[0] }, defines);
 
         // Vanilla: disruption 6 × 10 × (1 + 500/800); escort 2 × 10 × (1 + 500/800) × (1 + 0.5) × (1 + 0.3).
-        Assert.Equal(6 * 10 * 1.625, RegionAirWarRules.Disruption(10, fighter, true, defines), 6);
+        Assert.Equal(6 * 10 * 1.625, RegionAirWarRules.Disruption(10, fighter, true, defines, detection: 0), 6);
         Assert.Equal(2 * 10 * 1.625 * 1.5 * 1.3, RegionAirWarRules.Escort(10, fighter, defines), 6);
+        Assert.Equal(6 * 10 * 1.625 * 1.5, RegionAirWarRules.Disruption(10, fighter, true, defines, detection: 0.5), 6);
+    }
+
+    [Fact]
+    public void RegionDetection_CountsOwnRegionMissionsRadarsNightAndWeather()
+    {
+        // A-DETECT: 60 carrier fighters (air superiority, home) and 100 land bombers (no search mission, not home).
+        var country = new ModifierSet([new("air_superiority_detect_factor", 0.1), new("air_power_projection_factor", 0.2), new("air_night_penalty", -0.5)]);
+        var missions = new List<RegionAirWarRules.DetectionMission>
+        {
+            new(60, true, false, true, 0.5, 1),
+            new(100, false, false, false, 0.5, 1)
+        };
+
+        // count = 60 × 1.1 + 100 × (1 − 0.5 + 0.2) = 136; AIR = trunc(136 / 3000 × 0.8) = 0.03626.
+        Assert.Equal(0.03626, RegionAirWarRules.Detection(missions, country, 0, 0, 0, 0, defines), 9);
+        // + radars 0.4 × 0.5; × (1 + trunc(1 × −0.2) × 0.5 + (−0.1) × 1).
+        Assert.Equal(FixedPoint.Truncate((0.03626 + 0.2) * (1 - 0.1 - 0.1)), RegionAirWarRules.Detection(missions, country, 0.4, 0, 1, -0.1, defines), 9);
+        // No region missions and no radar: the 0.01 floor.
+        Assert.Equal(0.01, RegionAirWarRules.Detection([], country, 0, 0, 1, 0, defines), 9);
+    }
+
+    [Fact]
+    public void MissionEffectiveness_IsSupplyTimesCrowdingTimesAirMissionEfficiency_AtMostOne()
+    {
+        // A-REGION-SYNC 0xf78500: the logged CL3 attacker (supply 0.734) in light rain (air_mission_efficiency −0.1).
+        Assert.Equal(0.734 * 0.9, RegionAirWarRules.Effectiveness(0.734, 1, -0.1), 9);
+        Assert.Equal(0.734 * 0.5, RegionAirWarRules.Effectiveness(0.734, 0.5, 0), 9);
+        Assert.Equal(1, RegionAirWarRules.Effectiveness(0.9, 1, 0.5), 9);
+    }
+
+    [Fact]
+    public void RegionStats_TakeTheExperienceMalus_AndMissionEfficiencyOnlyOverTheRegion()
+    {
+        // A-STATS-XP: a fresh wing (xp 0) has vanilla air_wing_experience_malus_min (attack and agility −0.15, defence 0);
+        // air_untrained_pilots_penalty_factor −0.5 halves it. A-STATS-GETTERS: M and home defence only with the province.
+        var country = new ModifierSet([new("air_untrained_pilots_penalty_factor", -0.5), new("air_superiority_efficiency", 0.1),
+            new("air_home_defence_factor", 0.2)]);
+        var wing = new AirWing(Fighter(), 10, defines.Hardcoded) { RegionMission = new RegionMission(true, "air_superiority_efficiency") };
+        var plane = wing.Stats;
+
+        var sort = RegionAirWarRules.Stats(wing, defines, country);
+        var fight = RegionAirWarRules.Stats(wing, defines, country, inRegion: true);
+
+        Assert.Equal(FixedPoint.Truncate(0.925 * plane.AirAttack), sort.Attack, 9);
+        Assert.Equal(FixedPoint.Truncate(0.925 * plane.Agility), sort.Agility, 9);
+        Assert.Equal(plane.AirDefense, sort.Defence, 9);
+        Assert.Equal(FixedPoint.Truncate((0.1 + 0.925 + 0.2) * plane.AirAttack), fight.Attack, 9);
+        Assert.Equal(FixedPoint.Truncate((0.1 + 1 + 0.2) * plane.AirDefense), fight.Defence, 9);
+        Assert.Equal(FixedPoint.Truncate((0.1 + 0.925) * plane.Agility), fight.Agility, 9);
+
+        // At the first experience level the holder is empty.
+        wing.Experience = defines.NAir.AIR_WING_XP_LEVELS[0];
+        Assert.Equal(plane.AirAttack, RegionAirWarRules.Stats(wing, defines, country).Attack, 9);
     }
 }

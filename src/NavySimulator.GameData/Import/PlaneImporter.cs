@@ -110,6 +110,7 @@ public static class PlaneImporter
         var (id, block) = matches[0];
         plane.SubUnit = id;
         plane.SubUnitTypes = Words(block.GetAll("type"));
+        plane.SubUnitCategories = Words(block.GetAll("categories"));
         plane.CarrierWingSize = (int?)block.GetDouble("carrier_air_wing_size");
         plane.LandWingSize = (int?)block.GetDouble("land_air_wing_size");
     }

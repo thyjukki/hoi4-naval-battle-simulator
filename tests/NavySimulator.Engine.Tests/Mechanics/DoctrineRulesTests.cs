@@ -122,16 +122,24 @@ public class DoctrineRulesTests
     }
 
     [Fact]
-    public void Participant_DoesNotSimulateAirDoctrines_AndListsWhatItIgnores()
+    public void Participant_SimulatesAirDoctrines_AndListsWhatItIgnores()
     {
         var naval = Effects(new Dictionary<string, double> { ["naval_detection"] = 0.05, ["naval_retreat_speed"] = 0.1 }, notSimulated: ["effect"]);
+        var bonus = new PlaneBonus("new_battlefield_support (category_carrier_nav_bomber)", "category_carrier_nav_bomber",
+            new ModifierSet([new("naval_strike_attack", 0.1)]));
         var air = new GrandDoctrine("new_battlefield_support", "air", [],
-            Effects(new Dictionary<string, double> { ["naval_retreat_speed"] = 1 }), new Dictionary<string, CountryEffects>());
+            new CountryEffects(new ModifierSet([new("naval_retreat_speed", 1.0)]), [], [], [bonus]), new Dictionary<string, CountryEffects>());
 
         var participant = Participant([Ship("dd", "destroyer", "screen_ship")], Setup(Grand("new_fleet_in_being", [], naval)), Setup(air));
+        var carrierBomber = new PlaneEquipment("cv_nav_bomber_equipment_1", new PlaneStats(NavalAttack: 20), subUnit: "cv_nav_bomber",
+            subUnitCategories: ["category_nav_bomber", "category_carrier_nav_bomber"]);
+        var landBomber = new PlaneEquipment("nav_bomber_equipment_1", new PlaneStats(NavalAttack: 20), subUnit: "nav_bomber",
+            subUnitCategories: ["category_nav_bomber"]);
 
-        Assert.Equal(0.1, participant.CountryModifiers.Get("naval_retreat_speed"), 9);
-        Assert.Equal(["effect", "naval_detection", "air doctrine new_battlefield_support"], participant.IgnoredEffects());
+        Assert.Equal(1.1, participant.CountryModifiers.Get("naval_retreat_speed"), 9);
+        Assert.Equal(22, participant.PlaneStatsOf(carrierBomber).NavalAttack, 9);
+        Assert.Equal(20, participant.PlaneStatsOf(landBomber).NavalAttack, 9);
+        Assert.Equal(["effect", "naval_detection"], participant.IgnoredEffects());
     }
 
     [Fact]

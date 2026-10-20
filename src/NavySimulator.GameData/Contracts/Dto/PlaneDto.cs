@@ -26,6 +26,9 @@ public class PlaneDto
     /// <summary>The sub-unit's <c>type</c> keywords; the game's fighter tests read these, not the equipment's (A-WINGS).</summary>
     public List<string> SubUnitTypes { get; set; } = [];
 
+    /// <summary>The sub-unit's <c>categories</c> (e.g. <c>category_carrier_nav_bomber</c>); doctrine bonuses name them (S-DOCTRINE-EFFECT).</summary>
+    public List<string> SubUnitCategories { get; set; } = [];
+
     /// <summary>The sub-unit's <c>carrier_air_wing_size</c>: planes per wing on a carrier.</summary>
     public int? CarrierWingSize { get; set; }
 

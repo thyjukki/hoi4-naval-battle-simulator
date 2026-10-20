@@ -42,6 +42,26 @@ public sealed class DoctrineSetupTests : IDisposable
               ]
             }
             """);
+        File.WriteAllText(Path.Combine(data, "doctrines", "air.json"), """
+            {
+              "id": "air",
+              "tracks": [ { "id": "strike_aircraft" } ],
+              "grandDoctrines": [
+                {
+                  "id": "test_air",
+                  "tracks": [ "strike_aircraft" ],
+                  "effects": {
+                    "countryModifiers": { "air_nav_efficiency": 0.05, "carrier_traffic": 0.1, "air_accidents_factor": -0.1 },
+                    "unitBonuses": {
+                      "category_carrier_nav_bomber": { "naval_strike_attack": 0.1, "air_agility": 0.05 },
+                      "category_tac_bomber": { "air_bombing": 0.1 }
+                    }
+                  }
+                }
+              ],
+              "subdoctrines": []
+            }
+            """);
         File.WriteAllText(Path.Combine(data, "spirits", "navy-spirits.json"), """
             {
               "spirits": [
@@ -74,6 +94,25 @@ public sealed class DoctrineSetupTests : IDisposable
         Assert.Contains("naval_detection", scenario.Attacker.IgnoredEffects());
         Assert.Contains("supply_consumption (light_cruiser)", scenario.Attacker.IgnoredEffects());
         Assert.DoesNotContain(loader.Warnings, warning => warning.StartsWith("attacker", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AirDoctrines_RaiseThePlanesOfTheirCategories_AndTheirCountryModifiersApply()
+    {
+        // A-STATS: a block for category_carrier_nav_bomber reaches carrier naval bombers (sub-unit cv_nav_bomber) as a
+        // factor on the equipment stat, and not land naval bombers; air_bombing has no naval counterpart.
+        var (scenario, _) = Build(side => side.Doctrines["air"] = Setup("test_air"));
+        var carrier = scenario.PlanesByID["cv_nav_bomber_equipment_2"];
+        var land = scenario.PlanesByID["nav_bomber_equipment_2"];
+
+        Assert.Equal(NavySimulator.Engine.Stats.FixedPoint.Truncate(1.1 * carrier.Stats.NavalAttack), scenario.Attacker.PlaneStatsOf(carrier).NavalAttack, 9);
+        Assert.Equal(NavySimulator.Engine.Stats.FixedPoint.Truncate(1.05 * carrier.Stats.Agility), scenario.Attacker.PlaneStatsOf(carrier).Agility, 9);
+        Assert.Equal(land.Stats.NavalAttack, scenario.Attacker.PlaneStatsOf(land).NavalAttack, 9);
+        Assert.Equal(0.05, scenario.Attacker.CountryModifiers.Get("air_nav_efficiency"), 9);
+        Assert.Contains("air_bombing (category_tac_bomber)", scenario.Attacker.IgnoredEffects());
+        Assert.Contains("air_accidents_factor", scenario.Attacker.IgnoredEffects());
+        Assert.DoesNotContain("carrier_traffic", scenario.Attacker.IgnoredEffects());
+        Assert.DoesNotContain(scenario.Attacker.IgnoredEffects(), effect => effect.Contains("naval_strike_attack", StringComparison.Ordinal));
     }
 
     [Fact]

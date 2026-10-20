@@ -229,7 +229,7 @@ public sealed class ContentLibrary
         foreach (var plane in catalog.Planes.Where(plane => !string.IsNullOrWhiteSpace(plane.ID)))
         {
             planes.TryAdd(plane.ID, new PlaneEquipment(plane.ID, plane.Stats.ToDomain(), plane.Types, plane.Missions, plane.CarrierCapable,
-                plane.SubUnit, plane.SubUnitTypes));
+                plane.SubUnit, plane.SubUnitTypes, plane.SubUnitCategories));
         }
 
         var leaderTraits = new Dictionary<string, LeaderTrait>(StringComparer.Ordinal);
@@ -330,7 +330,8 @@ public sealed class ContentLibrary
     /// <summary>
     /// S-DOCTRINE-EFFECT: the engine form of a doctrine part's or spirit's effects. Each sub-unit block becomes a
     /// technology-like bonus for that sub-unit (S-STATS-SHIP), each <c>equipment_bonus</c> block an equipment bonus for that
-    /// equipment type (S-STATS-BONUS); stat keys with no simulator stat and scripted effects are listed as not simulated.
+    /// equipment type (S-STATS-BONUS); plane stat keys of a sub-unit block become a plane bonus for the plane sub-unit or
+    /// category it names (A-STATS); other stat keys and scripted effects are listed as not simulated.
     /// </summary>
     internal static CountryEffects Effects(CountryEffectsDto? effects, string source)
     {
@@ -340,6 +341,7 @@ public sealed class ContentLibrary
         }
 
         var bonuses = new List<Research>();
+        var planeBonuses = new List<PlaneBonus>();
         var notSimulated = new List<string>();
 
         void AddBonuses(Dictionary<string, Dictionary<string, double>>? blocks, bool isEquipmentBonus)
@@ -347,13 +349,28 @@ public sealed class ContentLibrary
             foreach (var (target, values) in blocks ?? [])
             {
                 var stats = new ShipStatsDto();
+                var planeStats = new Dictionary<string, double>(StringComparer.Ordinal);
 
                 foreach (var (key, value) in values ?? [])
                 {
-                    if (!ShipStatKeys.TryAdd(stats, key, value))
+                    // Ships and planes share maximum_speed and reliability; a block for a ship sub-unit matches no plane
+                    // and one for a plane category no ship.
+                    var planeKey = !isEquipmentBonus && PlaneBonus.StatKeys.Contains(key);
+
+                    if (planeKey)
+                    {
+                        planeStats[key] = value;
+                    }
+
+                    if (!ShipStatKeys.TryAdd(stats, key, value) && !planeKey)
                     {
                         notSimulated.Add($"{key} ({target})");
                     }
+                }
+
+                if (planeStats.Count > 0)
+                {
+                    planeBonuses.Add(new PlaneBonus($"{source} ({target})", target, new ModifierSet(planeStats)));
                 }
 
                 var domain = stats.ToDomain();
@@ -368,7 +385,7 @@ public sealed class ContentLibrary
         AddBonuses(effects.UnitBonuses, isEquipmentBonus: false);
         AddBonuses(effects.EquipmentBonuses, isEquipmentBonus: true);
         notSimulated.AddRange(effects.Scripted ?? []);
-        return new CountryEffects(new ModifierSet(effects.CountryModifiers ?? []), bonuses, notSimulated);
+        return new CountryEffects(new ModifierSet(effects.CountryModifiers ?? []), bonuses, notSimulated, planeBonuses);
     }
 
     /// <summary>

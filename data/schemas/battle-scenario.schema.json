@@ -132,6 +132,11 @@
             "carrierWingsExecuteNavalStrike": {
               "type": "boolean",
               "description": "A-WINGS-STRIKE [ASSUMED]: carrier strike wings execute naval strike (default true); false: carriers do no damage."
+            },
+            "escapedCarrierWings": {
+              "type": "string",
+              "enum": [ "Stay", "Leave", "RegionMissionOnly" ],
+              "description": "A-REGION [LOG, unsettled]: an escaped carrier's wings in the region's air war: Stay (default, as before the escape), Leave, or RegionMissionOnly (off the scramble list, keeping a region mission they had)."
             }
           },
           "additionalProperties": false
@@ -332,12 +337,18 @@
         },
         "carrierWingsOnRegionMission": {
           "type": "boolean",
-          "description": "A-REGION: the carrier wings fly a mission over the battle's region: all of them fight in the region's air war and can be disrupted (default false: only scrambled; their fighters attack, nobody is disrupted)."
+          "description": "A-REGION-SYNC: the carrier wings fly a mission over the battle's region: all of them fight in the region's air war and can be disrupted; false: only scrambled (their fighters attack, nobody is disrupted). Default: the game's case for a battle-start save, the attacker yes, the defender no (the attacker's naval mission tick gives its wings the region)."
         },
         "carrierMissionEfficiency": {
           "type": "number",
           "minimum": 0,
-          "description": "A-REGION: the carrier wings' mission effectiveness, which sets how many of their planes fight in the region's air war (default 1)."
+          "description": "A-REGION-SYNC: the carrier wings' supply ratio and fuel in their mission effectiveness (default 1). The effectiveness, which sets how many of their planes fight in the region's air war, also takes the deck crowding and air_mission_efficiency."
+        },
+        "radarCoverage": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "A-DETECT-RAD: share of the battle region's provinces covered by the side's (and its friends') radars, each times its state's control share (default 0). Times DETECT_CHANCE_FROM_RADARS it adds to the side's air detection in the region."
         }
       },
       "additionalProperties": false

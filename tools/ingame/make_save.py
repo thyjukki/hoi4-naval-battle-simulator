@@ -28,7 +28,11 @@ save with one task force of each side in one sea province, at war, where the bat
  10. removes the naval combat at the battle's location, so the game starts the battle afresh when unpaused;
  11. gives each carrier its air wings (A-WINGS-SAVE): an air base for the ship in strategic_air and, per plane sub-unit,
      an air wing pool of the country with the carrier's wings of the country's variant of each plane; adds the side's
-     plane stockpile to the country's equipment and sets the task force's carrier stance (sortie_efficiency);
+     plane stockpile to the country's equipment and sets the task force's carrier stance (sortie_efficiency); a side
+     with carrierWingsOnRegionMission true gets its carrier wings on a mission over the battle's region
+     (`mission={ type=0 period=2 active=yes strategic_region=<--air-region> region_change_penalty=0.9 ... }`,
+     A-REGION-SYNC); otherwise they have none and the game gives one only to the side whose naval mission tick starts
+     the battle (the attacker);
  12. puts the side's land-based wings at the country's air base (--air-base, default Burgas 329 for BUL and Dobrogea
      350 for ROM in the CL3 template) on their mission over the battle's strategic region (--air-region, default 30):
      `mission={ type=16 or 1 ... strategic_region=30 region_change_penalty=0 }` (A-MISSION-SAVE).
@@ -314,10 +318,17 @@ def mission_mask(missions):
     return sum(1 << MISSION_BITS.index(m) for m in missions if m in MISSION_BITS)
 
 
-def write_carrier_wings(save, country, side, carrier_ids, variants, ids):
+def write_carrier_wings(save, country, side, carrier_ids, variants, ids, region=None):
     """A-WINGS-SAVE: per carrier an air base (strategic_air, `carrier={ id type=51 }`, capacity = deck size x
     CARRIER_SIZE_STAT_INCREMENT) and, per plane sub-unit on it, an air wing pool of the country holding the carrier's
-    wings (count, manpower, the variant, allowed missions; experience 0, no mission). Returns (bases, pools, planes)."""
+    wings (count, manpower, the variant, allowed missions; experience 0). With `region` the wings fly a mission over that
+    strategic region (A-REGION-SYNC: the reader registers them on the region's mission list; the penalty is not read for
+    carrier wings), else none. Returns (bases, pools, planes)."""
+    if region is None:
+        mission = ["\t\t\t\t\ttype=0", "\t\t\t\t\tperiod=2", "\t\t\t\t\tactive=no", "\t\t\t\t\tmissions_done=0"]
+    else:
+        mission = ["\t\t\t\t\ttype=0", "\t\t\t\t\tperiod=2", "\t\t\t\t\tactive=yes", f"\t\t\t\t\tstrategic_region={region}",
+                   "\t\t\t\t\tregion_change_penalty=0.9", "\t\t\t\t\tmissions_done=0"]
     air = save.top_level("strategic_air")
     air_end = save.block_end(air)
     children = list(save.children(air, air_end))
@@ -354,8 +365,7 @@ def write_carrier_wings(save, country, side, carrier_ids, variants, ids):
                         pools += ["\t\t\tair_wings={", f"\t\t\t\tid={{ id={ids[69]} type=69 }}", f"\t\t\t\tcount={planes}",
                                   "\t\t\t\texperience=0", "\t\t\t\treinforcement_setting=1", "\t\t\t\ttimed_disabling={",
                                   "\t\t\t\t\tremaining_hours=0", "\t\t\t\t\tshould_start_on_transfer=no", "\t\t\t\t}",
-                                  f"\t\t\t\tmanpower={planes * 40}", "\t\t\t\tmission={", "\t\t\t\t\ttype=0", "\t\t\t\t\tperiod=2",
-                                  "\t\t\t\t\tactive=no", "\t\t\t\t\tmissions_done=0", "\t\t\t\t}", f'\t\t\t\ttag="{country}"',
+                                  f"\t\t\t\tmanpower={planes * 40}", "\t\t\t\tmission={"] + mission + ["\t\t\t\t}", f'\t\t\t\ttag="{country}"',
                                   "\t\t\t\tequipment={", "\t\t\t\t\tequipment={", f"\t\t\t\t\t\tid={{ id={variants[wing['plane']['id']]} type=70 }}",
                                   f"\t\t\t\t\t\tamount={planes}", "\t\t\t\t\t}", "\t\t\t\t\tallow_zero_entries=yes", "\t\t\t\t}",
                                   f'\t\t\t\tname="{design["design"]} {k + 1} {sub_unit} {n}"', "\t\t\t\tpriority=1",
@@ -1066,8 +1076,10 @@ def main():
         side = ships[role]
         for bonus in side["equipmentBonuses"]:
             warnings.append(f"{role}: equipment bonus {bonus['bonus']} (on {', '.join(bonus['designs'])}) is not written to the save")
-        if any(setup["folder"] != "naval" for setup in side["doctrines"]):
-            warnings.append(f"{role}: air doctrines are written, but the simulator does not simulate them yet")
+        on_region = side.get("carrierWingsOnRegionMission")
+        if role == "attacker" and on_region is False:
+            warnings.append("attacker: carrierWingsOnRegionMission false cannot be written; the game gives the attacker's "
+                            "carrier wings the region at its naval mission tick (A-REGION-SYNC)")
         mio_handles, next_mio = write_mios(save, tf.country, side, next_mio)
         side["mioHandles"] = mio_handles
         variants, clones = pick_variants(save, parsed, tf.country, side["designs"], taken)
@@ -1084,7 +1096,8 @@ def main():
         plane_ids |= {entry["plane"]["id"] for entry in side["planeStockpile"]}
         plane_ids |= {entry["plane"]["id"] for entry in side["landBasedAirwings"]}
         planes = plane_variants(save, parsed, tf.country, sorted(plane_ids))
-        side["air"] = write_carrier_wings(save, tf.country, side, side["shipIds"], planes, ids)
+        side["air"] = write_carrier_wings(save, tf.country, side, side["shipIds"], planes, ids,
+                                          args.air_region if side.get("carrierWingsOnRegionMission") else None)
         write_stockpile(save, tf.country, side["planeStockpile"], planes)
         write_carrier_stance(save, tf, side.get("carrierStanceIndex"))
         if side["landBasedAirwings"]:

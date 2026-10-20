@@ -57,6 +57,9 @@ public sealed record BattleRules
     /// </summary>
     public bool CarrierWingsExecuteNavalStrike { get; init; } = true;
 
+    /// <summary>A-REGION [LOG, unsettled]: what an escaped carrier's wings do in the region's air war.</summary>
+    public EscapedCarrierWings EscapedCarrierWings { get; init; } = EscapedCarrierWings.Stay;
+
     /// <summary>S-RETREAT: when false, ships never decide to retreat (tooling).</summary>
     public bool RetreatEnabled { get; init; } = true;
 

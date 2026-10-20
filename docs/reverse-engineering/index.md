@@ -860,11 +860,134 @@ From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings o
 | 0xf7ad60 | speed damage bonus `(out, vDef, vAtk, dmg)`: `vAtk > vDef > 0 ? (min(ratio, BIGGEST_SPEED_FACTOR_DIFF) − 1) × dmg × COMBAT_BETTER_SPEED_DAMAGE_INCREASE + trunc(vAtk/100) × TOP_SPEED_DAMAGE_BONUS_FACTOR × dmg : 0` | A-REGION, A-INTERCEPT | [REG/combat] |
 | 0xf7be70 | one attacker vs the defenders: engaged `min(Σleft × MULTIPLANE_CAP, n)`, per defender 0xf862a0 with shares, disruption `+0xb0`, ace earn rolls 0x82b / 0x833 / 0x834 / int 0x83f | A-REGION | [REG/combat] |
 | 0xf7ee40 | mission region: `+0x30`, else the carrier location's region | A-REGION | [REG/lists] |
-| 0xf80540 | defender weights `n`, `left`: `max(1, round(trunc(n × k) × (1 + stat37) × w))`, w CAS 2 / port 100 / strategic 1 + mod 4 / else 1; AS defenders `n` when a strike mission is present | A-REGION | [REG/war] |
+| 0xf80540 | defender weights `n`, `left`: `max(1, round(trunc(n × k) × (1 + stat37) × w))` (**corrected** by A-DETECT: `n × k` in fixed point; stat37 = air_visibility_factor), w CAS 2 / port 100 / strategic 1 + mod 4 / else 1; AS defenders `n` when a strike mission is present | A-REGION | [REG/war] |
 | 0xf81a20 | region air combat `(region, prov, tag, attackers, defenders)`: planes = `effective_planes_count`, detection, 0xf80540, attacker XP, 0xf7be70 per attacker | A-REGION | [REG/war] |
 | 0xf81ce0 | per defending country sums → war support / statistics (0xd026f0); no combat effect | A-REGION | [REG/war] |
 | 0xf862a0 | defender losses: `dmg = pot × COMBAT_DAMAGE_STATS_MULTILPIER + speed bonus − agility reduction`; `x = max(0.001, scale × dmg × 0.01 / defence)`, scale `COMBAT_DAMAGE_SCALE_CARRIER` if both carrier, random rounding U 0xacf below the cap; `+0x98 += losses`; killer rolls 0xade / 0xae5 | A-REGION | [REG/combat] |
 | 0xf87550 | apply the hour's air-war losses: ace death 0xa50 / 0xa53, 0xf63580, carrier in combat → 0x15c4500 (naval combat tally) | A-REGION, A-LOSSES | [REG/losses] |
+
+### Region air detection (A-DETECT)
+
+From [A-DETECT-region-air-detection.md][DET]: a country's air detection `det` in a strategic region (the region air war's defender weights, disruption and escorts), its radar, territory, aircraft, night and weather terms, and the debug lock. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x10a3f20 | radar record coverage: level (+0x58), range (+0x50) from NBuildings.RADAR_RANGE_*, covered provinces, per-region counts (+0x18 / +0x30) | A-DETECT | [DET/rad] |
+| 0x10a83f0 | country radar rebuild: one 0x70-byte radar record per state with radar buildings → country+0x1120 | A-DETECT | [DET/rad] |
+| 0x268ad0 | console command `lock_air_det` handler (registered in 0x36f0), fills 0x332f5f0 | A-DETECT | [DET/lock] |
+| 0x702780 | friendly test country × country (relation set +0x290, subject relation 0x30d1, relation +0x210); also "not enemy" in 0xf860e0 | A-DETECT | [DET/rad] |
+| 0x9d4190 | share of a state's provinces controlled by a tag (or the same original tag) | A-DETECT | [DET/rad] |
+| 0xc546e0 | strategicAir `+0x98[region id]` (region mission list) | A-DETECT | [DET/tot] |
+| 0xe21640 | mean province darkness (0xf19660) over a region's provinces | A-DETECT | [DET/night] |
+| 0xe21800 | share of the region's land provinces (terrain +0xd2 bit 0) controlled by tag / same original tag; 0 without land | A-DETECT | [DET/base] |
+| 0xf5e520 | wing base region (air base province's region, or the carrier task force's region), optional int | A-DETECT | [DET/tot] |
+| 0xf75690 | (update) targeted modifier 0xd = `air_intercept_efficiency` against the target | A-DETECT, A-REGION | [DET/use] |
+| 0xf75820 | (update) cached `clamp(base + targeted modifier 0x1 air_detection vs target, 0, 1)`; bases 1 (carrier) / `det` | A-DETECT, A-REGION | [DET/use] |
+| 0xf77730 | region air detection `det(country, region)` = `clamp((AIR + RAD + BASE) × (1 + NIGHT + WEA), 0.01, 1)`; debug lock table 0x332f5f0; tooltip AIR_DETECTION_IN_REGION_DETAILS | A-DETECT | [DET/tot] |
+| 0xf7a460 | radar coverage of a region for a country and its friends (0x702780): Σ 0xf861d0 / region provinces, clamp 0..1 (1 if none) | A-DETECT | [DET/rad] |
+| 0xf7be70 | (update) the disruption share uses the defender's `left` read before 0xf862a0's decrement (0xf7c282 → 0xf7c5a2) | A-DETECT, A-REGION | [DET/use] |
+| 0xf7d5e4 | naval strike / naval recon detection, calls 0xf7a460 / 0xf77730 (not decoded) | — | [DET/use] |
+| 0xf80540 | (update) weight `max(1, round(n × k × (1 + stat37) × w))` with `n × k` in fixed point (not an integer truncation) | A-DETECT, A-REGION | [DET/use] |
+| 0x1012f80 | in-range province count of a region from the base position (bounding-box precheck, distance² per province) | A-EXTERNAL | [DET/mix] |
+| 0x1c6cc50 | ship escape (from 0x19739bd, carrier): moves its AirFX from group+0x58 to group+0x88 (whether the carrier's wings then leave the region war is unsettled: the logs disagree, `rules.escapedCarrierWings`) | A-REGION | [DET/mix] |
+| 0xf87480 | (adds) coverage range = trunc(wing range (0xf5e5c0) / global 0x3335f50, likely MAP_SCALE_PIXEL_TO_KM 7.114) px | A-EXTERNAL | [DET/mix] |
+| 0xf861d0 | one country's radar sum in a region: Σ radar records (country+0x1120) covered provinces × control share (+0x68) | A-DETECT | [DET/rad] |
+
+| Field / id | Meaning | Finding |
+|---|---|---|
+| country +0x1120 / +0x112c | radar records (list, count) | [DET/rad] |
+| radar record +0x00 / +0x18 / +0x30 / +0x48 / +0x50 / +0x58 / +0x60 / +0x68 | covered provinces / regions / per-region counts / state / range / level / owner / control share | [DET/rad] |
+| data 0x332f5f0 / 0x332f5fc | `lock_air_det` table {country index, fixed det}, count | [DET/lock] |
+| modifier 0x1 `air_detection` | region weather holder (0xf77eee); targeted T1 (0xf75926) | [DET/tot] |
+| modifier 0x8 / 0x9 `air_interception_detect_factor` / `air_superiority_detect_factor` | 0xf7784b / 0xf77861 | [DET/tot] |
+| modifier 0x74 / 0x75 `air_home_defence_factor` / `air_power_projection_factor` | 0xf77882 / 0xf77894 | [DET/tot] |
+| modifier 0xd `air_intercept_efficiency` (targeted, T13) | 0xf75783 | [DET/use] |
+| NAir.DETECT_CHANCE_FROM_OCCUPATION / _RADARS / _AIRCRAFTS_EFFECTIVE_COUNT / _AIRCRAFTS / _NIGHT, NO_SEARCH_MISSION_DETECT_FACTOR | read at 0xf777de / 0xf7780c / 0xf77cc1 / 0xf77d15 / 0xf77d81 / 0xf77869 | [DET/tot] |
+| NBuildings.RADAR_RANGE_BASE / _MIN / _MAX | globals 0x3334040 / 0x33340c8 / 0x3334178, read 0x10a3fe5..0x10a3ff3 | [DET/rad] |
+
+### Plane stats and air modifiers (A-STATS)
+
+From [A-STATS-plane-stats-and-air-modifiers.md][AST]: how a wing's stats are built from its equipment and the owner's sub-unit bonuses (doctrines, spirits, technologies), how the combat getters read them, and which air country modifiers act in a naval battle. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1012920 | Σ amounts of the wing's equipment list (`wing+0x1d8`) | A-STATS | [AST/cache] |
+| 0x13e81b0 | stat token → `EEquipmentStats`: full enum incl. 0x2e air_range … 0x37 air_visibility_factor, 0x3e maximum_speed, 0x4c night_penalty, 0x2a naval_weather_penalty_factor | A-STATS, S-STATS | [AST/enum] |
+| 0x142a580 (thunk 0x1019ef0) | add a variant's stats to a wing × weight × (1 + sub-unit stat), all 78 stats (wing twin of 0x142b5f0) | A-STATS | [AST/cache] |
+| 0x142aa30 (0x1019f00) | one stat `x == 0 ? 0 : trunc(trunc((1 + sub[s]) × w) × x)` | A-STATS | [AST/cache] |
+| 0x142aaa0 (0x1019f30) | per-mission array: add sub-unit mines, reliability (+ factor), fuel (+ factor) | A-STATS | [AST/cache] |
+| 0x1976db0 | (update) the country's `carrier_traffic` is not read; only the weather (`combat+0xb0`) and night holders | A-SORTIE | [AST/mods] |
+| 0x197d4a0 | AirFX averages `+0xc8 / +0xd0 / +0xd8 / +0xe0 / +0xe8` = plane-weighted stats 0x31 / 0x34 / 0x35 / 0x3e / 0x4c (night_penalty) | A-HIT, A-STATS | [AST/getters] |
+| 0x6f2650 | country per-strategic-region modifier (`country+0x4d8` map → holder +0x50) `.Get(id)` | A-STATS | [AST/effectiveness] |
+| 0xbb8380 | port-strike combat (from 0xf82ca0): external efficiency × (1 + port_strike), ≥ 0.001 | A-EXTERNAL | [AST/mods] |
+| 0xc4daf0 | accident chance terms: BASE + air_accidents, (1 − rel) × RELIABILITY_MULT, region weather, CARRIER_MULT, training, air_accidents_factor (combination not decoded) | A-REGION | [AST/accident] |
+| 0xc62ba0 | country: 0xf661a0 for every pool (from 0x6eab50) | A-STATS | [AST/cache] |
+| 0xd23780 | targeted-modifier entry → holder `+0x130` | A-REGION | [AST/mods] |
+| 0xf5dfa0 | (update) XP gain `trunc(trunc(trunc(g × FIELD_EXPERIENCE_FACTOR) × fuelRatio) × (1 + air_mission_xp_gain_factor + ace))`, clamp [0, AIR_WING_XP_MAX] | A-STATS | [AST/mods] |
+| 0xf5e400 | per-mission stat array of one mission bit (null if none) | A-STATS | [AST/cache] |
+| 0xf5e890 | (update) home defence if the province's region equals the base region (land: base province; carrier: fleet region 0xd6d160), else power projection, to attack and defence; M by the executing mission | A-STATS, A-REGION | [AST/getters] |
+| 0xf60760 | (update) the country's `air_maximum_speed_factor` is never read; speed from `wing+0x580` (base array) × (1 + ace) | A-STATS, A-INTERCEPT | [AST/getters] |
+| 0xf60a40 | stat array for a mission bit, else `wing+0x390` | A-STATS | [AST/cache] |
+| 0xf61d70 | accident chance: 0 if the mission `type` is 0 or no planes; else 0xc4daf0 | A-REGION | [AST/accident] |
+| 0xf63a2d (chunk of 0xf63580) | XP loss on killed planes × (1 + air_wing_xp_loss_when_killed_factor), AIR_WING_XP_LOSS_WHEN_KILLED | A-STATS | [AST/mods] |
+| 0xf65f20 | (update) experience holder: `v` from AIR_WING_XP_LEVELS (−1..1, 0.01 steps); malus × (−v) × (1 + max(air_untrained_pilots_penalty_factor, −1)) if `wing+0x9c4` is set; cached `wing+0xa10` | A-STATS | [AST/xp] |
+| 0xf661a0 | pool `+0x20` = the owner's sub-unit copy (`[country+0xf70]`, 0xd11ae0) | A-STATS | [AST/cache] |
+| 0xf661e0 | wing stat cache `(wing, opt mask)`: per variant `stat[s] += trunc(trunc((1 + sub[s]) × w) × variant[s])` into `wing+0x390`; per-mission arrays `wing+0x968` (`mission_type_stats` deltas); then the sub-unit additive list and clamps (0x1019ea0); mask = argument or mission `type` | A-STATS | [AST/cache] |
+| 0xf78500 | effectiveness: `(1 + dist)(1 + crowd)(1 + supply) × (1 − rcp) × (1 + air_mission_efficiency [region weather + country + carrier fleet admiral]) × fuel × (1 + per-region country value)`, clamp [0, 1] | A-STATS, A-EXTERNAL | [AST/effectiveness] |
+| 0xf7ed40 | (update) the naval strike getters pass the mission `type` (carrier wings 0 → M = 0); 0xf5e890 passes the executing mission if not 0, else `type` | A-STATS, A-DMG | [AST/mission] |
+| 0xfaa680 | naval-mission fleet spotting: spotting_chance / night_spotting_chance (navalmission.cpp), before battles | — | [AST/mods] |
+
+| Field | Meaning | Finding |
+|---|---|---|
+| wing +0x390 / +0x2f0 / +0x968 | stat cache array / its stat block / per-mission arrays (0x270 bytes each) | [AST/cache] |
+| wing +0x1d8 / +0x1f8 | equipment amounts (stride 0x18) / `{variant, amount}` list (stride 0x10) | [AST/cache] |
+| wing +0x9c4 / +0xa10 / +0xa18 | owner tag (save `tag`, set at creation) / cached untrained factor (save `air_untrained_pilots_penalty_factor`) / its flag | [AST/xp] |
+| wing +0x548 | stat 0x37 `air_visibility_factor` (A-REGION's `stat37`) | [AST/enum] |
+| pool +0x20 | the owner's sub-unit copy (country +0xf70) | [AST/cache] |
+| airfx +0xe8 | plane-weighted `night_penalty` (stat 0x4c) of the strike wings (A-HIT night term) | [AST/getters] |
+
+### Carrier wings' region and mission effectiveness (A-REGION-SYNC)
+
+From [A-REGION-SYNC-carrier-wing-region.md][SYNC]: what gives a task force's carrier wings a mission region (the naval mission tick out of combat, region and province changes), and the full mission effectiveness 0xf78500. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1941470 / 0x19413d0 | air command A ctor (wing lists / one wing), vtable 0x2a1d570, execute 0x1946880, check 0x19488c0 → 0x1941e60 | A-REGION-SYNC | [SYNC/callers] |
+| 0x1941b10 | air command per wing: SetRegion(cmd region), then EnableMission per bit from the template wing's type | A-REGION-SYNC | [SYNC/callers] |
+| 0x1a0afb0 | CSupplyConsumer: `+0x30 = _ReceivedSupply(+0x40) / _AskedSupply(+0x28)`, 1 if asked = 0 | A-REGION-SYNC | [SYNC/eff] |
+| 0xc00000 | InCombat(unit): `unit+0x1b4 > 0` | A-REGION-SYNC | [SYNC/tick] |
+| 0xc02781 (in 0xc01dc0) | unit movement, naval unit entering a province: 0xd6fff0(tf, P) before SetLocation (vt+0xe8) | A-REGION-SYNC | [SYNC/move] |
+| 0xc482a0 | CSupplyConsumer base ctor: +0x20 / +0x28 / +0x30 = 1.0, +0x38 = −1, +0x40 = 1.0, +0x1c type | A-REGION-SYNC | [SYNC/eff] |
+| 0xc543e0 | base entry fuel ratio `clamp(received +0xf0 / fuel_consumption +0xe0, 0, 1)`, 1 if consumption ≤ 0 | A-REGION-SYNC | [SYNC/eff] |
+| 0xc54ed0 | base entry supply ratio (entry +0x30) for a tag | A-REGION-SYNC | [SYNC/eff] |
+| 0xc5c000 / 0xf63f50 | per base / per pool: 0xf643a0 for every wing (from task force SetLocation 0xd77c70) | A-REGION-SYNC | [SYNC/move] |
+| 0xc60df0 | base entry (CStrategicAir base access) reader / ctor: `countries` block, +0xd0 operational_status = 1, +0xd8..+0xf0 = 0 | A-REGION-SYNC | [SYNC/eff] |
+| 0xc647b0 | (update) region sync `(base, old, new)`: wings whose mission region == old → SetRegion(new, recompute); from 0xd6fff0 on a region change only, never gives a region to a wing without one | A-REGION-SYNC | [SYNC/move] |
+| 0xc668b0 | base entry writer: country, operational_status +0xd0, capacity_penalty +0xd8, fuel_consumption +0xe0, received +0xf0, base_fuel_consumption +0xe8 | A-REGION-SYNC | [SYNC/eff] |
+| 0xd6d160 | task force's sea region (location region; in port the port's sea zone) | A-REGION-SYNC | [SYNC/tick] |
+| 0xd6fff0 | task force province change: old / new region differ → 0xc647b0 for each carrier with an air base (+0x80 set) | A-REGION-SYNC | [SYNC/move] |
+| 0xd705f0 | task force hourly update (vtable 0x2963000): … 0xd79900 | A-REGION-SYNC | [SYNC/tick] |
+| 0xd72000 | make a task force the child of another: clears carrier wing regions (0xc4eaa0 → 0xf5d1d0) | A-REGION-SYNC | [SYNC/callers] |
+| 0xd77c70 | task force SetLocation (vt+0xe8): carrier pools → 0xf643a0 | A-REGION-SYNC | [SYNC/move] |
+| 0xd79900 | task force mission tick: return if in combat; state +0x4b8 == 0 → 0xfbcb90(tf+0x360) | A-REGION-SYNC | [SYNC/tick] |
+| 0xed0400 | CSupplyConsumer writer: `disrupted_supply` (+0xa0), `motorization_level` (+0x1d) | A-REGION-SYNC | [SYNC/eff] |
+| 0xf63e00 | add planes to a wing: blends region_change_penalty (+0x150) by plane count with min(p, PENALTY_FACTOR) | A-EXTERNAL | [SYNC/eff] |
+| 0xf643a0 | wing refresh: UpdateCoverage(force); if no province of its region is in range: carrier → command to the fleet's region, land → SetRegion(null); saves / restores type in +0x1b8 | A-REGION-SYNC | [SYNC/move] |
+| 0xf78500 | (update) mission effectiveness, full: `cov (non-carrier) × capacity × supply × (1 − penalty: non-carrier, type & 0x60 = 0) × (1 + air_mission_efficiency: region weather (wings with a region) + country + fleet admiral) × fuel × (1 + targeted)`, clamp [0, 1]; isCarrier = base+0x68 == 0 | A-EXTERNAL, A-REGION-SYNC | [SYNC/eff] |
+| 0xf7af10 | wing can be activated: base gives the country access, no training, and (0xf61600 > 0 or recon / paradrop or at war) | A-REGION-SYNC | [SYNC/tick] |
+| 0xf7ec90 | region change daily gain by sub-unit flags +0x5a8 (CAS, naval bomber, tactical, fighter, strategic, maritime patrol, default) | A-EXTERNAL | [SYNC/eff] |
+| 0xf80490 | region change penalty decay, hourly: `−= gain / 24`, clamp [0, 1], only type ≠ 0 and not training (carrier wings keep theirs; not read for them) | A-EXTERNAL | [SYNC/eff] |
+| 0xf80920 | mission has an active region mission (`+0x30 && active`) | A-REGION-SYNC | [SYNC/tick] |
+| 0xfa9e00 | assign the task force's carrier wings to region `rid` (0 = clear) via command 0x1941470 / 0x1946880 | A-REGION-SYNC | [SYNC/tick] |
+| 0xfb6710 | naval mission type → map icon (0 hold, 1 patrol, 2 strike force, 3 convoy raiding, 4 convoy escort, 5 mines planting, 6 mines sweeping, 7 training, 8 reserve fleet, 9 invasion support) | A-REGION-SYNC | [SYNC/tick] |
+| 0xfbcb90 | naval mission update: 0xfbe7f0 first, then (out of combat, in region) engagement per type and `hours_in_mission` +1 | A-REGION-SYNC | [SYNC/tick] |
+| 0xfbe7f0 | `is_in_regions` (+0x30) by type, and the carrier region rid by type → 0xfa9e00 (hold, strike force, convoy, mines, training: the location's region; patrol: if it is the spotting region; reserve, invasion support: none) | A-REGION-SYNC | [SYNC/tick] |
+| 0xfbea80 | naval mission writer: mission +0x14, is_in_regions +0x30, navy_engagement_rule +0x34, hours_in_mission +0x3c, spotting_region +0x70, hours_in_spotting_region +0x6c, accessible_regions_range +0xa8 | A-REGION-SYNC | [SYNC/tick] |
+
+| Field / id | Meaning | Finding |
+|---|---|---|
+| CStrategicAir base entry (`base+0x30[country]`) +0x30 / +0xd0 / +0xd8 / +0xe0 / +0xe8 / +0xf0 | supply ratio / operational_status / capacity_penalty / fuel_consumption / base_fuel_consumption / received | [SYNC/eff] |
+| modifier 0x11 `air_mission_efficiency` | 0xf78500 (country, fleet admiral, region weather) | [SYNC/eff] |
 
 ## 2. Struct fields
 
@@ -1873,3 +1996,25 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [REG/accident]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-accident-the-other-hourly-plane-loss
 [REG/other]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#a-region-other-other-effects-on-the-naval-battle
 [REG/open]: findings/A-REGION-carrier-wings-in-the-region-air-war.md#unresolved
+[DET]: findings/A-DETECT-region-air-detection.md
+[DET/tot]: findings/A-DETECT-region-air-detection.md#a-detect-tot-0xf77730out-rad-region-tag-tooltip
+[DET/rad]: findings/A-DETECT-region-air-detection.md#a-detect-rad-radar-coverage-0xf7a460--0xf861d0
+[DET/base]: findings/A-DETECT-region-air-detection.md#a-detect-base-controlled-territory-0xe21800region-out-tag
+[DET/night]: findings/A-DETECT-region-air-detection.md#a-detect-night-region-darkness-0xe21640region-out
+[DET/use]: findings/A-DETECT-region-air-detection.md#a-detect-use-where-det-enters-fills-in-a-region
+[DET/lock]: findings/A-DETECT-region-air-detection.md#a-detect-lock-debug-override
+[AST]: findings/A-STATS-plane-stats-and-air-modifiers.md
+[AST/enum]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-enum-the-stat-indices
+[AST/cache]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-cache-the-wing-stat-cache-0xf661e0
+[AST/getters]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-getters-how-the-combat-reads-the-cache
+[AST/mission]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-mission-eff-which-mission-efficiency-0xf7ed40
+[AST/effectiveness]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-effectiveness-air-keys-in-the-mission-effectiveness-0xf78500
+[AST/xp]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-xp-the-experience-holder-and-air_untrained_pilots_penalty_factor-0xf65f20
+[AST/accident]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-accident-no-accidents-for-carrier-wings-without-a-mission-type
+[AST/mods]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-mods-air-country-modifiers-in-a-naval-battle
+[SYNC]: findings/A-REGION-SYNC-carrier-wing-region.md
+[SYNC/callers]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-callers-every-caller-of-setregion-0xf859d0
+[SYNC/tick]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-tick-the-naval-mission-tick-0xd705f0--0xd79900--0xfbcb90--0xfbe7f0--0xfa9e00
+[SYNC/move]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-move-region-change-and-province-change
+[SYNC/eff]: findings/A-REGION-SYNC-carrier-wing-region.md#a-region-sync-eff-mission-effectiveness-0xf78500mission-out-iscarrier-nosupply-tooltip
+[DET/mix]: findings/A-DETECT-region-air-detection.md#a-detect-mix-air_cv_land_mix-buls-land-bombers-as-defenders-follow-up-log--re

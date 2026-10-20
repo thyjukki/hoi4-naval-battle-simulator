@@ -6,9 +6,10 @@ namespace NavySimulator.Engine.Battles.Air;
 /// <summary>One air wing in a naval battle; planes are removed as they are shot down.</summary>
 public sealed class AirWing
 {
-    public AirWing(PlaneEquipment plane, int planes, HardcodedValues values, bool executesNavalStrike = true)
+    public AirWing(PlaneEquipment plane, int planes, HardcodedValues values, bool executesNavalStrike = true, PlaneStats? stats = null)
     {
         Plane = plane;
+        Stats = stats ?? plane.Stats;
         Planes = planes;
         Size = planes;
         IsStrikeWing = plane.IsInStrikeList(values);
@@ -18,6 +19,9 @@ public sealed class AirWing
     }
 
     public PlaneEquipment Plane { get; }
+
+    /// <summary>A-STATS: the plane's stats with its side's sub-unit bonuses (doctrines, spirits).</summary>
+    public PlaneStats Stats { get; }
     public int Planes { get; set; }
 
     /// <summary>The wing's planes when the battle started: its full strength.</summary>
@@ -37,6 +41,16 @@ public sealed class AirWing
 
     /// <summary>A-WINGS: fighter-type for the sortie bonus of a carrier whose first wing is one (A-SORTIE).</summary>
     public bool IsSortieFighter { get; }
+
+    /// <summary>A-STATS-XP: the wing's experience (wing+0x218); 0 is a fresh wing, which carries the full experience malus.</summary>
+    public double Experience { get; set; }
+
+    /// <summary>
+    /// A-REGION-LISTS: the wing's mission over the battle's region this air hour (it is on the region's mission list);
+    /// null: none (a scrambled-only carrier wing). Its stats then take the mission efficiency and home defence or power
+    /// projection (A-STATS-GETTERS).
+    /// </summary>
+    public RegionMission? RegionMission { get; set; }
 
     /// <summary>A-REGION: planes the wing lost in this air hour's region air war so far (mission+0x98).</summary>
     public int RegionLosses { get; set; }

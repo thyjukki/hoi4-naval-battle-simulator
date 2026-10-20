@@ -13,6 +13,8 @@ public sealed class StaticModifiers
     public const string ShipExperienceMalusMin = "ship_experience_malus_min";
     public const string CarrierExperienceBonusMax = "carrier_experience_bonus_max";
     public const string CarrierExperienceMalusMin = "carrier_experience_malus_min";
+    public const string AirWingExperienceBonusMax = "air_wing_experience_bonus_max";
+    public const string AirWingExperienceMalusMin = "air_wing_experience_malus_min";
     public const string Night = "night";
 
     /// <summary>S-WEATHER: the region weather blocks (<c># on Region</c>), by the phenomenon of the battle's region.</summary>
@@ -66,6 +68,19 @@ public sealed class StaticModifiers
     public const string AirAgilityFactor = "air_agility_factor";
     public const string AirMaximumSpeedFactor = "air_maximum_speed_factor";
     public const string AirEscortEfficiency = "air_escort_efficiency";
+    public const string CarrierCapacityPenaltyReduction = "carrier_capacity_penalty_reduction";
+    public const string AirSuperiorityEfficiency = "air_superiority_efficiency";
+    public const string AirInterceptEfficiency = "air_intercept_efficiency";
+    public const string AirNavEfficiency = "air_nav_efficiency";
+    public const string AirMissionEfficiency = "air_mission_efficiency";
+    public const string AirUntrainedPilotsPenaltyFactor = "air_untrained_pilots_penalty_factor";
+    public const string AirSuperiorityDetectFactor = "air_superiority_detect_factor";
+    public const string AirInterceptionDetectFactor = "air_interception_detect_factor";
+    public const string AirHomeDefenceFactor = "air_home_defence_factor";
+    public const string AirPowerProjectionFactor = "air_power_projection_factor";
+    public const string AirNightPenalty = "air_night_penalty";
+    public const string AirWeatherPenalty = "air_weather_penalty";
+    public const string AirDetection = "air_detection";
     public const string AirAceGenerationChanceFactor = "air_ace_generation_chance_factor";
     public const string NavyCarrierAirAttackFactor = "navy_carrier_air_attack_factor";
     public const string NavyCarrierAirTargettingFactor = "navy_carrier_air_targetting_factor";
@@ -93,7 +108,7 @@ public sealed class StaticModifiers
     public static IReadOnlyCollection<string> UsedBlocks { get; } =
     [
         ScreeningBonus, CapitalScreeningBonus, ShipExperienceBonusMax, ShipExperienceMalusMin,
-        CarrierExperienceBonusMax, CarrierExperienceMalusMin, Night, PrideOfTheFleet,
+        CarrierExperienceBonusMax, CarrierExperienceMalusMin, AirWingExperienceBonusMax, AirWingExperienceMalusMin, Night, PrideOfTheFleet,
         WeatherRainLight, WeatherRainHeavy, WeatherSnow, WeatherBlizzard, WeatherSandstorm, WeatherArcticWater
     ];
 
@@ -105,6 +120,14 @@ public sealed class StaticModifiers
         [ShipExperienceMalusMin] = new(StringComparer.Ordinal) { [NavalDamageFactor] = -0.1, [NavalDefenseFactor] = -0.1 },
         [CarrierExperienceBonusMax] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = 0.2 },
         [CarrierExperienceMalusMin] = new(StringComparer.Ordinal) { [FighterSortieEfficiency] = -0.1 },
+        [AirWingExperienceBonusMax] = new(StringComparer.Ordinal)
+        {
+            [AirAttackFactor] = 0.2, [AirAgilityFactor] = 0.3, [AirNightPenalty] = -0.2, ["air_accidents_factor"] = -1.0
+        },
+        [AirWingExperienceMalusMin] = new(StringComparer.Ordinal)
+        {
+            [AirAttackFactor] = -0.15, [AirAgilityFactor] = -0.15, [AirNightPenalty] = 0.15, ["air_accidents_factor"] = 0.5
+        },
         [Night] = new(StringComparer.Ordinal) { [NavalHitChance] = -0.25, [NavalRetreatSpeed] = 0.1, [CarrierTraffic] = -1.0 },
         [PrideOfTheFleet] = new(StringComparer.Ordinal) { [ExperienceGainNavyUnitFactor] = 0.25, [CriticalReceiveChance] = -0.5 },
         [WeatherRainLight] = Block(("air_accidents", 0.1), ("air_detection", -0.1), ("air_mission_efficiency", -0.1), ("local_org_regain", -0.05),

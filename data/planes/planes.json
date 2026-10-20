@@ -23,6 +23,9 @@
         "cas",
         "strategic_bomber"
       ],
+      "subUnitCategories": [
+        "category_cas"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 12,
@@ -58,6 +61,9 @@
       "subUnitTypes": [
         "cas",
         "strategic_bomber"
+      ],
+      "subUnitCategories": [
+        "category_cas"
       ],
       "landWingSize": 100,
       "stats": {
@@ -95,6 +101,9 @@
         "cas",
         "strategic_bomber"
       ],
+      "subUnitCategories": [
+        "category_cas"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 16,
@@ -131,6 +140,9 @@
         "cas",
         "strategic_bomber"
       ],
+      "subUnitCategories": [
+        "category_cas"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 20,
@@ -161,6 +173,9 @@
       "subUnitTypes": [
         "strategic_bomber",
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -199,6 +214,10 @@
       "subUnitTypes": [
         "cas",
         "strategic_bomber"
+      ],
+      "subUnitCategories": [
+        "category_cas",
+        "category_carrier_cas"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -239,6 +258,10 @@
         "cas",
         "strategic_bomber"
       ],
+      "subUnitCategories": [
+        "category_cas",
+        "category_carrier_cas"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -277,6 +300,10 @@
       "subUnitTypes": [
         "cas",
         "strategic_bomber"
+      ],
+      "subUnitCategories": [
+        "category_cas",
+        "category_carrier_cas"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -317,6 +344,10 @@
         "cas",
         "strategic_bomber"
       ],
+      "subUnitCategories": [
+        "category_cas",
+        "category_carrier_cas"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -352,6 +383,10 @@
       "subUnit": "cv_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter",
+        "category_carrier_fighter"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -389,6 +424,10 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter",
+        "category_carrier_fighter"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -424,6 +463,10 @@
       "subUnit": "cv_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter",
+        "category_carrier_fighter"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -461,6 +504,10 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter",
+        "category_carrier_fighter"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -497,6 +544,10 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter",
+        "category_carrier_fighter"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -531,6 +582,10 @@
       "subUnit": "cv_nav_bomber",
       "subUnitTypes": [
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_carrier_nav_bomber"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -567,6 +622,10 @@
       "subUnitTypes": [
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_carrier_nav_bomber"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -601,6 +660,10 @@
       "subUnit": "cv_nav_bomber",
       "subUnitTypes": [
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_carrier_nav_bomber"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -637,6 +700,10 @@
       "subUnitTypes": [
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_carrier_nav_bomber"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -671,6 +738,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 8,
@@ -703,6 +773,9 @@
       "subUnit": "fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -737,6 +810,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 12,
@@ -770,6 +846,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 14,
@@ -802,6 +881,9 @@
       "subUnit": "fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -837,6 +919,11 @@
         "naval_bomber",
         "scout_plane"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 15,
@@ -870,6 +957,11 @@
       "subUnitTypes": [
         "naval_bomber",
         "scout_plane"
+      ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -905,6 +997,11 @@
         "naval_bomber",
         "scout_plane"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber",
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 21,
@@ -937,6 +1034,9 @@
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_heavy_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -971,6 +1071,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_heavy_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 20,
@@ -1003,6 +1106,9 @@
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_heavy_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1037,6 +1143,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_heavy_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 28,
@@ -1068,6 +1177,9 @@
       "subUnitTypes": [
         "cas",
         "strategic_bomber"
+      ],
+      "subUnitCategories": [
+        "category_cas"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1101,6 +1213,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 15,
@@ -1132,6 +1247,9 @@
       "subUnit": "jet_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1165,6 +1283,9 @@
       "subUnitTypes": [
         "fighter"
       ],
+      "subUnitCategories": [
+        "category_fighter"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 10,
@@ -1197,6 +1318,9 @@
       "subUnitTypes": [
         "strategic_bomber",
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1233,6 +1357,9 @@
       "subUnitTypes": [
         "tactical_bomber"
       ],
+      "subUnitCategories": [
+        "category_tac_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 24,
@@ -1268,6 +1395,9 @@
       "subUnitTypes": [
         "tactical_bomber"
       ],
+      "subUnitCategories": [
+        "category_tac_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 28,
@@ -1298,6 +1428,9 @@
       "subUnit": "mothership",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter"
       ],
       "landWingSize": 50,
       "stats": {
@@ -1331,6 +1464,9 @@
       "subUnitTypes": [
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 12,
@@ -1362,6 +1498,9 @@
       "subUnit": "nav_bomber",
       "subUnitTypes": [
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_nav_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1395,6 +1534,9 @@
       "subUnitTypes": [
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_nav_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 16,
@@ -1425,6 +1567,9 @@
       "subUnit": "nav_bomber",
       "subUnitTypes": [
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_nav_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1585,6 +1730,9 @@
       "subUnitTypes": [
         "scout_plane"
       ],
+      "subUnitCategories": [
+        "category_scout_plane"
+      ],
       "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
@@ -1617,6 +1765,9 @@
       "subUnit": "scout_plane",
       "subUnitTypes": [
         "scout_plane"
+      ],
+      "subUnitCategories": [
+        "category_scout_plane"
       ],
       "carrierWingSize": 10,
       "landWingSize": 100,
@@ -1652,6 +1803,9 @@
         "strategic_bomber",
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_strat_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 22,
@@ -1684,6 +1838,9 @@
       "subUnitTypes": [
         "strategic_bomber",
         "naval_bomber"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1718,6 +1875,9 @@
         "strategic_bomber",
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_strat_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 32,
@@ -1751,6 +1911,9 @@
         "strategic_bomber",
         "naval_bomber"
       ],
+      "subUnitCategories": [
+        "category_strat_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 37,
@@ -1780,6 +1943,9 @@
       "subUnit": "strat_bomber_intercontinental",
       "subUnitTypes": [
         "strategic_bomber"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1812,6 +1978,9 @@
       "subUnit": "jet_fighter",
       "subUnitTypes": [
         "fighter"
+      ],
+      "subUnitCategories": [
+        "category_fighter"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1848,6 +2017,9 @@
       "subUnitTypes": [
         "tactical_bomber"
       ],
+      "subUnitCategories": [
+        "category_tac_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 15,
@@ -1882,6 +2054,9 @@
       "subUnit": "tac_bomber",
       "subUnitTypes": [
         "tactical_bomber"
+      ],
+      "subUnitCategories": [
+        "category_tac_bomber"
       ],
       "landWingSize": 100,
       "stats": {
@@ -1918,6 +2093,9 @@
       "subUnitTypes": [
         "tactical_bomber"
       ],
+      "subUnitCategories": [
+        "category_tac_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 21,
@@ -1953,6 +2131,9 @@
       "subUnitTypes": [
         "tactical_bomber"
       ],
+      "subUnitCategories": [
+        "category_tac_bomber"
+      ],
       "landWingSize": 100,
       "stats": {
         "airDefense": 24,
@@ -1987,6 +2168,9 @@
       "subUnit": "tac_bomber",
       "subUnitTypes": [
         "tactical_bomber"
+      ],
+      "subUnitCategories": [
+        "category_tac_bomber"
       ],
       "landWingSize": 100,
       "stats": {

@@ -19,7 +19,21 @@ Air groups ("air objects"): one per **wing pool** on each carrier, i.e. per plan
 
 Planes are the game's fixed plane equipment, imported by `NavySimulator import-planes` (GUI: Settings → Import planes) into `data/planes/planes.json`; there is no plane designer. The import takes every non-archetype entry of `common/units/equipment` whose archetype is an air archetype (`interface_category = interface_category_air`) without `module_slots` (so the designer airframes are left out) and is not a missile. Keys a variant leaves out are its archetype's: stats (`air_attack`, `air_defence`, `air_agility`, `maximum_speed`, `naval_strike_attack`, `naval_strike_targetting`, `reliability`, `air_range`, `build_cost_ic`, `air_superiority`), `type`, `allow_mission_type` and `carrier_capable`. Each plane also gets the air sub-unit whose `need` names its archetype (`common/units/air.txt`, e.g. `cv_nav_bomber`): its `type` (which the fighter tests read) and wing sizes (`carrier_air_wing_size` 10, `land_air_wing_size` 100 in vanilla and TFB). With the TFB dev checkout over vanilla: 62 planes, 15 carrier capable (`cv_fighter_equipment_0..4`, `cv_CAS_equipment_1..4`, `cv_nav_bomber_equipment_1..4`, the two scout planes).
 
-Not modelled yet: plane equipment upgrades (TFB's `plane_naval_upgrade`, `cv_plane_naval_upgrade`, ...), plane MIOs, equipment bonuses of technologies and ideas on planes, air doctrines.
+Each plane also records its sub-unit's `categories` (e.g. `cv_nav_bomber`: `category_nav_bomber`, `category_carrier_nav_bomber`), which doctrine and spirit bonuses name (A-STATS).
+
+Not modelled yet: plane equipment upgrades (TFB's `plane_naval_upgrade`, `cv_plane_naval_upgrade`, ...), plane MIOs, equipment bonuses of technologies and ideas on planes.
+
+## A-STATS: a wing's stats [RE]
+
+From [A-STATS](../reverse-engineering/findings/A-STATS-plane-stats-and-air-modifiers.md). The wing stat cache (0xf661e0) multiplies each equipment stat by `1 + Σ` of the owner's sub-unit bonuses for the plane's sub-unit **and every one of its categories** (air doctrines and spirits: `category_carrier_nav_bomber = { naval_strike_attack = 0.05 }`; technologies the same way), as for ships (S-STATS-SHIP): `stat = trunc((1 + Σ bonus) × equipment stat)`. Reliability is the one plane stat on the additive list: `× (1 + b) + b` (only accidents read it). The stats then stay fixed for the battle. Code: `BattleParticipant.PlaneStatsOf`, `PlaneStatRules`, `AirWing.Stats`.
+
+The combat getters add their own `(1 + Σ)` on top (A-STATS-GETTERS):
+- **Naval strike** (A-DMG): attack and agility × (1 + `naval_strike_*_factor` + ace + M), targeting × (1 + `naval_strike_targetting_factor` + ace). M is the mission efficiency of the wing's mission *type*: carrier wings have none (M = 0, so `air_nav_efficiency` never raises carrier strikes); land-based naval-strike wings take `air_nav_efficiency`.
+- **Naval interception** (A-INTERCEPT): the cached air attack, defence and agility as they are; speed × (1 + ace). The country's `air_attack/defence/agility_factor` and `air_maximum_speed_factor` are not read here.
+- **Region air war** (A-REGION, 0xf5e890): attack, defence and agility × (M + 1 + Σ `air_*_factor` of the country and the wing's experience holder (+ ace)), truncated. M (by the *executing* mission: `air_superiority_efficiency`, `air_nav_efficiency`, interception's `air_intercept_efficiency`) and `air_home_defence_factor` (a carrier wing in its task force's region) or `air_power_projection_factor` (a land wing over a sea region) to attack and defence come in only for a wing with a region mission, in the fight and the strike efficiency, not in the attackers' sort or the escorts.
+- **Experience holder** (A-STATS-XP, 0xf65f20): with `v = clamp(xp / L0 − 1, −1, 0)` below the first `AIR_WING_XP_LEVELS` level (else `clamp((xp − L0) / (Llast − L0), 0, 1)`), truncated to 0.01, the wing carries `air_wing_experience_bonus_max × v` or `air_wing_experience_malus_min × (−v) × (1 + max(air_untrained_pilots_penalty_factor, −1))`. A fresh wing (xp 0, as `make_save.py` writes them) carries the whole malus: TFB −0.15 air attack, defence and agility and +0.15 `air_night_penalty`. In a naval battle it acts only in the region war and the night and weather factors. The simulator's wings start at experience 0 [LOG: the region replay's disruption and the strikes of disrupted wings match the game far better with it].
+
+Which air country keys act in a naval battle: the table in A-STATS-MODS. No effect: the country's `carrier_traffic` (only the weather and night holders count, A-SORTIE) and `air_maximum_speed_factor` (only an ace's), `spotting_chance` (fleet spotting before the battle), `port_strike`, and the land, strategic, mine, intel and cost keys. `air_mission_efficiency` multiplies the effectiveness, clamped to 1 (so it only helps a wing below 1); the effectiveness is an input here. `carrier_capacity_penalty_reduction` scales `CAPACITY_PENALTY` (A-SORTIE).
 
 ## A-WINGS: air objects, strike wings and fighters [RE]
 
@@ -61,7 +75,8 @@ flying  = round(poolPlanes × clamp(sortie, 0, 1))
 - The stance does not split planes into offence and defence (A-STANCE).
 - `night.carrier_traffic` comes from the loaded static modifiers (pass the mod folder with `--defines`). The country's `carrier_night_traffic` is the side's doctrines' and spirits' plus the participant input `carrierNightTraffic`.
 - Weather: × `clamp(1 + carrier_traffic, 0, 1)` of the region's weather holder, whole (0x1976f84; S-WEATHER: heavy rain −0.8, blizzard −1), beside the night factor.
-- Not modelled: `carrier_capacity_penalty_reduction`, leader modifiers.
+- `carrier_capacity_penalty_reduction` of the country scales `CAPACITY_PENALTY` by `1 + value` (A-STATS-MODS, 0xc57a89).
+- Not modelled: leader modifiers.
 
 ## A-STANCE [RE]
 
@@ -95,7 +110,7 @@ for each wing, in listed order [ASSUMED] while joined < cap:
     the wing is in the battle from now on; it may lose at most add planes in its strikes until its next join
 ```
 - A wing that has joined strikes at every air hour with **all its planes**, not only the joined count (read from code; worth an in-game check).
-- `missionEfficiency` is the mission's efficiency (air base, range, coverage, none simulated; an input): it only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless enemy interceptors disrupted the mission (an input; the disruption formula is in the finding).
+- `missionEfficiency` is the mission's efficiency (air base, range, coverage, none simulated; an input): it only scales the offered planes. `disruptionFactor` (airfx+0xc0, 0xf78160) multiplies their attack: 1 unless set; the region's air war computes the disruption itself (A-REGION), so leave it at 1 when the scenario has the enemy's air superiority wings.
 - [LOG] The disruption counts **twice**: the mission efficiency 0xf78160 weighs each wing's attack inside the strike average (A-DMG), and the air object's `airfx+0xc0`, the same value, multiplies the result again. In 10 logged TFB battles (`air_land_vs_fleet`: 100 land tactical bombers against cruisers covered by 100 land fighters on air superiority) the game's damage per hit was the undisrupted value × factor² in every strike (factor 0.45–0.51); the replays match within 0.5 % with it.
 - [LOG] Only wings in range join: in game, land CAS from Burgas or Dobrogea never joined a battle in province 7906, tactical bombers did (mission efficiency 0.6 from Burgas, 1.0 from Dobrogea). The simulator has no range or coverage model; leave out-of-range wings out of the scenario and set `missionEfficiency` to the game's.
 - Each entry has a `mission`: `naval_bomber` (naval strike, the default) or `air_superiority`. Air superiority wings never join the naval battle (A-WINGS-EXT); they fight in the region's air war (A-REGION), which disrupts and shoots down the enemy's strike wings.
@@ -104,24 +119,27 @@ for each wing, in listed order [ASSUMED] while joined < cap:
 
 ## A-REGION: the region's air war [RE + LOG]
 
-From [A-REGION](../reverse-engineering/findings/A-REGION-carrier-wings-in-the-region-air-war.md). In each air hour, before the naval combat hour (the hourly strategic-air update 0xc57d30), every wing over the battle's region fights the region's ordinary air war: carrier wings of task forces in combat (escaped carriers included, sunk ones not) and land-based wings. This is where carrier fighters matter in TFB (they never intercept, A-INTERCEPT), and where planes disappear between naval strikes. Code: `AirPhase.RegionAirWar`, `RegionAirWarRules`.
+From [A-REGION](../reverse-engineering/findings/A-REGION-carrier-wings-in-the-region-air-war.md). In each air hour, before the naval combat hour (the hourly strategic-air update 0xc57d30), every wing over the battle's region fights the region's ordinary air war: carrier wings of task forces in combat (retreating carriers included, sunk ones not; escaped ones per `rules.escapedCarrierWings`, below) and land-based wings. This is where carrier fighters matter in TFB (they never intercept, A-INTERCEPT), and where planes disappear between naval strikes. Code: `AirPhase.RegionAirWar`, `RegionAirWarRules`.
 
 Lists per side:
 - **Scrambled**: every carrier wing (0xc66480). Its fighters (air superiority) attack; all its wings defend; **none is ever disrupted**.
 - **Region missions**: land-based wings, and the carrier wings when they fly a mission over the region (`carrierWingsOnRegionMission`): all of them attack (bombers too), defend and can be disrupted. A carrier fighter of a side with region missions is on both lists (it attacks twice).
-- Effective planes per wing: `trunc(round(planes × effectiveness) × CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance])` for carrier wings (`carrierMissionEfficiency`), `round(planes × missionEfficiency)` for land wings.
+- **A-REGION-SYNC** [RE + LOG] ([finding](../reverse-engineering/findings/A-REGION-SYNC-carrier-wing-region.md)): a task force's carrier wings get the region at its hourly naval mission tick out of combat (0xd79900 → 0xfbe7f0 → 0xfa9e00; hold, strike force, convoy, mine and training missions: the location's region; patrol: only in its spotting region; reserve fleet and invasion support: none). The side whose tick starts the battle has them, a side already in combat never gets them; a region change carries an existing region along (0xc647b0) but never makes one. So in a battle-start save the attacker's wings are on the list and the defender's are not, which is the default when `carrierWingsOnRegionMission` is not set (the saves' `hours_in_mission` showed ROM's one tick and none for BUL).
+- Effective planes per wing: `trunc(round(planes × effectiveness) × CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance])` for carrier wings, `round(planes × effectiveness)` for land wings. Effectiveness (0xf78500) = `clamp(base × crowding × (1 + air_mission_efficiency), 0, 1)`: carrier wings take no coverage and no region change penalty; their base is the air supply ratio × fuel (`carrierMissionEfficiency`, default 1; the logged 0.734 was ROM's supply), crowding is the deck's (A-SORTIE, every plane on the carrier); `air_mission_efficiency` sums the country's, the fleet admiral's and (wings with a region mission) the region weather's (rain −0.1 / −0.3, snow −0.1, ...). Land wings: base = `missionEfficiency` (coverage, base crowding, supply, region change penalty and fuel, none modelled), × (1 + the country's and the weather's `air_mission_efficiency`). The effectiveness is recomputed every air hour and does not decay.
 
 Each side in turn attacks the other (the combat's attacker first, [ASSUMED]); per attacking wing, in order of normalised attack × agility:
 ```
-defender weight  d.left = max(1, round(trunc(n × k)))     k = 1 for a carrier wing, the detection (0, [ASSUMED]) for a land wing
+defender weight  d.left = max(1, round(trunc(n × k)))     k = 1 for a carrier wing, the attacker's detection (A-DETECT) for a land wing;
+                                                          n × k in fixed point (100 planes at 0.028 count 3)
 eng      = min(Σ d.left × COMBAT_MULTIPLANE_CAP, a.n);    share = d.left / Σ d.left
 damage   = share × eng × attack × COMBAT_DAMAGE_STATS_MULTILPIER − agility edge + speed edge (+ top speed bonus)
 x        = max(0.001, trunc(trunc(scale × damage) × 0.01) / defence)     scale = COMBAT_DAMAGE_SCALE_CARRIER (both carrier wings) | COMBAT_DAMAGE_SCALE
 losses   = x < cap ? floor(x) + (U < frac(x)) : cap        cap = min(d.left, d.n − losses so far)
-d.left  -= round(share × eng / COMBAT_MULTIPLANE_CAP)
 strike defenders: disruption += trunc(d.left / Σ strike d.left × trunc(DISRUPTION_FACTOR(_CARRIER) × a.n × (1 + speed × DSF) × (1 + agility × DAgF) × (1 + attack × DAtF) × (1 + detection × DDetF)))
+                  (d.left as before this attacker's decrement, [RE] 0xf7c282; the attacker's own detection)
+d.left  -= round(share × eng / COMBAT_MULTIPLANE_CAP)
 ```
-Then each side's air superiority wings escort: `escort = n × (1 + speed × ESF) × (1 + agility × EAgF) × (1 + attack × EAtF) × ESCORT_FACTOR`; the side's region-mission strike wings keep `trunc((1 − min(1, Σ escort / Σ disruption)) × disruption)`. The losses come off the wings after the whole air war; a carrier wing left without planes is deleted from its pool [LOG]. Disruption resets every air hour. A disrupted wing strikes at `e = clamp(1 − trunc(sqrt(disruption / den) × 0.316228), 0.001, 1)`, `den = n_i × (1 + defence × DISRUPTION_DEFENCE_DEFENCE_FACTOR) × (1 + attack × DISRUPTION_DEFENCE_ATTACK_FACTOR) × (1 + speed × DISRUPTION_DEFENCE_SPEED_FACTOR)` (stats as shares of `AIR_WING_MAX_STATS_*`), inside the strike average (A-DMG); a land wing's join factor (`airfx+0xc0`) is the same with its offered planes.
+The stats are those of A-STATS (region war getter). Then each side's air superiority wings escort: `escort = n × (1 + speed × ESF) × (1 + agility × EAgF) × (1 + attack × EAtF) × (1 + own detection × DDetF) × ESCORT_FACTOR × (1 + air_escort_efficiency)`; the side's region-mission strike wings keep `trunc((1 − min(1, Σ escort / Σ disruption)) × disruption)`. The losses come off the wings after the whole air war; a carrier wing left without planes is deleted from its pool [LOG]. Disruption resets every air hour. A disrupted wing strikes at `e = clamp(1 − trunc(sqrt(disruption / den) × 0.316228), 0.001, 1)`, `den = n_i × (1 + defence × DISRUPTION_DEFENCE_DEFENCE_FACTOR) × (1 + attack × DISRUPTION_DEFENCE_ATTACK_FACTOR) × (1 + speed × DISRUPTION_DEFENCE_SPEED_FACTOR)` (stats as shares of `AIR_WING_MAX_STATS_*`), inside the strike average (A-DMG); a land wing's join factor (`airfx+0xc0`) is the same with its offered planes.
 
 [LOG] Checked against 40 logged TFB battles (`air_cv_mirror`, `air_cv_bombers_vs_fighters`, 2026-10-20):
 - The efficiency formula reproduced the game's strike averages of disrupted carrier bombers (0.67 at disruption 14.4) and land bombers (0.956 at 2.9).
@@ -129,10 +147,28 @@ Then each side's air superiority wings escort: `escort = n × (1 + speed × ESF)
 - Planes lost in the region per air hour: predicted about 13 and 8 for the two sides of the mirror, logged 10–16 and 6–11.
 - The free-running engine matches the game's battle length, losses and air damage within noise in both carrier scenarios (see [calibration](../calibration.md#air-tests-2026-10-20)).
 - Wing by wing (`NavySimulator replay --region <file>`: the engine's region air war as a dry run from the game's wings at the start of each air hour, against the game's wings at their strike), in 8 replayed carrier battles: planes lost per wing and air hour 0.090 / 0.066 (engine) vs 0.087 / 0.066 (game) for the mirror attacker's bombers / fighters, 0.351 / 0.388 vs 0.382 / 0.376 for the defender's; bombers against fighters: disruption 10.2 vs 10.0, losses 0.163 vs 0.187 (the game's accidents add a little).
-- [LOG, open] Land-based bombers as defenders: in `air_cv_land_mix` (18 runs) the game's disruption of the USA's land bombers was about 4–6 times the engine's and of Japan's about 2 times, in `air_land_vs_fleet` far more (361 against none); each fits a different detection value (0.02–0.6), so the detection term (or the land wings' coverage) is not right yet. Land bombers' `disruptionFactor` is therefore an input taken from the log (the factor counts twice in the strike).
-- In the CL3 template the combat's attacker's carrier wings were on the region list (effectiveness 0.734) and the defender's were not (effectiveness 1.0); what decides it is not decoded (the region sync 0xc647b0 on task force moves is the candidate), so it is a scenario input.
+- [LOG] Land-based bombers as defenders (2026-10-20, after A-DETECT and A-STATS): the engine read the defender's capacity after the attacker's decrement, so a lone land wing (weight 1) took no disruption; with the game's order, the decoded detection and the fresh wings' experience malus, `air_land_vs_fleet` (20 runs) matches the game's disruption of Japan's land bombers within 1 % in 596 of 600 air hours, with no hand-set `disruptionFactor` and the USA's land fighters at `missionEfficiency` 0.46 (the land effectiveness, coverage of the region from the base, is not modelled). Strikes of the disrupted wings: 422 of 620 match, air damage exact. [LOG, unsettled] Escaped carriers (`rules.escapedCarrierWings`): on escape a carrier's air object leaves the naval combat side (0x1c6cc50), but the scramble list (0xc66480) takes carriers whose task force is in combat, and where the escaped ship goes is not traced. The logs disagree. In `air_cv_land_mix` the game's disruption of the USA's land bombers jumps at the hour a USA carrier escapes, and the engine follows it only when escaped carriers' wings leave (`Leave`: 205k against the game's 179k over 18 runs, against 59k with `Stay`); in `air_cv_bombers_vs_fighters` the USA's escaped carriers' fighters keep disrupting Japan's bombers in the game (`Stay`: 17,623 of 21,556 wing hours within 1 %, `Leave` and `RegionMissionOnly` 15,565), and the free-running populations fit `Stay` (the default) slightly better. The land fighters' `missionEfficiency` in `air_cv_land_mix` is 0.343 (4 of the region's 7 provinces in Fighter II range from Burgas × the base's supply factor 0.6, A-DETECT-MIX), its land bombers' 0.6. For free runs the template's stockpiles refill land wings with older variants whose stats the game averages into the wing (not modelled: the simulator counts stock as the wing's own plane).
+- In the CL3 template the combat's attacker's carrier wings were on the region list (effectiveness 0.734, its supply ratio) and the defender's were not, as A-REGION-SYNC predicts. `make_save.py` puts a side's carrier wings on the list when its `carrierWingsOnRegionMission` is true (an active mission over `--air-region`); the attacker's cannot be kept off it (not checked in game yet).
 
-Not modelled: the region's air detection (0xf77730; 0 here, which makes land wings defend with one plane and leaves land bombers undisrupted, so their `disruptionFactor` stays an input), the mission efficiency, weather, night and home-defence terms of the stats, the distance weight for wings over other regions, accidents (a separate hourly loss, about 1 in 10 hours, outline only), aces in air-to-air combat, the region's air superiority. A land fighter's `missionEfficiency` sets how many of its planes fight (in the mixed test, 0.33 matched the logged disruption).
+Not modelled: the land wings' effectiveness (coverage from their base's range, base crowding: the input `missionEfficiency`), the weather and night terms of the stats (none in TFB; vanilla night `air_attack_factor` −0.5), the distance weight for wings over other regions, accidents (a separate hourly loss of land wings; carrier wings in battle have none, A-STATS-ACCIDENT), aces in air-to-air combat, the region's air superiority, interception missions.
+
+## A-DETECT: a side's air detection in the region [RE]
+
+From [A-DETECT](../reverse-engineering/findings/A-DETECT-region-air-detection.md) (0xf77730, the game's tooltip "Aircraft detection"). Each air hour, for each side (its country) over the battle's region:
+```
+AIR   = trunc(clamp(Σ trunc((1 + t + h) × n) / DETECT_CHANCE_FROM_AIRCRAFTS_EFFECTIVE_COUNT, 0, 1) × DETECT_CHANCE_FROM_AIRCRAFTS)
+        over the side's own region-list missions (scrambled-only carrier wings do not count), n = effective planes;
+        t = air_superiority_detect_factor (air superiority) | air_interception_detect_factor (interception) | NO_SEARCH_MISSION_DETECT_FACTOR;
+        h = air_home_defence_factor (carrier wings, always home) | air_power_projection_factor (land wings: never home over a sea region)
+RAD   = trunc(radarCoverage × DETECT_CHANCE_FROM_RADARS)        radar-covered share of the region's provinces (own and friends' radars)
+BASE  = trunc(controlled land share × DETECT_CHANCE_FROM_OCCUPATION)   0 in a sea region
+NIGHT = trunc(trunc(mean darkness of the region's provinces × DETECT_CHANCE_FROM_NIGHT) × plane-weighted night factor)
+WEA   = trunc(the region weather's air_detection × plane-weighted weather factor)       rain −0.1 / −0.2, snow, ...
+det   = clamp(trunc((AIR + RAD + BASE) × (1 + NIGHT + WEA)), 0.01, 1)
+```
+Night factor `clamp(1 + air_night_penalty (country, experience holder), 0, 2)`, weather factor the same with `air_weather_penalty` (0xf5bc80, 0xf5c9d0; the plane's night stat, ace and carrier-mission terms are not modelled). The region's darkness is the mean over its provinces (`data/sea-regions`) at the battle's clock, read like the battle province's (S-NIGHT; weather off means no night).
+
+`det` is the attacker's detection in its turn: the weight of the other side's land wings (A-REGION), its disruption power, and (its own) its escorts. A country's own `air_detection` (spirits) is not read here; targeted modifiers (`air_detection`, `air_intercept_efficiency` against a country) are not modelled (no vanilla or TFB script sets them). In the logged CL3-template battles nobody had radar in region 30, so `det` was `0.8 × planes / 3000` or the floor 0.01. Code: `RegionAirWarRules.Detection`, `AirPhase.RegionDetection`. In game, the console command `lock_air_det <tag> [value]` fixes a country's value.
 
 ## A-INTERCEPT: carrier fighters vs strike planes [RE]
 
@@ -214,7 +250,7 @@ There is no damage randomness and no HP-scaled org damage. Sinking and retreat f
 
 ## A-STRIKE-MODS: country modifiers of the strike stats [RE]
 
-The plane stat getters (`0xf60f10`, `0xf61280`, `0xf60bc0`) multiply naval attack, targeting and agility by `1 + naval_strike_attack_factor`, `1 + naval_strike_targetting_factor` and `1 + naval_strike_agility_factor` of the planes' country; planes from a carrier also take `1 + navy_carrier_air_attack_factor`, `1 + navy_carrier_air_targetting_factor` and `1 + navy_carrier_air_agility_factor` (TFB's carrier subdoctrines and Base Strike milestone). The side's doctrines and spirits supply them (S-DOCTRINE-EFFECT). Leader terms and the air doctrines' plane bonuses are not modelled. Code: `AirRules.StrikeAverages`.
+The plane stat getters (`0xf60f10`, `0xf61280`, `0xf60bc0`) multiply naval attack, targeting and agility by `1 + naval_strike_attack_factor`, `1 + naval_strike_targetting_factor` and `1 + naval_strike_agility_factor` of the planes' country; planes from a carrier also take `1 + navy_carrier_air_attack_factor`, `1 + navy_carrier_air_targetting_factor` and `1 + navy_carrier_air_agility_factor` (TFB's carrier subdoctrines and Base Strike milestone). The side's doctrines and spirits supply them (S-DOCTRINE-EFFECT). Air doctrine plane bonuses are in the plane stats (A-STATS); a land-based naval strike wing adds `air_nav_efficiency` to attack and agility (M). Leader terms are not modelled. Code: `AirRules.StrikeAverages`.
 
 ## A-CRIT: crits from air [RE]
 
@@ -264,7 +300,7 @@ Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from th
 
 ## Not modelled
 
-Leader modifiers, air doctrines (S-DOCTRINE: recorded, not simulated), `carrier_capacity_penalty_reduction`, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, the region's air detection and accidents (A-REGION), range and coverage of land-based missions (inputs), plane equipment upgrades and plane MIOs.
+Leader modifiers, kamikaze, port strikes, support-ship silhouettes, the top-speed interception term, how losses are split across wings, accidents (A-REGION), range and coverage of land-based missions (inputs), plane equipment upgrades and plane MIOs, wing experience other than 0 (no input yet) and its gain in battle.
 
 ## Inputs
 
@@ -275,13 +311,15 @@ Leader modifiers, air doctrines (S-DOCTRINE: recorded, not simulated), `carrier_
 | `planeStockpile` | participant | planes in stock by plane ID (A-REINFORCE) |
 | `carrierStanceIndex` | participant | index into `CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO` |
 | `carrierNightTraffic` | participant | extra `carrier_night_traffic` on top of the side's doctrines and spirits |
-| `carrierWingsOnRegionMission` | participant | A-REGION: the carrier wings fly a mission over the region (all fight in the region's air war and can be disrupted); default false (scrambled only) |
-| `carrierMissionEfficiency` | participant | A-REGION: the carrier wings' mission effectiveness in the region's air war (default 1; the logged CL3 attacker had 0.734) |
-| `doctrines`, `spiritIDs` | participant | S-DOCTRINE, S-SPIRIT: sortie, strike and night traffic modifiers |
+| `carrierWingsOnRegionMission` | participant | A-REGION-SYNC: the carrier wings fly a mission over the region (all fight in the region's air war and can be disrupted); default: the attacker yes, the defender no |
+| `carrierMissionEfficiency` | participant | A-REGION-SYNC: the carrier wings' supply ratio and fuel in their effectiveness (default 1; the logged CL3 attacker had 0.734); crowding and `air_mission_efficiency` are computed |
+| `radarCoverage` | participant | A-DETECT: radar-covered share of the battle region's provinces (0..1, default 0) |
+| `doctrines`, `spiritIDs` | participant | S-DOCTRINE, S-SPIRIT: naval and air doctrines; sortie, strike, night traffic, region war and detection modifiers, plane stat bonuses (A-STATS) |
 | `rules.airRegionPhase`, `rules.startHourOfDay`, `rules.nightEnabled` | scenario | clock phase and night |
 | `rules.weatherEnabled` | scenario | weather off as with `disable_weather`, which also means no night (S-WEATHER, S-NIGHT) |
 | `weather`, `regionID`, `provinceID`, `startDate` | scenario | the region's weather (`carrier_traffic`, `naval_strike`) and the province's darkness (S-WEATHER, S-NIGHT) |
 | `rules.carrierWingsExecuteNavalStrike` | scenario | A-WINGS [LOG]: carrier strike wings execute naval strike (default true) |
+| `rules.escapedCarrierWings` | scenario | A-REGION [LOG, unsettled]: escaped carriers' wings in the region's air war: `Stay` (default), `Leave`, `RegionMissionOnly` |
 | `rules.navalDominanceEnabled` | scenario | S-DOMINANCE: the side with more naval dominance at the start regains organization faster (not used by air) |
 
 Each strike is reported as an `AirStrikeRecord`: hour, side, source, target, planes flying, intercepted, shot down, hits, AA reduction, crit, HP and org damage, and sunk.

@@ -35,7 +35,13 @@ public class BattleParticipant
         StaticModifiers.NavyScreenAttackFactor, StaticModifiers.NavyScreenDefenceFactor, StaticModifiers.NavalNightAttack,
         StaticModifiers.NavalDamageFactor, StaticModifiers.NavalDefenseFactor, StaticModifiers.NavyAntiAirAttack,
         StaticModifiers.NavyAntiAirAttackFactor, StaticModifiers.NavyVisibility, StaticModifiers.NavyCasualtyOnHit,
-        StaticModifiers.ExperienceGainNavyUnit, StaticModifiers.ExperienceGainNavyUnitFactor, StaticModifiers.NavyWeatherPenalty
+        StaticModifiers.ExperienceGainNavyUnit, StaticModifiers.ExperienceGainNavyUnitFactor, StaticModifiers.NavyWeatherPenalty,
+        // A-STATS-MODS, A-DETECT: air keys the naval strike, carrier sorties and the region's air war read.
+        StaticModifiers.AirAttackFactor, StaticModifiers.AirDefenceFactor, StaticModifiers.AirAgilityFactor, StaticModifiers.AirEscortEfficiency,
+        StaticModifiers.AceEffectivenessFactor, StaticModifiers.AirAceGenerationChanceFactor, StaticModifiers.AirSuperiorityEfficiency,
+        StaticModifiers.AirNavEfficiency, StaticModifiers.AirHomeDefenceFactor, StaticModifiers.AirPowerProjectionFactor,
+        StaticModifiers.AirSuperiorityDetectFactor, StaticModifiers.AirInterceptionDetectFactor, StaticModifiers.AirUntrainedPilotsPenaltyFactor,
+        StaticModifiers.AirNightPenalty, StaticModifiers.AirWeatherPenalty, StaticModifiers.CarrierCapacityPenaltyReduction
     ], StringComparer.Ordinal);
 
     /// <summary>
@@ -56,7 +62,18 @@ public class BattleParticipant
     public static IReadOnlySet<string> CountryModifiersWithoutBattleEffect { get; } = new HashSet<string>(
     [
         StaticModifiers.NavalEnemyFleetSizeRatioPenaltyFactor, "naval_has_potf_in_combat_attack", "naval_has_potf_in_combat_defense",
-        StaticModifiers.NavalEnemyRetreatChance, "navy_casualty_on_sink", "naval_coordination"
+        StaticModifiers.NavalEnemyRetreatChance, "navy_casualty_on_sink", "naval_coordination",
+        // [RE] A-STATS-MODS: air keys with no reader in a naval battle: the country's carrier_traffic (only the weather and
+        // night holders count) and air_maximum_speed_factor (only an ace's), fleet spotting before the battle, port
+        // strikes, and the land, strategic bombing, mine, intel, cost and research keys of the air doctrines and spirits.
+        StaticModifiers.CarrierTraffic, StaticModifiers.AirMaximumSpeedFactor, "spotting_chance", "night_spotting_chance", "port_strike",
+        "air_cas_efficiency", "air_cas_present_factor", "army_bonus_air_superiority_factor", "air_close_air_support_org_damage_factor",
+        "ground_attack_factor", "air_strategic_bomber_bombing_factor", "air_strategic_bomber_defence_factor", "air_strategic_bomber_night_penalty",
+        "strategic_bomb_visibility", "air_training_xp_gain_factor", "experience_gain_air", "experience_gain_air_factor",
+        "air_manpower_requirement_factor", "mines_planting_by_air_factor", "mines_sweeping_by_air_factor", "intel_from_combat_factor",
+        "army_intel_factor", "navy_intel_factor", "airforce_intel_factor", "civilian_intel_factor", "airforce_intel_to_others",
+        "air_advisor_cost_factor", "fighter_aircraft_track_mastery_gain_factor", "strike_aircraft_track_mastery_gain_factor",
+        "medium_aircraft_track_mastery_gain_factor", "heavy_aircraft_track_mastery_gain_factor"
     ], StringComparer.Ordinal);
 
     /// <summary>
@@ -93,7 +110,7 @@ public class BattleParticipant
     public readonly List<Spirit> Spirits;
     public readonly Aggressiveness Aggressiveness;
 
-    /// <summary>S-DOCTRINE: the side's doctrines, one setup per folder. Only the naval folder is simulated yet.</summary>
+    /// <summary>S-DOCTRINE: the side's doctrines, one setup per folder (naval and air).</summary>
     public readonly IReadOnlyList<DoctrineSetup> Doctrines;
 
     /// <summary>S-MIO: the side's MIOs (unlocked traits and policy). A design's MIO without a setup gives its initial trait only.</summary>
@@ -106,7 +123,7 @@ public class BattleParticipant
     public readonly IReadOnlyDictionary<string, Mio?> DesignMios;
 
     /// <summary>
-    /// S-DOCTRINE-EFFECT: the effects the side's naval doctrines and spirits give, each with its source (e.g.
+    /// S-DOCTRINE-EFFECT: the effects the side's doctrines (every folder) and spirits give, each with its source (e.g.
     /// <c>line_of_battle/flagships</c>).
     /// </summary>
     public readonly IReadOnlyList<(string Source, CountryEffects Effects)> ActiveEffects;
@@ -136,16 +153,27 @@ public class BattleParticipant
     public readonly double CarrierNightTraffic;
 
     /// <summary>
-    /// A-REGION-LISTS [RE + LOG]: the side's carrier wings fly a mission over the battle's region (they are on the
-    /// region's mission list): every wing then fights in the region's air war and can be disrupted. Otherwise they are
-    /// only scrambled: their fighters attack, every wing defends, and none is disrupted. In the logged TFB battles the
-    /// combat's attacker's carrier wings were on the list and the defender's were not.
+    /// A-REGION-SYNC [RE + LOG]: the side's carrier wings fly a mission over the battle's region (they are on the region's
+    /// mission list): every wing then fights in the region's air war and can be disrupted; otherwise they are only
+    /// scrambled (their fighters attack, every wing defends, none is disrupted). The game gives the wings the region at
+    /// the task force's naval mission tick out of combat (0xfbe7f0), so the side whose tick starts the battle has them and
+    /// a side already in combat does not. Null: the game's case for a battle-start save, the attacker yes, the defender no.
     /// </summary>
-    public readonly bool CarrierWingsOnRegionMission;
+    public readonly bool? CarrierWingsOnRegionMission;
 
-    /// <summary>A-REGION: the carrier wings' mission effectiveness (wing mission+0xd8; logged 0.734 or 1.0), which sets
-    /// their effective planes in the region's air war.</summary>
+    /// <summary>
+    /// A-REGION-SYNC [RE + LOG]: the carrier wings' air supply ratio and fuel in their mission effectiveness (0xf78500:
+    /// the base's received / asked supply × the fuel factor; 1 when supplied). The effectiveness also takes the deck
+    /// crowding and air_mission_efficiency (<see cref="NavySimulator.Engine.Battles.Air.RegionAirWarRules.Effectiveness"/>).
+    /// The logged CL3-template attacker had 0.734.
+    /// </summary>
     public readonly double CarrierMissionEfficiency;
+
+    /// <summary>
+    /// A-DETECT-RAD [RE]: the share of the battle region's provinces the side's and its friends' radars cover, each radar
+    /// times its state's control share (0..1); with DETECT_CHANCE_FROM_RADARS it raises the side's air detection.
+    /// </summary>
+    public readonly double RadarCoverage;
 
     public BattleParticipant(
         Fleet fleet,
@@ -163,8 +191,9 @@ public class BattleParticipant
         Ship? prideOfTheFleet = null,
         IReadOnlyList<LandBasedAirwing>? landBasedAirwings = null,
         IReadOnlyDictionary<string, int>? planeStockpile = null,
-        bool carrierWingsOnRegionMission = false,
-        double carrierMissionEfficiency = 1.0)
+        bool? carrierWingsOnRegionMission = null,
+        double carrierMissionEfficiency = 1.0,
+        double radarCoverage = 0)
     {
         if (prideOfTheFleet is not null && !fleet.Ships.Contains(prideOfTheFleet))
         {
@@ -183,13 +212,14 @@ public class BattleParticipant
         CarrierStanceIndex = carrierStanceIndex;
         CarrierWingsOnRegionMission = carrierWingsOnRegionMission;
         CarrierMissionEfficiency = carrierMissionEfficiency;
+        RadarCoverage = Math.Clamp(radarCoverage, 0, 1);
         Doctrines = doctrines ?? [];
         Mios = mios ?? [];
         DesignMios = designMios ?? new Dictionary<string, Mio?>();
 
-        // S-DOCTRINE: air doctrines are recorded but not simulated yet.
+        // S-DOCTRINE: naval and air doctrines alike; the air folder's effects reach the planes (A-STATS).
         var gameDefines = defines ?? GameDefines.Vanilla();
-        ActiveEffects = Doctrines.Where(setup => setup.Folder == NavalFolder)
+        ActiveEffects = Doctrines
             .SelectMany(setup => DoctrineRules.ActiveEffects(setup, gameDefines))
             .Concat(spirits.Select(spirit => (Source: spirit.ID, spirit.Effects)))
             .ToList();
@@ -197,6 +227,7 @@ public class BattleParticipant
             .Concat(ActiveEffects.Select(effect => effect.Effects.CountryModifiers))
             .Aggregate(ModifierSet.Empty, (current, modifiers) => current.Add(modifiers));
         CarrierNightTraffic = carrierNightTraffic + CountryModifiers.Get(StaticModifiers.CarrierNightTraffic);
+        PlaneBonuses = ActiveEffects.SelectMany(effect => effect.Effects.PlaneBonuses).ToList();
 
         ApplyFleetModifiers();
     }
@@ -214,13 +245,30 @@ public class BattleParticipant
         return MioRules.EquipmentBonus(design, assigned, Mios.FirstOrDefault(setup => setup.Mio.ID == assigned?.ID));
     }
 
-    /// <summary>The doctrine folder whose effects are simulated.</summary>
+    /// <summary>The naval doctrine folder.</summary>
     public const string NavalFolder = "naval";
+
+    /// <summary>A-STATS: the plane bonus blocks of the side's doctrines and spirits.</summary>
+    public readonly IReadOnlyList<PlaneBonus> PlaneBonuses;
+
+    private readonly Dictionary<string, PlaneStats> planeStats = new(StringComparer.Ordinal);
+
+    /// <summary>A-STATS: the plane's stats with the side's bonuses for its sub-unit and categories (<see cref="PlaneStatRules"/>).</summary>
+    public PlaneStats PlaneStatsOf(PlaneEquipment plane)
+    {
+        if (!planeStats.TryGetValue(plane.ID, out var stats))
+        {
+            var bonus = PlaneBonuses.Where(entry => entry.AppliesTo(plane))
+                .Aggregate(ModifierSet.Empty, (current, entry) => current.Add(entry.Values));
+            stats = planeStats[plane.ID] = PlaneStatRules.WithBonuses(plane.Stats, bonus);
+        }
+
+        return stats;
+    }
 
     /// <summary>
     /// The inputs combat ignores: effects of the active doctrines and spirits with no simulator counterpart (unmodelled
-    /// country modifiers, stats and scripted effects), MIO bonus stats the simulator does not have, and the doctrine
-    /// folders that are not simulated. Keys the game itself does not use in battle
+    /// country modifiers, stats and scripted effects) and MIO bonus stats the simulator does not have. Keys the game itself does not use in battle
     /// (<see cref="CountryModifiersWithoutBattleEffect"/>) are not listed.
     /// </summary>
     public IReadOnlyList<string> IgnoredEffects()
@@ -231,7 +279,6 @@ public class BattleParticipant
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)
             .ToList();
-        ignored.AddRange(Doctrines.Where(setup => setup.Folder != NavalFolder).Select(setup => $"{setup.Folder} doctrine {setup.GrandDoctrine.ID}"));
         ignored.AddRange(Mios.SelectMany(setup => (setup.Mio.InitialTrait is null ? [] : new[] { setup.Mio.InitialTrait })
                 .Concat(setup.UnlockedTraits)
                 .SelectMany(trait => trait.NotSimulated)

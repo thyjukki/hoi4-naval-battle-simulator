@@ -6,7 +6,11 @@ namespace NavySimulator.Engine.Doctrines;
 /// S-DOCTRINE-EFFECT: what a grand doctrine, milestone, subdoctrine, reward or spirit gives its country. Spec:
 /// docs/mechanics/surface.md.
 /// </summary>
-public sealed class CountryEffects(ModifierSet countryModifiers, IReadOnlyList<Research> statBonuses, IReadOnlyList<string> notSimulated)
+public sealed class CountryEffects(
+    ModifierSet countryModifiers,
+    IReadOnlyList<Research> statBonuses,
+    IReadOnlyList<string> notSimulated,
+    IReadOnlyList<PlaneBonus>? planeBonuses = null)
 {
     public static CountryEffects Empty { get; } = new(ModifierSet.Empty, [], []);
 
@@ -18,6 +22,9 @@ public sealed class CountryEffects(ModifierSet countryModifiers, IReadOnlyList<R
     /// S-STATS-BONUS), each as a <see cref="Research"/> scoped to its sub-unit or equipment type.
     /// </summary>
     public IReadOnlyList<Research> StatBonuses { get; } = statBonuses;
+
+    /// <summary>The sub-unit bonus blocks with plane stats, for the plane sub-units or categories they name (A-STATS).</summary>
+    public IReadOnlyList<PlaneBonus> PlaneBonuses { get; } = planeBonuses ?? [];
 
     /// <summary>Parts the simulator has no counterpart for (stats it does not model, scripted effects), as text.</summary>
     public IReadOnlyList<string> NotSimulated { get; } = notSimulated;

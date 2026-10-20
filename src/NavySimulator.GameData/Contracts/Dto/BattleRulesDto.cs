@@ -10,6 +10,7 @@ public class BattleRulesDto
     public bool? WeatherEnabled { get; set; }
     public bool? NavalDominanceEnabled { get; set; }
     public bool? CarrierWingsExecuteNavalStrike { get; set; }
+    public string? EscapedCarrierWings { get; set; }
     public int? StartHourOfDay { get; set; }
     public int? AirRegionPhase { get; set; }
     public int? NightStartHour { get; set; }

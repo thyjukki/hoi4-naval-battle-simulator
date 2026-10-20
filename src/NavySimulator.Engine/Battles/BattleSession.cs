@@ -48,6 +48,9 @@ public sealed class BattleSession
     private readonly List<ShipHourState[]>? shipHistory;
     private readonly AirPhase airPhase;
     private readonly (long X, long Y, long Z)[]? provinceVectors;
+
+    // A-DETECT-NIGHT: every province of the battle's region, whose mean darkness the region's air detection reads.
+    private readonly List<(long X, long Y, long Z)[]> regionProvinceVectors = [];
     private readonly WeatherPattern? weatherPattern;
     private readonly Dictionary<RegionWeather, ModifierSet> weatherModifiers = [];
     private BattleEnvironment environment;
@@ -80,6 +83,8 @@ public sealed class BattleSession
         {
             provinceVectors = DarknessRules.ProvinceVectors(location.Province!.X, location.Province.Y, location.Region!.MapWidth,
                 location.Region.MapHeight, defines);
+            regionProvinceVectors.AddRange(location.Region.Provinces.Select(province =>
+                DarknessRules.ProvinceVectors(province.X, province.Y, location.Region.MapWidth, location.Region.MapHeight, defines)));
         }
 
         if (scenario.WeatherSetup.Mode == WeatherMode.Simulated && location is { Region: { } region, StartDate: not null })
@@ -702,10 +707,11 @@ public sealed class BattleSession
         if (airPhase.HasAir && AirRules.IsAirHour(HourOfDay(hour), rules.AirRegionPhase, defines))
         {
             // A-REGION [RE]: the region's air war comes first in the hourly air update, then the land-based joins.
-            airPhase.RegionAirWar(hour, random);
+            var conditions = RegionAirConditionsAt(hour);
+            airPhase.RegionAirWar(hour, random, conditions: conditions);
             log.AddRange(airPhase.Log);
             airPhase.Log.Clear();
-            airPhase.JoinLandBased(hour);
+            airPhase.JoinLandBased(hour, conditions);
         }
     }
 
@@ -786,6 +792,25 @@ public sealed class BattleSession
             ? timeOfDay >= start || timeOfDay < end
             : timeOfDay >= start && timeOfDay < end;
         return night ? 1 : 0;
+    }
+
+    /// <summary>
+    /// A-DETECT [RE]: what the region's air detection reads in battle hour <paramref name="hour"/>: the mean darkness of the
+    /// region's provinces (0xe21640, with the battle province's timing and switches; the battle province's own darkness
+    /// when the region's provinces are unknown or the darkness is logged) and the region's weather holder.
+    /// </summary>
+    public RegionAirConditions RegionAirConditionsAt(int hour)
+    {
+        var environment = EnvironmentAt(hour);
+        var darkness = environment.Darkness;
+
+        if (rules.NightEnabled && rules.WeatherEnabled && DarknessOverride is null && regionProvinceVectors.Count > 0)
+        {
+            var date = BattleClock(hour - 1);
+            darkness = regionProvinceVectors.Average(vectors => DarknessRules.Darkness(vectors, date.DayOfYear, date.Hour, defines));
+        }
+
+        return new RegionAirConditions(darkness, environment.WeatherModifiers);
     }
 
     private GameDate BattleClock(int hour)

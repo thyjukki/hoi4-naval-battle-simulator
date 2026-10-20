@@ -219,6 +219,8 @@ public static class ListShipsCommand
             }).ToList(),
             // A-STANCE: the task force's carrier stance (the save's task force sortie_efficiency); null: the define's default.
             carrierStanceIndex = side.CarrierStanceIndex,
+            // A-REGION-SYNC: the carrier wings fly a mission over the battle's region (null: the game decides, the attacker).
+            carrierWingsOnRegionMission = side.CarrierWingsOnRegionMission,
             // A-REINFORCE, A-EXTERNAL: the side's plane stockpile and land-based planes.
             planeStockpile = side.PlaneStockpile.Select(entry => new { plane = Plane(entry.Key), count = entry.Value }).ToList(),
             landBasedAirwings = side.LandBasedAirwings.Select(entry => new { plane = Plane(entry.PlaneID), planes = entry.Planes, missionEfficiency = entry.MissionEfficiency, disruptionFactor = entry.DisruptionFactor, mission = string.IsNullOrEmpty(entry.Mission) ? "naval_bomber" : entry.Mission }).ToList(),

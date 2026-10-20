@@ -89,10 +89,8 @@ public sealed class HardcodedValues
     // [RE] A-REGION-DISRUPT (0xf78160, divisor 316200): e = 1 − sqrt(disruption / den) × 0.316228.
     public double DisruptionEfficiencyScale { get; set; } = 0.316228;
 
-    // [ASSUMED + LOG] A-REGION: the attacker's air detection in the region (0xf77730, not decoded). 0 fits the logged
-    // disruption of carrier bombers (22.4 predicted, 22.0 logged in a TFB carrier battle); it also makes land wings count
-    // as one plane when defending (their weight is trunc(planes × detection)).
-    public double RegionAirDetection { get; set; } = 0;
+    // [RE] A-DETECT 0xf77730: the floor of a country's air detection in a region (0x3e8 in fixed point).
+    public double MinimumRegionAirDetection { get; set; } = 0.01;
 
     // [RE] A-WINGS-STRIKE: only strike wings executing naval strike or naval kamikaze (& 0x90) enter the strike averages
     // and take losses; a wing can execute only a mission its plane allows.

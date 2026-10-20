@@ -223,8 +223,7 @@
                 <div class="fields">
                     @foreach (var folder in Workspace.DoctrineFolders)
                     {
-                        <DoctrineEditor Folder="folder" Side="Side" OnChanged="Changed"
-                                        Hint="@(folder.ID == Engine.Battles.BattleParticipant.NavalFolder ? null : "Recorded with the setup and checked for spirits; its effects are not simulated yet.")" />
+                        <DoctrineEditor Folder="folder" Side="Side" OnChanged="Changed" />
                     }
                 </div>
             </div>
@@ -425,15 +424,23 @@
                     <span class="hint">Country modifier added to the night sortie factor.</span>
                 </div>
                 <div class="field">
-                    <label title="A-REGION: carrier wings with a mission over the battle's region all fight in its air war and can be disrupted; otherwise only their fighters attack">
-                        <input type="checkbox" @bind="CarrierWingsOnRegionMission" /> Carrier wings on a region mission
-                    </label>
-                    <span class="hint">In the logged test battles: on for the combat's attacker.</span>
+                    <label title="A-REGION-SYNC: carrier wings with a mission over the battle's region all fight in its air war and can be disrupted; otherwise only their fighters attack">Carrier wings on a region mission</label>
+                    <select @bind="CarrierWingsOnRegionMission">
+                        <option value="">Game default</option>
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                    </select>
+                    <span class="hint">Game default: the attacker yes, the defender no (its naval mission tick before the battle gives the region).</span>
                 </div>
                 <div class="field">
-                    <label>Carrier mission efficiency</label>
+                    <label>Carrier supply ratio</label>
                     <input type="number" min="0" step="0.01" placeholder="1" @bind="Side.CarrierMissionEfficiency" @bind:after="Changed" />
-                    <span class="hint">Share of carrier planes in the region's air war.</span>
+                    <span class="hint">Air supply and fuel in the carrier wings' effectiveness; deck crowding and air mission efficiency are added.</span>
+                </div>
+                <div class="field">
+                    <label title="A-DETECT: share of the battle region's provinces the side's radars cover; adds DETECT_CHANCE_FROM_RADARS × coverage to its air detection">Radar coverage</label>
+                    <input type="number" min="0" max="1" step="0.05" placeholder="0" @bind="Side.RadarCoverage" @bind:after="Changed" />
+                    <span class="hint">0 to 1; raises the side's air detection in the region.</span>
                 </div>
             </div>
         </details>
@@ -483,13 +490,13 @@
         await OnChanged.InvokeAsync();
     }
 
-    // A-REGION-LISTS: stored as null when off, as the other optional inputs.
-    private bool CarrierWingsOnRegionMission
+    // A-REGION-SYNC: null is the game's default for a battle-start save.
+    private string CarrierWingsOnRegionMission
     {
-        get => Side.CarrierWingsOnRegionMission == true;
+        get => Side.CarrierWingsOnRegionMission switch { true => "yes", false => "no", null => "" };
         set
         {
-            Side.CarrierWingsOnRegionMission = value ? true : null;
+            Side.CarrierWingsOnRegionMission = value switch { "yes" => true, "no" => false, _ => null };
             _ = Changed();
         }
     }
