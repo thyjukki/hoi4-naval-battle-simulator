@@ -11,7 +11,9 @@
       "weatherEnabled": true,
       "navalDominanceEnabled": true,
       "startHourOfDay": 13,
-      "airRegionPhase": 6
+      "airRegionPhase": 6,
+      "nightStartHour": 17,
+      "nightEndHour": 4
     },
     "attacker": {
       "fleetID": "air_test_cv_std",

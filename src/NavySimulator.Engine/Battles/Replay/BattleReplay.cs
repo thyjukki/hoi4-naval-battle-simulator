@@ -81,6 +81,7 @@ public static class BattleReplay
                 }
             }
 
+            session.DarknessOverride = hour.Darkness;
             var shotsBefore = session.Shots.Count;
             var strikesBefore = session.AirStrikes.Count;
             random.Load(hour.Rolls);

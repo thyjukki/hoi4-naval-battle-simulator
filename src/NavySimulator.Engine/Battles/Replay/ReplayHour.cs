@@ -18,4 +18,6 @@ public sealed record ReplayHour(
     IReadOnlyList<ReplaySideState>? Sides = null,
     IReadOnlyList<ReplaySideState>? StartSides = null,
     IReadOnlyDictionary<string, int>? StartAirObjectPlanes = null,
-    IReadOnlyDictionary<uint, int>? StartWingPlanes = null);
+    IReadOnlyDictionary<uint, int>? StartWingPlanes = null,
+    double? Darkness = null,
+    int? Weather = null);

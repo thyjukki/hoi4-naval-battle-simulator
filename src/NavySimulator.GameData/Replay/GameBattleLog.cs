@@ -172,7 +172,9 @@ public sealed class GameBattleLog
                 SideStates(record.GetProperty("sides")),
                 SideStates(record.GetProperty("start")),
                 i > 0 ? counted[i - 1] : null,
-                i > 0 ? WingPlanes(hours[i - 1]) : null))
+                i > 0 ? WingPlanes(hours[i - 1]) : null,
+                record.TryGetProperty("darkness", out var darkness) ? darkness.GetInt64() / Fx : null,
+                record.TryGetProperty("weather", out var weather) ? weather.GetInt32() : null))
             .ToList();
     }
 

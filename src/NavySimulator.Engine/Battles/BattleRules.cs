@@ -22,6 +22,17 @@ public sealed record BattleRules
     /// </summary>
     public bool WeatherEnabled { get; init; } = true;
 
+    /// <summary>
+    /// S-NIGHT [ASSUMED + LOG]: the hours of day (game clock) when the battle's province is dark, from
+    /// <see cref="NightStartHour"/> up to <see cref="NightEndHour"/>; null uses HardcodedValues' 20 and 6. The game's
+    /// darkness follows the province's longitude and the season: in province 7906 (Black Sea) in May it was 1 from 17:00 to
+    /// 03:00, with a short ramp at 16:00.
+    /// </summary>
+    public int? NightStartHour { get; init; }
+
+    /// <inheritdoc cref="NightStartHour"/>
+    public int? NightEndHour { get; init; }
+
     /// <summary>Hour of day (0-23) at which the battle starts (battle hour 0).</summary>
     public int StartHourOfDay { get; init; } = 12;
 

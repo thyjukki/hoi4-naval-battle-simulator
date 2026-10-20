@@ -87,6 +87,18 @@
               "type": "integer",
               "description": "Strategic region id (or its value mod 8). Air strikes happen when hour of day mod 8 equals this mod 8."
             },
+            "nightStartHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 23,
+              "description": "S-NIGHT: hour of day (game clock) when the province gets dark (default 20; province 7906 in May: 17)."
+            },
+            "nightEndHour": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 23,
+              "description": "S-NIGHT: hour of day when it gets light again (default 6; province 7906 in May: 4)."
+            },
             "carrierWingsExecuteNavalStrike": {
               "type": "boolean",
               "description": "A-WINGS-STRIKE [ASSUMED]: carrier strike wings execute naval strike (default true); false: carriers do no damage."

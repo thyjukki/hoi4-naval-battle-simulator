@@ -491,7 +491,9 @@ public class SetupLoader
             NavalDominanceEnabled = dto.NavalDominanceEnabled ?? rules.NavalDominanceEnabled,
             CarrierWingsExecuteNavalStrike = dto.CarrierWingsExecuteNavalStrike ?? rules.CarrierWingsExecuteNavalStrike,
             StartHourOfDay = dto.StartHourOfDay ?? rules.StartHourOfDay,
-            AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase
+            AirRegionPhase = dto.AirRegionPhase ?? rules.AirRegionPhase,
+            NightStartHour = dto.NightStartHour ?? rules.NightStartHour,
+            NightEndHour = dto.NightEndHour ?? rules.NightEndHour
         };
     }
 

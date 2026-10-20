@@ -127,7 +127,15 @@
             <div class="field">
                 <label>Start hour of day</label>
                 <input type="number" min="0" max="23" placeholder="@DefaultRules.StartHourOfDay" @bind:get="Rules?.StartHourOfDay" @bind:set="SetStartHour" />
-                <span class="hint">Battle hour 0. Night is 20:00 to 06:00 [ASSUMED].</span>
+                <span class="hint">Battle hour 0 (the game clock).</span>
+            </div>
+            <div class="field">
+                <label>Night from / to</label>
+                <span class="row">
+                    <input type="number" min="0" max="23" style="width: 60px" placeholder="@NightDefaults.Start" @bind:get="Rules?.NightStartHour" @bind:set="SetNightStart" />
+                    <input type="number" min="0" max="23" style="width: 60px" placeholder="@NightDefaults.End" @bind:get="Rules?.NightEndHour" @bind:set="SetNightEnd" />
+                </span>
+                <span class="hint">Hours of day the province is dark (it follows its longitude and the season; province 7906 in May: 17 to 4).</span>
             </div>
             <div class="field">
                 <label>Air region phase</label>
@@ -379,6 +387,21 @@
     private async Task SetAirPhase(int? value)
     {
         EnsureRules().AirRegionPhase = value;
+        await Edited();
+    }
+
+    private static (int Start, int End) NightDefaults => (new NavySimulator.Engine.Defines.HardcodedValues().NightStartHour,
+        new NavySimulator.Engine.Defines.HardcodedValues().NightEndHour);
+
+    private async Task SetNightStart(int? value)
+    {
+        EnsureRules().NightStartHour = value;
+        await Edited();
+    }
+
+    private async Task SetNightEnd(int? value)
+    {
+        EnsureRules().NightEndHour = value;
         await Edited();
     }
 

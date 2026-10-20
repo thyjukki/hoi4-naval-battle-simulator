@@ -12,4 +12,6 @@ public class BattleRulesDto
     public bool? CarrierWingsExecuteNavalStrike { get; set; }
     public int? StartHourOfDay { get; set; }
     public int? AirRegionPhase { get; set; }
+    public int? NightStartHour { get; set; }
+    public int? NightEndHour { get; set; }
 }

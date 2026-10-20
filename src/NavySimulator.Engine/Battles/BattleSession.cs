@@ -696,13 +696,22 @@ public sealed class BattleSession
             return 0;
         }
 
-        var hardcoded = defines.Hardcoded;
+        if (DarknessOverride is { } logged)
+        {
+            return logged;
+        }
+
+        var start = rules.NightStartHour ?? defines.Hardcoded.NightStartHour;
+        var end = rules.NightEndHour ?? defines.Hardcoded.NightEndHour;
         var timeOfDay = HourOfDay(hour);
-        var night = hardcoded.NightStartHour > hardcoded.NightEndHour
-            ? timeOfDay >= hardcoded.NightStartHour || timeOfDay < hardcoded.NightEndHour
-            : timeOfDay >= hardcoded.NightStartHour && timeOfDay < hardcoded.NightEndHour;
+        var night = start > end
+            ? timeOfDay >= start || timeOfDay < end
+            : timeOfDay >= start && timeOfDay < end;
         return night ? 1 : 0;
     }
+
+    /// <summary>S-REPLAY: the darkness of the next hour, as the game logged it; null uses the night window.</summary>
+    public double? DarknessOverride { get; set; }
 
     private void CountSkip(string reason)
     {
