@@ -90,7 +90,14 @@ public sealed class AirPhase
         }
 
         // A-EXTERNAL: one air object per land-based entry (the game's per air base AirFX); it strikes once it has joined.
-        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0))
+        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0 && !entry.JoinsNavalBattle))
+        {
+            // [RE] A-WINGS-EXT: air superiority and interception wings are never run through the naval join (0xf82110).
+            Notes.Add($"{side.Label}: {landBased.Planes} land-based {landBased.PlaneID} on {landBased.Mission} fight in the region's air war, " +
+                      "which is not simulated; they do not join the naval battle.");
+        }
+
+        foreach (var landBased in side.Participant.LandBasedAirwings.Where(entry => entry.Planes > 0 && entry.JoinsNavalBattle))
         {
             if (scenario.PlanesByID.TryGetValue(landBased.PlaneID, out var plane))
             {
@@ -191,8 +198,10 @@ public sealed class AirPhase
             }
 
             var source = group.Source;
+            // [RE + LOG] 0x197bb9d: every fighter-type wing on every carrier of the target's group that is still afloat,
+            // escaped carriers and wings without planes included.
             var defenders = groups[enemy]
-                .Where(defending => defending.Carrier is { IsInBattle: true })
+                .Where(defending => defending.Carrier is { IsSunk: false })
                 .SelectMany(defending => defending.FighterWings)
                 .ToList();
             var ratios = defines.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
@@ -207,7 +216,7 @@ public sealed class AirPhase
 
             var strikers = flying - intercepted - shotDown;
             var hits = strikers > 0 ? AirRules.Hits(strikers, targeting, defines, random) : 0;
-            var reduction = AirRules.AntiAirReduction(targetAntiAir, AirRules.FleetAntiAir(enemy.Ships, enemy.Positioning, defines), defines);
+            var reduction = AirRules.AntiAirReduction(targetAntiAir, enemy.FleetAntiAir, defines);
 
             if (hits <= 0)
             {
@@ -239,31 +248,39 @@ public sealed class AirPhase
             .Select(ship => (ship, AirRules.TargetWeight(ship, enemy.Screening.ScreeningEfficiency, defines)))
             .Where(candidate => candidate.Item2 > 0)
             .ToList();
-        return TargetingRules.WeightedPick(candidates, random);
+        return AirRules.PickTarget(candidates, random);
     }
 
-    // [RE] A-CRIT; a part hit would replace the multiplier, but no part data is loaded (the "no candidates" path).
+    // [RE] A-CRIT (0x197ae86..0x197b06c): on a crit whose multiplier is above 1, a part is damaged as for guns
+    // (0x1975150: S-CRIT-PART with CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR); the part's multipliers then replace
+    // the critical multiplier. Without part data or a candidate left, the multiplier applies.
     private bool RollCritical(Ship target, int hits, double criticalReceiveChance, ref double strDamage, ref double orgDamage, IRandomSource random)
     {
         var chance = AirRules.CriticalChance(target, criticalReceiveChance, defines);
 
-        if (chance <= 0 || random.NextDouble(RollKind.Air) >= chance)
+        if (chance <= 0 || random.NextDouble(RollKind.AirCritical) >= chance)
         {
             return false;
         }
 
         var multiplier = AirRules.CriticalMultiplier(target, hits, defines);
 
-        if (multiplier > 1)
+        if (multiplier <= 1 || (strDamage <= 0 && orgDamage <= 0))
         {
-            var reliability = Math.Min(target.GetFinalStats().Reliability, 1);
-            var partChance = reliability > 0 ? defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR / reliability : 1;
+            return true;
+        }
 
-            if (partChance < 1 && reliability > 0 && target.Role != ShipRole.Convoy)
-            {
-                random.NextDouble(RollKind.Air);
-            }
+        var part = CriticalPartRules.RollPartDamage(target, defines, random, defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR)
+            ? CriticalPartRules.DamageRandomPart(target, defines, random)
+            : null;
 
+        if (part is not null)
+        {
+            strDamage = strDamage * part.StrDamageMultiplier + part.StrDamage;
+            orgDamage = orgDamage * part.OrgDamageMultiplier + part.OrgDamage;
+        }
+        else
+        {
             strDamage *= multiplier;
             orgDamage *= multiplier;
         }

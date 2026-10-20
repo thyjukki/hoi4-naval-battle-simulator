@@ -21,7 +21,8 @@ public class Ship
         ID = id;
         Design = design;
         InitialExperience = experience;
-        MaxManpower = Math.Max(0, design.Hull.Manpower);
+        // S-STATS-MANPOWER [LOG]: hull crew plus the modules' manpower (a carrier's deck spaces).
+        MaxManpower = Math.Max(0, design.Hull.Manpower + design.Modules.Sum(module => module.Manpower));
         VariantStats = design.GetFinalStats();
         undamagedStats = VariantStats;
         stats = undamagedStats;

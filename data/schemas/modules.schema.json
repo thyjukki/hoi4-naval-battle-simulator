@@ -57,6 +57,10 @@
               "type": "string"
             }
           },
+          "manpower": {
+            "description": "manpower outside the stat blocks (deck spaces): crew added to the hull's (S-STATS-MANPOWER).",
+            "type": "integer"
+          },
           "statModifiers": {
             "$ref": "common.schema.json#/$defs/shipStats"
           },

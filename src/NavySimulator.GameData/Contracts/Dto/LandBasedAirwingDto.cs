@@ -11,4 +11,10 @@ public class LandBasedAirwingDto
 
     /// <summary>The mission's disruption factor (1 without enemy interceptors); multiplies their attack. Null: 1.</summary>
     public double? DisruptionFactor { get; set; }
+
+    /// <summary>
+    /// The game's mission keyword over the battle's region: <c>naval_bomber</c> (naval strike; null means this) or
+    /// <c>air_superiority</c> (fights in the region's air war, does not join the naval battle; A-WINGS-EXT).
+    /// </summary>
+    public string? Mission { get; set; }
 }

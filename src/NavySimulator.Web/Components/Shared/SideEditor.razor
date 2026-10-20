@@ -339,7 +339,7 @@
                     {
                         <div style="overflow-x: auto">
                         <table class="data compact" style="width: 100%">
-                            <thead><tr><th>Plane</th><th class="num">Planes</th><th class="num" title="The air mission's efficiency (air base, range, coverage; not simulated): scales the planes offered to the battle each air hour">Mission eff.</th><th class="num" title="The mission's disruption factor: multiplies their attack; 1 when no enemy interceptors disrupt it">Disruption</th><th></th></tr></thead>
+                            <thead><tr><th>Plane</th><th title="naval strike joins the naval battle; air superiority fights in the region's air war only (not simulated)">Mission</th><th class="num">Planes</th><th class="num" title="The air mission's efficiency (air base, range, coverage; not simulated): scales the planes offered to the battle each air hour">Mission eff.</th><th class="num" title="The mission's disruption factor: multiplies their attack; 1 when no enemy interceptors disrupt it">Disruption</th><th></th></tr></thead>
                             <tbody>
                                 @foreach (var landBased in Side.LandBasedAirwings)
                                 {
@@ -359,6 +359,12 @@
                                                         }
                                                     </optgroup>
                                                 }
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select @bind="landBased.Mission" @bind:after="Changed" aria-label="Mission">
+                                                <option value="">Naval strike</option>
+                                                <option value="air_superiority">Air superiority</option>
                                             </select>
                                         </td>
                                         <td class="num"><input type="number" min="0" @bind="landBased.Planes" @bind:after="Changed" style="width: 70px" /></td>

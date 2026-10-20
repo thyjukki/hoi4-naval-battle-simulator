@@ -10,10 +10,11 @@ namespace NavySimulator.Engine.Battles.Mechanics;
 public static class CriticalPartRules
 {
     /// <summary>
-    /// [RE] 0x1974511: on a crit, a part is damaged with chance <c>CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT ×
+    /// [RE] 0x1974511 / 0x1975150: on a crit, a part is damaged with chance <c>CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT ×
     /// critical_part_damage_chance_mult / reliability</c>; no roll (always) when that is at least 1 or reliability is 0.
+    /// Air crits pass <c>CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT_FROM_AIR</c> as <paramref name="baseChance"/> (A-CRIT).
     /// </summary>
-    public static bool RollPartDamage(Ship target, GameDefines defines, IRandomSource random)
+    public static bool RollPartDamage(Ship target, GameDefines defines, IRandomSource random, double? baseChance = null)
     {
         if (target.Role == ShipRole.Convoy)
         {
@@ -21,7 +22,7 @@ public static class CriticalPartRules
         }
 
         var reliability = Math.Min(target.GetFinalStats().Reliability, 1);
-        var chance = defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT * target.Design.ShipType.CriticalPartDamageChanceMult;
+        var chance = (baseChance ?? defines.NNavy.CHANCE_TO_DAMAGE_PART_ON_CRITICAL_HIT) * target.Design.ShipType.CriticalPartDamageChanceMult;
 
         if (reliability <= 0)
         {

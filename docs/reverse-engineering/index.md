@@ -10,7 +10,7 @@ Built only from the [findings](findings/README.md). Nothing here is new evidence
 
 **How to add to this index.** Check this index before decoding anything in hoi4.exe. Every decoding session adds each function, struct field, modifier id and define read site it decoded here (one row each, sorted, with a link), and puts the pseudocode, evidence addresses and confidence in a findings file (`findings/<SPEC-ID>-<name>.md`, from [finding-template.md](finding-template.md)). If a new reading contradicts a row, keep both meanings, flag the row "**disagrees**", and settle it in [findings/README.md][README/disagree]. After a game patch, re-run `tools/re/` and re-verify before trusting any row.
 
-File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS].
+File keys: HOUR = [S-HOUR][HOUR], ACT = [S-ACTIVATE][ACT], TGT = [S-TARGET][TGT], HIT = [S-HIT][HIT], DMG = [S-DMG][DMG], POS = [S-POS][POS], XP = [S-XP][XP], AIR = [A-air-combat][AIR], WTH = [S-WEATHER][WTH], LOG = [in-game logging][LOG], DOC = [S-DOCTRINE][DOC], STATS = [S-STATS][STATS], STC = [S-STATS-COUNTRY][STC], MIOI = [S-MIO-INCLUDE][MIOI], MIO = [S-MIO-MATCH][MIO], ADM = [S-ADMIRAL][ADM], POTF = [S-POTF][POTF], WINGS = [A-WINGS][WINGS], MSAVE = [A-MISSION-SAVE][MSAVE].
 
 ## 1. Functions
 
@@ -686,7 +686,7 @@ From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]: the type keyword bits,
 | 0xf5d0a0 | CanSwap(wing, variant): same missions, needed type, preference, holds a variant that 0xbd7dc0 accepts; no combat check | A-REINFORCE | [WINGS/reinforce] |
 | 0xf5f000 | wing max size: land `land_air_wing_size`, carrier `carrier_air_wing_size` / mega / submarine (0x101b080); sub-unit type bit 33 → base capacity `base+0x78` | A-REINFORCE | [WINGS/reinforce] |
 | 0xf61f70 | reinforcement score `priority × 1000 + (mission type ≠ 0 ? 500 : 0) + missing planes` | A-REINFORCE | [WINGS/reinforce] |
-| 0xf62750 | wing hourly update: ready timer `+0x64 → +0x60`, not-ready wings into `strategicAir+0x70` | A-REINFORCE | [WINGS/reinforce] |
+| 0xf62750 | wing hourly update: ready timer `+0x64 → +0x60`, not-ready wings into `strategicAir+0x70`. **disagrees** (MSAVE): its only caller path found is the air manager daily 0xc50040 → 0xc46030 → 0xf62a50 | A-REINFORCE | [WINGS/reinforce], [MSAVE/eff] |
 | 0xf63100 | fighter-type test on the pool's sub-unit `type` (`& 0x100000c00`) | A-INTERCEPT, A-WINGS | [WINGS/types] |
 | 0xf632c0 | reinforcement preference `wing+0x9cc`: 0 obsolete only, 1 any, 2 only current, 3 only same ("unhandled reinforcement setting") | A-REINFORCE | [WINGS/reinforce] |
 | 0xf63fa0 | Reinforce(wing, variant, amount): `n = min(amount, max − planes)`, manpower-limited, AddAirplanes; returns the rest | A-REINFORCE | [WINGS/reinforce] |
@@ -716,6 +716,50 @@ From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]: the type keyword bits,
 | 0x1c6a7c0 | group AddMember(group, ship, flag): one AirFX per non-empty wing pool of the ship's base (0xc536b0), unless a submarine; wings get the combat only in normal combats (+0x10c / +0x10d clear) | A-WINGS | [WINGS/strike] |
 | 0x1c6c120 | add a wing to the AirFX holding another wing (split) | A-WINGS | [WINGS/strike] |
 | 0x1c6c1e0 | wing changed base in a group: removed from its AirFX (0x197a5a0), new AirFX if the new base is a carrier member of the group | A-WINGS | [WINGS/strike] |
+
+### Air mission save and execution (A-MISSION-SAVE)
+
+From [A-MISSION-SAVE-air-mission-save-format.md][MSAVE]: the mission's save keys, what a load rebuilds, where region missions are kept and who sets `executing_mission`. Sorted by RVA. Rows here can repeat an RVA of the A-WINGS table with the MSAVE reading.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1d4810 | `gamestate.daily` (calls the air manager daily 0xc50040 at 0x1d497e) | A-WINGS | [MSAVE/eff] |
+| 0x700520 | country `+0xf88` → 0xd3fd60(…, 0); used as "may be active" by EnableMission (probably at war) | A-WINGS | [MSAVE/exec] |
+| 0x714830 | reserve command power `(country, reservation, flag)`: fails above NCountry.BASE_MAX_COMMAND_POWER + modifiers − used | A-WINGS | [MSAVE/read] |
+| 0x7191b0 (0x71a8a3) | country writer: country `+0x180` list written as `air_theatre` | A-WINGS | [MSAVE/lists] |
+| 0xb0f470 | wing busy: `+0x79`, ready timer `+0x64 < +0x60`, or a transfer target `+0x48` | A-WINGS | [MSAVE/exec] |
+| 0xc46030 / 0xc46440 | air manager daily per-country job: … each pool's wings 0xf62a50 (parallel task vtable 0x2959ea0) | A-WINGS | [MSAVE/eff] |
+| 0xc49e80 | parallel body of 0xc58660: per region, land missions `strategicAir+0x98[r]`: CanExecute (0xf79a00) → `executing_mission` = 0xf7a420, else 0 on land bases; carrier list `+0x140[r]`: 0xf79c10 → 0xf7acc0, else 0; region record `+0xe0[r]+0x9a` = executing & 0xf7fa | A-WINGS, A-EXTERNAL | [MSAVE/exec] |
+| 0xc50040 | air manager daily ("airmanager.daily", from 0x1d4810) | A-WINGS | [MSAVE/eff] |
+| 0xc58660 | `executing_mission` refresh, called by the hourly air update 0xc57d30 at 0xc58068 before the mission loop (0xc58582): per-region mission holders, region night coverage (0xe21640), parallel 0xc49e80 (task vtable 0x2959ec0) | A-WINGS, A-EXTERNAL | [MSAVE/exec] |
+| 0xc5daa0 | register a mission: `_ActiveMissions[region id]` (`strategicAir+0x98`), `_AllActiveMissions` (`+0xb0`), `_ActiveMissionRegions` (`+0xc8`, sorted ids) | A-WINGS | [MSAVE/lists] |
+| 0xc5dcb0 | unregister a mission (same lists) | A-WINGS | [MSAVE/lists] |
+| 0xc66c60 | strategic air writer tail: `air_theatre_index` / `air_group_index` (id counters) | A-WINGS | [MSAVE/lists] |
+| 0x1012f80 / 0x10132d0 | region provinces within the wing's range of its base (land base province or the carrier's fleet location) → list (16-byte entries {province, distance}) | A-WINGS | [MSAVE/read] |
+| 0x1013de0 / 0x1014010 | mission keyword → bit / bit → keyword (`air_superiority` … `sam_mission`; leaf switches) | A-WINGS | [MSAVE/token] |
+| 0x14ec490 / 0x14ec5a0 | air theatre writer (`air_theatre`, regions `+0x70`, groups) / air group writer (`country`, `name`, `air_group` members `+0x40`) | A-WINGS | [MSAVE/lists] |
+| 0xf5e5c0 | wing range (fixed; whole km after ÷1e5) | A-WINGS | [MSAVE/read] |
+| 0xf62a50 | pool: for each wing, 0xf68040 if ready and not transferring, then 0xf62750 | A-WINGS | [MSAVE/eff] |
+| 0xf62bc0 | wing InitPostRead (vtable 0x297ade0 + 0x40, `this = wing+0x10`): ace check, 0xf661e0, coverage 0xf87480(force), command power 0xf87290 | A-WINGS | [MSAVE/read] |
+| 0xf651b0 | wing ReadMember (vtable 0x297ade0 + 0x20, `this = wing+0x10`): `allow_mission_type` → `wing+0x2c`, `mission` → `wing+0x90`, `region_to_assign` / `mission_to_assign` → `wing+0x70` / `+0x74`, `other_combats`, `timed_disabling`, … | A-WINGS | [MSAVE/read] |
+| 0xf65c70 | pool ReadMember (vtable 0x297ae38 + 0x20): new wing (0xf5a1f0), read, available missions 0xf667b0, append | A-WINGS | [MSAVE/read] |
+| 0xf78500 | mission effectiveness `(mission, &out, isCarrier, a4, a5)`: coverage term (`1 − +0x50`), × `(1 − region_change_penalty)` unless a4 or `type & 0x60` | A-EXTERNAL | [MSAVE/eff] |
+| 0xf796e0 | land chooser after AS / interception: CAS, strategic, barrage, naval bomber / kamikaze (0xf7d590 target), port strike, logistics, air supply, mines, recon, naval patrol, paradrop; first match with the bit in `type` and in `wing+0x30` | A-WINGS, A-EXTERNAL | [MSAVE/exec] |
+| 0xf79a00 | CanExecute(mission, night coverage): type, region, active, coverage `+0x50`, available missions, wing not busy, planes, `period` vs DAY_NIGHT_COVERAGE_FACTOR, AGGRESSION_THRESHOLD, carrier-in-combat rule; sets `effectiveness` (0xf78500) and `effective_planes_count` (0xf78360) | A-WINGS, A-EXTERNAL | [MSAVE/exec] |
+| 0xf79c10 | carrier CanExecute (not decoded) | A-WINGS | [MSAVE/exec] |
+| 0xf79e40 | mission command power cost (NAir.MISSION_COMMAND_POWER_COSTS × planes) | A-WINGS | [MSAVE/read] |
+| 0xf7a420 | land chooser: `type & 1` and `wing+0x30 & 1` → 0x1; `& 4` → 0x4; else 0xf796e0 | A-WINGS | [MSAVE/exec] |
+| 0xf7a760 | SetRegion helper: list `mission+0x58` from the base position and the region (meaning ?) | A-WINGS | [MSAVE/read] |
+| 0xf7acc0 | carrier chooser from `wing+0x30` only: fighter-type → AS, interception, kamikaze, naval bomber; others → kamikaze, naval bomber, AS, interception. **Settles** the A-WINGS carrier `executing_mission` setter | A-WINGS | [MSAVE/exec] |
+| 0xf7d590 (body 0xf7d5e4) | naval targets of a mission: needs `+0x44 > 0` and `region+0xa0`; walks the in-range province list `+0x38`: naval combats (`province+0x170`, `vt+0x58 == 2`, 0x13e27f0 / 0x161f620), then spotted fleets (`province+0xf8`, NAVAL_STRIKE / NAVAL_RECON_DETECTION_BALANCE_FACTOR) | A-EXTERNAL | [MSAVE/exec] |
+| 0xf80490 | region change penalty decay: `+0xc0 −= gain / 24` (0xf7ec90, EFFICIENCY_REGION_CHANGE_DAILY_GAIN_*), clamped [0, 1], only with `type != 0` and not training | A-EXTERNAL | [MSAVE/eff] |
+| 0xf80930 | aggressiveness test: `planes / maxSize >= NAir.AGGRESSION_THRESHOLD[+0x1c]` | A-WINGS | [MSAVE/exec] |
+| 0xf84d40 | air mission ReadMember: fields directly; `executing_mission` keyword → bit; `strategic_region` id → SetRegion(…, false) when `1 <= id < gamestate+0x2ec` | A-WINGS | [MSAVE/read] |
+| 0xf852a0 | EnableMission: `type` (0x30085 bits replace the mask, others are added); `active` = base has the country, no training, and 0xf61600 > 0 / recon / paradrop / 0x700520; else `active` and `executing_mission` 0; then 0xf87290 | A-WINGS | [MSAVE/exec] |
+| 0xf859d0 | SetRegion(mission, region, recompute): if changed: `executing_mission = 0`, `region_change_penalty = EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR`, unregister / register (0xc5dcb0 / 0xc5daa0), `+0x30`; recompute → range and coverage; `+0x58` list (0xf7a760) | A-WINGS | [MSAVE/read] |
+| 0xf87290 | reserve command power for `type` (0xf79e40, 0x714830); failure → `type = 0` | A-WINGS | [MSAVE/read] |
+| 0xf87480 | UpdateCoverage(mission, force): range `+0x78`, in-range province list `+0x38` / `+0x44`, coverage `+0x50 = min(1, count / region+0x24)` | A-WINGS, A-EXTERNAL | [MSAVE/read] |
+| 0xf87820 | air mission writer: `type`, `period`, `active`, [`executing_mission` keyword], [`effectiveness`], [`effective_planes_count`], [`effective_air_superiority`], [`strategic_region` = region+0x58, `region_change_penalty`], `missions_done`, [`aggressiveness`], `priority`*, [`stop_training_at_max_xp`] | A-WINGS | [MSAVE/write] |
 
 ## 2. Struct fields
 
@@ -1118,6 +1162,40 @@ From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]. A wing handle resolves
 | country | +0xf78 | air CReinforcementStatus | [WINGS/reinforce] |
 | naval combatant | +0x100 / +0x10c | external AirFX / count | [WINGS/ext] |
 
+### Air mission save and execution (A-MISSION-SAVE)
+
+From [A-MISSION-SAVE-air-mission-save-format.md][MSAVE]. Save keys in backticks.
+
+| Object | Offset | Meaning | Finding |
+|---|---|---|---|
+| air mission | +0x10 | `type` (assigned mission bits) | [MSAVE/write] |
+| air mission | +0x14 | `executing_mission` (saved as a keyword; cleared by SetRegion, set by 0xc49e80) | [MSAVE/exec] |
+| air mission | +0x18 | `period`: 0 day, 1 night, 2 day and night (ctor 2) | [MSAVE/exec] |
+| air mission | +0x1c | `aggressiveness` (index into NAir.AGGRESSION_THRESHOLD) | [MSAVE/exec] |
+| air mission | +0x20 | `active` (only EnableMission 0xf852a0 writes it) | [MSAVE/exec] |
+| air mission | +0x30 | target strategic region (`strategic_region` = its +0x58) | [MSAVE/write] |
+| air mission | +0x38 / +0x44 | in-range provinces of the region (16-byte {province, distance}) / count | [MSAVE/read] |
+| air mission | +0x50 | coverage = in-range share of the region's provinces (not saved) | [MSAVE/read] |
+| air mission | +0x58 / +0x64 | list built by 0xf7a760 in SetRegion / count (meaning ?) | [MSAVE/read] |
+| air mission | +0x74 | `missions_done` | [MSAVE/write] |
+| air mission | +0x78 | range the coverage was computed for (whole km; 0 after the ctor) | [MSAVE/read] |
+| air mission | +0x7c | `stop_training_at_max_xp` | [MSAVE/write] |
+| air mission | +0x80 / +0x8c | `priority` entries / count | [MSAVE/write] |
+| air mission | +0xc0 | `region_change_penalty` (effectiveness × (1 − it)) | [MSAVE/eff] |
+| air mission | +0xe8 | `effective_air_superiority` | [MSAVE/write] |
+| air mission | +0xf0 | command power reservation | [MSAVE/read] |
+| wing | +0x70 / +0x74 | `region_to_assign` / `mission_to_assign` | [MSAVE/read] |
+| CStrategicAir | +0x98 | `_ActiveMissions[region id]` (24-byte lists, count +0xc): land-based missions per region | [MSAVE/lists] |
+| CStrategicAir | +0xb0 / +0xc8 | `_AllActiveMissions` / `_ActiveMissionRegions` (sorted ids) | [MSAVE/lists] |
+| CStrategicAir | +0xe0 | per-region records (0xa0 bytes); `+0x9a` = a non-AS / interception / training mission executes there | [MSAVE/exec] |
+| CStrategicAir | +0x140 | per-region carrier mission lists (registration not decoded) | [MSAVE/exec] |
+| country | +0x180 | air theatres (`air_theatre`; UI organisation, not read by mission execution) | [MSAVE/lists] |
+| strategic region | +0x24 | province count (coverage denominator) | [MSAVE/read] |
+| strategic region | +0x58 | region id (`strategic_region`, `spotting_region`); also the weather index ([WTH/combat]) | [MSAVE/write] |
+| strategic region | +0xa0 | must be non-null for naval targets / naval patrol (meaning ?) | [MSAVE/exec] |
+| gamestate | +0x2e0 / +0x2ec | strategic regions by id / count | [MSAVE/read] |
+| province | +0x170 / +0xf8 | combats in the province / units (fleets) in it | [MSAVE/exec] |
+
 ## 3. Modifier ids and read sites
 
 ### Modifier ids
@@ -1368,7 +1446,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - `airfx+0xe8` name (equipment +0x260). [AIR/open]
 - Top-speed term in 0xf7ad60; plane stat indices 0x2f/0x30. [AIR/open]
 - ~~`0xf78160` (fuel?); `airfx+0xc0` source; caller and 5th argument of 0x16205c0~~ settled: disruption efficiency, caller 0xf82ca0 with 0 ([WINGS/ext]). [AIR/open]
-- Who sets `executing_mission` (`wing+0xa4`) of carrier wings; whether two pools of one sub-unit can sit on a carrier; bit 23 of the type map (token id 0); `variant+0x42c` / `wing+0xa28`; the two wing stats in the disruption formula (0xf5e890); priority among distributables (0xd0bdd0 / 0xd0c650) and stockpile order (0xbd2420); the variant test 0xbd7dc0 of the swap path. [WINGS/open]
+- ~~Who sets `executing_mission` (`wing+0xa4`) of carrier wings~~ settled: 0xc49e80 → 0xf7acc0 from the available missions ([MSAVE/exec]); whether two pools of one sub-unit can sit on a carrier; bit 23 of the type map (token id 0); `variant+0x42c` / `wing+0xa28`; the two wing stats in the disruption formula (0xf5e890); priority among distributables (0xd0bdd0 / 0xd0c650) and stockpile order (0xbd2420); the variant test 0xbd7dc0 of the swap path. [WINGS/open]
 - Port-strike branch (`combat+0x10c`, PORT_STRIKE_DAMAGE_FACTOR). [AIR/open]
 - `0xf80f60` per-wing losses/experience. [AIR/losses]
 - Rebuilt region weather state after `disable_weather` (`0xf1cb90`): no weather and an empty holder?; which weather each region flag is; `set_weather` 0x2874b0. [WTH/open]
@@ -1376,6 +1454,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - ~~Country MIO `+0x134`~~ settled: trait points ([MIO/map]); the other arguments of `CanUnlockTrait` 0x13af360; chained includes (one pass in database order; no script uses one); ~~whether a `limit_to_equipment_type` naming only unknown equipment counts as empty~~ settled: not empty, it matches nothing ([MIO/match]). [MIOI/open]
 - MIO matching: 0xbd3a50 in full (variant role mask); the roster's use of `allowed`/`visible`/`available`; when the create-variant command carries its own snapshot; production mode 0xdb7a30 consumers; the policy template base shift (map read at `+0x40`, written at `+0x50`); 0x9f8570. [MIO/open]
 - Pride of the fleet: whether any order moves a task force out of a running naval combat (the escaped case assumes not); bit 37 in the eligibility test; which medal holder is `ship_modifiers`; `country+0x484`; the AI weight in 0x1310de0. [POTF/open]
+- Air missions: how often the wing update 0xf62750 runs (penalty decay hourly or daily); the coverage term of 0xf78500; 0xc58660's region filter; `region+0xa0`; the combat tests 0x13e27f0 / 0x161f620; `mission+0x58` (0xf7a760); the carrier list `strategicAir+0x140` and 0xf79c10; `priority` entries. [MSAVE/open]
 
 [README]: findings/README.md
 [LOG]: findings/LOG-ingame-logging.md
@@ -1541,3 +1620,12 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [WINGS/reinforce]: findings/A-WINGS-carrier-wings-and-reinforcement.md#a-wings-reinforce-planes-from-the-stockpile
 [WINGS/defines]: findings/A-WINGS-carrier-wings-and-reinforcement.md#defines-and-constants-involved
 [WINGS/open]: findings/A-WINGS-carrier-wings-and-reinforcement.md#unresolved
+[MSAVE]: findings/A-MISSION-SAVE-air-mission-save-format.md
+[MSAVE/token]: findings/A-MISSION-SAVE-air-mission-save-format.md#token-ids
+[MSAVE/write]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-write-the-writer-0xf87820
+[MSAVE/read]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-read-the-reader-0xf84d40-and-what-it-does-on-load
+[MSAVE/lists]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-lists-where-region-missions-are-kept
+[MSAVE/exec]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-exec-what-must-hold-for-the-wing-to-execute-the-mission
+[MSAVE/eff]: findings/A-MISSION-SAVE-air-mission-save-format.md#a-mission-save-eff-effectiveness-is-recomputed
+[MSAVE/example]: findings/A-MISSION-SAVE-air-mission-save-format.md#what-to-write-one-naval-strike-wing-and-one-air-superiority-wing-over-region-30
+[MSAVE/open]: findings/A-MISSION-SAVE-air-mission-save-format.md#unresolved

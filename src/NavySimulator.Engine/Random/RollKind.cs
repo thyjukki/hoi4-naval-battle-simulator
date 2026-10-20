@@ -35,8 +35,29 @@ public enum RollKind
     /// <summary>S-CRIT-PART: which part is damaged (game ship.cpp line 0x78f); the engine has no part data and does not roll it.</summary>
     PartPick,
 
-    /// <summary>A-*: any roll of the air phase.</summary>
-    Air,
+    /// <summary>A-TARGET: the air target pick, an integer draw (naval_fire_exchange_air.cpp line 0x43f) used as U = n / 2^31.</summary>
+    AirTargetPick,
+
+    /// <summary>A-INTERCEPT: the roll that rounds the planes carrier fighters shoot down (line 0x27d).</summary>
+    AirInterception,
+
+    /// <summary>A-AA-PREEMPT: whether the target's AA fires before the strike (line 0x212).</summary>
+    AirAntiAirChance,
+
+    /// <summary>A-AA-PREEMPT: the roll that rounds the planes the target's AA shoots down (line 0x21c).</summary>
+    AirAntiAirKills,
+
+    /// <summary>A-HIT: the uniform factor of the hit count (line 0x45d).</summary>
+    AirHits,
+
+    /// <summary>A-CRIT: critical roll of an air strike (line 0x487).</summary>
+    AirCritical,
+
+    /// <summary>
+    /// Rolls the game makes after each strike for every strike wing (airmission.cpp lines 0xb52, 0xb54, 0xb68, 0xb72:
+    /// plane experience and aces) and once per strike (integer draw, line 0x1c9); no combat effect, the engine makes none.
+    /// </summary>
+    AirBookkeeping,
 
     /// <summary>Rolls the game makes when a ship sinks (game line 0x40e, 6–9 per sinking); no combat effect, the engine makes none.</summary>
     Sinking

@@ -1,0 +1,275 @@
+{
+  "$schema": "../schemas/force-compositions.schema.json",
+  "fleets": [
+    {
+      "id": "air_test_cv_std",
+      "shipDesigns": {
+        "39_carrier": 4,
+        "39lc_la": 12
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "air_test_cv_std_b",
+      "shipDesigns": {
+        "39_carrier": 4,
+        "39lc_la": 12
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 5,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "air_test_cv_bombers",
+      "shipDesigns": {
+        "39_carrier": 4,
+        "39lc_la": 12
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 8,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 8,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 8,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 8,
+                "planeCount": 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "air_test_cv_fighters_cas",
+      "shipDesigns": {
+        "39_carrier": 4,
+        "39lc_la": 12
+      },
+      "carrierAirwings": {
+        "39_carrier": [
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 2,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 6,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 2,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 6,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_CAS_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 2,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          },
+          {
+            "wings": [
+              {
+                "planeID": "cv_CAS_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_nav_bomber_equipment_2",
+                "airwings": 2,
+                "planeCount": 10
+              },
+              {
+                "planeID": "cv_fighter_equipment_2",
+                "airwings": 3,
+                "planeCount": 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "air_test_cl_a",
+      "shipDesigns": {
+        "39lc_la": 12
+      }
+    },
+    {
+      "id": "air_test_cl_b",
+      "shipDesigns": {
+        "39lc_la": 12
+      }
+    }
+  ]
+}

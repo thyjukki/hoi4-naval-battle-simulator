@@ -44,11 +44,11 @@ public sealed class AdmiralInfoTests : IDisposable
     }
 
     [Fact]
-    public void PrideOfTheFleetCandidates_AreTheFleetsCapitalShips()
+    public void PrideOfTheFleetCandidates_AreTheFleetsCapitalShipsAndCarriers()
     {
         var side = new BattleParticipantDto { FleetID = "Jukki_bb_fleet_usa" };
 
-        Assert.Equal(["39_battleship_pure_la", "shbb_4battery_2aa"], Workspace.PrideOfTheFleetCandidates(side).Select(design => design.ID).Order(StringComparer.Ordinal));
+        Assert.Equal(["39_battleship_pure_la", "39_carrier", "shbb_4battery_2aa"], Workspace.PrideOfTheFleetCandidates(side).Select(design => design.ID).Order(StringComparer.Ordinal));
         Assert.StartsWith("The ship takes half the gun and torpedo crits", AdmiralInfo.PrideOfTheFleetEffects(null), StringComparison.Ordinal);
     }
 

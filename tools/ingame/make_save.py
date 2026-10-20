@@ -28,10 +28,15 @@ save with one task force of each side in one sea province, at war, where the bat
  10. removes the naval combat at the battle's location, so the game starts the battle afresh when unpaused;
  11. gives each carrier its air wings (A-WINGS-SAVE): an air base for the ship in strategic_air and, per plane sub-unit,
      an air wing pool of the country with the carrier's wings of the country's variant of each plane; adds the side's
-     plane stockpile to the country's equipment and sets the task force's carrier stance (sortie_efficiency).
+     plane stockpile to the country's equipment and sets the task force's carrier stance (sortie_efficiency);
+ 12. puts the side's land-based wings at the country's air base (--air-base, default Burgas 329 for BUL and Dobrogea
+     350 for ROM in the CL3 template) on their mission over the battle's strategic region (--air-region, default 30):
+     `mission={ type=16 or 1 ... strategic_region=30 region_change_penalty=0 }` (A-MISSION-SAVE).
 A design on a hull the country has no free variant of gets a copy of the country's variant on a hull of the same family
 (e.g. ship_hull_carrier_2 for ship_hull_carrier_3) with a new id.
-The attacker's task force is the template combat's attacker (else --attacker-country). Everything else in the save is
+The attacker's task force is the template combat's attacker, or the task force of --attacker-country (in the CL3
+template the game makes ROM the attacker of the new battle, so pass --attacker-country ROM to give the scenario's
+attacker the side the game will make attacker). Everything else in the save is
 kept byte for byte. The result goes to the save games folder (default name: <scenario id>_battle_start.hoi4).
 """
 import argparse
@@ -179,7 +184,13 @@ def battle_task_forces(save, parsed, args):
         location = int(save.text(save.child(i, "location")).split("=")[1])
         if len(units) == 2:
             by_id = {tf.id: tf for tf in parsed.task_forces()}
-            return by_id[units["attacker"]], by_id[units["defender"]], location
+            attacker, defender = by_id[units["attacker"]], by_id[units["defender"]]
+            if args.attacker_country and args.attacker_country == defender.country:
+                # The game picks the attacker of the new battle itself (ROM in the CL3 template), not the template's.
+                attacker, defender = defender, attacker
+            elif args.attacker_country and args.attacker_country != attacker.country:
+                sys.exit(f"--attacker-country {args.attacker_country} has no task force in the template's battle")
+            return attacker, defender, location
     if not args.attacker_country:
         sys.exit("the template has no naval combat; pass --attacker-country and --location")
     forces = [tf for tf in parsed.task_forces() if tf.location == args.location]
@@ -223,7 +234,8 @@ def pick_variants(save, parsed, country, designs, taken):
             if not sources:
                 sys.exit(f"{country} has no free design variant on {design['hull']} (or its family) to hold {design['design']}")
             source = max(sources, key=lambda v: (v.equipment_type, v.id))
-            new_id = max(max(blocks), max(clones.values(), default=0)) + 1
+            # after every id taken so far, the other side's copies included (`taken` is shared by both sides)
+            new_id = max(max(blocks), max(taken, default=0)) + 1
             clones[design["design"]] = new_id
             chosen[design["design"]] = new_id
             taken.add(new_id)
@@ -358,6 +370,65 @@ def write_carrier_wings(save, country, side, carrier_ids, variants, ids):
     else:
         save.replace(air_end, air_end - 1, [line + eol for line in [f"\t{country}={{"] + pools + ["\t}"]])
     return len(bases) // 14, sum(1 for line in pools if line == "\t\tair_wing_pool={"), total
+
+
+# A-MISSION-SAVE: the mission bit of each land-based mission keyword.
+LAND_MISSIONS = {"naval_bomber": 16, "air_superiority": 1}
+# Land air bases near the CL3 template's battle (province 7906, strategic region 30, the Black Sea).
+DEFAULT_AIR_BASES = {"BUL": 329, "ROM": 350}
+
+
+def write_land_wings(save, country, entries, variants, ids, base_id, region):
+    """A-MISSION-SAVE: per land-based entry one wing of the country's variant of the plane (count = planes) at the air
+    base, flying its mission over `region`; wings of a sub-unit go into the country's pool of that sub-unit at the base
+    (a new pool if there is none). Returns the number of wings written."""
+    if not entries:
+        return 0
+    air = save.top_level("strategic_air")
+    air_end = save.block_end(air)
+    country_line = next((i for k, i in save.children(air, air_end) if k == country), None)
+    eol = save.eol(air)
+    existing = {}
+    if country_line is not None:
+        for key, i in save.children(country_line):
+            if key != "air_wing_pool":
+                continue
+            fields = {k: save.text(j).strip() for k, j in save.children(i)}
+            if fields.get("air_base") == f"air_base={{ id={base_id} type=65 }}":
+                existing[fields.get("definition", "").split("=", 1)[-1]] = i
+    new_pools = {}
+    for n, entry in enumerate(entries, 1):
+        plane = entry["plane"]
+        mission = entry.get("mission") or "naval_bomber"
+        ids[69] += 1
+        planes = entry["planes"]
+        wing = ["\t\t\tair_wings={", f"\t\t\t\tid={{ id={ids[69]} type=69 }}", f"\t\t\t\tcount={planes}", "\t\t\t\texperience=0",
+                "\t\t\t\treinforcement_setting=1", "\t\t\t\ttimed_disabling={", "\t\t\t\t\tremaining_hours=0",
+                "\t\t\t\t\tshould_start_on_transfer=no", "\t\t\t\t}", f"\t\t\t\tmanpower={planes * 40}", "\t\t\t\tmission={",
+                f"\t\t\t\t\ttype={LAND_MISSIONS[mission]}", "\t\t\t\t\tperiod=2", "\t\t\t\t\tactive=yes",
+                f"\t\t\t\t\tstrategic_region={region}", "\t\t\t\t\tregion_change_penalty=0", "\t\t\t\t\tmissions_done=0",
+                "\t\t\t\t}", f'\t\t\t\ttag="{country}"', "\t\t\t\tequipment={", "\t\t\t\t\tequipment={",
+                f"\t\t\t\t\t\tid={{ id={variants[plane['id']]} type=70 }}", f"\t\t\t\t\t\tamount={planes}", "\t\t\t\t\t}",
+                "\t\t\t\t\tallow_zero_entries=yes", "\t\t\t\t}", f'\t\t\t\tname="land {plane["id"]} {mission} {n}"', "\t\t\t\tpriority=1",
+                f"\t\t\t\tallow_mission_type={mission_mask(plane['missions'])}", "\t\t\t\tair_untrained_pilots_penalty_factor=1",
+                "\t\t\t}"]
+        sub_unit = plane["subUnit"] or plane["id"]
+        if sub_unit in existing:
+            pool = existing[sub_unit]
+            save.replace(save.block_end(pool), save.block_end(pool) - 1, [line + eol for line in wing])
+        else:
+            new_pools.setdefault(sub_unit, []).extend(wing)
+    pools = []
+    for sub_unit, wings in new_pools.items():
+        ids[4713] += 1
+        pools += ["\t\tair_wing_pool={", f"\t\t\tid={{ id={ids[4713]} type=4713 }}", f"\t\t\tdefinition={sub_unit}",
+                  f"\t\t\tair_base={{ id={base_id} type=65 }}"] + wings + ["\t\t}"]
+    if pools:
+        if country_line is not None:
+            save.replace(country_line + 1, country_line, [line + eol for line in pools])
+        else:
+            save.replace(air_end, air_end - 1, [line + eol for line in [f"\t{country}={{"] + pools + ["\t}"]])
+    return len(entries)
 
 
 def write_stockpile(save, country, stockpile, variants):
@@ -959,12 +1030,19 @@ def main():
     parser.add_argument("--data", type=Path, default=REPO / "data")
     parser.add_argument("--defines", action="append", default=[], help="define source for list-ships (experience levels)")
     parser.add_argument("--dotnet", default=os.environ.get("DOTNET", "dotnet"), help=".NET 10 SDK executable (env DOTNET)")
-    parser.add_argument("--attacker-country", help="attacker's country tag when the template has no combat")
+    parser.add_argument("--attacker-country",
+                        help="country whose task force gets the scenario's attacker (default: the template combat's attacker; "
+                             "needed when the template has no combat). The CL3 template's new battles make ROM the attacker.")
     parser.add_argument("--location", type=int, help="battle province when the template has no combat")
+    parser.add_argument("--air-base", action="append", default=[], metavar="TAG=ID",
+                        help="air base (strategic_air air_base id) of a country's land-based planes; defaults: " +
+                             ", ".join(f"{k}={v}" for k, v in DEFAULT_AIR_BASES.items()))
+    parser.add_argument("--air-region", type=int, default=30, help="strategic region of the land-based missions (default 30)")
     parser.add_argument("--force", action="store_true", help="overwrite an existing output save")
     parser.add_argument("--keep-block-order", action="store_true",
                         help="do not move the countries' deployment blocks (doctrine sub-unit records) before their units")
     args = parser.parse_args()
+    args.air_base = {tag: int(value) for tag, value in (item.split("=", 1) for item in args.air_base)}
 
     template = Path(args.template) if Path(args.template).is_absolute() else SAVE_DIR / args.template
     ships = list_ships(args)
@@ -1004,12 +1082,16 @@ def main():
         side["prideId"] = pride_id
         plane_ids = {w["plane"]["id"] for d in side["designs"] for wings in (d.get("carrierWings") or []) for w in wings}
         plane_ids |= {entry["plane"]["id"] for entry in side["planeStockpile"]}
+        plane_ids |= {entry["plane"]["id"] for entry in side["landBasedAirwings"]}
         planes = plane_variants(save, parsed, tf.country, sorted(plane_ids))
         side["air"] = write_carrier_wings(save, tf.country, side, side["shipIds"], planes, ids)
         write_stockpile(save, tf.country, side["planeStockpile"], planes)
         write_carrier_stance(save, tf, side.get("carrierStanceIndex"))
         if side["landBasedAirwings"]:
-            warnings.append(f"{role}: land-based planes are not written to the save")
+            base_id = args.air_base.get(tf.country) or DEFAULT_AIR_BASES.get(tf.country)
+            if base_id is None:
+                sys.exit(f"{role}: no air base for {tf.country}'s land-based planes; pass --air-base {tf.country}=<air base id>")
+            side["landWings"] = (write_land_wings(save, tf.country, side["landBasedAirwings"], planes, ids, base_id, args.air_region), base_id)
         added, tech_warnings = add_technologies(save, tf.country, side["researchIDs"])
         warnings += tech_warnings
         folders = write_doctrines(save, tf.country, side["doctrines"])
@@ -1029,6 +1111,9 @@ def main():
                   f"stance {side.get('carrierStanceIndex')}")
         if side["planeStockpile"]:
             print("  plane stockpile: " + ", ".join(f"{e['count']} {e['plane']['id']}" for e in side["planeStockpile"]))
+        if side["landBasedAirwings"]:
+            print(f"  land-based: air base {side['landWings'][1]}, region {args.air_region}: " +
+                  ", ".join(f"{e['planes']} {e['plane']['id']} ({e.get('mission') or 'naval_bomber'})" for e in side["landBasedAirwings"]))
         for mio, handle in mio_handles.items():
             setup = next((m for m in side["mios"] if m["id"] == mio), None)
             print(f"  MIO {mio} (handle {handle}): {len(setup['traits']) if setup else 0} traits unlocked, policy {(setup or {}).get('policy') or 'none'}")

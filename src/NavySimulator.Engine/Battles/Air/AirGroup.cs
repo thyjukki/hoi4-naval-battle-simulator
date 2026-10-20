@@ -41,8 +41,13 @@ public sealed class AirGroup
     /// <summary>All planes of the pool's wings.</summary>
     public int Planes => Wings.Sum(wing => wing.Planes);
 
-    public IEnumerable<AirWing> StrikeWings => Wings.Where(wing => wing.IsStrikeWing && wing.Planes > 0);
-    public IEnumerable<AirWing> FighterWings => Wings.Where(wing => wing.IsFighter && wing.Planes > 0);
+    /// <summary>
+    /// [RE + LOG] The strike list (airfx+0x28) and the fighter-type wings; a wing stays in them with no planes left, so it
+    /// still counts for the stacking selection (A-STACK) and the per-wing interception averages (A-INTERCEPT).
+    /// </summary>
+    public IEnumerable<AirWing> StrikeWings => Wings.Where(wing => wing.IsStrikeWing);
+
+    public IEnumerable<AirWing> FighterWings => Wings.Where(wing => wing.IsFighter);
 
     public static AirGroup ForCarrier(Ship carrier, List<AirWing> wings, string? pool = null)
     {

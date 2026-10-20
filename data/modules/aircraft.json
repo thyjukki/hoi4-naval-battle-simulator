@@ -65,6 +65,7 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "manpower": 500,
       "statModifiers": {
         "carrierSize": 2,
         "productionCost": 1750
@@ -81,6 +82,7 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "manpower": 800,
       "statModifiers": {
         "carrierSize": 3,
         "productionCost": 2000
@@ -97,6 +99,7 @@
       "addEquipmentTypes": [
         "capital_ship"
       ],
+      "manpower": 250,
       "statModifiers": {
         "carrierSubDetection": 5,
         "carrierSurfaceDetection": 1,
@@ -115,6 +118,7 @@
       "addEquipmentTypes": [
         "carrier"
       ],
+      "manpower": 100,
       "statModifiers": {
         "productionCost": 350
       },

@@ -1,0 +1,67 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "air_cv_bombers_vs_fighters",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 720,
+    "iterations": 10,
+    "continueAfterRetreat": false,
+    "rules": {
+      "weatherEnabled": false,
+      "navalDominanceEnabled": true,
+      "startHourOfDay": 13,
+      "airRegionPhase": 6
+    },
+    "attacker": {
+      "fleetID": "air_test_cv_bombers",
+      "country": "JAP",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4
+    },
+    "defender": {
+      "fleetID": "air_test_cv_fighters_cas",
+      "country": "USA",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4
+    }
+  }
+}

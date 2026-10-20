@@ -181,6 +181,7 @@ public static class ShipDataWriter
         AddWords(node, "addEquipmentTypes", module.AddEquipmentTypes);
         AddWords(node, "forbiddenCategories", module.ForbiddenCategories);
         AddWords(node, "criticalParts", module.CriticalParts);
+        AddNumber(node, "manpower", module.Manpower ?? 0, 0);
         AddStats(node, "statModifiers", module.StatModifiers);
         AddStats(node, "statAverages", module.StatAverages);
         AddStats(node, "statMultipliers", module.StatMultipliers);

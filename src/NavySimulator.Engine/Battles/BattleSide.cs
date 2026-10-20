@@ -21,6 +21,9 @@ public sealed class BattleSide
     public double Positioning { get; set; } = 1;
     public ScreeningSummary Screening { get; set; } = new(1, 1);
 
+    /// <summary>A-AA-REDUCE: the side's fleet AA term, set with positioning at the start of each hour (game side+0x170).</summary>
+    public double FleetAntiAir { get; set; }
+
     /// <summary>S-TARGET: visible enemy ships per line, taken at the start of this side's turn (game group+0xa0).</summary>
     public EnemyLineCounts EnemyCounts { get; set; }
 

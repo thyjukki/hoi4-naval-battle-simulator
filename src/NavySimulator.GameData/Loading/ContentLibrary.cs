@@ -127,7 +127,8 @@ public sealed class ContentLibrary
                 module.Category,
                 module.AddEquipmentTypes ?? [],
                 module.ForbiddenCategories ?? [],
-                Parts(module.CriticalParts)));
+                Parts(module.CriticalParts),
+                module.Manpower ?? 0));
         }
 
         foreach (var shipType in catalog.ShipTypes.Where(shipType => !string.IsNullOrWhiteSpace(shipType.ID)))

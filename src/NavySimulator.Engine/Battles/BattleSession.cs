@@ -81,6 +81,7 @@ public sealed class BattleSession
 
         SetNavalDominance();
         airPhase = new AirPhase(scenario, attacker, defender);
+        CreationUpdate();
         AddInputNotes();
         shipHistory = recordShipHistory ? [] : null;
         over = rules.MaxHours <= 0;
@@ -104,6 +105,9 @@ public sealed class BattleSession
 
     public IReadOnlyList<ShotRecord> Shots => shots;
     public IReadOnlyList<AirStrikeRecord> AirStrikes => airStrikes;
+
+    /// <summary>The battle's air objects (A-*); a replay sets their planes from the game's log.</summary>
+    public AirPhase AirPhase => airPhase;
     public IReadOnlyList<string> HourlyLog => log;
     public IReadOnlyList<BattleEvent> Events => events;
     public IReadOnlyList<HourSummary> Timeline => timeline;
@@ -231,6 +235,25 @@ public sealed class BattleSession
         return BuildSideResult(side);
     }
 
+    /// <summary>
+    /// [LOG] S-HOUR: the game updates a new battle once with hour counter 0 before its first battle hour: the side update
+    /// (positioning, screening, fleet AA) runs and carriers gain their sortie experience, but nothing fires. Battle hour 0
+    /// then starts from that screening, which the carrier sorties and so the carrier-ratio positioning read.
+    /// </summary>
+    private void CreationUpdate()
+    {
+        const int hour = -1;
+        BeginHour(hour);
+
+        foreach (var side in new[] { attacker, defender })
+        {
+            foreach (var ship in side.Ships)
+            {
+                AddCarrierSortieExperience(side, ship, hour);
+            }
+        }
+    }
+
     // [RE] Positioning, screening and detection for both sides from the same pre-fire state; [CAL] the experience
     // level the combat modifiers use is taken here too (S-XP).
     private void BeginHour(int hour)
@@ -250,6 +273,9 @@ public sealed class BattleSession
             SideModifier(attacker, StaticModifiers.Positioning), FleetSizePenaltyFactor(defender));
         defender.Positioning = PositioningRules.Calculate(defender.Lines, attacker.Lines, defines, defenderAir.A, attackerAir,
             SideModifier(defender, StaticModifiers.Positioning), FleetSizePenaltyFactor(attacker));
+        // [RE + LOG] A-AA-REDUCE: the fleet AA term is fixed here for the hour, so ships sunk during it still count.
+        attacker.FleetAntiAir = AirRules.FleetAntiAir(attacker.Ships, attacker.Positioning, defines);
+        defender.FleetAntiAir = AirRules.FleetAntiAir(defender.Ships, defender.Positioning, defines);
         attacker.Screening = ScreeningRules.Calculate(attacker.Lines, attacker.Positioning, defines,
             SideModifier(attacker, StaticModifiers.ScreeningEfficiency), Country(attacker, StaticModifiers.ScreeningWithoutScreens));
         defender.Screening = ScreeningRules.Calculate(defender.Lines, defender.Positioning, defines,
@@ -518,16 +544,27 @@ public sealed class BattleSession
                     var gain = ExperienceRules.HourlyGain(enemy.Ships.Count, side.Ships.Count, tally.LastTargetWasConvoy, defines);
                     ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
                 }
-                else if (ship.IsInBattle && airPhase.GroupsOf(side).FirstOrDefault(group => group.Carrier == ship) is { } group)
+                else
                 {
-                    // [RE] A carrier that did not fire gains from its sortie efficiency instead.
-                    var efficiency = Math.Clamp(airPhase.SortieEfficiency(group, side, hour, Darkness(hour)), 0, 1);
-                    var navy = defines.NNavy;
-                    var gain = navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN;
-                    ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
+                    AddCarrierSortieExperience(side, ship, hour);
                 }
             }
         }
+    }
+
+    // [RE] A carrier that did not fire gains from its sortie efficiency instead. [LOG] The efficiency is not clamped to 1:
+    // TFB carriers at 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit of efficiency).
+    private void AddCarrierSortieExperience(BattleSide side, Ship ship, int hour)
+    {
+        if (!ship.IsInBattle || airPhase.GroupsOf(side).FirstOrDefault(group => group.Carrier == ship) is not { } group)
+        {
+            return;
+        }
+
+        var efficiency = Math.Max(0, airPhase.SortieEfficiency(group, side, hour, Darkness(hour)));
+        var navy = defines.NNavy;
+        var gain = navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN;
+        ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
     }
 
     // S-MANPOWER [CAL]: a sinking refills the rest of the sunk ship's task force at once, as the daily update does

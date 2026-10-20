@@ -1,0 +1,224 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "jukki_usa_vs_bc_japan_ingame",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 720,
+    "iterations": 10,
+    "continueAfterRetreat": false,
+    "rules": {
+      "weatherEnabled": false,
+      "navalDominanceEnabled": true,
+      "startHourOfDay": 13,
+      "airRegionPhase": 6
+    },
+    "attacker": {
+      "fleetID": "japan_bc_dd_shbb",
+      "country": "JAP",
+      "admiral": {
+        "id": "JAP_tamon_yamaguchi",
+        "name": "Tamon Yamaguchi",
+        "country": "JAP",
+        "skill": 4,
+        "attackSkill": 5,
+        "defenseSkill": 2,
+        "maneuveringSkill": 4,
+        "coordinationSkill": 3,
+        "traits": [
+          "bold",
+          "aviation_enthusiast",
+          "cuts_corners",
+          "big_guns_expert",
+          "ironside"
+        ]
+      },
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [
+        "decisive_battle_spirit"
+      ],
+      "doctrines": {
+        "naval": {
+          "grandDoctrine": "new_fleet_in_being",
+          "tracks": {
+            "submarines": {
+              "subdoctrine": "coastal_minelaying",
+              "mastery": 500
+            },
+            "screens": {
+              "subdoctrine": "jeune_ecole",
+              "mastery": 500
+            },
+            "carriers": {
+              "subdoctrine": "light_task_forces",
+              "mastery": 500
+            },
+            "capital_ships": {
+              "subdoctrine": "battlecruiser_supremacy",
+              "mastery": 500
+            }
+          }
+        }
+      },
+      "mios": {
+        "JAP_kure_naval_arsenal_organization": {
+          "traits": [
+            "generic_mio_trait_internal_armor_belt",
+            "generic_mio_trait_hardened_critical_components",
+            "JAP_mio_trait_rapid_counterflooding_system",
+            "generic_mio_trait_advanced_armor_design",
+            "generic_mio_trait_primary_battery_layout",
+            "generic_mio_trait_high_velocity_guns",
+            "generic_mio_trait_secondary_battery_layout",
+            "generic_mio_trait_anti_air_layout",
+            "generic_mio_trait_gyro_stabilized_mounts",
+            "JAP_mio_trait_enhanced_optics",
+            "generic_mio_trait_secondary_fire_director_control",
+            "generic_mio_trait_combat_information_center"
+          ],
+          "policy": "mio_policy_navy_stable_platforms"
+        },
+        "JAP_maizuru_naval_arsenal_organization": {
+          "traits": [
+            "generic_mio_trait_submarine_hunters",
+            "generic_mio_trait_high_speed_mine_hunting_equipment",
+            "JAP_mio_trait_high_pressure_boilers",
+            "generic_mio_trait_advanced_hydrodynamic_design",
+            "generic_mio_trait_fleet_escorts"
+          ]
+        }
+      },
+      "designMios": {
+        "shbb_4battery_2aa": "JAP_kure_naval_arsenal_organization",
+        "39_battlecruiser_pure_la": "JAP_kure_naval_arsenal_organization",
+        "dd_3_la": "JAP_maizuru_naval_arsenal_organization"
+      },
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair"
+    },
+    "defender": {
+      "fleetID": "Jukki_bb_fleet_usa",
+      "country": "USA",
+      "admiral": {
+        "id": "USA_william_halsey_jr",
+        "name": "William Halsey, Jr.",
+        "country": "USA",
+        "skill": 5,
+        "attackSkill": 5,
+        "defenseSkill": 4,
+        "maneuveringSkill": 3,
+        "coordinationSkill": 3,
+        "traits": [
+          "bold",
+          "aviation_enthusiast",
+          "superior_tactician",
+          "spotter",
+          "cruiser_captain"
+        ]
+      },
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [
+        "decisive_battle_spirit"
+      ],
+      "doctrines": {
+        "naval": {
+          "grandDoctrine": "new_fleet_in_being",
+          "tracks": {
+            "submarines": {
+              "subdoctrine": "submarine_fleet_operations",
+              "mastery": 500
+            },
+            "screens": {
+              "subdoctrine": "support_integrated_operations",
+              "mastery": 500
+            },
+            "carriers": {
+              "subdoctrine": "broad_naval_support",
+              "mastery": 500
+            },
+            "capital_ships": {
+              "subdoctrine": "line_of_battle",
+              "mastery": 500
+            }
+          }
+        }
+      },
+      "mios": {
+        "USA_brooklyn_naval_yard_organization": {
+          "traits": [
+            "generic_mio_trait_internal_armor_belt",
+            "generic_mio_trait_hardened_critical_components",
+            "generic_mio_trait_advanced_armor_design",
+            "generic_mio_trait_secondary_battery_layout",
+            "generic_mio_trait_anti_air_layout",
+            "generic_mio_trait_gyro_stabilized_mounts",
+            "generic_mio_trait_secondary_fire_director_control",
+            "generic_mio_trait_combat_information_center",
+            "generic_mio_trait_primary_battery_layout",
+            "generic_mio_trait_high_velocity_guns"
+          ],
+          "policy": "mio_policy_navy_stable_platforms"
+        },
+        "USA_newport_news_shipbuilding_organization": {
+          "traits": [
+            "generic_mio_trait_high_speed_cruising",
+            "generic_mio_trait_splinter_protection",
+            "generic_mio_trait_transom_stern",
+            "generic_mio_trait_secondary_fire_director_control",
+            "generic_mio_trait_flight_deck_edge_aa_mounts",
+            "generic_mio_trait_gyro_stabilized_mounts",
+            "generic_mio_trait_rapid_fire_guns",
+            "generic_mio_trait_advanced_fitting_works",
+            "generic_mio_trait_carrier_flight_operations_center",
+            "generic_mio_trait_primary_fire_director_control"
+          ],
+          "policy": "mio_policy_navy_stable_platforms"
+        }
+      },
+      "designMios": {
+        "shbb_4battery_2aa": "USA_brooklyn_naval_yard_organization",
+        "39_battleship_pure_la": "USA_brooklyn_naval_yard_organization",
+        "36lc_a3_la3": "USA_newport_news_shipbuilding_organization",
+        "39lc_la": "USA_newport_news_shipbuilding_organization"
+      },
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "planeStockpile": {
+        "cv_nav_bomber_equipment_2": 1000
+      },
+      "carrierStanceIndex": 4
+    }
+  }
+}

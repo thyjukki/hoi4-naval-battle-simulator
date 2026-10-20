@@ -255,10 +255,14 @@
                 "minimum": 0,
                 "description": "The air mission's efficiency: scales the planes offered to the join cap (default 1)."
               },
+              "mission": {
+                "enum": ["naval_bomber", "air_superiority"],
+                "description": "The game's mission over the battle's region: naval_bomber (naval strike, default) joins the naval battle; air_superiority fights in the region's air war only (not simulated)."
+              },
               "disruptionFactor": {
                 "type": "number",
                 "minimum": 0,
-                "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors)."
+                "description": "The mission's disruption factor: multiplies their attack (default 1, no enemy interceptors).
               }
             },
             "additionalProperties": false

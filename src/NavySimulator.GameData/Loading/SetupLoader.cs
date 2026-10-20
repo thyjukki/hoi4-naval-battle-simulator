@@ -1175,6 +1175,12 @@ public class SetupLoader
             {
                 errors.Add($"battleScenario.{role}.landBasedAirwings '{landBased.PlaneID}' needs planes, missionEfficiency and disruptionFactor >= 0.");
             }
+
+            if (landBased.Mission is { Length: > 0 } mission && mission != LandBasedAirwing.NavalStrike && mission != LandBasedAirwing.AirSuperiority)
+            {
+                errors.Add($"battleScenario.{role}.landBasedAirwings '{landBased.PlaneID}' has mission '{mission}'; use " +
+                           $"'{LandBasedAirwing.NavalStrike}' or '{LandBasedAirwing.AirSuperiority}'.");
+            }
         }
 
         foreach (var (planeId, count) in participant.PlaneStockpile)
@@ -1229,7 +1235,8 @@ public class SetupLoader
             BuildMios(participant, library),
             BuildDesignMios(participant, library),
             pride,
-            participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0)).ToList(),
+            participant.LandBasedAirwings.Select(entry => new LandBasedAirwing(entry.PlaneID, entry.Planes, entry.MissionEfficiency ?? 1.0, entry.DisruptionFactor ?? 1.0,
+                string.IsNullOrEmpty(entry.Mission) ? LandBasedAirwing.NavalStrike : entry.Mission)).ToList(),
             new Dictionary<string, int>(participant.PlaneStockpile, StringComparer.Ordinal));
     }
 

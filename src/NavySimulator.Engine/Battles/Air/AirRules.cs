@@ -45,7 +45,9 @@ public static class AirRules
             ratio = 1.0 - ratio;
         }
 
-        var baseEfficiency = (hour < navy.SELECTED_SORTIE_INITIAL_TIME ? ratio : navy.BASE_CARRIER_SORTIE_EFFICIENCY);
+        // [RE + LOG] The game compares its hour counter (combat+0x44), which is one ahead of the battle hour during the
+        // update (S-HOUR), so the stance base ends after battle hour SELECTED_SORTIE_INITIAL_TIME - 2.
+        var baseEfficiency = (hour + 1 < navy.SELECTED_SORTIE_INITIAL_TIME ? ratio : navy.BASE_CARRIER_SORTIE_EFFICIENCY);
 
         // [RE] sortie_efficiency through the member getter: capital_screening_bonus for the carrier line (screening_bonus
         // has none in vanilla), country modifiers (doctrines, spirits) and damaged parts (damaged_flight_deck, S-CRIT-PART).
@@ -137,16 +139,52 @@ public static class AirRules
             _ => (navy.NAVAL_COMBAT_AIR_CONVOY_TARGET_BASE, navy.NAVAL_COMBAT_AIR_CONVOY_TARGET_SCALE)
         };
 
-        var typeScore = baseScore * targetSideScreening + scaleScore * (1.0 - targetSideScreening);
+        // Each product truncated to the game's fx5, as for the surface target weight (the pick walks fx5 integers).
+        var typeScore = FixedPoint.Truncate(FixedPoint.Truncate(baseScore * targetSideScreening) +
+                                            FixedPoint.Truncate(scaleScore * (1.0 - targetSideScreening)));
         var stats = target.GetFinalStats();
-        var weight = Math.Max(stats.Hp, 0.001) * typeScore *
-                     (1.0 + navy.NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE * (1.0 - TargetingRules.HpRatio(target)));
-        return weight + navy.NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE * Math.Clamp(5.0 - CombatStatRules.AntiAir(target, defines), 0, 5);
+        var missing = 1.0 - FixedPoint.Divide(target.CurrentHP, Math.Max(stats.Hp, 0.001));
+        var weight = FixedPoint.Truncate(FixedPoint.Truncate(Math.Max(stats.Hp, 0.001) * typeScore) *
+                                         FixedPoint.Truncate(1.0 + navy.NAVAL_COMBAT_AIR_STRENGTH_TARGET_SCORE * missing));
+        return weight + FixedPoint.Truncate(navy.NAVAL_COMBAT_AIR_LOW_AA_TARGET_SCORE *
+                                            Math.Clamp(5.0 - CombatStatRules.AntiAir(target, defines), 0, 5));
+    }
+
+    /// <summary>
+    /// [RE] A-TARGET pick (0x197ac19, 0x24f04f0): an integer draw n (line 0x43f) gives <c>p = trunc(n / 2^31 × Σw)</c>
+    /// over the fx5 weights, and the first candidate in list order whose running sum exceeds p is the target. Unlike the
+    /// surface pick (S-TARGET) the heaviest candidate does not come first.
+    /// </summary>
+    public static Ship? PickTarget(IReadOnlyList<(Ship Target, double Weight)> candidates, IRandomSource random)
+    {
+        var weights = candidates.Select(candidate => Math.Max(0, FixedPoint.Raw(candidate.Weight))).ToList();
+        var total = weights.Sum();
+
+        if (total <= 0)
+        {
+            return null;
+        }
+
+        var point = (long)(random.NextDouble(RollKind.AirTargetPick) * total);
+        var cumulative = 0L;
+
+        for (var i = 0; i < candidates.Count; i++)
+        {
+            cumulative += weights[i];
+
+            if (weights[i] > 0 && point < cumulative)
+            {
+                return candidates[i].Target;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
     /// [RE] A-INTERCEPT (0x197b380): planes the defending carrier fighters shoot down. Defenders take no losses.
-    /// The top-speed bonus term of the speed helper is not decoded and not modelled.
+    /// The top-speed bonus term of the speed helper is not decoded and not modelled. [RE + LOG] The roll is made whenever
+    /// there is a defending wing, with or without planes; the averages are per wing.
     /// </summary>
     public static int Interception(
         IReadOnlyList<AirWing> attackers,
@@ -159,12 +197,12 @@ public static class AirRules
         var defendingPlanes = defenders.Sum(wing => wing.Planes);
         var attackingPlanes = attackers.Sum(wing => wing.Planes);
 
-        if (defendingPlanes <= 0 || attackingPlanes <= 0)
+        if (defenders.Count == 0 || attackers.Count == 0)
         {
             return 0;
         }
 
-        var roll = random.NextDouble(RollKind.Air);
+        var roll = random.NextDouble(RollKind.AirInterception);
         var defending = air.CARRIER_PERCENTAGE_DEFEND * defendingPlanes * defendingShare;
         var engaged = Math.Min(defending, attackingPlanes * air.COMBAT_MULTIPLANE_CAP);
         var defenderAttack = defenders.Average(wing => wing.Plane.Stats.AirAttack);
@@ -203,7 +241,7 @@ public static class AirRules
 
         var chance = navy.ANTI_AIR_TARGETTING_TO_CHANCE * Math.Max(targeting + 0.5 * (targeting - strikeAgility), 0.01);
 
-        if (random.NextDouble(RollKind.Air) > chance)
+        if (random.NextDouble(RollKind.AirAntiAirChance) > chance)
         {
             return 0;
         }
@@ -211,7 +249,7 @@ public static class AirRules
         var fraction = Math.Clamp(targetAntiAir * navy.ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1);
         var expected = planesInReach * fraction;
         var kills = (int)Math.Floor(expected);
-        return random.NextDouble(RollKind.Air) < expected - kills ? kills + 1 : kills;
+        return random.NextDouble(RollKind.AirAntiAirKills) < expected - kills ? kills + 1 : kills;
     }
 
     /// <summary>[RE] A-AA-REDUCE (0x196fca0): min(MAX, MULT * (fleet AA term + target AA)^POW).</summary>
@@ -225,10 +263,14 @@ public static class AirRules
             : 0;
     }
 
-    /// <summary>[RE] Side fleet AA term: sum of warship AA * SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning (convoys add nothing).</summary>
+    /// <summary>
+    /// [RE + LOG] A-AA-REDUCE side fleet AA term (side+0x170, set in the side update with positioning): sum of warship AA
+    /// * SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning over the side's members that are afloat, escaped ships included
+    /// (they stay in the group's member list; sunk ones do not count). Convoys add nothing.
+    /// </summary>
     public static double FleetAntiAir(IEnumerable<Ship> sideShips, double positioning, GameDefines defines)
     {
-        return sideShips.Where(ship => ship.IsInBattle && ship.Role != ShipRole.Convoy).Sum(ship => CombatStatRules.AntiAir(ship, defines)) *
+        return sideShips.Where(ship => !ship.IsSunk && ship.Role != ShipRole.Convoy).Sum(ship => CombatStatRules.AntiAir(ship, defines)) *
                defines.NNavy.SHIP_TO_FLEET_ANTI_AIR_RATIO * positioning;
     }
 
@@ -236,7 +278,7 @@ public static class AirRules
     public static int Hits(int strikers, double averageTargeting, GameDefines defines, IRandomSource random)
     {
         var fraction = Math.Clamp(averageTargeting * defines.NAir.NAVAL_STRIKE_TARGETTING_TO_AMOUNT, 0, 1);
-        return (int)Math.Round(strikers * fraction * random.NextDouble(RollKind.Air), MidpointRounding.AwayFromZero);
+        return (int)Math.Round(strikers * fraction * random.NextDouble(RollKind.AirHits), MidpointRounding.AwayFromZero);
     }
 
     /// <summary>

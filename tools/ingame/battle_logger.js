@@ -20,6 +20,13 @@ const RVA = {
   containerGet: 0x55e360, // modifier container Get(container, out, id)
   ownerCountry: 0xbb48f0, // task force +0x1d8 -> country
   airStrike: 0x197b890, // AirFX main strike (airfx, enemyGroup, combat, F); A-WINGS
+  randomInt: 0x2233fa0, // random int31 (file, line): returns the next draw of the same generator as random_fixed
+  airSortie: 0x19786c0, // A-SORTIE (airfx, out, ...): *out = sortie efficiency (fx5) after the org factor
+  airTarget: 0x197a700, // A-TARGET (airfx, enemyGroup, ...): returns the target member
+  airIntercept: 0x197b380, // A-INTERCEPT: returns the planes shot down by enemy carrier fighters
+  airPreempt: 0x197c8b0, // A-AA-PREEMPT (airfx, target, agility, aaPlanes): returns the planes shot down by the target
+  carrierRatio: 0x161eeb0, // S-POS carrier-ratio helper (side, &A, &B): sortie x planes over the side's air objects
+  airHits: 0x197ac80, // A-HIT / A-DMG (..., strikers in r9d, ...): returns the HP damage dealt, truncated to an integer
 };
 
 const resolveHandle = new NativeFunction(base.add(RVA.resolveHandle), 'pointer', ['pointer']);
@@ -161,6 +168,9 @@ let ticks = 0;
 let airLog = []; // air objects that tried to strike since the last hour record
 let current = null; // the combat being updated: { key, hour, thread, start, rolls, shots, damage }
 let shooting = null; // the shot loop in progress
+let striking = null; // the air strike in progress (its record)
+let ratioCall = null; // the carrier-ratio helper call in progress: { side, members: [ { eff, planes } ] }
+let ratioLog = []; // carrier-ratio helper calls since the last hour record
 
 function guard(fn) {
   return function (...a) {
@@ -183,6 +193,7 @@ Interceptor.attach(base.add(RVA.combatUpdate), {
       key: combat.toString(), hourAtUpdate: combat.add(0x44).readS32(), thread: this.threadId,
       start: [sideState(combat.add(0x28).readPointer(), true), sideState(combat.add(0x30).readPointer(), true)],
       rolls: [], shots: [], damage: [],
+      sidePointers: [combat.add(0x28).readPointer().toString(), combat.add(0x30).readPointer().toString()],
     };
   }),
 });
@@ -206,8 +217,11 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       start: current && current.key === combat.toString() ? current.start : null,
       rolls: current && current.key === combat.toString() ? current.rolls : [],
       air: airLog,
+      carrierRatio: ratioLog,
+      airObjects: [airObjects(combat.add(0x28).readPointer()), airObjects(combat.add(0x30).readPointer())],
     };
     airLog = [];
+    ratioLog = [];
   }),
   onLeave: guard(function endHourLeave(retval) {
     if (!this.record) return;
@@ -274,6 +288,22 @@ Interceptor.attach(base.add(RVA.randomFixed), {
   }),
 });
 
+// The generator's integer draws (the air target pick, line 0x43f in naval_fire_exchange_air.cpp, and others) share the
+// sequence of random_fixed, so they are logged in the same list: `int` is the draw with bit 31 cleared, as the callers
+// use it.
+Interceptor.attach(base.add(RVA.randomInt), {
+  onEnter(args) {
+    if (current === null || this.threadId !== current.thread) return;
+    this.line = args[1].toInt32();
+    this.active = true;
+  },
+  onLeave: guard(function randomIntLeave(retval) {
+    if (!this.active || current === null) return;
+    const value = retval.toUInt32() & 0x7fffffff;
+    current.rolls.push({ line: this.line, value, int: true, loop: shooting === null ? -1 : current.shots.length });
+  }),
+});
+
 // Damage applied inside a shot loop belongs to its last shot; outside one (air strikes) it is listed per hour.
 Interceptor.attach(base.add(RVA.applyDamage), {
   onEnter: guard(function damageEnter(args) {
@@ -289,6 +319,7 @@ Interceptor.attach(base.add(RVA.applyDamage), {
       shooting.shots[shooting.shots.length - 1].hits.push(this.hit);
     } else if (current !== null) {
       current.damage.push(this.hit);
+      if (striking !== null) striking.damage = this.hit; // the air strike in progress (A-DMG)
     }
   }),
 });
@@ -313,9 +344,30 @@ function wingHandles(fx, off) {
         rec.available = w.add(0x30).readU32();
         rec.type = w.add(0xa0).readU32();
         rec.executing = w.add(0xa4).readU32();
+        // the wing's mission object at +0x90: +0xa8 disruption taken, +0xd8 effectiveness (A-WINGS-EXT)
+        rec.disruption = s64(w.add(0x90 + 0xa8));
+        rec.effectiveness = s64(w.add(0x90 + 0xd8));
       }
     } catch (e) { rec.error = String(e); }
     out.push(rec);
+  }
+  return out;
+}
+
+// Every air object of a side at the end of the hour (group+0x58, count +0x64): its carrier, planes and wings, to see
+// planes lost outside the naval strikes (the region's air war) and the missions' disruption.
+function airObjects(side) {
+  try { return airObjectsUnsafe(side); } catch (e) { return [{ error: String(e) }]; }
+}
+
+function airObjectsUnsafe(side) {
+  const out = [];
+  for (const group of list(side, 0xe8)) {
+    for (const fx of list(group, 0x58)) {
+      const member = fx.add(0x10).readPointer();
+      out.push({ carrier: member.isNull() ? null : member.add(0xc).readU32(), external: fx.add(0x81).readU8(),
+        planes: fx.add(0x5c).readS32(), wings: wingHandles(fx, 0x40) });
+    }
   }
   return out;
 }
@@ -332,13 +384,69 @@ Interceptor.attach(base.add(RVA.airStrike), {
       stacking: argS64(args[3]),
       strikeWings: wingHandles(fx, 0x28), wings: wingHandles(fx, 0x40),
     };
+    striking = this.rec;
   }),
   onLeave: guard(function airLeave(retval) {
     if (!this.rec) return;
     this.rec.struck = (retval.toUInt32() & 0xff) !== 0;
     this.rec.planesAfter = this.fx.add(0x5c).readS32();
     airLog.push(this.rec);
+    striking = null;
   }),
+});
+
+// Steps of the strike in progress (A-SORTIE, A-TARGET, A-INTERCEPT, A-AA-PREEMPT, A-HIT), added to its air record.
+Interceptor.attach(base.add(RVA.airSortie), {
+  onEnter(args) {
+    this.out = striking || ratioCall ? args[1] : null;
+    this.fx = args[0];
+  },
+  onLeave: guard(function sortieLeave() {
+    if (!this.out) return;
+    if (striking) striking.sortie = s64(this.out);
+    else if (ratioCall) {
+      const member = this.fx.add(0x10).readPointer();
+      ratioCall.members.push({ eff: s64(this.out), planes: this.fx.add(0x5c).readS32(),
+        carrier: member.isNull() ? null : member.add(0xc).readU32() });
+    }
+  }),
+});
+
+// S-POS carrier ratio: A (out arg 1) and B (out arg 2) of a side, with each air object's sortie efficiency and planes.
+Interceptor.attach(base.add(RVA.carrierRatio), {
+  onEnter(args) {
+    if (current === null || this.threadId !== current.thread) return;
+    this.a = args[1];
+    this.b = args[2];
+    ratioCall = { side: current.sidePointers.indexOf(args[0].toString()), members: [] };
+    this.call = ratioCall;
+  },
+  onLeave: guard(function ratioLeave() {
+    if (!this.call) return;
+    this.call.a = s64(this.a);
+    this.call.b = s64(this.b);
+    ratioLog.push(this.call);
+    ratioCall = null;
+  }),
+});
+Interceptor.attach(base.add(RVA.airTarget), {
+  onEnter() { this.active = striking !== null; },
+  onLeave: guard(function targetLeave(retval) {
+    if (!this.active || !striking) return;
+    striking.target = retval.isNull() ? null : retval.add(0xc).readU32();
+  }),
+});
+Interceptor.attach(base.add(RVA.airIntercept), {
+  onEnter() { this.active = striking !== null; },
+  onLeave: guard(function interceptLeave(retval) { if (this.active && striking) striking.intercepted = retval.toInt32(); }),
+});
+Interceptor.attach(base.add(RVA.airPreempt), {
+  onEnter(args) { this.active = striking !== null; if (this.active) { striking.aaPlanes = args[3].toInt32(); } },
+  onLeave: guard(function preemptLeave(retval) { if (this.active && striking) striking.shotDown = retval.toInt32(); }),
+});
+Interceptor.attach(base.add(RVA.airHits), {
+  onEnter(args) { this.active = striking !== null; if (this.active) { striking.strikers = args[3].toInt32(); } },
+  onLeave: guard(function hitsLeave(retval) { if (this.active && striking) striking.damageInt = retval.toInt32(); }),
 });
 
 rpc.exports = {

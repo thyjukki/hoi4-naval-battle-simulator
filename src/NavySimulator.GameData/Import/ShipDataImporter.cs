@@ -156,7 +156,8 @@ public static class ShipDataImporter
             CategoryName = localisation.Get($"EQ_MOD_CAT_{category}_TITLE"),
             AddEquipmentTypes = Words(item.Block.GetAll("add_equipment_type")),
             ForbiddenCategories = Words(item.Block.GetAll("forbid_module_categories")),
-            CriticalParts = Words(item.Block.GetAll("critical_parts"))
+            CriticalParts = Words(item.Block.GetAll("critical_parts")),
+            Manpower = item.Block.GetDouble("manpower") is { } manpower ? (int)manpower : null
         };
 
         foreach (var blockName in ModuleStatBlocks)

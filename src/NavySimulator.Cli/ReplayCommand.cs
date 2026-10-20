@@ -15,7 +15,7 @@ public static class ReplayCommand
     public const string Name = "replay";
 
     public const string Usage = """
-        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>]
+        Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>] [--air <file>]
 
           --log <dir>         A run folder of tools/ingame/run_battles.py (meta.json, raw.jsonl), logged with rolls
           --data <dir>        Data directory (default: ./data)
@@ -24,6 +24,7 @@ public static class ReplayCommand
           --details <n>       Hours to describe in detail (default 10)
           --shots <file>      Write every shot, game and engine side by side, as CSV
           --states <file>     Write every end-of-hour ship value that differs, as CSV
+          --air <file>        Write every air strike, game and engine side by side, as CSV
 
         Each hour starts from the game's logged state and is fought with the game's rolls; the attacker is the game's.
         """;
@@ -37,6 +38,7 @@ public static class ReplayCommand
         var details = 10;
         string? shotsFile = null;
         string? statesFile = null;
+        string? airFile = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -75,6 +77,9 @@ public static class ReplayCommand
                     break;
                 case "--states":
                     statesFile = args[++i];
+                    break;
+                case "--air":
+                    airFile = args[++i];
                     break;
                 default:
                     Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
@@ -124,6 +129,25 @@ public static class ReplayCommand
         using var shots = shotsFile is null ? null : new StreamWriter(shotsFile);
         shots?.WriteLine("hour,index,gameShooter,gameWeapon,gameTarget,gameHit,gameHitChance,gameHpDamage," +
                          "engineSide,engineShooter,engineWeapon,engineTarget,engineHit,engineHitChance,engineProfileFactor,engineHitModifier,engineDamage,enginePiercingTier,engineHpDamage");
+        using var air = airFile is null ? null : new StreamWriter(airFile);
+        air?.WriteLine("hour,index,gameCarrier,gameSortie,gameTarget,gameStrikers,gameIntercepted,gameShotDown,gameHpDamage,gameOrgDamage," +
+                       "engineSource,engineTarget,engineFlying,engineIntercepted,engineShotDown,engineHits,engineReduction,engineCritical,engineHpDamage,engineOrgDamage");
+        Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<Engine.Results.AirStrikeRecord>>? onAir = air is null ? null : (hour, game, engine) =>
+        {
+            var invariant = System.Globalization.CultureInfo.InvariantCulture;
+
+            for (var i = 0; i < Math.Max(game.Count, engine.Count); i++)
+            {
+                var g = i < game.Count ? game[i] : null;
+                var e = i < engine.Count ? engine[i] : null;
+                air.WriteLine(string.Join(",",
+                    hour, i,
+                    g?.CarrierId, g?.Sortie?.ToString("R", invariant), g?.TargetId, g?.Strikers, g?.Intercepted, g?.ShotDown,
+                    g?.HpDamage.ToString("R", invariant), g?.OrganizationDamage.ToString("R", invariant),
+                    e?.Source, e?.TargetId, e?.Flying, e?.Intercepted, e?.ShotDownByAntiAir, e?.Hits, e?.AntiAirReduction.ToString("R", invariant),
+                    e?.Critical, e?.HpDamage.ToString("R", invariant), e?.OrganizationDamage.ToString("R", invariant)));
+            }
+        };
         var reports = BattleReplay.Run(scenario, log.Hours(map), shots is null ? null : (hour, game, engine) =>
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;
@@ -139,7 +163,7 @@ public static class ReplayCommand
                     e?.ProfileFactor.ToString("R", invariant), e?.HitModifier.ToString("R", invariant), e?.Damage.ToString("R", invariant),
                     e?.PiercingTier, e?.HpDamage.ToString("R", invariant)));
             }
-        });
+        }, onAir);
         if (statesFile is not null)
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;
@@ -166,6 +190,12 @@ public static class ReplayCommand
             Console.WriteLine($"HP damage dealt by the {side}: game {game:F1}, engine {engine:F1} ({(game > 0 ? engine / game - 1 : 0):+0.00%;-0.00%})");
         }
 
+        var gameAir = reports.Sum(report => report.GameAirHpDamage);
+        var engineAir = reports.Sum(report => report.EngineAirHpDamage);
+        Console.WriteLine($"Air strikes: game {reports.Sum(report => report.GameAirStrikes)}, engine {reports.Sum(report => report.EngineAirStrikes)}, " +
+                          $"matching {reports.Sum(report => report.MatchingAirStrikes)}; air HP damage game {gameAir:F1}, engine {engineAir:F1} " +
+                          $"({(gameAir > 0 ? engineAir / gameAir - 1 : 0):+0.00%;-0.00%})");
+
         var divergences = reports.Where(report => report.Divergence is not null)
             .GroupBy(report => $"engine {report.Divergence!.Requested?.ToString() ?? "done"} / game {Describe(report.Divergence.Logged)}")
             .OrderByDescending(group => group.Count());
@@ -190,6 +220,15 @@ public static class ReplayCommand
             Console.WriteLine($"  {group.Count(),5} h  {group.Key}");
         }
 
+        Console.WriteLine("Air strike differences by kind:");
+
+        foreach (var group in reports.Where(report => report.FirstAirMismatch is not null)
+                     .GroupBy(report => report.FirstAirMismatch!.Split(':')[0].Split(" differs in ").Last())
+                     .OrderByDescending(group => group.Count()))
+        {
+            Console.WriteLine($"  {group.Count(),5} h  {group.Key}");
+        }
+
         foreach (var report in reports.Where(report => !report.Matches).Take(details))
         {
             Console.WriteLine();
@@ -205,6 +244,11 @@ public static class ReplayCommand
                 Console.WriteLine($"  shot {shot.Index} differs in {shot.Difference}:");
                 Console.WriteLine($"    game   {(shot.Game is { } g ? $"{g.ShooterId} {g.Weapon} -> {g.TargetId} hit {g.Hit} HP {g.HpDamage:F3} org {g.OrganizationDamage:F3} crit {g.Critical} part rolled {g.PartRolled} damaged {g.PartDamaged} (hit chance {g.HitChance:F5})" : "-")}");
                 Console.WriteLine($"    engine {(shot.Engine is { } e ? $"{e.ShooterId} {e.Weapon} -> {e.TargetId} hit {e.Hit} HP {e.HpDamage:F3} org {e.OrganizationDamage:F3} crit {e.Critical} part {e.PartHit} (hit chance {e.HitChance:F5})" : "-")}");
+            }
+
+            if (report.FirstAirMismatch is { } airMismatch)
+            {
+                Console.WriteLine($"  air: {airMismatch}");
             }
 
             foreach (var mismatch in report.StateMismatches.Take(5))

@@ -10,7 +10,8 @@ public class StatModule(
     string category = "",
     IReadOnlyList<string>? addedEquipmentTypes = null,
     IReadOnlyList<string>? forbiddenCategories = null,
-    IReadOnlyList<CriticalPart>? criticalParts = null)
+    IReadOnlyList<CriticalPart>? criticalParts = null,
+    int manpower = 0)
 {
     public string ID { get; } = id;
     public ShipStats StatModifiers { get; } = statModifiers;
@@ -28,4 +29,10 @@ public class StatModule(
 
     /// <summary><c>critical_parts</c>: parts the module adds to the ship's candidates (S-CRIT-PART).</summary>
     public IReadOnlyList<CriticalPart> CriticalParts { get; } = criticalParts ?? [];
+
+    /// <summary>
+    /// S-STATS-MANPOWER [PDX + LOG]: the module's <c>manpower</c> (deck spaces: 500 in vanilla and TFB), added to the
+    /// hull's crew.
+    /// </summary>
+    public int Manpower { get; } = manpower;
 }

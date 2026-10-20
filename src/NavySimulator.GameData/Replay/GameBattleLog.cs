@@ -25,7 +25,29 @@ public sealed class GameBattleLog
         [0x2f4] = RollKind.PartDamage,
         [0x78f] = RollKind.PartPick,
         [0xa83] = RollKind.RetreatDecision,
-        [0x40e] = RollKind.Sinking
+        [0x40e] = RollKind.Sinking,
+        [0x27d] = RollKind.AirInterception,
+        [0x212] = RollKind.AirAntiAirChance,
+        [0x21c] = RollKind.AirAntiAirKills,
+        [0x45d] = RollKind.AirHits,
+        [0x487] = RollKind.AirCritical,
+        [0xb52] = RollKind.AirBookkeeping,
+        [0xb54] = RollKind.AirBookkeeping,
+        [0xb68] = RollKind.AirBookkeeping
+    };
+
+    /// <summary>
+    /// Source lines of the integer draws (random int31, the same generator) in the combat update ([LOG], logged since
+    /// 2026-10-20): 0x43f the air target pick (naval_fire_exchange_air.cpp), 0x96 with the sinking rolls, 0x1c9 once per
+    /// air strike and 0xb72 per strike wing (plane experience); only the target pick decides anything in the battle.
+    /// </summary>
+    public static IReadOnlyDictionary<int, RollKind> IntegerRollLines { get; } = new Dictionary<int, RollKind>
+    {
+        [0x43f] = RollKind.AirTargetPick,
+        [0x96] = RollKind.Sinking,
+        [0x1c9] = RollKind.AirBookkeeping,
+        [0xb72] = RollKind.AirBookkeeping,
+        [0x369] = RollKind.AirBookkeeping
     };
 
     // Game fixed point: values are raw / 100000.
@@ -143,8 +165,86 @@ public sealed class GameBattleLog
                 Shots(record.GetProperty("shots"), map),
                 i + 1 < hours.Count && hours[i + 1].GetProperty("hourAtUpdate").GetInt32() == record.GetProperty("hourAtUpdate").GetInt32() + 1
                     ? States(hours[i + 1].GetProperty("start"), map)
-                    : States(record.GetProperty("sides"), map)))
+                    : States(record.GetProperty("sides"), map),
+                Air(record, map),
+                SideStates(record.GetProperty("sides")),
+                SideStates(record.GetProperty("start"))))
             .ToList();
+    }
+
+    // Null for logs without the side values (written before 2026-10-19).
+    private static List<ReplaySideState>? SideStates(JsonElement sides)
+    {
+        if (sides.ValueKind != JsonValueKind.Array || sides.EnumerateArray().Any(side => !side.TryGetProperty("fleetAa", out _)))
+        {
+            return null;
+        }
+
+        return sides.EnumerateArray().Select(side => new ReplaySideState(
+            side.GetProperty("positioning").GetInt64() / Fx, side.GetProperty("screening").GetInt64() / Fx,
+            side.GetProperty("carrierScreening").GetInt64() / Fx, side.GetProperty("fleetAa").GetInt64() / Fx)).ToList();
+    }
+
+    /// <summary>
+    /// The hour's air objects (raw.jsonl <c>air</c>, A-WINGS) with what their strikes did. The damage applied outside the
+    /// shot loops (<c>damage</c>) belongs to the strikes that hit, in order (each applies its damage to its target once).
+    /// </summary>
+    private static List<ReplayAirStrike> Air(JsonElement record, IReadOnlyDictionary<uint, string> map)
+    {
+        var strikes = new List<ReplayAirStrike>();
+
+        if (!record.TryGetProperty("air", out var air) || air.ValueKind != JsonValueKind.Array)
+        {
+            return strikes;
+        }
+
+        var damage = record.TryGetProperty("damage", out var hits) ? hits.EnumerateArray().ToList() : [];
+        var next = 0;
+
+        foreach (var entry in air.EnumerateArray())
+        {
+            string? Id(string key) => entry.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Number &&
+                                      map.TryGetValue(value.GetUInt32(), out var id) ? id : null;
+            int? Int(string key) => entry.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.Number ? value.GetInt32() : null;
+
+            var wings = entry.GetProperty("wings").EnumerateArray()
+                .Select(wing => wing.TryGetProperty("planes", out var planes) ? planes.GetInt32() : 0)
+                .ToList();
+            var struck = entry.TryGetProperty("struck", out var flag) && flag.GetBoolean();
+            var hp = 0.0;
+            var org = 0.0;
+
+            // Logs since 2026-10-20 03:00 attach the strike's damage to it; older ones list it per hour, in strike order, and
+            // give the damage truncated to an integer ("hits" or "damageInt"; 0 can still be a hit below 1 HP).
+            JsonElement? applied = entry.TryGetProperty("damage", out var own) && own.ValueKind == JsonValueKind.Object ? own : null;
+
+            if (applied is null && struck && next < damage.Count && entry.TryGetProperty("target", out var target) &&
+                target.ValueKind == JsonValueKind.Number && damage[next].GetProperty("target").GetUInt32() == target.GetUInt32())
+            {
+                var whole = Int("damageInt") ?? Int("hits");
+                var loss = (damage[next].GetProperty("before").GetProperty("hp").GetInt64() - damage[next].GetProperty("after").GetProperty("hp").GetInt64()) / Fx;
+
+                if (whole is null || whole > 0 || loss < 1)
+                {
+                    applied = damage[next];
+                    next++;
+                }
+            }
+
+            if (applied is { } hit)
+            {
+                var before = hit.GetProperty("before");
+                var after = hit.GetProperty("after");
+                hp = (before.GetProperty("hp").GetInt64() - after.GetProperty("hp").GetInt64()) / Fx;
+                org = (before.GetProperty("org").GetInt64() - after.GetProperty("org").GetInt64()) / Fx;
+            }
+
+            strikes.Add(new ReplayAirStrike(Id("carrier"), wings, struck,
+                entry.TryGetProperty("sortie", out var sortie) ? sortie.GetInt64() / Fx : null,
+                Id("target"), Int("intercepted"), Int("shotDown"), Int("strikers"), hp, org));
+        }
+
+        return strikes;
     }
 
     private bool SameDesigns(int side, BattleParticipant participant)
@@ -215,6 +315,13 @@ public sealed class GameBattleLog
             .Select(roll =>
             {
                 var line = roll.GetProperty("line").GetInt32();
+
+                // An integer draw n is used as U = n / 2^31 (0x24f04f0).
+                if (roll.TryGetProperty("int", out var integer) && integer.GetBoolean())
+                {
+                    return new ReplayRoll(IntegerRollLines.GetValueOrDefault(line, RollKind.Unspecified), roll.GetProperty("value").GetInt64() / 2147483648.0, line);
+                }
+
                 return new ReplayRoll(RollLines.GetValueOrDefault(line, RollKind.Unspecified), roll.GetProperty("value").GetInt64() / Fx, line);
             })
             .ToList();

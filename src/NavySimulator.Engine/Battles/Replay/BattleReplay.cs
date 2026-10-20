@@ -16,9 +16,10 @@ public static class BattleReplay
     /// Logged rolls the engine does not make: the bookkeeping rolls of a sinking, and part picks when the data has no
     /// critical parts (the engine then makes none).
     /// </summary>
-    public static IReadOnlySet<RollKind> SkippedKinds { get; } = new HashSet<RollKind> { RollKind.Sinking };
+    public static IReadOnlySet<RollKind> SkippedKinds { get; } = new HashSet<RollKind> { RollKind.Sinking, RollKind.AirBookkeeping };
 
-    private static readonly IReadOnlySet<RollKind> SkippedWithoutParts = new HashSet<RollKind> { RollKind.Sinking, RollKind.PartPick };
+    private static readonly IReadOnlySet<RollKind> SkippedWithoutParts =
+        new HashSet<RollKind> { RollKind.Sinking, RollKind.AirBookkeeping, RollKind.PartPick };
 
     private const double DamageTolerance = 0.01;
 
@@ -32,7 +33,8 @@ public static class BattleReplay
     /// diagnostics beyond the first mismatch.
     /// </summary>
     public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours,
-        Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null)
+        Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null,
+        Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<AirStrikeRecord>>? onAirHour = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
         var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts);
@@ -55,10 +57,19 @@ public static class BattleReplay
                 }
             }
 
+            var air = hour.Air ?? [];
+            ApplyAir(session, shipsById, air);
+            ApplySides(session, hour.StartSides);
+
             var shotsBefore = session.Shots.Count;
+            var strikesBefore = session.AirStrikes.Count;
             random.Load(hour.Rolls);
             session.StepHour();
             random.Finish();
+            var engineStrikes = session.AirStrikes.Skip(strikesBefore).ToList();
+            var gameStrikes = air.Where(strike => strike.Struck).ToList();
+            var (airMatching, airMismatch) = CompareAir(gameStrikes, engineStrikes);
+            onAirHour?.Invoke(hour.Hour, gameStrikes, engineStrikes);
 
             var engineShots = session.Shots.Skip(shotsBefore).ToList();
             onHour?.Invoke(hour.Hour, hour.Shots, engineShots);
@@ -67,11 +78,129 @@ public static class BattleReplay
                 .GroupBy(shot => session.SideOf(shipsById[shot.ShooterId]))
                 .ToDictionary(group => group.Key, group => group.Sum(shot => shot.HpDamage));
             var engineDamage = engineShots.GroupBy(shot => shot.ShooterSide).ToDictionary(group => group.Key, group => group.Sum(shot => shot.HpDamage));
+            var states = CompareStates(hour.End, shipsById);
+            states.AddRange(CompareSides(hour.Sides, session));
             reports.Add(new ReplayHourReport(hour.Hour, random.Divergence, random.Skipped, hour.Shots.Count, engineShots.Count,
-                matching, firstMismatch, CompareStates(hour.End, shipsById), gameDamage, engineDamage));
+                matching, firstMismatch, states, gameDamage, engineDamage,
+                gameStrikes.Count, engineStrikes.Count, airMatching, airMismatch,
+                gameStrikes.Sum(strike => strike.HpDamage), engineStrikes.Sum(strike => strike.HpDamage)));
         }
 
         return reports;
+    }
+
+    // A-WINGS: each carrier's air objects in the game's order are its wing pools in the engine's order (both by first
+    // wing); the game's wing planes at the start of the strike are the hour's start (only its own strike removes planes).
+    private static void ApplyAir(BattleSession session, IReadOnlyDictionary<string, Ship> shipsById, IReadOnlyList<ReplayAirStrike> air)
+    {
+        foreach (var byCarrier in air.Where(strike => strike.CarrierId is not null).GroupBy(strike => strike.CarrierId!))
+        {
+            if (!shipsById.TryGetValue(byCarrier.Key, out var carrier))
+            {
+                continue;
+            }
+
+            var side = session.SideOf(carrier) == session.Attacker.Label ? session.Attacker : session.Defender;
+            var groups = session.AirPhase.GroupsOf(side).Where(group => group.Carrier == carrier).ToList();
+
+            foreach (var (strike, group) in byCarrier.Zip(groups))
+            {
+                for (var i = 0; i < group.Wings.Count && i < strike.WingPlanes.Count; i++)
+                {
+                    group.Wings[i].Planes = strike.WingPlanes[i];
+                }
+            }
+        }
+    }
+
+    // The side values the hour starts from (the previous hour's): carrier sorties, and so positioning, read screening.
+    private static void ApplySides(BattleSession session, IReadOnlyList<ReplaySideState>? start)
+    {
+        if (start is null)
+        {
+            return;
+        }
+
+        foreach (var (state, side) in start.Zip(new[] { session.Attacker, session.Defender }))
+        {
+            side.Positioning = state.Positioning;
+            side.Screening = new ScreeningSummary(state.Screening, state.CarrierScreening);
+            side.FleetAntiAir = state.FleetAntiAir;
+        }
+    }
+
+    // S-POS, S-SCREEN, A-AA-REDUCE: the side values of the hour, by side label in place of a ship ID.
+    private static IEnumerable<ReplayStateMismatch> CompareSides(IReadOnlyList<ReplaySideState>? game, BattleSession session)
+    {
+        if (game is null)
+        {
+            yield break;
+        }
+
+        foreach (var (state, side) in game.Zip(new[] { session.Attacker, session.Defender }))
+        {
+            var values = new (string Field, double Game, double Engine)[]
+            {
+                ("side positioning", state.Positioning, side.Positioning),
+                ("side screening", state.Screening, side.Screening.ScreeningEfficiency),
+                ("side carrier screening", state.CarrierScreening, side.Screening.CarrierScreeningEfficiency),
+                ("side fleet AA", state.FleetAntiAir, side.FleetAntiAir)
+            };
+
+            foreach (var (field, gameValue, engineValue) in values)
+            {
+                if (Math.Abs(gameValue - engineValue) > FractionTolerance * Math.Max(1, Math.Abs(gameValue)))
+                {
+                    yield return new ReplayStateMismatch(side.Label, field, gameValue, engineValue);
+                }
+            }
+        }
+    }
+
+    private static (int Matching, string? First) CompareAir(IReadOnlyList<ReplayAirStrike> game, IReadOnlyList<AirStrikeRecord> engine)
+    {
+        var matching = 0;
+        string? first = null;
+
+        for (var i = 0; i < Math.Max(game.Count, engine.Count); i++)
+        {
+            var g = i < game.Count ? game[i] : null;
+            var e = i < engine.Count ? engine[i] : null;
+            var difference = g is null ? "the game made fewer strikes"
+                : e is null ? "the engine made fewer strikes"
+                : g.CarrierId is not null && g.CarrierId != e.Source ? "source"
+                : g.TargetId != e.TargetId ? "target"
+                : g.Intercepted is { } intercepted && intercepted != e.Intercepted ? "intercepted"
+                : g.ShotDown is { } shotDown && shotDown != e.ShotDownByAntiAir ? "shot down by AA"
+                : Math.Abs(g.HpDamage - e.HpDamage) > DamageTolerance ? "HP damage"
+                : Math.Abs(g.OrganizationDamage - e.OrganizationDamage) > DamageTolerance ? "organization damage"
+                : null;
+
+            if (difference is null)
+            {
+                matching++;
+            }
+            else
+            {
+                first ??= $"strike {i} differs in {difference}: game {Describe(g)}, engine {Describe(e)}";
+            }
+        }
+
+        return (matching, first);
+    }
+
+    private static string Describe(ReplayAirStrike? strike)
+    {
+        return strike is null ? "-"
+            : $"{strike.CarrierId ?? "land-based"} sortie {strike.Sortie:F5} -> {strike.TargetId}: {strike.Strikers} strikers, " +
+              $"{strike.Intercepted} intercepted, {strike.ShotDown} shot down, HP {strike.HpDamage:F3} org {strike.OrganizationDamage:F3}";
+    }
+
+    private static string Describe(AirStrikeRecord? strike)
+    {
+        return strike is null ? "-"
+            : $"{strike.Source} -> {strike.TargetId}: {strike.Flying} flying, {strike.Intercepted} intercepted, {strike.ShotDownByAntiAir} shot down, " +
+              $"{strike.Hits} hits, AA reduction {strike.AntiAirReduction:F5}, HP {strike.HpDamage:F3} org {strike.OrganizationDamage:F3}";
     }
 
     private static void Apply(Ship ship, ReplayShipState state)

@@ -367,10 +367,12 @@ def write_outputs(out_dir, hours, index, meta):
 
     with (out_dir / "rolls.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["combat", "tick", "hour", "seq", "line", "value", "loop"])
+        w.writerow(["combat", "tick", "hour", "seq", "line", "value", "loop", "int"])
         for h in hours:
             for seq, r in enumerate(h.get("rolls") or []):
-                w.writerow([h["combat"], h["tick"], h["hourAtUpdate"], seq, f"{r['line']:#x}", r["value"] / FX, r["loop"]])
+                # integer draws (random int31, e.g. the air target pick) as a fraction of 2^31, as the game uses them
+                value = r["value"] / 2**31 if r.get("int") else r["value"] / FX
+                w.writerow([h["combat"], h["tick"], h["hourAtUpdate"], seq, f"{r['line']:#x}", value, r["loop"], 1 if r.get("int") else 0])
 
     meta["hours"] = len({(h["combat"], h["hourAtEndHour"]) for h in hours})
     meta["combats"] = sorted({h["combat"] for h in hours})
