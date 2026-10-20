@@ -44,8 +44,8 @@ fields yet). Game logs under `output/ingame/air_batch1` … `air_batch5` (local 
 |---|---|---|---|
 | `air_cv_mirror` | 4 CV (50 naval bombers + 30 fighters each) + 12 CL each side | 30 | hours 262 ± 151 vs 234 ± 130; defender sunk 8.3 ± 5.4 vs 9.6 ± 5.2; defender HP lost to air 1703 ± 466 vs 1776 ± 442 |
 | `air_cv_bombers_vs_fighters` | Japan 4 CV × 80 naval bombers; USA 4 CV with 60 fighters + 20 bombers or 30 CAS + 20 bombers + 30 fighters | 30 | hours 296 ± 255 vs 256 ± 139; defender sunk 7.9 vs 8.1; air HP lost 1615 vs 1645 (defender), 157 vs 158 (attacker) |
-| `air_land_vs_fleet` | 12 CL each; Japan 100 land tactical bombers (naval strike), USA 100 land fighters (air superiority) | 10 | hours 249 ± 31 vs 244 ± 40; defender air HP lost 67 ± 17 vs 69 ± 14 (with `disruptionFactor` 0.48 from the log) |
-| `air_cv_land_mix` | the mirror's carriers + Japan 100 land tactical bombers, USA 100 tactical bombers and 100 fighters | 8 (+10 queued) | hours 370 ± 133 vs 331 ± 133; Japan's air damage 1434 ± 271 vs 1244 ± 339, **USA's 327 ± 96 vs 503 ± 245** (open) |
+| `air_land_vs_fleet` | 12 CL each; Japan 100 land tactical bombers (naval strike), USA 100 land fighters (air superiority) | 20 | hours 246 ± 33 vs 244 ± 40; defender air HP lost 68 ± 16 vs 69 ± 14 (with `disruptionFactor` 0.48 from the log) |
+| `air_cv_land_mix` | the mirror's carriers + Japan 100 land tactical bombers, USA 100 tactical bombers and 100 fighters | 18 | hours 368 ± 101 vs 331 ± 133; Japan's air damage 1317 ± 297 vs 1244 ± 339, **USA's 399 ± 125 vs 503 ± 245** (2.7 SE; open: land wings in the region's air war, see air.md A-REGION) |
 | `jukki_usa_vs_bc_japan_ingame` | the user's scenario with Japan attacking (the game's attacker) and region 30's air phase 6 | 11 | hours 190 ± 17 vs 197 ± 46; sunk 21.0 / 42.0 vs 23.6 / 40.2; Japan's HP lost to air 1695 ± 191 vs 1771 ± 429 |
 
 Before the region's air war (A-REGION) the engine ended the mirror in about 156 h with 15 of 16 defending ships sunk; the
