@@ -16,7 +16,7 @@ public static class ReplayCommand
 
     public const string Usage = """
         Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>] [--air <file>] [--region <file>]
-                                [--design <game name>=<design id>]...
+                                [--design <game name>=<design id>]... [--constant-roll <U>]
 
           --log <dir>         A run folder of tools/ingame/run_battles.py (meta.json, raw.jsonl), logged with rolls
           --data <dir>        Data directory (default: ./data)
@@ -29,6 +29,9 @@ public static class ReplayCommand
           --region <file>     Write the region air war check per wing and air hour (engine from the game's start, game), as CSV
           --design <a>=<b>    The logged variant name a is the scenario's design b (a design renamed after the battle was
                               recorded, docs/calibration.md). Repeatable.
+          --constant-roll <U> Fight the battle free from the game's first hour with every roll U, for a run logged with
+                              run_battles.py --constant-roll U (S-REPLAY-CONSTANT); each hour then compares the whole
+                              battle so far. Surface battles only.
 
         Each hour starts from the game's logged state and is fought with the game's rolls; the attacker is the game's.
         """;
@@ -45,6 +48,7 @@ public static class ReplayCommand
         string? airFile = null;
         string? regionFile = null;
         var designNames = new Dictionary<string, string>(StringComparer.Ordinal);
+        double? constantRoll = null;
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -100,6 +104,16 @@ public static class ReplayCommand
                     }
 
                     designNames[pair[0]] = pair[1];
+                    break;
+                case "--constant-roll":
+                    constantRoll = double.Parse(args[++i], System.Globalization.CultureInfo.InvariantCulture);
+
+                    if (constantRoll is < 0 or >= 1)
+                    {
+                        Console.Error.WriteLine($"--constant-roll expects a value in [0, 1), got '{args[i]}'.");
+                        return 2;
+                    }
+
                     break;
                 default:
                     Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
@@ -195,7 +209,7 @@ public static class ReplayCommand
                     e?.ProfileFactor.ToString("R", invariant), e?.HitModifier.ToString("R", invariant), e?.Damage.ToString("R", invariant),
                     e?.PiercingTier, e?.HpDamage.ToString("R", invariant)));
             }
-        }, onAir, onRegion);
+        }, onAir, onRegion, constantRoll);
         if (statesFile is not null)
         {
             var invariant = System.Globalization.CultureInfo.InvariantCulture;
@@ -212,6 +226,8 @@ public static class ReplayCommand
     {
         Console.WriteLine($"Replay of {scenario.ID}: game attacker {log.Country(0)} = {scenario.Attacker.Fleet.ID}, defender {log.Country(1)} = {scenario.Defender.Fleet.ID}");
         Console.WriteLine($"Hours logged {log.HourCount}, replayed {reports.Count}, matching exactly {reports.Count(report => report.Matches)}");
+        var over = reports.FirstOrDefault(report => report.EngineOver);
+        Console.WriteLine(over is null ? "Engine battle: not over after the replayed hours" : $"Engine battle: over after hour {over.Hour} (the game's last logged hour is {reports[^1].Hour})");
         Console.WriteLine($"Shots: game {reports.Sum(report => report.GameShots)}, engine {reports.Sum(report => report.EngineShots)}, " +
                           $"matching position by position {reports.Sum(report => report.MatchingShots)}; logged rolls skipped {reports.Sum(report => report.SkippedRolls)}");
 

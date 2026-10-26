@@ -32,16 +32,22 @@ public static class BattleReplay
 
     /// <summary>
     /// Replays the hours; <paramref name="onHour"/> gets each hour's game and engine shots, position by position, for
-    /// diagnostics beyond the first mismatch.
+    /// diagnostics beyond the first mismatch. With <paramref name="constantRoll"/> (S-REPLAY-CONSTANT) the battle is not
+    /// replayed but fought free from the game's first logged hour: every engine roll is that value, as the game's were
+    /// when logged with <c>run_battles.py --constant-roll</c>, and no later state is taken from the log, so each hour
+    /// compares the whole battle so far. Surface battles only: air wings and side values are set in the first hour only.
     /// </summary>
     public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours,
         Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null,
         Action<int, IReadOnlyList<ReplayAirStrike>, IReadOnlyList<AirStrikeRecord>>? onAirHour = null,
-        Action<IReadOnlyList<ReplayRegionWing>>? onRegionHour = null)
+        Action<IReadOnlyList<ReplayRegionWing>>? onRegionHour = null,
+        double? constantRoll = null)
     {
         var hasParts = scenario.Attacker.Fleet.Ships.Concat(scenario.Defender.Fleet.Ships).Any(ship => ship.Design.CriticalPartCandidates.Count > 0);
-        var random = new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate, RollKind.AirAccident });
-        var session = new BattleSession(scenario, random);
+        var replayRandom = constantRoll is null
+            ? new ReplayRandomSource(hasParts ? SkippedKinds : SkippedWithoutParts, unlogged: new HashSet<RollKind> { RollKind.AirAceTemplate, RollKind.AirAccident })
+            : null;
+        var session = new BattleSession(scenario, replayRandom ?? (IRandomSource)new ConstantRandomSource(constantRoll!.Value));
         // The region's air war happens outside the logged combat update: the wings' planes and disruption come from the log.
         session.AirPhase.RegionAirWarEnabled = false;
         var shipsById = session.Ships.ToDictionary(ship => ship.ID, StringComparer.Ordinal);
@@ -56,7 +62,10 @@ public static class BattleReplay
                 break;
             }
 
-            foreach (var (id, state) in hour.Start)
+            // S-REPLAY-CONSTANT: a free battle takes the game's state at its start only.
+            var setState = constantRoll is null || reports.Count == 0;
+
+            foreach (var (id, state) in setState ? hour.Start : new Dictionary<string, ReplayShipState>())
             {
                 if (shipsById.TryGetValue(id, out var ship))
                 {
@@ -71,10 +80,13 @@ public static class BattleReplay
                 onRegionHour(CheckRegion(session, hour, startWings, wingIds));
             }
 
-            ApplyAir(session, shipsById, air, wingIds, airObjects);
-            ApplySides(session, hour.StartSides);
+            if (setState)
+            {
+                ApplyAir(session, shipsById, air, wingIds, airObjects);
+                ApplySides(session, hour.StartSides);
+            }
 
-            foreach (var (pointer, planes) in hour.StartAirObjectPlanes ?? new Dictionary<string, int>())
+            foreach (var (pointer, planes) in (setState ? hour.StartAirObjectPlanes : null) ?? new Dictionary<string, int>())
             {
                 if (airObjects.TryGetValue(pointer, out var group))
                 {
@@ -87,9 +99,9 @@ public static class BattleReplay
             session.WeatherOverride = hour.Weather is { } weatherType ? RegionWeather.FromCombatType(weatherType) : null;
             var shotsBefore = session.Shots.Count;
             var strikesBefore = session.AirStrikes.Count;
-            random.Load(hour.Rolls);
+            replayRandom?.Load(hour.Rolls);
             session.StepHour();
-            random.Finish();
+            replayRandom?.Finish();
             var engineStrikes = session.AirStrikes.Skip(strikesBefore).ToList();
             var gameStrikes = air.Where(strike => strike.Struck).ToList();
             var (airMatching, airMismatch) = CompareAir(gameStrikes, engineStrikes);
@@ -104,10 +116,10 @@ public static class BattleReplay
             var engineDamage = engineShots.GroupBy(shot => shot.ShooterSide).ToDictionary(group => group.Key, group => group.Sum(shot => shot.HpDamage));
             var states = CompareStates(hour.End, shipsById);
             states.AddRange(CompareSides(hour.Sides, session));
-            reports.Add(new ReplayHourReport(hour.Hour, random.Divergence, random.Skipped, hour.Shots.Count, engineShots.Count,
+            reports.Add(new ReplayHourReport(hour.Hour, replayRandom?.Divergence, replayRandom?.Skipped ?? 0, hour.Shots.Count, engineShots.Count,
                 matching, firstMismatch, states, gameDamage, engineDamage,
                 gameStrikes.Count, engineStrikes.Count, airMatching, airMismatch,
-                gameStrikes.Sum(strike => strike.HpDamage), engineStrikes.Sum(strike => strike.HpDamage)));
+                gameStrikes.Sum(strike => strike.HpDamage), engineStrikes.Sum(strike => strike.HpDamage), session.IsOver));
         }
 
         return reports;

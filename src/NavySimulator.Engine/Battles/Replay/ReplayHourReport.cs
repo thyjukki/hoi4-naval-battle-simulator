@@ -6,7 +6,8 @@ namespace NavySimulator.Engine.Battles.Replay;
 /// How one replayed hour compared: the first roll divergence (null: the engine made exactly the game's rolls), shot
 /// counts, shots that match position by position, the first differing shot, end-of-hour state differences, and the HP
 /// each side's shots took off in the game and in the engine (by side label), and the air strikes: how many each made,
-/// how many match (target, planes shot down, hits, HP and organization damage) and the first difference.
+/// how many match (target, planes shot down, hits, HP and organization damage) and the first difference, and whether the
+/// engine's battle was over after the hour.
 /// </summary>
 public sealed record ReplayHourReport(
     int Hour,
@@ -24,7 +25,8 @@ public sealed record ReplayHourReport(
     int MatchingAirStrikes = 0,
     string? FirstAirMismatch = null,
     double GameAirHpDamage = 0,
-    double EngineAirHpDamage = 0)
+    double EngineAirHpDamage = 0,
+    bool EngineOver = false)
 {
     public bool Matches => Divergence is null && FirstShotMismatch is null && StateMismatches.Count == 0 && FirstAirMismatch is null;
 }

@@ -1,6 +1,7 @@
 using NavySimulator.Cli;
 using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
+using NavySimulator.Engine.Random;
 using NavySimulator.GameData;
 
 if (args.Length > 0 && args[0] == ImportShipDataCommand.Name)
@@ -108,7 +109,9 @@ var results = new List<NavySimulator.Engine.Results.BattleResult>();
 
 for (var run = 1; run <= iterations; run++)
 {
-    var result = engine.Simulate(scenario, baseSeed + run - 1);
+    var result = options.ConstantRoll is { } constantRoll
+        ? engine.Simulate(scenario, new ConstantRandomSource(constantRoll), baseSeed + run - 1)
+        : engine.Simulate(scenario, baseSeed + run - 1);
     results.Add(result);
     ReportWriter.WriteRun(Path.Combine(runDirectory, $"run-{run:D3}"), result);
     Console.WriteLine(

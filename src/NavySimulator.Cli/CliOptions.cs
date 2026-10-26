@@ -7,6 +7,7 @@ public sealed class CliOptions
     public List<string> DefineSources { get; } = [];
     public int? Iterations { get; private set; }
     public int? Seed { get; private set; }
+    public double? ConstantRoll { get; private set; }
     public string OutputDirectory { get; private set; } = "output";
     public bool ShowHelp { get; private set; }
 
@@ -19,6 +20,7 @@ public sealed class CliOptions
                               directory (uses its common/defines/*.lua). Repeatable.
           --iterations <n>    Override the scenario's iteration count
           --seed <n>          Base seed; run i uses seed + i - 1 (default: scenario seed, else random)
+          --constant-roll <U> Every roll is U in [0, 1) instead of the seeded dice (S-REPLAY-CONSTANT)
           --out <dir>         Output root directory (default: output)
           --help              Show this help
 
@@ -72,6 +74,15 @@ public sealed class CliOptions
                     break;
                 case "--seed":
                     options.Seed = int.Parse(NextValue());
+                    break;
+                case "--constant-roll":
+                    options.ConstantRoll = double.Parse(NextValue(), System.Globalization.CultureInfo.InvariantCulture);
+
+                    if (options.ConstantRoll is < 0 or >= 1)
+                    {
+                        throw new ArgumentException("--constant-roll expects a value in [0, 1).");
+                    }
+
                     break;
                 case "--out":
                     options.OutputDirectory = NextValue();

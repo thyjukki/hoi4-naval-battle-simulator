@@ -165,6 +165,12 @@ function sideState(side, inputs) {
   };
 }
 
+// S-REPLAY-CONSTANT: with run_battles.py --constant-roll every roll of the naval combat update that the engine also
+// makes (target pick, torpedo line, hit, damage randomness, crit, part chance, part pick, retreat decision) returns
+// this raw value (0..99999) instead of the generator's; the sinking rolls (0x40e) and integer draws are left alone.
+let forcedRoll = null;
+const FORCED_LINES = new Set([0x37b, 0x3d9, 0x587, 0x593, 0x59f, 0x2f4, 0x78f, 0xa83]);
+
 let ticks = 0;
 let airLog = []; // air objects that tried to strike since the last hour record
 let current = null; // the combat being updated: { key, hour, thread, start, rolls, shots, damage }
@@ -281,6 +287,7 @@ Interceptor.attach(base.add(RVA.randomFixed), {
   },
   onLeave: guard(function randomLeave() {
     if (!this.out || current === null) return;
+    if (forcedRoll !== null && FORCED_LINES.has(this.line)) this.out.writeS64(int64(forcedRoll));
     const roll = { line: this.line, value: s64(this.out) };
     current.rolls.push({ line: roll.line, value: roll.value, loop: shooting === null ? -1 : current.shots.length });
     if (shooting === null) return;
@@ -469,6 +476,7 @@ Interceptor.attach(base.add(RVA.airHits), {
 
 rpc.exports = {
   ping() { return { base: base.toString(), ticks }; },
+  forceRoll(raw) { forcedRoll = raw; return forcedRoll; },
 };
 
 send({ type: 'ready', base: base.toString() });

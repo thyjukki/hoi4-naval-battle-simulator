@@ -47,6 +47,19 @@ public class RetreatAndSubmarineTests
     }
 
     [Fact]
+    public void AdvanceRetreat_AddsTheDailySpeedOver24TruncatedToFx5()
+    {
+        // S-RETREAT-SPEED [RE + CAL]: 0.40625 a day is 40625 raw; 40625 / 24 = 1692 raw an hour, not 0.0169270833.
+        var capital = TestEntityFactory.CreateShip("bb", ShipRole.Capital, TestEntityFactory.CapitalStats() with { Speed = 30 });
+        capital.CurrentStatus = ShipStatus.Retreating;
+
+        RetreatRules.AdvanceRetreat(capital, 10, new ScreeningSummary(1, 1), BattleEnvironment.None, defines);
+        RetreatRules.AdvanceRetreat(capital, 10, new ScreeningSummary(1, 1), BattleEnvironment.None, defines);
+
+        Assert.Equal(0.03384, capital.RetreatProgress, 9);
+    }
+
+    [Fact]
     public void EscapeSpeed_SubmarinesAddTheirBonusOnTopOfTheBase()
     {
         var hidden = TestEntityFactory.Submarine("ss");

@@ -133,6 +133,11 @@ catch a second engagement), closes the game and deletes the copy. `continue_game
 `--setup-only` loads one save and seed, types the console commands and leaves the game paused and running on the copy
 (nothing is logged; unpausing starts the battle), for looking at a new setup in the game first.
 
+`--constant-roll U` makes every combat roll the engine also makes return U (whole 1e-5 steps), for a battle the engine
+must fight identically; check it with `NavySimulator replay --log <run> --constant-roll U`, which fights it free from the
+game's first hour (S-REPLAY-CONSTANT in docs/mechanics/surface.md). With U = 0.05 the mixed-fleet save gives a 137-hour
+battle with losses on both sides; at 0.5 almost nothing hits and no battle ends.
+
 A save replays the identical battle every time it is loaded with the same console commands; the seed is what makes
 repetitions independent. `--seeds 0` runs the save's own seed once. A run gives up when no combat has started after
 `--start-hours` (48) game hours.

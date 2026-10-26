@@ -1,6 +1,7 @@
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
+using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -116,7 +117,11 @@ public static class RetreatRules
         return Math.Max(0, speed);
     }
 
-    /// <summary>[RE] Retreating ships add the daily escape speed / 24 each hour and escape at 1.</summary>
+    /// <summary>
+    /// [RE] Retreating ships add the daily escape speed / 24 each hour, an integer division of the fx5 value
+    /// (0x19738fd), and escape at 1. [CAL] Without the truncation a free-running constant-roll battle drifts 1e-5 an hour
+    /// from the game's progress (S-REPLAY-CONSTANT).
+    /// </summary>
     public static bool AdvanceRetreat(Ship ship, int tick, ScreeningSummary ownScreening, BattleEnvironment environment, GameDefines defines)
     {
         if (ship.CurrentStatus != ShipStatus.Retreating || ship.IsSunk)
@@ -124,7 +129,7 @@ public static class RetreatRules
             return false;
         }
 
-        ship.RetreatProgress += EscapeSpeedPerDay(ship, tick, ownScreening, environment, defines) / 24.0;
+        ship.RetreatProgress += FixedPoint.Raw(EscapeSpeedPerDay(ship, tick, ownScreening, environment, defines)) / 24 / (double)FixedPoint.Scale;
 
         if (ship.RetreatProgress < 1.0)
         {

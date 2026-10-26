@@ -189,6 +189,9 @@ def run_one(save_path, seed, out_dir, args):
         script = session.create_script(AGENT.read_text(encoding="utf-8"))
         script.on("message", lambda message, _data: messages.put(message))
         script.load()
+        if args.constant_roll is not None:
+            # S-REPLAY-CONSTANT: the combat rolls the engine also makes all return this value (battle_logger.js)
+            script.exports_sync.force_roll(round(args.constant_roll * FX))
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -208,7 +211,7 @@ def run_one(save_path, seed, out_dir, args):
 
     write_outputs(out_dir, hours, index, {
         "save": str(save_path), "seed": seed if seed is not None else save.seed, "date": save.date,
-        "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256,
+        "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256, "constantRoll": args.constant_roll,
     })
 
 
@@ -398,10 +401,15 @@ def main():
     parser.add_argument("--load-timeout", type=int, default=600)
     parser.add_argument("--settle", type=float, default=5, help="seconds to wait after loading before typing")
     parser.add_argument("--stall-seconds", type=float, default=8)
+    parser.add_argument("--constant-roll", type=float,
+                        help="every combat roll the engine also makes is this U in [0, 1) (whole fx5 steps); "
+                             "compare with NavySimulator replay --constant-roll U")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
     parser.add_argument("--setup-only", action="store_true",
                         help="load the first save and seed, type the commands and leave the game paused and running (nothing logged)")
     args = parser.parse_args()
+    if args.constant_roll is not None and not 0 <= args.constant_roll < 1:
+        sys.exit("--constant-roll expects a value in [0, 1)")
     if args.setup_only and (len(args.saves) > 1 or args.seeds > 1):
         sys.exit("--setup-only loads one save with one seed")
 
