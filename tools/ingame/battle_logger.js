@@ -28,6 +28,7 @@ const RVA = {
   airAverages: 0x1978e30, // A-DMG stat averages (airfx, ?, &attack, &targeting, &agility, ...) of the strike's wings
   carrierRatio: 0x161eeb0, // S-POS carrier-ratio helper (side, &A, &B): sortie x planes over the side's air objects
   airHits: 0x197ac80, // A-HIT / A-DMG (..., strikers in r9d, ...): returns the HP damage dealt, truncated to an integer
+  accidentEntry: 0xc60290, // A-ACCIDENT (entry, local generator state): one (air base, country) entry's accident roll
 };
 
 const resolveHandle = new NativeFunction(base.add(RVA.resolveHandle), 'pointer', ['pointer']);
@@ -165,11 +166,32 @@ function sideState(side, inputs) {
   };
 }
 
-// S-REPLAY-CONSTANT: with run_battles.py --constant-roll every roll of the naval combat update that the engine also
-// makes (target pick, torpedo line, hit, damage randomness, crit, part chance, part pick, retreat decision) returns
-// this raw value (0..99999) instead of the generator's; the sinking rolls (0x40e) and integer draws are left alone.
+// S-REPLAY-CONSTANT: with run_battles.py --constant-roll every roll the engine also makes returns this raw value
+// (0..99999) instead of the generator's, and its integer draws floor(raw / 100000 × 2^31). In the naval combat update by
+// source line: target pick, torpedo line, hit, damage randomness, crit, part chance, part pick, retreat decision, and the
+// air strike's interception, AA chance and kills, hits, crit, ace earn and ace death; the sinking rolls (0x40e) and the
+// bookkeeping draws keep the generator's. Outside it, by call site (the return address; tools/re, hoi4.exe 1.19.3): the
+// region air war's losses, ace attribution and ace earning, and its province pick.
 let forcedRoll = null;
-const FORCED_LINES = new Set([0x37b, 0x3d9, 0x587, 0x593, 0x59f, 0x2f4, 0x78f, 0xa83]);
+let forcedInt = null;
+let forcedOutside = 0; // forced rolls outside the combat update since the last hour record
+const FORCED_LINES = new Set([0x37b, 0x3d9, 0x587, 0x593, 0x59f, 0x2f4, 0x78f, 0xa83,
+  0x27d, 0x212, 0x21c, 0x45d, 0x487, 0xb68, 0xb52]);
+const FORCED_FIXED_SITES = new Set([
+  0xf86610, // 0xf862a0 defender losses: U(airmission.cpp 0xacf) rounds the planes lost (A-REGION)
+  0xf86660, // 0xf862a0: U(0xade), which ace a mission credits
+  0xf86735, // 0xf862a0: U(0xae5), clearing the credited ace
+  0xf7c674, // 0xf7be70 one attacker against the defenders: ace earn U(0x82b)
+  0xf7c710, // 0xf7be70: U(0x833)
+  0xf7c727, // 0xf7be70: U(0x834)
+]);
+const FORCED_INT_SITES = new Set([
+  0x197ac2a, // 0x197a700 A-TARGET: the air target pick, random_int(naval_fire_exchange_air.cpp 0x43f)
+  0xc6006e, // 0xc5f4c0 region air war: random_int(strategicair.cpp 0x12c9) picks the fight's province
+]);
+// With --constant-roll the accident pass is switched off (A-ACCIDENT): its local generator is seeded once an hour and
+// shared by every air base in the world, so the engine cannot follow it; the engine's free replay turns its own off.
+let noAccidents = null;
 
 let ticks = 0;
 let airLog = []; // air objects that tried to strike since the last hour record
@@ -226,7 +248,9 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       air: airLog,
       carrierRatio: ratioLog,
       airObjects: [airObjects(combat.add(0x28).readPointer()), airObjects(combat.add(0x30).readPointer())],
+      forcedOutside,
     };
+    forcedOutside = 0;
     airLog = [];
     ratioLog = [];
   }),
@@ -281,11 +305,16 @@ Interceptor.attach(base.add(RVA.shotProfile), {
 // a hit roll (naval_fire_exchange_member.cpp line 0x587) starts a new shot.
 Interceptor.attach(base.add(RVA.randomFixed), {
   onEnter(args) {
+    if (forcedRoll !== null && FORCED_FIXED_SITES.has(this.returnAddress.sub(base).toUInt32())) this.forceOut = args[0];
     if (current === null || this.threadId !== current.thread) return;
     this.out = args[0];
     this.line = args[2].toInt32();
   },
   onLeave: guard(function randomLeave() {
+    if (this.forceOut) {
+      this.forceOut.writeS64(int64(forcedRoll));
+      forcedOutside++;
+    }
     if (!this.out || current === null) return;
     if (forcedRoll !== null && FORCED_LINES.has(this.line)) this.out.writeS64(int64(forcedRoll));
     const roll = { line: this.line, value: s64(this.out) };
@@ -301,13 +330,18 @@ Interceptor.attach(base.add(RVA.randomFixed), {
 // use it.
 Interceptor.attach(base.add(RVA.randomInt), {
   onEnter(args) {
+    this.forceInt = forcedInt !== null && FORCED_INT_SITES.has(this.returnAddress.sub(base).toUInt32());
     if (current === null || this.threadId !== current.thread) return;
     this.line = args[1].toInt32();
     this.active = true;
   },
   onLeave: guard(function randomIntLeave(retval) {
+    if (this.forceInt) {
+      retval.replace(ptr(forcedInt));
+      if (!this.active || current === null) forcedOutside++;
+    }
     if (!this.active || current === null) return;
-    const value = retval.toUInt32() & 0x7fffffff;
+    const value = this.forceInt ? forcedInt : retval.toUInt32() & 0x7fffffff;
     current.rolls.push({ line: this.line, value, int: true, loop: shooting === null ? -1 : current.shots.length });
   }),
 });
@@ -476,7 +510,18 @@ Interceptor.attach(base.add(RVA.airHits), {
 
 rpc.exports = {
   ping() { return { base: base.toString(), ticks }; },
-  forceRoll(raw) { forcedRoll = raw; return forcedRoll; },
+  forceRoll(raw) {
+    forcedRoll = raw;
+    forcedInt = Math.floor(raw * 2147483648 / 100000);
+    return { fixed: forcedRoll, int: forcedInt };
+  },
+  disableAccidents() {
+    if (noAccidents === null) {
+      noAccidents = new NativeCallback(() => {}, 'void', ['pointer', 'pointer']); // kept referenced while replaced
+      Interceptor.replace(base.add(RVA.accidentEntry), noAccidents);
+    }
+    return true;
+  },
 };
 
 send({ type: 'ready', base: base.toString() });

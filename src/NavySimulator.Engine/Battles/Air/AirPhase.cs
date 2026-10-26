@@ -416,6 +416,12 @@ public sealed class AirPhase
     /// </summary>
     public bool RegionAirWarEnabled { get; set; } = true;
 
+    /// <summary>
+    /// A-ACCIDENT: whether the hourly accident pass runs (a constant-roll replay turns it off, as the logger does in the
+    /// game: the game's accident generator is shared by every air base in the world, S-REPLAY-CONSTANT).
+    /// </summary>
+    public bool AccidentsEnabled { get; set; } = true;
+
     private readonly Dictionary<BattleSide, double> detection = new();
 
     /// <summary>A-DETECT: each side's air detection in the region in the last air hour's region air war.</summary>
@@ -790,6 +796,11 @@ public sealed class AirPhase
     public List<string> Accidents(int hour, IRandomSource random)
     {
         var lines = new List<string>();
+
+        if (!AccidentsEnabled)
+        {
+            return lines;
+        }
 
         foreach (var side in new[] { Attacker, Defender })
         {

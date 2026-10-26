@@ -117,6 +117,11 @@ public class AirWingsTests
         // An hour whose gate draw is 10 % or more has none.
         Assert.Empty(phase.Accidents(6, new ScriptedRandomSource(0.2)));
         Assert.Equal(994, wing.Planes);
+
+        // Switched off (a constant-roll replay, S-REPLAY-CONSTANT): no draw, no loss.
+        phase.AccidentsEnabled = false;
+        Assert.Empty(phase.Accidents(7, new ScriptedRandomSource()));
+        Assert.Equal(994, wing.Planes);
     }
 
     [Fact]

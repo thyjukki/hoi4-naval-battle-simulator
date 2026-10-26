@@ -190,8 +190,11 @@ def run_one(save_path, seed, out_dir, args):
         script.on("message", lambda message, _data: messages.put(message))
         script.load()
         if args.constant_roll is not None:
-            # S-REPLAY-CONSTANT: the combat rolls the engine also makes all return this value (battle_logger.js)
+            # S-REPLAY-CONSTANT: the rolls the engine also makes all return this value (battle_logger.js), and the
+            # accident pass is off (its generator is shared by every air base in the world)
             script.exports_sync.force_roll(round(args.constant_roll * FX))
+            if not args.keep_accidents:
+                script.exports_sync.disable_accidents()
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -212,6 +215,7 @@ def run_one(save_path, seed, out_dir, args):
     write_outputs(out_dir, hours, index, {
         "save": str(save_path), "seed": seed if seed is not None else save.seed, "date": save.date,
         "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256, "constantRoll": args.constant_roll,
+        "accidentsDisabled": args.constant_roll is not None and not args.keep_accidents,
     })
 
 
@@ -404,6 +408,8 @@ def main():
     parser.add_argument("--constant-roll", type=float,
                         help="every combat roll the engine also makes is this U in [0, 1) (whole fx5 steps); "
                              "compare with NavySimulator replay --constant-roll U")
+    parser.add_argument("--keep-accidents", action="store_true",
+                        help="with --constant-roll, leave the game's air accident pass on (the engine cannot follow it)")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
     parser.add_argument("--setup-only", action="store_true",
                         help="load the first save and seed, type the commands and leave the game paused and running (nothing logged)")

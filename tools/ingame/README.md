@@ -133,10 +133,48 @@ catch a second engagement), closes the game and deletes the copy. `continue_game
 `--setup-only` loads one save and seed, types the console commands and leaves the game paused and running on the copy
 (nothing is logged; unpausing starts the battle), for looking at a new setup in the game first.
 
-`--constant-roll U` makes every combat roll the engine also makes return U (whole 1e-5 steps), for a battle the engine
-must fight identically; check it with `NavySimulator replay --log <run> --constant-roll U`, which fights it free from the
-game's first hour (S-REPLAY-CONSTANT in docs/mechanics/surface.md). With U = 0.05 the mixed-fleet save gives a 137-hour
-battle with losses on both sides; at 0.5 almost nothing hits and no battle ends.
+`--constant-roll U` makes every roll the engine also makes return U (whole 1e-5 steps; the air target pick's integer
+draw floor(U × 2^31)), for a battle the engine must fight identically: the surface and air rolls of the combat update,
+and the region air war's rolls outside it (forced by call site). It also switches the game's air accident pass off
+(`--keep-accidents` leaves it on): its generator is shared by every air base in the world, so the engine cannot follow
+it. Check a run with `NavySimulator replay --log <run> --constant-roll U`, which fights it free from the game's first
+hour, region air war included and accidents off (S-REPLAY-CONSTANT in docs/mechanics/surface.md). With U = 0.05 the
+mixed-fleet save gives a 137-hour battle with losses on both sides; at 0.5 almost nothing hits and no battle ends. Keep
+U above `ACE_EARN_CHANCE_BASE` (0.01): an ace earned takes its template from the game's own hash, which the engine does
+not have. A replay that needs `--design` or a weather-on scenario: see docs/calibration.md and the notes below.
+
+### Constant-roll air checks (runbook)
+
+Written 2026-10-26, not yet run: the carrier and land-based plane battles with constant rolls. On the computer with the
+game:
+
+1. Prerequisites: hoi4.exe 1.19.3 with the SHA-256 in `run_battles.py` (the logger's addresses are for that build),
+   Python with `frida-tools`, the Windows session active and unlocked on the console (the game crashes on a locked or
+   disconnected session), the game closed. `HOI4_DIR` / `HOI4_USER_DIR` if the game or the user folder are elsewhere.
+2. Copy the four saves into the save games folder (from this computer's `Documents/Paradox Interactive/Hearts of Iron
+   IV/save games`): `air_cv_mirror_battle_start.hoi4`, `air_cv_bombers_vs_fighters_battle_start.hoi4`,
+   `air_land_vs_fleet_battle_start.hoi4`, `air_cv_land_mix_battle_start.hoi4`. The TFB dev mod must be the mod the
+   saves load with, as here.
+3. Run (about a minute a battle; the game window takes focus):
+   ```
+   cd tools/ingame
+   python run_battles.py air_cv_mirror_battle_start.hoi4 air_cv_bombers_vs_fighters_battle_start.hoi4 air_land_vs_fleet_battle_start.hoi4 air_cv_land_mix_battle_start.hoi4 --seeds 0 --constant-roll 0.05 --out ../../output/ingame/constant_roll_air/u005
+   python run_battles.py air_cv_mirror_battle_start.hoi4 air_cv_bombers_vs_fighters_battle_start.hoi4 air_land_vs_fleet_battle_start.hoi4 air_cv_land_mix_battle_start.hoi4 --seeds 0 --constant-roll 0.07 --out ../../output/ingame/constant_roll_air/u007
+   ```
+   Each run folder's `meta.json` should say `"constantRoll": 0.05` and `"accidentsDisabled": true`; in `raw.jsonl`
+   the hour records' `forcedOutside` counts the region air war rolls forced in that hour (above 0 in air hours with a
+   region fight), and `rolls.csv` should hold only U (and the bookkeeping lines 0x40e, 0x96, 0x1c9, 0xb72, 0x369).
+4. Bring `output/ingame/constant_roll_air/` back (or replay there) and compare, per run:
+   ```
+   dotnet run --project src/NavySimulator.Cli -- replay --log output/ingame/constant_roll_air/u005/air_cv_mirror_battle_start_<stamp>/save-seed --data data --scenario air_cv_mirror.json --defines "<TFB dev mod folder>" --constant-roll 0.05 --air <scratch>/air.csv --states <scratch>/states.csv
+   ```
+   with `air_cv_bombers_vs_fighters.json`, `air_land_vs_fleet.json` and `air_cv_land_mix.json` for the other saves
+   (the replay turns the sides round when the game's attacker is the scenario's defender). Expected: every shot and
+   every air strike matching, both sides' damage equal and the engine's battle over in the game's last hour; the
+   surface runs so far left only the last hour's regain and experience and fixed-point rounding. A first difference
+   shows where a rule differs; `--air` lists the strikes side by side. `air_cv_land_mix` holds the open gap of
+   calibration.md (the USA's air damage 35 % above the game in free runs): an identical constant-roll battle there
+   says the rules agree and the gap is luck.
 
 A save replays the identical battle every time it is loaded with the same console commands; the seed is what makes
 repetitions independent. `--seeds 0` runs the save's own seed once. A run gives up when no combat has started after

@@ -57,6 +57,45 @@ public class BattleReplayTests
     }
 
     [Fact]
+    public void AConstantRollBattle_FoughtFreeFromItsStart_IsTheSameBattle()
+    {
+        // S-REPLAY-CONSTANT: only the first hour's state is taken; every later hour compares the whole battle so far.
+        var scenario = Scenario();
+        var session = new BattleSession(scenario, new ConstantRandomSource(0.05));
+        var hours = new List<ReplayHour>();
+
+        while (!session.IsOver)
+        {
+            var hour = session.HoursFought;
+            var start = session.Ships.ToDictionary(ship => ship.ID, StateOf);
+            var shotsBefore = session.Shots.Count;
+            session.StepHour();
+            var shots = session.Shots.Skip(shotsBefore)
+                .Select(shot => new ReplayShot(shot.ShooterId, shot.TargetId, shot.Weapon, shot.Hit, shot.HpDamage, shot.OrganizationDamage))
+                .ToList();
+            hours.Add(new ReplayHour(hour, start, [], shots, session.Ships.ToDictionary(ship => ship.ID, StateOf)));
+        }
+
+        var reports = BattleReplay.Run(Scenario(), hours, constantRoll: 0.05);
+
+        Assert.Equal(hours.Count, reports.Count);
+        Assert.True(reports[^1].EngineOver);
+        Assert.All(reports, report => Assert.True(report.Matches, $"hour {report.Hour}: {report.FirstShotMismatch} {report.StateMismatches.Count}"));
+        Assert.True(reports.Sum(report => report.GameShots) > 20);
+    }
+
+    [Fact]
+    public void ConstantRolls_GiveIntegerDrawsTheGamesForcedValue()
+    {
+        // The logger forces the game's integer draws (the air target pick) to floor(raw / 100000 × 2^31).
+        var random = new ConstantRandomSource(0.05);
+
+        Assert.Equal(0.05, random.NextDouble(RollKind.Hit));
+        Assert.Equal(107374182 / 2147483648.0, random.NextDouble(RollKind.AirTargetPick));
+        Assert.Equal(0.5, new ConstantRandomSource(0.5).NextDouble(RollKind.AirTargetPick));
+    }
+
+    [Fact]
     public void ADifferentRoll_IsReportedWhereItHappens()
     {
         var hours = Record(Scenario(), 11);

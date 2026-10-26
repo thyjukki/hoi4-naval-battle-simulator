@@ -35,7 +35,8 @@ public static class BattleReplay
     /// diagnostics beyond the first mismatch. With <paramref name="constantRoll"/> (S-REPLAY-CONSTANT) the battle is not
     /// replayed but fought free from the game's first logged hour: every engine roll is that value, as the game's were
     /// when logged with <c>run_battles.py --constant-roll</c>, and no later state is taken from the log, so each hour
-    /// compares the whole battle so far. Surface battles only: air wings and side values are set in the first hour only.
+    /// compares the whole battle so far. Air wings and side values are set in the first hour only; the region's air war
+    /// runs in the engine, and accidents are off on both sides.
     /// </summary>
     public static IReadOnlyList<ReplayHourReport> Run(BattleScenario scenario, IReadOnlyList<ReplayHour> hours,
         Action<int, IReadOnlyList<ReplayShot>, IReadOnlyList<ShotRecord>>? onHour = null,
@@ -49,7 +50,10 @@ public static class BattleReplay
             : null;
         var session = new BattleSession(scenario, replayRandom ?? (IRandomSource)new ConstantRandomSource(constantRoll!.Value));
         // The region's air war happens outside the logged combat update: the wings' planes and disruption come from the log.
+        // S-REPLAY-CONSTANT: a free battle fights it from its second hour (the logger forces its rolls too; the first
+        // hour's state already holds the game's) and, like the logged game, has no accidents.
         session.AirPhase.RegionAirWarEnabled = false;
+        session.AirPhase.AccidentsEnabled = constantRoll is null;
         var shipsById = session.Ships.ToDictionary(ship => ship.ID, StringComparer.Ordinal);
         var reports = new List<ReplayHourReport>();
         var wingIds = new Dictionary<AirGroup, List<uint>>();
@@ -64,6 +68,7 @@ public static class BattleReplay
 
             // S-REPLAY-CONSTANT: a free battle takes the game's state at its start only.
             var setState = constantRoll is null || reports.Count == 0;
+            session.AirPhase.RegionAirWarEnabled = !setState;
 
             foreach (var (id, state) in setState ? hour.Start : new Dictionary<string, ReplayShipState>())
             {
@@ -283,9 +288,10 @@ public static class BattleReplay
             }
         }
 
+        var enabled = session.AirPhase.RegionAirWarEnabled;
         session.AirPhase.RegionAirWarEnabled = true;
         session.AirPhase.RegionAirWar(hour.Hour, new SeededRandomSource(hour.Hour), applyLosses: false);
-        session.AirPhase.RegionAirWarEnabled = false;
+        session.AirPhase.RegionAirWarEnabled = enabled;
 
         // [RE + LOG] A-REGION-ESCAPE: an escaped carrier's wings stay in the region's air war, but the logger no longer
         // lists them (their air object moved to group+0x88); they keep losing planes, so take the engine's own losses
