@@ -130,6 +130,19 @@ public class AirRulesTests
     }
 
     [Fact]
+    public void PreemptiveAntiAir_ComputesTheChanceInFixedPoint_AndFiresOnEquality()
+    {
+        // [CAL] TFB's ANTI_AIR_TARGETING 0.4 against agility 0.7: 0.2 × (0.4 + 0.5 × (0.4 − 0.7)) is 0.05 exactly in fx5
+        // (0.04999999999999999 in doubles). The constant-roll carrier battle at U 0.05: the game's AA fired and shot down
+        // 7 of 48 (48 × 12.9 × 0.01 = 6.192, rounded up by U).
+        var tfb = GameDefines.Vanilla();
+        tfb.NNavy.ANTI_AIR_TARGETING = 0.4;
+
+        Assert.Equal(7, AirRules.PreemptiveAntiAir(12.9, 0.7000000000000002, 48, tfb, new ScriptedRandomSource(0.05, 0.05)));
+        Assert.Equal(0, AirRules.PreemptiveAntiAir(12.9, 0.7000000000000002, 48, tfb, new ScriptedRandomSource(0.05001)));
+    }
+
+    [Fact]
     public void AntiAirReduction_IsCappedPowerOfThePool()
     {
         Assert.Equal(0.18 * Math.Pow(35, 0.225), AirRules.AntiAirReduction(10, 25, defines), 9);

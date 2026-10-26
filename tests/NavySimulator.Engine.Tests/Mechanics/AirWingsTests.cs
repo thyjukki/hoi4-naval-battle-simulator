@@ -2,6 +2,7 @@ using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Environment;
+using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -133,6 +134,33 @@ public class AirWingsTests
         Assert.Contains(withMission.AirStrikes, strike => strike.HpDamage > 0);
         Assert.NotEmpty(without.AirStrikes);
         Assert.All(without.AirStrikes, strike => Assert.Equal(0, strike.HpDamage));
+    }
+
+    [Fact]
+    public void CarrierSortieExperience_LeavesTheStanceRatioAnHourBeforeTheStrikes()
+    {
+        // [LOG] The gain comes after the hour ends, with the game's counter two ahead: battle hour 21 still gains from the
+        // stance ratio (1.0 at index 4), hour 22 from BASE_CARRIER_SORTIE_EFFICIENCY (0.5), half as much.
+        var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 4 });
+        var wings = new Dictionary<string, List<CarrierAirwingAssignment>> { [carrier.ID] = [new CarrierAirwingAssignment("cv_nb", 4, 10)] };
+        var attacker = new BattleParticipant(new Fleet("a", [carrier], wings), null, [], [], carrierStanceIndex: 4);
+        var target = TestEntityFactory.CreateShip("target", ShipRole.Capital,
+            TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, TorpedoAttack = 0, Hp = 100000 });
+        var scenario = new BattleScenario("air", "ocean", "clear", 1, null, attacker, TestEntityFactory.Participant("d", [target]),
+            Planes(), defines, new BattleRules { MaxHours = 30, NightEnabled = false });
+        var session = new BattleSession(scenario, new ConstantRandomSource(0.5));
+        var experience = new List<double>();
+
+        while (session.HoursFought < 25)
+        {
+            experience.Add(carrier.Experience);
+            session.StepHour();
+        }
+
+        double Gain(int hour) => experience[hour + 1] - experience[hour];
+        Assert.Equal(Gain(20), Gain(21), 9);
+        Assert.Equal(Gain(21) / 2, Gain(22), 9);
+        Assert.Equal(Gain(22), Gain(23), 9);
     }
 
     private Results.BattleResult Simulate(BattleRules rules)

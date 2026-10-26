@@ -225,7 +225,7 @@ The low-AA term is additive and, at real weights, negligible. Each group picks o
 ```
 chance = ANTI_AIR_TARGETTING_TO_CHANCE × max(1.5 × ANTI_AIR_TARGETING − 0.5 × agi, 0.01)
          agi = AIR_AGILITY_TO_NAVAL_STRIKE_AGILITY × average agility of the selected strike wings × A-STRIKE-MODS (agility)
-fires if U ≤ chance
+fires if U ≤ chance      (all in fx5, products truncated: TFB's T 0.4 against agility 0.7 gives exactly 0.05) [RE + CAL]
 kills  = randomly rounded ceil((flying − intercepted) × F) × clamp(targetAA × ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1)
 ```
 Convoys have no AA. Kamikaze is not modelled.
@@ -327,7 +327,7 @@ Carrier wings in a naval battle have no mission type, so no accidents. TFB tacti
 
 ## Experience from sorties [RE]
 
-Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from the sortie efficiency of their first air object. [LOG] The efficiency is **not clamped** to 1: TFB carriers at a sortie efficiency of 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit), the engine clamped to 0.16. The game's counter-0 update before battle hour 0 (S-HOUR) already gives one hour of it.
+Carriers gain experience per sortie as part of S-XP (`ExperienceRules`), from the sortie efficiency of their first air object. [LOG] The efficiency is **not clamped** to 1: TFB carriers at a sortie efficiency of 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit), the engine clamped to 0.16. The game's counter-0 update before battle hour 0 (S-HOUR) already gives one hour of it. [LOG] The gain comes after the hour has ended and the game's hour counter has moved on again, so its stance window (A-SORTIE, `SELECTED_SORTIE_INITIAL_TIME`) closes one battle hour before the strikes': the constant-roll carrier battles gained from the stance ratio up to battle hour 21 and from the base efficiency from hour 22 (`BattleSession.AddCarrierSortieExperience` passes hour + 1). Open: in some hours the game's gain is about 3 % above the engine's (a screening term, `air_cv_mirror` at U 0.07 from hour 66).
 
 ## Not modelled
 

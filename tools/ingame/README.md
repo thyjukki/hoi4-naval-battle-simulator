@@ -145,8 +145,8 @@ not have. A replay that needs `--design` or a weather-on scenario: see docs/cali
 
 ### Constant-roll air checks (runbook)
 
-Written 2026-10-26, not yet run: the carrier and land-based plane battles with constant rolls. On the computer with the
-game:
+Written and first run 2026-10-26 (results: docs/mechanics/surface.md, S-REPLAY-CONSTANT): the carrier and land-based
+plane battles with constant rolls. On the computer with the game:
 
 1. Prerequisites: hoi4.exe 1.19.3 with the SHA-256 in `run_battles.py` (the logger's addresses are for that build),
    Python with `frida-tools`, the Windows session active and unlocked on the console (the game crashes on a locked or

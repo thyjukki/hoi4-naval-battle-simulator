@@ -235,7 +235,9 @@ public static class AirRules
 
     /// <summary>
     /// [RE] A-AA-PREEMPT (0x197c8b0): only the target fires; chance ANTI_AIR_TARGETTING_TO_CHANCE * max(1.5 * T - 0.5 * agility, 0.01),
-    /// then AA * ANTI_AIR_ATTACK_TO_AMOUNT of the (stacking-scaled) planes, randomly rounded.
+    /// then AA * ANTI_AIR_ATTACK_TO_AMOUNT of the (stacking-scaled) planes, randomly rounded. In fx5, products truncated:
+    /// [CAL] TFB's T 0.4 against agility 0.7 makes the chance exactly 0.05, which the constant-roll battles at U 0.05 hit
+    /// (the game fires on equality; in doubles the chance was 0.04999999999999999).
     /// </summary>
     public static int PreemptiveAntiAir(double targetAntiAir, double strikeAgility, int planesInReach, GameDefines defines, IRandomSource random)
     {
@@ -247,15 +249,17 @@ public static class AirRules
             return 0;
         }
 
-        var chance = navy.ANTI_AIR_TARGETTING_TO_CHANCE * Math.Max(targeting + 0.5 * (targeting - strikeAgility), 0.01);
+        var agility = FixedPoint.Truncate(strikeAgility);
+        var chance = FixedPoint.Truncate(navy.ANTI_AIR_TARGETTING_TO_CHANCE *
+                                         Math.Max(targeting + FixedPoint.Truncate(0.5 * (targeting - agility)), 0.01));
 
         if (random.NextDouble(RollKind.AirAntiAirChance) > chance)
         {
             return 0;
         }
 
-        var fraction = Math.Clamp(targetAntiAir * navy.ANTI_AIR_ATTACK_TO_AMOUNT, 0, 1);
-        var expected = planesInReach * fraction;
+        var fraction = Math.Clamp(FixedPoint.Truncate(targetAntiAir * navy.ANTI_AIR_ATTACK_TO_AMOUNT), 0, 1);
+        var expected = FixedPoint.Truncate(planesInReach * fraction);
         var kills = (int)Math.Floor(expected);
         return random.NextDouble(RollKind.AirAntiAirKills) < expected - kills ? kills + 1 : kills;
     }

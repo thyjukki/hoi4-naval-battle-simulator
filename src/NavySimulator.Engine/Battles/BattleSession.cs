@@ -637,7 +637,10 @@ public sealed class BattleSession
     }
 
     // [RE] A carrier that did not fire gains from its sortie efficiency instead. [LOG] The efficiency is not clamped to 1:
-    // TFB carriers at 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit of efficiency).
+    // TFB carriers at 1.55 in the first day gained 0.24789 an hour in game (0.16 per unit of efficiency). [LOG] The gain
+    // comes after the hour has ended and the game's hour counter has moved on again (S-HOUR), so its stance window
+    // closes an hour before the strikes' (the constant-roll carrier battles: the gain fell to the base efficiency's in
+    // battle hour 22, where the strikes' sortie still had the stance ratio).
     private void AddCarrierSortieExperience(BattleSide side, Ship ship, int hour)
     {
         if (!ship.IsInBattle || airPhase.GroupsOf(side).FirstOrDefault(group => group.Carrier == ship) is not { } group)
@@ -645,7 +648,7 @@ public sealed class BattleSession
             return;
         }
 
-        var efficiency = Math.Max(0, airPhase.SortieEfficiency(group, side, hour, environment));
+        var efficiency = Math.Max(0, airPhase.SortieEfficiency(group, side, hour + 1, environment));
         var navy = defines.NNavy;
         var gain = navy.UNIT_EXPERIENCE_PER_COMBAT_HOUR * navy.UNIT_EXPERIENCE_SCALE * efficiency * navy.EXPERIENCE_FACTOR_CARRIER_GAIN;
         ExperienceRules.AddExperience(ship, ExperienceRules.ModifiedGain(ship, gain, defines), defines);
