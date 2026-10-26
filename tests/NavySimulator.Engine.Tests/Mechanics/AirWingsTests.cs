@@ -189,6 +189,32 @@ public class AirWingsTests
     }
 
     [Fact]
+    public void WingExperience_GainsInFixedPoint_AndBlendsWithLostAndRefilledPlanes()
+    {
+        // A-XP [RE + LOG]: an air-war gain 0.8 × FIELD_EXPERIENCE_FACTOR 0.7 = 0.56 (the logged gain of one attacker entry);
+        // a lost plane takes a pilot with AIR_WING_XP_LOSS_WHEN_KILLED 300 out of the average (at sea), stock planes bring 0.
+        var defines = GameDefines.Vanilla();
+        var fighter = new PlaneEquipment("f", new PlaneStats(AirAttack: 1), ["fighter"], ["air_superiority"], subUnitTypes: ["fighter"]);
+        var wing = new AirWing(fighter, 100, defines.Hardcoded) { Experience = 400 };
+
+        wing.GainExperience(0.8, defines, ModifierSet.Empty);
+        Assert.Equal(400.56, wing.Experience, 9);
+
+        wing.LosePlanes(10, defines, ModifierSet.Empty);
+        Assert.Equal((100 * 400.56 - 10 * 300) / 90, wing.Experience, 4);
+        Assert.Equal(90, wing.Planes);
+
+        var before = wing.Experience;
+        wing.Reinforce(fighter, 10, defines);
+        Assert.Equal(Math.Truncate(90 * before * 1e5 / 100) / 1e5, wing.Experience, 9);
+
+        // A wing whose average falls below the killed pilots' drops to 0.
+        wing.Experience = 0.56;
+        wing.LosePlanes(1, defines, ModifierSet.Empty);
+        Assert.Equal(0, wing.Experience);
+    }
+
+    [Fact]
     public void RegionEscorts_CountACarrierWingOnBothListsTwice_AndALandWingOnce()
     {
         // A-REGION [RE + LOG] 0xc4c570: the taken and escort sums run over the region list and the scrambled list, so the

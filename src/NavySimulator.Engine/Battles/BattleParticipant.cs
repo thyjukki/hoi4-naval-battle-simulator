@@ -41,7 +41,9 @@ public class BattleParticipant
         StaticModifiers.AceEffectivenessFactor, StaticModifiers.AirAceGenerationChanceFactor, StaticModifiers.AirSuperiorityEfficiency,
         StaticModifiers.AirNavEfficiency, StaticModifiers.AirHomeDefenceFactor, StaticModifiers.AirPowerProjectionFactor,
         StaticModifiers.AirSuperiorityDetectFactor, StaticModifiers.AirInterceptionDetectFactor, StaticModifiers.AirUntrainedPilotsPenaltyFactor,
-        StaticModifiers.AirNightPenalty, StaticModifiers.AirWeatherPenalty, StaticModifiers.CarrierCapacityPenaltyReduction
+        StaticModifiers.AirNightPenalty, StaticModifiers.AirWeatherPenalty, StaticModifiers.CarrierCapacityPenaltyReduction,
+        // A-XP: the wings' experience gain in the region's air war and loss with killed planes.
+        StaticModifiers.AirMissionXpGainFactor, StaticModifiers.AirWingXpLossWhenKilledFactor
     ], StringComparer.Ordinal);
 
     /// <summary>

@@ -106,7 +106,43 @@ public sealed class AirWing
         {
             var factor = FixedPoint.Raw(defines.NAir.EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR);
             RegionChangePenalty = (old * FixedPoint.Raw(RegionChangePenalty) + (n - old) * factor) / n / (double)FixedPoint.Scale;
+            // A-XP [RE + LOG]: the same call blends the experience; stockpile planes bring none.
+            Experience = old * FixedPoint.Raw(Experience) / n / (double)FixedPoint.Scale;
         }
+    }
+
+    /// <summary>
+    /// A-XP [RE + LOG] 0xf63580 → 0xf63e00: planes lost (region air war, AA, interception, accidents) take their pilots
+    /// with <c>trunc(lossF × AIR_WING_XP_LOSS_WHEN_KILLED)</c> experience out of the wing's average, lossF = clamp((1 −
+    /// trunc(f × AIR_WING_XP_LOSS_REDUCTION_OVER_FRIENDLY_TERRITORY_FACTOR)) × (1 + air_wing_xp_loss_when_killed_factor),
+    /// 0, 1) with f the friendly share of the mission region's provinces, 0 over a sea region [ASSUMED for every battle].
+    /// </summary>
+    public void LosePlanes(int planes, GameDefines defines, ModifierSet country)
+    {
+        var old = Planes;
+        Planes = old - Math.Min(planes, old);
+        var n = Planes;
+
+        if (n == old)
+        {
+            return;
+        }
+
+        var lossFactor = Math.Clamp(1 + country.Get(StaticModifiers.AirWingXpLossWhenKilledFactor), 0, 1);
+        var killed = FixedPoint.Raw(FixedPoint.Truncate(lossFactor * defines.NAir.AIR_WING_XP_LOSS_WHEN_KILLED));
+        Experience = n > 0 ? Math.Max(0, (old * FixedPoint.Raw(Experience) - (old - n) * killed) / n) / (double)FixedPoint.Scale : 0;
+    }
+
+    /// <summary>
+    /// A-XP [RE + LOG] 0xf5dfa0: an experience gain g, trunc(trunc(trunc(g × FIELD_EXPERIENCE_FACTOR) × fuel) × (1 +
+    /// air_mission_xp_gain_factor)), up to AIR_WING_XP_MAX; fuel 1 (the caller skips the battle's first air hour, when
+    /// the game's fuel ratio is still 0). The ace term is not modelled.
+    /// </summary>
+    public void GainExperience(double gain, GameDefines defines, ModifierSet country)
+    {
+        var air = defines.NAir;
+        var added = FixedPoint.Truncate(FixedPoint.Truncate(gain * air.FIELD_EXPERIENCE_FACTOR) * (1 + country.Get(StaticModifiers.AirMissionXpGainFactor)));
+        Experience = Math.Clamp(Experience + added, 0, air.AIR_WING_XP_MAX);
     }
 
     /// <summary>

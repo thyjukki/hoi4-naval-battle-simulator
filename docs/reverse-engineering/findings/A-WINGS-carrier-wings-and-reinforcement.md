@@ -178,7 +178,8 @@ airfx = existing external AirFX of the side holding this wing (side+0x100) or a 
 0x197a6a0(airfx, add, now, eff): airfx.planes(+0x5c) = Σ wing planes; airfx.offered(+0x58) = min(add, +0x5c);
                                  airfx+0xc0 = eff; airfx+0x70 = date; airfx+0x80 = 0
 new AirFX: pushed into the side's first group (side+0xe8[0]).+0x58; wing gets the combat (0xf5af10)
-afterwards 0xf64af0(wing, used) gives the wing experience for the used planes
+afterwards 0xf64af0(wing, used): used × CLOSE_AIR_SUPPORT_EXPERIENCE_SCALE to the country's air experience, not
+the wing's (corrected by A-XP)
 ```
 - **Cap per air hour, not cumulative** (the reset at 0xc584e4): this **disagrees** with A-air-combat "`+0x3e8` is never
   decreased". Each air hour the side can take up to `cap` newly offered planes again.

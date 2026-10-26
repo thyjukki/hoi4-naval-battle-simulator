@@ -214,12 +214,12 @@ public sealed class AirPhase
             var ratios = defines.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
             var defendingShare = 1.0 - (ratios.Length == 0 ? 0.5 : ratios[Math.Clamp(StanceIndex(enemy), 0, ratios.Length - 1)]);
             var intercepted = Math.Min(flying, AirRules.Interception(strikeWings, defenders, defendingShare, defines, random));
-            RemoveLosses(group, intercepted);
+            RemoveLosses(group, intercepted, own.Participant.CountryModifiers);
 
             var targetAntiAir = target.Role == ShipRole.Convoy ? 0 : CombatStatRules.AntiAir(target, defines);
             var inReach = (int)Math.Ceiling(Math.Max(0, flying - intercepted) * stacking);
             var shotDown = Math.Min(flying - intercepted, AirRules.PreemptiveAntiAir(targetAntiAir, agility, inReach, defines, random));
-            RemoveLosses(group, shotDown);
+            RemoveLosses(group, shotDown, own.Participant.CountryModifiers);
             group.CountedPlanes = group.Planes;
 
             var strikers = flying - intercepted - shotDown;
@@ -361,11 +361,11 @@ public sealed class AirPhase
 
     // [RE] A-LOSSES (0x197a1dc): losses go to the strike wings executing naval strike, in order [ASSUMED]; an external
     // wing loses at most the planes it offered at its last join.
-    private static void RemoveLosses(AirGroup group, int losses)
+    private void RemoveLosses(AirGroup group, int losses, ModifierSet country)
     {
         var limit = group.IsExternal ? Math.Min(losses, group.Offered) : losses;
         var removed = Math.Min(limit, group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).Sum(wing => wing.Planes));
-        AirRules.RemoveLosses(group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).ToList(), removed);
+        AirRules.RemoveLosses(group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).ToList(), removed, defines, country);
 
         if (group.IsExternal)
         {
@@ -423,6 +423,10 @@ public sealed class AirPhase
     public bool AccidentsEnabled { get; set; } = true;
 
     private readonly Dictionary<BattleSide, double> detection = new();
+
+    // A-XP: the experience the region's air war gives, applied after it (attacker side, wing, gain); and the air wars run.
+    private readonly List<(BattleSide Side, AirWing Wing, double Gain)> pendingExperience = [];
+    private int regionAirWars;
 
     /// <summary>A-DETECT: each side's air detection in the region in the last air hour's region air war.</summary>
     public IReadOnlyDictionary<BattleSide, double> RegionDetection => detection;
@@ -575,8 +579,20 @@ public sealed class AirPhase
 
         if (!applyLosses)
         {
+            pendingExperience.Clear();
             return;
         }
+
+        // A-XP [RE + LOG]: the experience gained in the fights counts from here (the stats of this hour's war and escorts
+        // read the experience from its start); none in the battle's first air hour (the game's fuel ratio is still 0).
+        var firstAirHour = regionAirWars++ == 0;
+
+        foreach (var (side, wing, gain) in firstAirHour ? [] : pendingExperience)
+        {
+            wing.GainExperience(gain, defines, side.Participant.CountryModifiers);
+        }
+
+        pendingExperience.Clear();
 
         // 0xf87550: the losses come off the wings after the whole air war.
         foreach (var side in new[] { Attacker, Defender })
@@ -586,7 +602,7 @@ public sealed class AirPhase
                 foreach (var wing in group.Wings.Where(wing => wing.RegionLosses > 0).ToList())
                 {
                     var removed = Math.Min(wing.Planes, wing.RegionLosses);
-                    wing.Planes -= removed;
+                    wing.LosePlanes(removed, defines, side.Participant.CountryModifiers);
                     Log.Add($"Hour {hour}: {side.Label} {group.Source} lost {removed} {wing.Plane.ID} in the region's air war");
 
                     // [LOG] A carrier wing emptied in the region's air war is deleted from its pool.
@@ -595,6 +611,16 @@ public sealed class AirPhase
                         group.Wings.Remove(wing);
                     }
                 }
+            }
+        }
+
+        // A-XP [RE + LOG] 0xf82110: after the losses, the land naval-strike wings with effective planes complete their
+        // ground mission (AIR_WING_XP_GROUND_MISSION_COMPLETED_GAIN).
+        foreach (var side in firstAirHour ? [] : new[] { Attacker, Defender })
+        {
+            foreach (var entry in lists[side].RegionList.Where(entry => !entry.Carrier && entry.Strike && entry.Planes > 0 && entry.Wing.Planes > 0))
+            {
+                entry.Wing.GainExperience(defines.NAir.AIR_WING_XP_GROUND_MISSION_COMPLETED_GAIN, defines, side.Participant.CountryModifiers);
             }
         }
     }
@@ -685,6 +711,17 @@ public sealed class AirPhase
             defender.Left = defender.AirSuperiority && anyStrike
                 ? defender.Planes
                 : Math.Max(1, (int)Math.Round(seen, MidpointRounding.AwayFromZero));
+        }
+
+        // A-XP [RE + LOG] 0xf81a20: before the fights every attacker entry gains trunc(min(1, trunc(Σ defender weights ×
+        // COMBAT_MULTIPLANE_CAP) / Σ attacker planes) × AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN); a wing on both lists twice.
+        var attackerPlanes = attackers.Sum(entry => entry.Planes);
+
+        if (attackerPlanes > 0)
+        {
+            var ratio = Math.Min(1, FixedPoint.Truncate(FixedPoint.Truncate(defenders.Sum(entry => entry.Left) * defines.NAir.COMBAT_MULTIPLANE_CAP) / attackerPlanes));
+            var gain = FixedPoint.Truncate(ratio * defines.NAir.AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN);
+            pendingExperience.AddRange(attackers.Select(entry => (own, entry.Wing, gain)));
         }
 
         // A-STATS-GETTERS: the sort reads the stats without the province (no mission efficiency, no home defence), the
@@ -843,7 +880,7 @@ public sealed class AirPhase
 
                         if (lost > 0)
                         {
-                            wing.Planes -= Math.Min(lost, wing.Planes);
+                            wing.LosePlanes(lost, defines, country);
                             lines.Add($"Hour {hour}: {side.Label} {pools[(start + k) % pools.Count].Source} lost {lost} {wing.Plane.ID} in an accident");
                         }
 

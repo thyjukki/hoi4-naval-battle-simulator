@@ -414,8 +414,11 @@ public static class AirRules
                FixedPoint.Truncate(FixedPoint.Truncate(losses * air.ACE_DEATH_CHANCE_PLANES_MULT) * defines.Hardcoded.AceChancePlanesScale);
     }
 
-    /// <summary>[ASSUMED] Removes lost planes from the wings in order (strike wings first); the game's split is not decoded.</summary>
-    public static void RemoveLosses(IEnumerable<AirWing> wings, int losses)
+    /// <summary>
+    /// [ASSUMED] Removes lost planes from the wings in order (strike wings first); the game's split is not decoded. Each
+    /// wing's experience loses the killed pilots' (A-XP).
+    /// </summary>
+    public static void RemoveLosses(IEnumerable<AirWing> wings, int losses, GameDefines defines, ModifierSet country)
     {
         foreach (var wing in wings)
         {
@@ -425,7 +428,7 @@ public static class AirRules
             }
 
             var removed = Math.Min(wing.Planes, losses);
-            wing.Planes -= removed;
+            wing.LosePlanes(removed, defines, country);
             losses -= removed;
         }
     }

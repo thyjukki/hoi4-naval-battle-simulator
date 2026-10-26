@@ -175,6 +175,24 @@ public sealed class NAirDefines
     /// <summary>Experience needed to progress to the next level</summary>
     public double[] AIR_WING_XP_LEVELS { get; set; } = [100.0, 300.0, 700.0, 900.0];
 
+    /// <summary>A-XP: factor on all air experience gain.</summary>
+    public double FIELD_EXPERIENCE_FACTOR { get; set; } = 0.7;
+
+    /// <summary>A-XP: per plane experience cap.</summary>
+    public double AIR_WING_XP_MAX { get; set; } = 1000.0;
+
+    /// <summary>A-XP: experience of a pilot lost with his plane (blended out of the wing's average).</summary>
+    public double AIR_WING_XP_LOSS_WHEN_KILLED { get; set; } = 300;
+
+    /// <summary>A-XP: experience gain of the wings fighting in the region's air war, per air hour.</summary>
+    public double AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN { get; set; } = 0.8;
+
+    /// <summary>A-XP: experience gain of bombers completing their mission (land naval-strike wings), per air hour.</summary>
+    public double AIR_WING_XP_GROUND_MISSION_COMPLETED_GAIN { get; set; } = 0.28;
+
+    /// <summary>A-XP: reduction of the killed pilots' experience loss over friendly territory.</summary>
+    public double AIR_WING_XP_LOSS_REDUCTION_OVER_FRIENDLY_TERRITORY_FACTOR { get; set; } = 0.3;
+
     /// <summary>Base chance % (0 - 100) for accident to happen. Reduced with higher reliability stat.</summary>
     public double ACCIDENT_CHANCE_BASE { get; set; } = 0.1;
 

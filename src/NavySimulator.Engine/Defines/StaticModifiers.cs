@@ -74,6 +74,8 @@ public sealed class StaticModifiers
     public const string AirInterceptEfficiency = "air_intercept_efficiency";
     public const string AirNavEfficiency = "air_nav_efficiency";
     public const string AirMissionEfficiency = "air_mission_efficiency";
+    public const string AirMissionXpGainFactor = "air_mission_xp_gain_factor";
+    public const string AirWingXpLossWhenKilledFactor = "air_wing_xp_loss_when_killed_factor";
     public const string AirRangeFactor = "air_range_factor";
     public const string AirAccidents = "air_accidents";
     public const string AirAccidentsFactor = "air_accidents_factor";

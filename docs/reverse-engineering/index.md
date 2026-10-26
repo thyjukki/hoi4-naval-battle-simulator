@@ -717,7 +717,7 @@ From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]: the type keyword bits,
 | 0xf59760 / 0xf59c00 / 0xf59f70 / 0xf5a1f0 | CAirWing ctors; reinforce timer `+0xa20` = REINFORCEMENT_DISABLING_DURATION_IN_LAND_CARRIER_TRANSFER; priority `+0x28` = REINFORCEMENT_AIRBASE_PRIORITY_DEFAULT; preference `+0x9cc` = 1 | A-REINFORCE | [WINGS/reinforce] |
 | 0xf5a480 | CAirWingPool ctor (0x48 bytes; vtable 0x297ae38) | A-WINGS | [WINGS/objects] |
 | 0xf5aad0 | wing owner tag: `wing+0x9c4` if set (exile), else `[pool+0x40]+0x90` | A-WINGS | [WINGS/objects] |
-| 0xf5add0 | AddAirplanes(wing, variant, n, xp): equipment pool += n, `wing+0x7c` = pool count ("AddAirplanes - nAdd") | A-REINFORCE | [WINGS/reinforce] |
+| 0xf5add0 | AddAirplanes(wing, variant, n, xp): equipment pool += n, `wing+0x7c` = pool count ("AddAirplanes - nAdd"); passes `xp` to 0xf63e00 as xpNew | A-REINFORCE, A-XP | [WINGS/reinforce], [XP/xp] |
 | 0xf5cc60 | CanReinforce(wing, variant): below max size, ready, not transferring, timer expired, same allowed missions, `+0xa28 == variant+0x42c`, **not on a carrier whose task force is in combat** (0xf5cda2), preference | A-REINFORCE | [WINGS/reinforce] |
 | 0xf5d0a0 | CanSwap(wing, variant): same missions, needed type, preference, holds a variant that 0xbd7dc0 accepts; no combat check | A-REINFORCE | [WINGS/reinforce] |
 | 0xf5f000 | wing max size: land `land_air_wing_size`, carrier `carrier_air_wing_size` / mega / submarine (0x101b080); sub-unit type bit 33 → base capacity `base+0x78` | A-REINFORCE | [WINGS/reinforce] |
@@ -725,14 +725,14 @@ From [A-WINGS-carrier-wings-and-reinforcement.md][WINGS]: the type keyword bits,
 | 0xf62750 | wing hourly update: ready timer `+0x64 → +0x60`, not-ready wings into `strategicAir+0x70`. **disagrees** (MSAVE): its only caller path found is the air manager daily 0xc50040 → 0xc46030 → 0xf62a50 | A-REINFORCE | [WINGS/reinforce], [MSAVE/eff] |
 | 0xf63100 | fighter-type test on the pool's sub-unit `type` (`& 0x100000c00`) | A-INTERCEPT, A-WINGS | [WINGS/types] |
 | 0xf632c0 | reinforcement preference `wing+0x9cc`: 0 obsolete only, 1 any, 2 only current, 3 only same ("unhandled reinforcement setting") | A-REINFORCE | [WINGS/reinforce] |
-| 0xf63fa0 | Reinforce(wing, variant, amount): `n = min(amount, max − planes)`, manpower-limited, AddAirplanes; returns the rest | A-REINFORCE | [WINGS/reinforce] |
+| 0xf63fa0 | Reinforce(wing, variant, amount): `n = min(amount, max − planes)`, manpower-limited, AddAirplanes with xp = `wing+0x9c8 > 0 ? [0x3335b40] : 0`; returns the rest | A-REINFORCE, A-XP | [WINGS/reinforce], [XP/xp] |
 | 0xf64190 | Swap(wing, variant, amount): add `min(amount, planes)` new planes, `wing+0x88 +=` the same | A-REINFORCE | [WINGS/reinforce] |
-| 0xf64af0 | experience for the planes used on a mission | A-EXTERNAL | [WINGS/ext] |
+| 0xf64af0 | (corrected, A-XP) `g = used × CLOSE_AIR_SUPPORT_EXPERIENCE_SCALE` → 0xf64770, the **country's** air experience (0x12a6370); no wing experience | A-EXTERNAL, A-XP | [WINGS/ext], [XP/xp] |
 | 0xf667b0 | available missions `wing+0x30` = equipment missions `+0x2c`, + naval kamikaze for fighter-type sub-units of a kamikaze-capable country, + mines (DLC 0x13), − training, − air supply below MIN_PLANE_COUNT_AIR_SUPPLY | A-WINGS | [WINGS/strike] |
 | 0xf66dd0 | return `wing+0x88` planes to the stockpile (0xe6f910) and recount | A-REINFORCE | [WINGS/reinforce] |
 | 0xf78160 | external efficiency = disruption factor (see the main table) | A-EXTERNAL | [WINGS/ext] |
 | 0xf78360 | mission plane budget: `round(planes × effectiveness)`; carrier × CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO[stance]; missile / kind-2 bases | A-EXTERNAL | [WINGS/ext] |
-| 0xf82110 | mission execution in an air hour: dispatch on `executing_mission` (0x10 / 0x80 naval, 0x8000 patrol, 0x100 port, …); joins targets while budget remains, not for 0x8 / 0x10000 | A-EXTERNAL | [WINGS/ext] |
+| 0xf82110 | mission execution in an air hour: dispatch on `executing_mission` (0x10 / 0x80 naval, 0x8000 patrol, 0x100 port, …); joins targets while budget remains, not for 0x8 / 0x10000; at the end (bit ≠ 0x10000) wing XP 0xf5dfa0(AIR_WING_XP_GROUND_MISSION_COMPLETED_GAIN, or _RECON_ with mission+0x14 bit 14) (0xf827f6..0xf8281b) | A-EXTERNAL, A-XP | [WINGS/ext], [XP/xp] |
 | 0xf82ca0 | mission joins one combat target: disruption eff (0xf78160), side `vt+0xf0` = 0x16205c0 with sub = 0 | A-EXTERNAL | [WINGS/ext] |
 | 0xf84d40 / 0xf87820 | air mission reader / writer: `type` +0x10, `executing_mission` +0x14, `period` +0x18, `active` +0x20, `effectiveness` +0xd8, `effective_planes_count` +0xe0 | A-WINGS | [WINGS/objects] |
 | 0xf852a0 | mission enable / disable a mission bit (`type`); clears `executing_mission` when its bit goes | A-WINGS | [WINGS/strike] |
@@ -872,7 +872,7 @@ From [A-REGION-carrier-wings-in-the-region-air-war.md][REG]: how carrier wings o
 | 0xf7be70 | one attacker vs the defenders: engaged `min(Σleft × MULTIPLANE_CAP, n)`, per defender 0xf862a0 with shares, disruption `+0xb0`, ace earn rolls 0x82b / 0x833 / 0x834 / int 0x83f | A-REGION | [REG/combat] |
 | 0xf7ee40 | mission region: `+0x30`, else the carrier location's region | A-REGION | [REG/lists] |
 | 0xf80540 | defender weights `n`, `left`: `max(1, round(trunc(n × k) × (1 + stat37) × w))` (**corrected** by A-DETECT: `n × k` in fixed point; stat37 = air_visibility_factor), w CAS 2 / port 100 / strategic 1 + mod 4 / else 1; AS defenders `n` when a strike mission is present | A-REGION | [REG/war] |
-| 0xf81a20 | region air combat `(region, prov, tag, attackers, defenders)`: planes = `effective_planes_count`, detection, 0xf80540, attacker XP, 0xf7be70 per attacker | A-REGION | [REG/war] |
+| 0xf81a20 | region air combat `(region, prov, tag, attackers, defenders)`: planes = `effective_planes_count`, detection, 0xf80540, attacker XP `g = trunc(min(1, trunc(totD × CAP) / totA) × AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN)` to every attacker entry (0xf81bc1..0xf81c76), 0xf7be70 per attacker | A-REGION, A-XP | [REG/war], [XP/xp] |
 | 0xf81ce0 | per defending country sums → war support / statistics (0xd026f0); no combat effect | A-REGION | [REG/war] |
 | 0xf862a0 | defender losses: `dmg = pot × COMBAT_DAMAGE_STATS_MULTILPIER + speed bonus − agility reduction`; `x = max(0.001, scale × dmg × 0.01 / defence)`, scale `COMBAT_DAMAGE_SCALE_CARRIER` if both carrier, random rounding U 0xacf below the cap; `+0x98 += losses`; killer rolls 0xade / 0xae5 | A-REGION | [REG/combat] |
 | 0xf87550 | apply the hour's air-war losses: ace death 0xa50 / 0xa53, 0xf63580, carrier in combat → 0x15c4500 (naval combat tally) | A-REGION, A-LOSSES | [REG/losses] |
@@ -935,6 +935,8 @@ From [A-STATS-plane-stats-and-air-modifiers.md][AST]: how a wing's stats are bui
 | 0xc62ba0 | country: 0xf661a0 for every pool (from 0x6eab50) | A-STATS | [AST/cache] |
 | 0xd23780 | targeted-modifier entry → holder `+0x130` | A-REGION | [AST/mods] |
 | 0xf5dfa0 | (update) XP gain `trunc(trunc(trunc(g × FIELD_EXPERIENCE_FACTOR) × fuelRatio) × (1 + air_mission_xp_gain_factor + ace))`, clamp [0, AIR_WING_XP_MAX] | A-STATS | [AST/mods] |
+| 0xf64770 | country air experience from a mission (fuel ratio, 0x12a6370), reached from 0xf64af0 and 0xf5d820; never writes `wing+0x218` | A-XP | [XP/xp] |
+| wing +0x218 / +0x9c8 | experience (fixed; logged as `xp`) / a count that makes refills bring the global at 0x3335b40 (unidentified) | A-XP | [XP/xp] |
 | 0xf5e400 | per-mission stat array of one mission bit (null if none) | A-STATS | [AST/cache] |
 | 0xf5e890 | (update) home defence if the province's region equals the base region (land: base province; carrier: fleet region 0xd6d160), else power projection, to attack and defence; M by the executing mission | A-STATS, A-REGION | [AST/getters] |
 | 0xf60760 | (update) the country's `air_maximum_speed_factor` is never read; speed from `wing+0x580` (base array) × (1 + ace) | A-STATS, A-INTERCEPT | [AST/getters] |
@@ -969,7 +971,7 @@ From [A-REGION-SYNC-carrier-wing-region.md][SYNC]: what gives a task force's car
 | 0xc00000 | InCombat(unit): `unit+0x1b4 > 0` | A-REGION-SYNC | [SYNC/tick] |
 | 0xc02781 (in 0xc01dc0) | unit movement, naval unit entering a province: 0xd6fff0(tf, P) before SetLocation (vt+0xe8) | A-REGION-SYNC | [SYNC/move] |
 | 0xc482a0 | CSupplyConsumer base ctor: +0x20 / +0x28 / +0x30 = 1.0, +0x38 = −1, +0x40 = 1.0, +0x1c type | A-REGION-SYNC | [SYNC/eff] |
-| 0xc543e0 | base entry fuel ratio `clamp(received +0xf0 / fuel_consumption +0xe0, 0, 1)`, 1 if consumption ≤ 0 | A-REGION-SYNC | [SYNC/eff] |
+| 0xc543e0 | base entry fuel ratio `clamp(received +0xf0 / fuel_consumption +0xe0, 0, 1)`, 1 if consumption ≤ 0; also the XP gain's fuel factor (0 in a battle's first air hour, [LOG]) | A-REGION-SYNC, A-XP | [SYNC/eff], [XP/xp] |
 | 0xc54ed0 | base entry supply ratio (entry +0x30) for a tag | A-REGION-SYNC | [SYNC/eff] |
 | 0xc5c000 / 0xf63f50 | per base / per pool: 0xf643a0 for every wing (from task force SetLocation 0xd77c70) | A-REGION-SYNC | [SYNC/move] |
 | 0xc60df0 | base entry (CStrategicAir base access) reader / ctor: `countries` block, +0xd0 operational_status = 1, +0xd8..+0xf0 = 0 | A-REGION-SYNC | [SYNC/eff] |
@@ -1067,7 +1069,7 @@ From [A-ACCIDENT-land-wing-accidents.md][ACC]: the hourly accident pass, its loc
 | 0xc60290 | accident per entry: local hash `next()`, gate `u < 10000`, start pool, per eligible wing draw u2, `p_raw > u2 / 10` → 0xf5dd80(next() % 1e5), stop | A-ACCIDENT | [ACC/pass] |
 | 0xf5dd80 | accident effect: n = 0x715310(planes · u3); RemovePlanes; wing+0x84 += n; ace death u3 ≤ ACE_DEATH_CHANCE_BASE | A-ACCIDENT | [ACC/effect] |
 | 0xf61d70 | accident chance: 0 if type 0 / no planes / mission inactive (non-training); rel = stat 0x41; xp `air_accidents_factor`; owner | A-ACCIDENT | [ACC/chance] |
-| 0xf63e00 | wing XP average after a plane-count change (formula in the A-EXTERNAL row) | A-ACCIDENT | [ACC/effect] |
+| 0xf63e00 | wing XP average after a plane-count change: `xp = n > 0 ? max(0, (old × xp + (n − old) × xpNew) / n) : 0` (raw integer division); losses pass xpKilled, refills 0 | A-ACCIDENT, A-XP | [ACC/effect], [XP/xp] |
 | 0xf80920 | mission active with a region | A-ACCIDENT | [ACC/chance] |
 
 ### Mixed plane variants in a wing (A-MIXED)
@@ -2111,6 +2113,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [AST/mission]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-mission-eff-which-mission-efficiency-0xf7ed40
 [AST/effectiveness]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-effectiveness-air-keys-in-the-mission-effectiveness-0xf78500
 [AST/xp]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-xp-the-experience-holder-and-air_untrained_pilots_penalty_factor-0xf65f20
+[XP/xp]: findings/A-XP-air-wing-experience-in-battle.md
 [AST/accident]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-accident-no-accidents-for-carrier-wings-without-a-mission-type
 [AST/mods]: findings/A-STATS-plane-stats-and-air-modifiers.md#a-stats-mods-air-country-modifiers-in-a-naval-battle
 [SYNC]: findings/A-REGION-SYNC-carrier-wing-region.md

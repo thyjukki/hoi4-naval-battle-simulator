@@ -173,6 +173,14 @@ The stats are those of A-STATS (region war getter). Then each side's air superio
 
 Not modelled: the weather and night terms of the stats (none in TFB; vanilla night `air_attack_factor` −0.5), the distance weight for wings over other regions, aces in air-to-air combat, the region's air superiority, interception missions. Land wings' effectiveness: A-COVERAGE; accidents: A-ACCIDENT.
 
+## A-XP: air wing experience in battle [RE + LOG]
+
+From [A-XP](../reverse-engineering/findings/A-XP-air-wing-experience-in-battle.md). A wing's experience (`wing+0x218`, 0 in generated saves) sets the experience malus or bonus of A-STATS-XP (`RegionAirWarRules.ExperienceModifier`), which only the region's air war reads. It changes in battle three ways (fixed point, products truncated):
+- **Air war gain** (0xf81a20, before the fights of each side's turn): every attacker entry, so a wing on both lists twice, gains `trunc(min(1, trunc(Σ defender weights × COMBAT_MULTIPLANE_CAP) / Σ attacker planes) × AIR_WING_XP_AIR_VS_AIR_COMBAT_GAIN)`, through 0xf5dfa0: `trunc(trunc(g × FIELD_EXPERIENCE_FACTOR) × fuel) × (1 + air_mission_xp_gain_factor)`, up to `AIR_WING_XP_MAX` (0.8 × 0.7 = 0.56 an air hour). Defenders gain nothing.
+- **Ground mission** (0xf82110, after the region losses): land naval-strike wings with effective planes gain `AIR_WING_XP_GROUND_MISSION_COMPLETED_GAIN` (0.28 → 0.196).
+- **Plane changes** (0xf63e00): lost planes (region war, AA, interception, accidents) take pilots with `trunc(lossF × AIR_WING_XP_LOSS_WHEN_KILLED)` (300 at sea) out of the average, `xp = max(0, (old × xp − lost × 300) / new)`; stock planes bring 0.
+No gain in the battle's first air hour (the game's fuel ratio is 0 then) and none from naval strikes or from joining a naval battle (that experience goes to the country). The air war's own stats read the experience from the start of its hour; the engine applies the hour's gains, then the loss blend, then the ground-mission gain after the war and its escorts. [LOG] The decoded rules reproduce all 11,861 logged wing experience values of two constant-roll battles; the engine's wing experience matches the game's for every wing and air hour checked. Not modelled: the ace term of the gain, the friendly-territory share (0 over a sea region). Code: `AirWing.GainExperience`, `AirWing.LosePlanes`, `AirWing.Reinforce`, `AirPhase.RegionAirWar`.
+
 ## A-DETECT: a side's air detection in the region [RE]
 
 From [A-DETECT](../reverse-engineering/findings/A-DETECT-region-air-detection.md) (0xf77730, the game's tooltip "Aircraft detection"). Each air hour, for each side (its country) over the battle's region:
