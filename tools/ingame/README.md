@@ -209,6 +209,11 @@ One folder per run under `output/ingame/<save>_<timestamp>/<seed>/` (or `--out`)
 - `rolls.csv`: every `random_fixed` call of the combat update in call order: hour, sequence, source line, value, and the
   index of the shot loop it fell in (-1 outside one); since 2026-10-20 also the generator's integer draws (`int` = 1,
   value = n / 2^31: the air target pick 0x43f and bookkeeping draws).
+- `landwings.csv` (since 2026-10-26): every land-based wing with a mission over `--air-region` (default 30), read by its
+  handle at the start of each combat hour, after that hour's region air war: planes, mission type and executing, the
+  region air war's disruption taken and escort value, the disruption after escorts, the region change penalty, the
+  mission effectiveness and the wing's experience. Air superiority wings never enter the combat, so this is their only
+  record. Carrier and naval-strike wings carry the same fields (and `xp`) in `raw.jsonl`'s air records.
 - `raw.jsonl`: everything the logger sent, including every member's state at the start of each hour. With the rolls
   it lets `NavySimulator replay --log <run folder>` fight each hour with the game's own dice (S-REPLAY in
   [surface.md](../../docs/mechanics/surface.md)). Air (since 2026-10-20): per strike attempt (`air`) the air object's

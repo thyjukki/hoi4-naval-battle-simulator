@@ -193,6 +193,31 @@ const FORCED_INT_SITES = new Set([
 // shared by every air base in the world, so the engine cannot follow it; the engine's free replay turns its own off.
 let noAccidents = null;
 
+// A-REGION: land-based wings to read every combat hour by handle {69, id} (run_battles.py: every land wing with a mission
+// over the battle's region), so the air superiority wings, which never enter the combat, are logged too.
+let watchedWings = [];
+const watchHandle = Memory.alloc(8);
+
+function landWings() {
+  const out = [];
+  for (const id of watchedWings) {
+    watchHandle.writeU32(69);
+    watchHandle.add(4).writeU32(id);
+    const resolved = resolveHandle(watchHandle);
+    if (resolved.isNull()) {
+      out.push({ id, gone: true });
+      continue;
+    }
+    const w = resolved.sub(0x10);
+    // wing +0x7c planes, +0xa0 / +0xa4 mission type / executing; mission object at +0x90: +0xa8 disruption, +0xb0 taken,
+    // +0xb8 escort, +0xc0 region change penalty (= wing+0x150, A-COVERAGE-REFILL), +0xd8 effectiveness
+    out.push({ id, planes: w.add(0x7c).readS32(), type: w.add(0xa0).readU32(), executing: w.add(0xa4).readU32(),
+      disruption: s64(w.add(0x90 + 0xa8)), taken: s64(w.add(0x90 + 0xb0)), escort: s64(w.add(0x90 + 0xb8)),
+      penalty: s64(w.add(0x90 + 0xc0)), effectiveness: s64(w.add(0x90 + 0xd8)), xp: s64(w.add(0x218)) }); // +0x218 wing experience (A-ACCIDENT, A-STATS-XP)
+  }
+  return out;
+}
+
 let ticks = 0;
 let airLog = []; // air objects that tried to strike since the last hour record
 let current = null; // the combat being updated: { key, hour, thread, start, rolls, shots, damage }
@@ -222,6 +247,7 @@ Interceptor.attach(base.add(RVA.combatUpdate), {
       key: combat.toString(), hourAtUpdate: combat.add(0x44).readS32(), thread: this.threadId,
       start: [sideState(combat.add(0x28).readPointer(), true), sideState(combat.add(0x30).readPointer(), true)],
       rolls: [], shots: [], damage: [],
+      landWings: guard(landWings)() || [],
       sidePointers: [combat.add(0x28).readPointer().toString(), combat.add(0x30).readPointer().toString()],
     };
   }),
@@ -249,6 +275,7 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       carrierRatio: ratioLog,
       airObjects: [airObjects(combat.add(0x28).readPointer()), airObjects(combat.add(0x30).readPointer())],
       forcedOutside,
+      landWingsStart: current && current.key === combat.toString() ? current.landWings : [],
     };
     forcedOutside = 0;
     airLog = [];
@@ -392,6 +419,7 @@ function wingHandles(fx, off) {
         rec.taken = s64(w.add(0x90 + 0xb0));
         rec.escort = s64(w.add(0x90 + 0xb8));
         rec.effectiveness = s64(w.add(0x90 + 0xd8));
+        rec.xp = s64(w.add(0x218)); // wing experience (A-STATS-XP)
         // A-ACE: the wing's ace handle at +0x2e8; ace +0x158 alive, +0x170 its common/aces template (+0x30 chance, fx5)
         const aceHandle = w.add(0x2e8);
         if (aceHandle.readU32() !== 0 || aceHandle.add(4).readU32() !== 0) {
@@ -518,6 +546,7 @@ rpc.exports = {
     forcedInt = Math.floor(raw * 2147483648 / 100000);
     return { fixed: forcedRoll, int: forcedInt };
   },
+  watchWings(ids) { watchedWings = ids; return watchedWings.length; },
   disableAccidents() {
     if (noAccidents === null) {
       noAccidents = new NativeCallback(() => {}, 'void', ['pointer', 'pointer']); // kept referenced while replaced

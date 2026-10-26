@@ -180,6 +180,7 @@ def run_one(save_path, seed, out_dir, args):
         return
 
     index = savefile.ship_index(save, set(args.locations) if args.locations else None)
+    land_wings = save.region_land_wings(args.air_region)
     out_dir.mkdir(parents=True, exist_ok=True)
     messages = queue.Queue()
     session = None
@@ -189,6 +190,8 @@ def run_one(save_path, seed, out_dir, args):
         script = session.create_script(AGENT.read_text(encoding="utf-8"))
         script.on("message", lambda message, _data: messages.put(message))
         script.load()
+        if land_wings:
+            script.exports_sync.watch_wings([wing_id for _, wing_id, _ in land_wings])
         if args.constant_roll is not None:
             # S-REPLAY-CONSTANT: the rolls the engine also makes all return this value (battle_logger.js), and the
             # accident pass is off (its generator is shared by every air base in the world)
@@ -201,6 +204,7 @@ def run_one(save_path, seed, out_dir, args):
             raise RuntimeError("game window not found")
         console(hwnd, [c for c in args.commands.split(";") if c] + [f"gamespeed {args.speed}"])
         hours = record(messages, hwnd, out_dir, args)
+        write_land_wings(out_dir, hours, land_wings)
     finally:
         if session is not None:
             try:
@@ -292,6 +296,25 @@ def record(messages, hwnd, out_dir, args):
 
 WEAPONS = {0: "heavy", 1: "torpedo", 2: "light"}
 ROLL_LINES = {0x587: "hit", 0x593: "damage", 0x59F: "crit"}
+
+
+def write_land_wings(out_dir, hours, land_wings):
+    """landwings.csv: every watched land wing at the start of each combat hour (after that hour's region air war)."""
+    if not land_wings:
+        return
+    info = {wing_id: (country, sub_unit) for country, wing_id, sub_unit in land_wings}
+    with (out_dir / "landwings.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["combat", "tick", "hour", "wing", "country", "subUnit", "planes", "type", "executing", "taken",
+                    "escort", "disruption", "penalty", "effectiveness", "xp"])
+        for h in hours:
+            for s in h.get("landWingsStart") or []:
+                country, sub_unit = info.get(s["id"], (None, None))
+                if s.get("gone"):
+                    w.writerow([h["combat"], h["tick"], h["hourAtUpdate"], s["id"], country, sub_unit])
+                    continue
+                w.writerow([h["combat"], h["tick"], h["hourAtUpdate"], s["id"], country, sub_unit, s["planes"], s["type"], s["executing"],
+                            *(s[k] / FX for k in ("taken", "escort", "disruption", "penalty", "effectiveness")), s.get("xp", 0) / FX])
 
 
 def write_outputs(out_dir, hours, index, meta):
@@ -405,6 +428,8 @@ def main():
     parser.add_argument("--load-timeout", type=int, default=600)
     parser.add_argument("--settle", type=float, default=5, help="seconds to wait after loading before typing")
     parser.add_argument("--stall-seconds", type=float, default=8)
+    parser.add_argument("--air-region", type=int, default=30,
+                        help="strategic region whose land-based wings are logged every hour (landwings.csv; default 30)")
     parser.add_argument("--constant-roll", type=float,
                         help="every combat roll the engine also makes is this U in [0, 1) (whole fx5 steps); "
                              "compare with NavySimulator replay --constant-roll U")

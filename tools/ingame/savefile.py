@@ -217,6 +217,41 @@ class SaveFile:
                 result.setdefault(tag, {})[key] = float(value)
         return result
 
+    def region_land_wings(self, region):
+        """A-REGION: [(country, wing id, sub-unit)] of every land-based air wing (a pool at an air base without a carrier)
+        whose mission flies over strategic region `region`, from strategic_air."""
+        start = next(i for i, line in enumerate(self.lines) if line.rstrip("\r") == "strategic_air={")
+        end = self._block_end(start)
+        base_id = re.compile(r"id=(\d+) type=65")
+        carrier_bases = set()
+        for line, i in self._children(start, end):
+            if line == "air_base={":
+                block = self.lines[i:self._block_end(i) + 1]
+                base = next((base_id.search(l) for l in block if "type=65" in l), None)
+                if base and any(l.strip().startswith("carrier=") for l in block):
+                    carrier_bases.add(base.group(1))
+        result = []
+        for line, i in self._children(start, end):
+            if not re.fullmatch(r"[A-Z0-9]{3}=\{", line):
+                continue
+            country = line[:3]
+            for pool_line, pool in self._children(i, self._block_end(i)):
+                if pool_line != "air_wing_pool={":
+                    continue
+                fields = {l.split("=", 1)[0]: l for l, _ in self._children(pool, self._block_end(pool))}
+                base = base_id.search(fields.get("air_base", ""))
+                if base is None or base.group(1) in carrier_bases:
+                    continue
+                definition = fields.get("definition", "=").split("=", 1)[1]
+                for wing_line, wing in self._children(pool, self._block_end(pool)):
+                    if wing_line != "air_wings={":
+                        continue
+                    text = "\n".join(self.lines[wing:self._block_end(wing) + 1])
+                    wing_id = re.search(r"id=(\d+) type=69", text)
+                    if wing_id and re.search(rf"strategic_region={region}(?!\d)", text):
+                        result.append((country, int(wing_id.group(1)), definition))
+        return result
+
     def unit_modifier_records(self, country):
         """S-DOCTRINE-SAVE: (type, number, id) of the country's deployment={ unit_modifiers={ ... } } records."""
         deployment = next((i for key, i in self.country_children(country) if key == "deployment"), None)
