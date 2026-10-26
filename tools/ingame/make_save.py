@@ -5,6 +5,9 @@ Usage: python make_save.py SCENARIO TEMPLATE [--out NAME] [--data DIR] [--define
 SCENARIO is a scenario file in the data directory (for example jukki_usa_vs_bc_japan.json). TEMPLATE is a plain-text
 save with one task force of each side in one sea province, at war, where the battle has started or starts at once
 (for example light_attack_vs_torp_cruiser_battle_start.hoi4). The script:
+  0. removes the two battle countries' planes that the scenario does not define: every air wing pool of theirs in
+     strategic_air (the template's land and carrier wings) and every plane in their production stock, so the save holds
+     only the scenario's carrier wings, land-based wings and stockpile (--keep-template-planes keeps them);
   1. runs `NavySimulator list-ships` for the scenario's ships (design, hull, modules by slot, ship type, max HP,
      organization, manpower, experience);
   2. per side, puts the MIOs it uses into the country's MIO list with its unlocked traits and policy (S-MIO-SAVE), and
@@ -35,7 +38,9 @@ save with one task force of each side in one sea province, at war, where the bat
      the battle (the attacker);
  12. puts the side's land-based wings at the country's air base (--air-base, default Burgas 329 for BUL and Dobrogea
      350 for ROM in the CL3 template) on their mission over the battle's strategic region (--air-region, default 30):
-     `mission={ type=16 or 1 ... strategic_region=30 region_change_penalty=0 }` (A-MISSION-SAVE).
+     `mission={ type=16 or 1 ... strategic_region=30 region_change_penalty=0 }` (A-MISSION-SAVE), and sets the base's
+     level to the side's airBases level; it warns when the side's otherPlanes differ from the planes left at the base
+     (A-COVERAGE).
 A design on a hull the country has no free variant of gets a copy of the country's variant on a hull of the same family
 (e.g. ship_hull_carrier_2 for ship_hull_carrier_3) with a new id.
 The attacker's task force is the template combat's attacker, or the task force of --attacker-country (in the CL3
@@ -380,6 +385,78 @@ def write_carrier_wings(save, country, side, carrier_ids, variants, ids, region=
     else:
         save.replace(air_end, air_end - 1, [line + eol for line in [f"\t{country}={{"] + pools + ["\t}"]])
     return len(bases) // 14, sum(1 for line in pools if line == "\t\tair_wing_pool={"), total
+
+
+def plane_types(data):
+    """The plane equipment ids of the imported planes (data/planes)."""
+    ids = set()
+    for path in (Path(data) / "planes").glob("*.json"):
+        content = json.loads(path.read_text(encoding="utf-8"))
+        for plane in content if isinstance(content, list) else content.get("planes") or []:
+            if isinstance(plane, dict) and "id" in plane:
+                ids.add(plane["id"])
+    return ids
+
+
+def strip_template_planes(save, parsed, countries, planes):
+    """Removes the countries' planes that the scenario does not define: every air wing pool of theirs in strategic_air
+    (land and carrier wings) and every plane in their production stock. Deletes the lines at once, so it runs before
+    any edit is recorded. Returns {country: (pools, wings, planes in wings, planes in stock)}."""
+    if save.edits:
+        raise RuntimeError("strip_template_planes must run before any other edit")
+    variants = parsed.variants()
+    blocks, counts = [], {}
+    air = save.top_level("strategic_air")
+    for key, i in save.children(air):
+        if key not in countries:
+            continue
+        pools = [j for k, j in save.children(i) if k == "air_wing_pool"]
+        wings = planes_in_wings = 0
+        for pool in pools:
+            for k, wing in save.children(pool):
+                if k == "air_wings":
+                    wings += 1
+                    planes_in_wings += int(next(save.text(j).strip().split("=", 1)[1] for k2, j in save.children(wing) if k2 == "count"))
+            blocks.append((pool, save.block_end(pool)))
+        counts[key] = [len(pools), wings, planes_in_wings, 0]
+    for country in countries:
+        block = save.child(save.top_level("countries"), country)
+        equipments = save.child(save.child(block, "production"), "equipments") if block is not None else None
+        for k, i in save.children(equipments) if equipments is not None else []:
+            if k != "equipment":
+                continue
+            end = save.block_end(i)
+            text = " ".join(save.text(j).strip() for j in range(i, end + 1))
+            variant = MIO_VARIANT_70.search(text)
+            amount = re.search(r"amount=([\d.]+)", text)
+            if variant and variants.get(int(variant.group(1))) and variants[int(variant.group(1))].equipment_type in planes:
+                blocks.append((i, end))
+                counts.setdefault(country, [0, 0, 0, 0])[3] += round(float(amount.group(1))) if amount else 0
+    for start, end in sorted(blocks, reverse=True):
+        del save.lines[start:end + 1]
+    return counts
+
+
+MIO_VARIANT_70 = re.compile(r"id=(\d+) type=70")
+
+
+def set_air_base_level(save, state, level):
+    """A-COVERAGE: sets the level of the template's air base in `state`; returns the level it had, or None without one."""
+    air = save.top_level("strategic_air")
+    for key, i in save.children(air):
+        if key != "air_base":
+            continue
+        fields = {k: j for k, j in save.children(i)}
+        if "state" in fields and save.text(fields["state"]).strip() == f"state={state}":
+            line = fields.get("level")
+            old = int(save.text(line).strip().split("=", 1)[1]) if line is not None else None
+            if old != level:
+                if line is None:
+                    raise RuntimeError(f"air base in state {state} has no level line")
+                text = save.text(line)
+                save.replace(line, line, [f"{text[: len(text) - len(text.lstrip())]}level={level}{save.eol(line)}"])
+            return old
+    return None
 
 
 # A-MISSION-SAVE: the mission bit of each land-based mission keyword.
@@ -1080,6 +1157,9 @@ def main():
                              ", ".join(f"{k}={v}" for k, v in DEFAULT_AIR_BASES.items()))
     parser.add_argument("--air-region", type=int, default=30, help="strategic region of the land-based missions (default 30)")
     parser.add_argument("--force", action="store_true", help="overwrite an existing output save")
+    parser.add_argument("--keep-template-planes", action="store_true",
+                        help="keep the battle countries' planes that the scenario does not define (the template's air wings "
+                             "and plane stock); by default they are removed, so the save holds only the scenario's planes")
     parser.add_argument("--keep-block-order", action="store_true",
                         help="do not move the countries' deployment blocks (doctrine sub-unit records) before their units")
     args = parser.parse_args()
@@ -1094,6 +1174,11 @@ def main():
     parsed = savefile.SaveFile(template)
     save = Lines(template)
     attacker_tf, defender_tf, location = battle_task_forces(save, parsed, args)
+    if not args.keep_template_planes:
+        # Only the scenario's planes: the template's other wings (bases, carriers) and plane stock of both countries go.
+        stripped = strip_template_planes(save, parsed, {attacker_tf.country, defender_tf.country}, plane_types(args.data))
+        for country, (pools, wings, wing_planes, stock) in sorted(stripped.items()):
+            print(f"{country}: removed the template's planes: {wings} air wings ({wing_planes} planes) in {pools} pools, {stock} planes in stock")
     unit_line = next(i for i in range(200) if save.text(i).startswith("unit="))
     unit_counter = start_counter = int(save.text(unit_line).split("=")[1])
     blocks = variant_blocks(save)
@@ -1139,8 +1224,18 @@ def main():
             if states and found is None:
                 sys.exit(f"{role}: the template has no air base in state {next(iter(states))}")
             if found is not None:
-                print(f"  {role}: air base {found[0]} (state {next(iter(states))}): level {found[1]}, {found[2]} planes stationed before the scenario's "
-                      "(set the side's airBases level and otherPlanes to these)")
+                state = next(iter(states))
+                setup = next((b for b in side.get("airBases") or [] if b["state"] == state), None)
+                level = found[1]
+                if setup and setup.get("level") is not None:
+                    set_air_base_level(save, state, setup["level"])
+                    level = setup["level"]
+                print(f"  {role}: air base {found[0]} (state {state}): level {level}" + (f" (was {found[1]})" if level != found[1] else "") +
+                      f", {found[2]} planes stationed before the scenario's")
+                other = (setup or {}).get("otherPlanes", 0)
+                if setup is None or other != found[2]:
+                    warnings.append(f"{role}: the scenario's air base in state {state} has otherPlanes {other} and level "
+                                    f"{(setup or {}).get('level')}; the save has {found[2]} other planes there at level {level}")
             base_id = found[0] if found else args.air_base.get(tf.country) or DEFAULT_AIR_BASES.get(tf.country)
             if base_id is None:
                 sys.exit(f"{role}: no air base for {tf.country}'s land-based planes; pass --air-base {tf.country}=<air base id>")

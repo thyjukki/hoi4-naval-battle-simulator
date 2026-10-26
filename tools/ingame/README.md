@@ -119,6 +119,13 @@ python compare.py ../../output/ingame/<save>_<timestamp> [more game folders] ../
 python make_calibration.py ../../output/ingame/<save>_<timestamp> [more game folders] --id <case> --scenario <scenario>.json --attacker BUL --sim ../../output/<scenario>_<timestamp> --sim-commit <commit>
 ```
 
+`make_save.py` removes the two battle countries' planes that the scenario does not define (the template's air wings
+and plane stock; `--keep-template-planes` keeps them), so a land wing's air base holds only the scenario's planes and
+`otherPlanes` is 0; it writes the scenario's air base level into the save. The air saves before 2026-10-26 kept the CL3
+template's planes (1,000 BUL fighters at Burgas, refilled from the 10,011-fighter stock at every day change); they are
+kept as `<scenario>_battle_start_template_planes.hoi4`, and their batches (`air_batch1` … `air_batch7`) replay with a
+copy of the scenario whose Burgas base has `otherPlanes` 1000.
+
 `make_calibration.py` keeps each seed once (the copy with roll logs if there are several), maps the countries to the
 scenario's sides (`--attacker`) and the game's variant names to design IDs (`--design "39LC LA=39lc_la_aa3"`; saves from
 `make_save.py` already use the IDs of their time). A design edited after its battles were recorded keeps the recorded

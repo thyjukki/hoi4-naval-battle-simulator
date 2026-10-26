@@ -183,6 +183,8 @@ public static class ListShipsCommand
             prideOfTheFleet = side.PrideOfTheFleet is { } pride ? new { ship = pride.ID, design = pride.Design.ID } : null,
             // S-DOMINANCE-DAILY: the side's start value in the battle region, when the scenario sets one (else the ships' sum).
             navalDominanceStart = side.NavalDominanceStart,
+            // A-COVERAGE: the side's air bases (make_save.py writes their level into the save and checks the other planes).
+            airBases = side.AirBases.Select(setup => new { state = setup.Base.State, level = setup.Level, otherPlanes = setup.OtherPlanes, supplyRatio = setup.SupplyRatio }).ToList(),
             admiral = side.Admiral is { } admiral
                 ? new { id = admiral.ID, name = admiral.Name, skills = admiral.BaseSkills, traits = admiral.Traits.Select(trait => trait.ID).ToList() }
                 : null,
