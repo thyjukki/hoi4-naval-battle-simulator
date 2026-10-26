@@ -386,8 +386,11 @@ function wingHandles(fx, off) {
         rec.available = w.add(0x30).readU32();
         rec.type = w.add(0xa0).readU32();
         rec.executing = w.add(0xa4).readU32();
-        // the wing's mission object at +0x90: +0xa8 disruption taken, +0xd8 effectiveness (A-WINGS-EXT)
+        // the wing's mission object at +0x90: +0xa8 disruption after escorts, +0xb0 disruption taken in the region air
+        // war, +0xb8 its escort value (air superiority), +0xd8 effectiveness (A-WINGS-EXT, A-REGION-DISRUPT)
         rec.disruption = s64(w.add(0x90 + 0xa8));
+        rec.taken = s64(w.add(0x90 + 0xb0));
+        rec.escort = s64(w.add(0x90 + 0xb8));
         rec.effectiveness = s64(w.add(0x90 + 0xd8));
         // A-ACE: the wing's ace handle at +0x2e8; ace +0x158 alive, +0x170 its common/aces template (+0x30 chance, fx5)
         const aceHandle = w.add(0x2e8);

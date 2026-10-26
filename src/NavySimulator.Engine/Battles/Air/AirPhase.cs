@@ -548,11 +548,14 @@ public sealed class AirPhase
         }
 
         // 0xf77360 / 0xc4c570: escorts of the side's air superiority missions cancel its disruption; only its region
-        // missions keep what is left (scrambled-only wings are never disrupted).
+        // missions keep what is left (scrambled-only wings are never disrupted). [RE + LOG] Both sums run over the region
+        // list and the scrambled list, so a carrier wing on both counts twice in each and a land wing once (the
+        // constant-roll air_cv_land_mix battle logged every mission's taken and escort: the game's share left is
+        // 1 − 2E / (2C + L), 0.250429, where the deduplicated sums gave 0.25416).
         foreach (var side in new[] { Attacker, Defender })
         {
             var (regionList, scrambled) = lists[side];
-            var wings = regionList.Concat(scrambled).GroupBy(entry => entry.Wing).Select(entries => entries.First()).ToList();
+            var wings = regionList.Concat(scrambled).ToList();
             var taken = wings.Sum(entry => entry.Wing.DisruptionTaken);
             var escorts = wings.Where(entry => entry.AirSuperiority)
                 .Sum(entry => RegionAirWarRules.Escort(entry.Planes, RegionAirWarRules.Stats(entry.Wing, defines, side.Participant.CountryModifiers),

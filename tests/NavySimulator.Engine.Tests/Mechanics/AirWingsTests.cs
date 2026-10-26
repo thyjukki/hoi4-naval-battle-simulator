@@ -3,6 +3,7 @@ using NavySimulator.Engine.Battles.Air;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Random;
+using NavySimulator.Engine.Stats;
 using NavySimulator.Engine.Tests.TestSupport;
 
 namespace NavySimulator.Engine.Tests.Mechanics;
@@ -161,6 +162,41 @@ public class AirWingsTests
         Assert.Equal(Gain(20), Gain(21), 9);
         Assert.Equal(Gain(21) / 2, Gain(22), 9);
         Assert.Equal(Gain(22), Gain(23), 9);
+    }
+
+    [Fact]
+    public void RegionEscorts_CountACarrierWingOnBothListsTwice_AndALandWingOnce()
+    {
+        // A-REGION [RE + LOG] 0xc4c570: the taken and escort sums run over the region list and the scrambled list, so the
+        // share left is 1 − 2E / (2C + L) for carrier wings C and E on both and a land wing L on the region list only.
+        var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 40 });
+        var wings = new Dictionary<string, List<CarrierAirwingAssignment>>
+        {
+            [carrier.ID] = [new CarrierAirwingAssignment("cv_nb", 2, 10), new CarrierAirwingAssignment("cv_f", 1, 10)]
+        };
+        var attacker = new BattleParticipant(new Fleet("a", [carrier], wings), null, [], [], carrierStanceIndex: 4,
+            landBasedAirwings: [new LandBasedAirwing("nb", 50)], carrierWingsOnRegionMission: true);
+        var defender = new BattleParticipant(new Fleet("d", [TestEntityFactory.Capital("bb")]), null, [], [],
+            landBasedAirwings: [new LandBasedAirwing("cv_f", 100, Mission: LandBasedAirwing.AirSuperiority)]);
+        var scenario = new BattleScenario("air", "ocean", "clear", 1, null, attacker, defender, Planes(), defines, new BattleRules());
+        var phase = new AirPhase(scenario, new BattleSide("attacker", attacker), new BattleSide("defender", defender));
+
+        phase.RegionAirWar(1, new ConstantRandomSource(0.5));
+
+        var groups = phase.GroupsOf(phase.Attacker);
+        var carrierWings = groups.Where(group => group.Carrier is not null).SelectMany(group => group.Wings).ToList();
+        var land = groups.Single(group => group.LandBased is not null).Wings.Single();
+        var bomber = carrierWings.First(wing => wing.ExecutesNavalStrike);
+        var fighter = carrierWings.Single(wing => wing.IsFighter);
+        var country = attacker.CountryModifiers;
+        var escort = RegionAirWarRules.Escort(fighter.Planes, RegionAirWarRules.Stats(fighter, defines, country), defines, country,
+            phase.RegionDetection[phase.Attacker]);
+        var carrierTaken = carrierWings.Sum(wing => wing.DisruptionTaken);
+        var left = 1 - Math.Min(1, 2 * escort / (2 * carrierTaken + land.DisruptionTaken));
+
+        Assert.InRange(left, 0.01, 0.99);
+        Assert.True(land.DisruptionTaken > 0);
+        Assert.Equal(FixedPoint.Truncate(left * bomber.DisruptionTaken), bomber.Disruption, 9);
     }
 
     private Results.BattleResult Simulate(BattleRules rules)
