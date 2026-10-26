@@ -231,6 +231,8 @@ public sealed class BattleSession
         var hourStartStrikes = airStrikes.Count;
         // A-STATS-CACHE [RE]: the hourly air update caches every wing's stats from its mix before anything else.
         airPhase.RefreshWingStats();
+        // A-COVERAGE-REFILL [RE + LOG]: the hourly decay of the land wings' region change penalty.
+        airPhase.DecayRegionChangePenalties();
         // A-ACCIDENT [RE]: then every hour the accident pass, before the region's air war.
         log.AddRange(airPhase.Accidents(hour, random));
         JoinLandBasedPlanes(hour);

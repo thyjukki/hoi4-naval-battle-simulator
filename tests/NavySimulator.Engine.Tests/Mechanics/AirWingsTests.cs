@@ -165,6 +165,30 @@ public class AirWingsTests
     }
 
     [Fact]
+    public void RefilledPlanes_BringTheRegionChangePenalty_WhichDecaysEveryHour()
+    {
+        // A-COVERAGE-REFILL [RE + LOG]: the logged BUL tactical bombers, 76 planes refilled with 18 at the day change:
+        // pen = trunc(18 × 0.9 / 94) = 0.17234; six hours at trunc(0.192 / 24) = 0.008 later 0.12434 (effectiveness 0.87566).
+        var tfb = GameDefines.Vanilla();
+        var bomber = new PlaneEquipment("tac", new PlaneStats(AirAttack: 1), ["tactical_bomber"], ["naval_bomber"], subUnitTypes: ["tactical_bomber"]);
+        var wing = new AirWing(bomber, 76, tfb.Hardcoded);
+
+        wing.Reinforce(bomber, 18, tfb);
+        Assert.Equal(0.17234, wing.RegionChangePenalty, 9);
+
+        for (var hour = 0; hour < 6; hour++)
+        {
+            wing.DecayRegionChangePenalty(tfb);
+        }
+
+        Assert.Equal(0.12434, wing.RegionChangePenalty, 9);
+
+        // Setting the count (a replay's logged planes) brings none.
+        wing.Planes += 10;
+        Assert.Equal(0.12434, wing.RegionChangePenalty, 9);
+    }
+
+    [Fact]
     public void RegionEscorts_CountACarrierWingOnBothListsTwice_AndALandWingOnce()
     {
         // A-REGION [RE + LOG] 0xc4c570: the taken and escort sums run over the region list and the scrambled list, so the

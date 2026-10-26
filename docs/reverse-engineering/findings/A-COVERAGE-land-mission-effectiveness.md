@@ -128,7 +128,56 @@ live supply network (hub flow, railways, the army's consumption), which is not i
 - Region change penalty: make_save writes `region_change_penalty=0`. Load does not call SetRegion with a change, so it
   stays 0 (the logged bombers fly at exactly the crowd factor from the first air hour). It comes back with
   reinforcement: refilled planes enter at `EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR`, blended by plane count
-  (0xf63e00), and the penalty decays every hour by `trunc(gain / 24)` (0.008 for naval bombers, 0.037 for fighters).
+  (0xf63e00), and the penalty decays every hour by `trunc(gain / 24)` (0.008 for naval bombers, 0.037 for fighters);
+  exact rule and timing in A-COVERAGE-REFILL below.
+
+### A-COVERAGE-REFILL: the region change penalty of refilled planes
+
+[RE + LOG, 2026-10-26] The dip of a land wing's effectiveness after a stockpile refill is the mission's
+`region_change_penalty` (`mission+0xc0` = `wing+0x150`), which the land branch of 0xf78500 applies as `× (1 − pen)`
+(carrier wings skip it, A-REGION-SYNC). New planes bring it in; every hour takes some off. Fixed point ×1e5, raw integers:
+```
+on every plane add (0xf63e00(wing, old, xpNew, p, flag), called after wing+0x7c = n, the new count):
+    if n > old:  pen = trunc((old × pen + (n − old) × min(p, EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR)) / n)
+    // p = EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR (0x33382d0) from every plane-adding path: wing creation 0xf59760,
+    // AddAirplanes 0xf5ac50 / 0xf5add0, the stockpile and production refill (0xf66890, 0xf683b8, 0xf63aa3), planes
+    // returned to a wing 0xf66dd0; planes moved from another wing (0xf63af0 ← 0xf674e0) bring the source's own pen.
+    // Removing planes never changes pen. One call per variant offered, so a refill of two variants blends twice.
+every hour (0xf80490 from the wing update 0xf62750, hourly strategic-air job), for a wing with a mission
+(mission+0x10 type != 0) that is not training (type & 0x800 = 0):
+    if pen > 0:  pen = clamp(pen − trunc(gain / 24), 0, 1)
+    gain (0xf7ec90, the pool sub-unit's `type` keywords, sub-unit+0x5a8): CAS bit 14 → _DAILY_GAIN_CAS,
+         naval bomber bit 15 → _NAVAL_BOMBER, tactical bomber bit 12 → _TACTICAL_BOMBER, mask 0x100000400 (fighter,
+         heavy fighter) → _FIGHTER, strategic bomber bit 13 → _STRATEGIC_BOMBER, bit 21 → _MARITIME_PATROL_PLANE,
+         else _DEFAULT   (vanilla / TFB 0.888, 0.192, 0.192, 0.888, 0.072 / TFB 0.1, 1, 1 a day)
+effectiveness (land wings, in the air hours): e = … × (1 − pen) × …, as in the land branch above.
+```
+Timing [LOG]: the daily refill (A-REINFORCE, the day-change tick) comes before that tick's hourly decay, so a wing
+refilled at the day change has `trunc(old × pen + added × 0.9) / n` reduced once in the tick of the refill and once in
+every following tick: an air hour h ticks after the refill reads `pen_refill − h × trunc(gain / 24)`. Example
+(`constant_roll_air_clean/u007/air_cv_land_mix`): BUL's land tactical bombers, 76 planes, get the 18 old
+`tac_bomber_equipment_0` of the stock at the day change → `pen = 18 × 90000 / 94 = 17234`; 6 hours later (air hour
+17) `17234 − 6 × 800 = 12434` → e = 0.87566; air hour 25: 6034 → 0.93966; air hour 33: 0 → 1. With TFB's gains a
+tactical bomber needs `0.9 / 0.008 = 112.5` hours to recover a fully new wing, a fighter 24.3.
+
+**Engine state per land wing:** `pen` (start: the save's `region_change_penalty`, 0 from make_save.py); the blend on
+every plane add (the daily refill per variant, the creation of a wing); the hourly decay by the wing's sub-unit type
+(every hour, not only air hours, only while the wing has a mission); `× (1 − pen)` in the land effectiveness (also the
+region air war's effective planes `round(planes × e)`, A-REGION). Carrier wings take none.
+
+**Validation** (`penalty_model.py` in the session scratchpad): every logged land wing effectiveness (`raw.jsonl` →
+`air[].wings[].effectiveness`, the land bombers; the land fighters on air superiority are not in the combat log):
+- the clean saves (only the scenario's planes): the 8 constant-roll runs (`constant_roll_air_clean/u005`, `u007`) and the
+  20 random seeds (`air_clean_batch`): **2,232 of 2,232** values exact to 1e-5, the 47 with a penalty included;
+- the template-plane saves (crowding from the CL3 template's 1,000 BUL fighters at Burgas, + 100 AS fighters assumed
+  full): `constant_roll_air` 103 of 112, `air_batch3` / `air_batch5` 2,185 of 2,282; every miss has pen = 0 and is the
+  unlogged crowding (±1 plane of the fighters, or late hours of one constant-roll battle with more planes at Burgas).
+  The parent analysis that read the hour-17 dip at Burgas as 38 extra template planes was this penalty: with it the
+  template's planes stay at 1000 (1000 + 94 + 100 → crowd 0.612 × 0.87566 = 0.5359, the logged value).
+
+**Confidence:** high for the blend and the decay (read in full, every logged value reproduced); high that all plane-adding
+paths pass the factor (operand resolved at each call); medium for the sub-unit type bit names (from A-REGION-SYNC); the
+fighters' decay (0.037 a hour) is not checked in a log (their effectiveness is not logged).
 
 ## Worked numbers (TFB map, region 30 Black Sea)
 

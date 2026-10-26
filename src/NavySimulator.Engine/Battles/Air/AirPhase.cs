@@ -514,10 +514,9 @@ public sealed class AirPhase
                 }
                 else if (group.LandBased is { } landBased)
                 {
-                    var effectiveness = LandEffectiveness(side, group, conditions);
-
                     foreach (var wing in group.Wings.Where(wing => wing.Planes > 0))
                     {
+                        var effectiveness = LandEffectiveness(side, group, conditions, wing);
                         var planes = (int)Math.Round(wing.Planes * effectiveness, MidpointRounding.AwayFromZero);
 
                         if (planes > 0)
@@ -623,17 +622,19 @@ public sealed class AirPhase
 
     // [RE] A-REGION-SYNC / A-COVERAGE 0xf78500: a land wing's effectiveness, clamp(coverage × crowding × supply × its input ×
     // (1 + air_mission_efficiency of the country and the region's weather), 0, 1). Without an air base the input stands
-    // for coverage, crowding and supply.
-    private double LandEffectiveness(BattleSide side, AirGroup group, RegionAirConditions conditions)
+    // for coverage, crowding and supply. A-COVERAGE-REFILL [RE + LOG]: × (1 − the wing's region change penalty) after the
+    // supply (the group's first wing unless another is named).
+    private double LandEffectiveness(BattleSide side, AirGroup group, RegionAirConditions conditions, AirWing? wing = null)
     {
         var landBased = group.LandBased!;
+        var penalty = (wing ?? group.Wings.FirstOrDefault())?.RegionChangePenalty ?? 0;
         var modifier = side.Participant.CountryModifiers.Get(StaticModifiers.AirMissionEfficiency) +
                        conditions.WeatherModifier(StaticModifiers.AirMissionEfficiency);
         var setup = side.Participant.AirBases.FirstOrDefault(entry => entry.Base.State == landBased.AirBase);
 
         if (setup is null)
         {
-            return RegionAirWarRules.Effectiveness(landBased.MissionEfficiency, 1, modifier);
+            return RegionAirWarRules.Effectiveness(FixedPoint.Truncate(landBased.MissionEfficiency * (1 - penalty)), 1, modifier);
         }
 
         var coverage = 1.0;
@@ -647,7 +648,8 @@ public sealed class AirPhase
         // [RE] 0xc4d910: every plane at the base: the side's wings flying from it and the other planes stationed there.
         var planes = setup.OtherPlanes + groups[side].Where(other => other.LandBased?.AirBase == setup.Base.State).Sum(other => other.Planes);
         var crowding = setup.Level is { } level ? AirCoverageRules.Crowding(planes, level, defines) : 1;
-        var baseEfficiency = FixedPoint.Truncate(FixedPoint.Truncate(FixedPoint.Truncate(coverage * crowding) * setup.SupplyRatio) * landBased.MissionEfficiency);
+        var baseEfficiency = FixedPoint.Truncate(FixedPoint.Truncate(FixedPoint.Truncate(FixedPoint.Truncate(coverage * crowding) * setup.SupplyRatio) *
+                                                                     (1 - penalty)) * landBased.MissionEfficiency);
         return RegionAirWarRules.Effectiveness(baseEfficiency, 1, modifier);
     }
 
@@ -776,7 +778,7 @@ public sealed class AirPhase
                 }
 
                 stock[plane.ID] -= take;
-                wing.Add(plane, take);
+                wing.Reinforce(plane, take, defines);
                 added[wing] = added.GetValueOrDefault(wing) + take;
             }
         }
@@ -869,6 +871,18 @@ public sealed class AirPhase
         var factor = 1 + RegionAirWarRules.ExperienceModifier(wing, StaticModifiers.AirAccidentsFactor, country, defines) +
                      country.Get(StaticModifiers.AirAccidentsFactor);
         return FixedPoint.Truncate(FixedPoint.Truncate((air.ACCIDENT_CHANCE_BASE + country.Get(StaticModifiers.AirAccidents)) * reliability) * factor);
+    }
+
+    /// <summary>
+    /// A-COVERAGE-REFILL [RE + LOG] 0xf80490: every hour (not only air hours), before the region's air war, the land wings
+    /// (on their missions) lose some of their region change penalty; carrier wings in combat have no mission type.
+    /// </summary>
+    public void DecayRegionChangePenalties()
+    {
+        foreach (var wing in groups.Values.SelectMany(list => list).Where(group => group.LandBased is not null).SelectMany(group => group.Wings))
+        {
+            wing.DecayRegionChangePenalty(defines);
+        }
     }
 
     /// <summary>A-STATS-CACHE [RE] 0xf661e0: every wing's stats from its current mix, at the start of the hour.</summary>

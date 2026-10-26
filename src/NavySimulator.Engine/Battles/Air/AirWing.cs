@@ -92,6 +92,53 @@ public sealed class AirWing
     }
 
     /// <summary>
+    /// A-COVERAGE-REFILL [RE + LOG] 0xf63e00: planes added to the wing by a refill (one call per variant offered) bring
+    /// <c>EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR</c> into its region change penalty, blended by plane count in fixed
+    /// point: <c>trunc((old × pen + added × factor) / n)</c>. Setting <see cref="Planes"/> (a replay's logged count) does not.
+    /// </summary>
+    public void Reinforce(PlaneEquipment plane, int planes, GameDefines defines)
+    {
+        var old = Planes;
+        Add(plane, planes);
+        var n = Planes;
+
+        if (n > old)
+        {
+            var factor = FixedPoint.Raw(defines.NAir.EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR);
+            RegionChangePenalty = (old * FixedPoint.Raw(RegionChangePenalty) + (n - old) * factor) / n / (double)FixedPoint.Scale;
+        }
+    }
+
+    /// <summary>
+    /// A-COVERAGE-REFILL [RE + LOG]: the mission's region change penalty (mission+0xc0), which a land wing's effectiveness
+    /// takes as × (1 − pen) (A-COVERAGE). 0 at the start (make_save.py writes <c>region_change_penalty=0</c>).
+    /// </summary>
+    public double RegionChangePenalty { get; set; }
+
+    /// <summary>
+    /// A-COVERAGE-REFILL [RE + LOG] 0xf80490: every hour a wing with a mission loses trunc(daily gain / 24) of its
+    /// penalty, the gain by the sub-unit's type keywords in the game's order (0xf7ec90).
+    /// </summary>
+    public void DecayRegionChangePenalty(GameDefines defines)
+    {
+        if (RegionChangePenalty <= 0)
+        {
+            return;
+        }
+
+        var air = defines.NAir;
+        var types = Plane.SubUnitTypes;
+        var gain = types.Contains("cas") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_CAS
+            : types.Contains("naval_bomber") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_NAVAL_BOMBER
+            : types.Contains("tactical_bomber") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_TACTICAL_BOMBER
+            : types.Contains("fighter") || types.Contains("interceptor") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_FIGHTER
+            : types.Contains("strategic_bomber") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_STRATEGIC_BOMBER
+            : types.Contains("scout_plane") ? air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_MARITIME_PATROL_PLANE
+            : air.EFFICIENCY_REGION_CHANGE_DAILY_GAIN_DEFAULT;
+        RegionChangePenalty = Math.Clamp(RegionChangePenalty - FixedPoint.Truncate(gain / 24), 0, 1);
+    }
+
+    /// <summary>
     /// A-STATS-CACHE [RE + LOG] 0xf661e0: recomputes the stats from the current mix. The game does this once an hour, at the
     /// start of the hourly air update, so losses and refills during the hour count from the next one.
     /// </summary>

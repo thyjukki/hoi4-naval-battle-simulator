@@ -982,7 +982,8 @@ From [A-REGION-SYNC-carrier-wing-region.md][SYNC]: what gives a task force's car
 | 0xd77c70 | task force SetLocation (vt+0xe8): carrier pools → 0xf643a0 | A-REGION-SYNC | [SYNC/move] |
 | 0xd79900 | task force mission tick: return if in combat; state +0x4b8 == 0 → 0xfbcb90(tf+0x360) | A-REGION-SYNC | [SYNC/tick] |
 | 0xed0400 | CSupplyConsumer writer: `disrupted_supply` (+0xa0), `motorization_level` (+0x1d) | A-REGION-SYNC | [SYNC/eff] |
-| 0xf63e00 | add planes to a wing: blends region_change_penalty (+0x150) by plane count with min(p, PENALTY_FACTOR) | A-EXTERNAL | [SYNC/eff] |
+| 0xf63e00 | (wing, oldPlanes, xpNew, p, flag) after `wing+0x7c` = n is set: XP `+0x218 = trunc((old × xp + (n − old) × xpNew) / n)`; if n > old: region_change_penalty `+0x150 = trunc((old × pen + (n − old) × min(p, EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR 0x33382d0)) / n)` (raw fx5, p < 0 not capped); then 0xf87290(mission, flag) | A-EXTERNAL, A-COVERAGE | [SYNC/eff], [COV/refill] |
+| 0xf59760, 0xf5ac50, 0xf5add0, 0xf66890, 0xf66dd0, 0xf683b8, 0xf63aa3 | plane-adding callers of 0xf63e00 (wing creation, AddAirplanes, stockpile and production refill, returned planes): pass p = EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR; 0xf63af0 (from 0xf674e0, planes moved between wings) passes the source wing's `+0x150` | A-COVERAGE | [COV/refill] |
 | 0xf643a0 | wing refresh: UpdateCoverage(force); if no province of its region is in range: carrier → command to the fleet's region, land → SetRegion(null); saves / restores type in +0x1b8 | A-REGION-SYNC | [SYNC/move] |
 | 0xf78500 | (update) mission effectiveness, full: `cov (non-carrier) × capacity × supply × (1 − penalty: non-carrier, type & 0x60 = 0) × (1 + air_mission_efficiency: region weather (wings with a region) + country + fleet admiral) × fuel × (1 + targeted)`, clamp [0, 1]; isCarrier = base+0x68 == 0 | A-EXTERNAL, A-REGION-SYNC | [SYNC/eff] |
 | 0xf7af10 | wing can be activated: base gives the country access, no training, and (0xf61600 > 0 or recon / paradrop or at war) | A-REGION-SYNC | [SYNC/tick] |
@@ -1066,7 +1067,7 @@ From [A-ACCIDENT-land-wing-accidents.md][ACC]: the hourly accident pass, its loc
 | 0xc60290 | accident per entry: local hash `next()`, gate `u < 10000`, start pool, per eligible wing draw u2, `p_raw > u2 / 10` → 0xf5dd80(next() % 1e5), stop | A-ACCIDENT | [ACC/pass] |
 | 0xf5dd80 | accident effect: n = 0x715310(planes · u3); RemovePlanes; wing+0x84 += n; ace death u3 ≤ ACE_DEATH_CHANCE_BASE | A-ACCIDENT | [ACC/effect] |
 | 0xf61d70 | accident chance: 0 if type 0 / no planes / mission inactive (non-training); rel = stat 0x41; xp `air_accidents_factor`; owner | A-ACCIDENT | [ACC/chance] |
-| 0xf63e00 | wing XP average after a plane-count change | A-ACCIDENT | [ACC/effect] |
+| 0xf63e00 | wing XP average after a plane-count change (formula in the A-EXTERNAL row) | A-ACCIDENT | [ACC/effect] |
 | 0xf80920 | mission active with a region | A-ACCIDENT | [ACC/chance] |
 
 ### Mixed plane variants in a wing (A-MIXED)
@@ -2133,6 +2134,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [ACC/pass]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-pass-when-and-over-which-wings
 [ACC/chance]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-chance-0xf61d70--0xc4daf0
 [ACC/effect]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-effect-planes-lost-0xf5dd80
+[COV/refill]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-refill-the-region-change-penalty-of-refilled-planes
 [MIX]: findings/A-MIXED-plane-variants-in-a-wing.md
 [MIX/stock]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-stock-which-variants-the-day-tick-gives-a-reinforce
 [MIX/order]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-order-how-a-wing-stores-its-variants

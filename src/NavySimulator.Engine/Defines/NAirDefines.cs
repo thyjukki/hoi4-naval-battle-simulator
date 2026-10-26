@@ -178,6 +178,30 @@ public sealed class NAirDefines
     /// <summary>Base chance % (0 - 100) for accident to happen. Reduced with higher reliability stat.</summary>
     public double ACCIDENT_CHANCE_BASE { get; set; } = 0.1;
 
+    /// <summary>A-COVERAGE-REFILL: penalty applied for changing region; new planes bring it into their wing.</summary>
+    public double EFFICIENCY_REGION_CHANGE_PENALTY_FACTOR { get; set; } = 0.9;
+
+    /// <summary>A-COVERAGE-REFILL: default efficiency regained per day.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_DEFAULT { get; set; } = 1;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by close air support.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_CAS { get; set; } = 0.888;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by naval bombers.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_NAVAL_BOMBER { get; set; } = 0.192;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by tactical bombers.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_TACTICAL_BOMBER { get; set; } = 0.192;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by fighters.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_FIGHTER { get; set; } = 0.888;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by strategic bombers.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_STRATEGIC_BOMBER { get; set; } = 0.072;
+
+    /// <summary>A-COVERAGE-REFILL: efficiency regained per day by maritime patrol planes.</summary>
+    public double EFFICIENCY_REGION_CHANGE_DAILY_GAIN_MARITIME_PATROL_PLANE { get; set; } = 1;
+
     /// <summary>The total accident chance is scaled up when it happens on the carrier ship.</summary>
     public double ACCIDENT_CHANCE_CARRIER_MULT { get; set; } = 1.5;
 
