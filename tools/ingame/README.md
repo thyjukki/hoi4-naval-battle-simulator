@@ -120,8 +120,9 @@ python make_calibration.py ../../output/ingame/<save>_<timestamp> [more game fol
 ```
 
 `make_calibration.py` keeps each seed once (the copy with roll logs if there are several), maps the countries to the
-scenario's sides (`--attacker`) and the game's variant names to design IDs (`--design "39LC LA=39lc_la"`; saves from
-`make_save.py` already use the IDs).
+scenario's sides (`--attacker`) and the game's variant names to design IDs (`--design "39LC LA=39lc_la_aa3"`; saves from
+`make_save.py` already use the IDs of their time). A design edited after its battles were recorded keeps the recorded
+version under a new ID (docs/calibration.md); `NavySimulator replay --design <logged name>=<design id>` maps it.
 
 For each seed the runner writes `nsim_<save>_s<seed>.hoi4` (the template with `multiplayer_random_seed` replaced) to the
 save games folder, points `continue_game.json` at it, starts `hoi4.exe -continuelastsave`, waits for `game.log` to

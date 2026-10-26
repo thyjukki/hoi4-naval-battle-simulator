@@ -15,7 +15,7 @@
       "startHourOfDay": 12
     },
     "attacker": {
-      "fleetID": "75_39lc_la",
+      "fleetID": "75_39lc_la_aa3",
       "aggressiveness": "AlwaysEngage",
       "repairPriority": "NeverRepair",
       "researchIDs": ["light_upgrade_1", "torpedo_upgrade_1", "smoke_generator", "damage_control_1", "damage_control_2"],

@@ -9,6 +9,28 @@
         "36lc_a3_la3": 27,
         "39lc_la": 10
       }
+    },
+    {
+      "id": "75_39lc_la_aa3",
+      "shipDesigns": {
+        "39lc_la_aa3": 75
+      }
+    },
+    {
+      "id": "Jukki_bb_fleet_usa_20261019",
+      "shipDesigns": {
+        "shbb_4battery_2aa": 6,
+        "39_battleship_pure_la": 8,
+        "39lc_la_aa3": 27
+      }
+    },
+    {
+      "id": "japan_bc_dd_shbb_20261019",
+      "shipDesigns": {
+        "shbb_4battery_2aa": 5,
+        "39_battlecruiser_pure_la": 12,
+        "dd_3_la": 54
+      }
     }
   ]
 }

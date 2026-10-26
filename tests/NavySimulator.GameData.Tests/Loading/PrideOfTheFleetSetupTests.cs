@@ -23,12 +23,12 @@ public sealed class PrideOfTheFleetSetupTests : IDisposable
     public void TheFirstShipOfTheDesign_IsThePride()
     {
         var (scenario, loader) = Build(side => side.PrideOfTheFleet = "39_battleship_pure_la");
-        var pride = scenario.Attacker.PrideOfTheFleet!;
+        var pride = scenario.Defender.PrideOfTheFleet!;
 
-        Assert.Equal("Jukki_bb_fleet_usa_39_battleship_pure_la_001", pride.ID);
+        Assert.Equal("Jukki_bb_fleet_usa_20261019_39_battleship_pure_la_001", pride.ID);
         Assert.True(pride.IsPrideOfTheFleet);
-        Assert.All(scenario.Attacker.Fleet.Ships, ship => Assert.Same(pride, ship.PrideOfTheFleet));
-        Assert.Null(scenario.Defender.PrideOfTheFleet);
+        Assert.All(scenario.Defender.Fleet.Ships, ship => Assert.Same(pride, ship.PrideOfTheFleet));
+        Assert.Null(scenario.Attacker.PrideOfTheFleet);
         Assert.DoesNotContain(loader.Warnings, warning => warning.Contains("pride", StringComparison.Ordinal));
     }
 
@@ -36,10 +36,10 @@ public sealed class PrideOfTheFleetSetupTests : IDisposable
     public void ADesignOutsideTheFleet_IsAnError_AndAScreenAWarning()
     {
         var exception = Assert.Throws<SetupValidationException>(() => Build(side => side.PrideOfTheFleet = "dd_3_la"));
-        Assert.Contains("battleScenario.attacker.prideOfTheFleet names design 'dd_3_la', which is not in fleet 'Jukki_bb_fleet_usa'.", exception.Errors);
+        Assert.Contains("battleScenario.defender.prideOfTheFleet names design 'dd_3_la', which is not in fleet 'Jukki_bb_fleet_usa_20261019'.", exception.Errors);
 
-        var (_, loader) = Build(side => side.PrideOfTheFleet = "39lc_la");
-        Assert.Contains(loader.Warnings, warning => warning.StartsWith("attacker: the pride of the fleet (39lc_la) is a ", StringComparison.Ordinal) &&
+        var (_, loader) = Build(side => side.PrideOfTheFleet = "39lc_la_aa3");
+        Assert.Contains(loader.Warnings, warning => warning.StartsWith("defender: the pride of the fleet (39lc_la_aa3) is a ", StringComparison.Ordinal) &&
                                                     warning.EndsWith(", not a capital ship or carrier; it is simulated anyway.", StringComparison.Ordinal));
     }
 
@@ -48,7 +48,7 @@ public sealed class PrideOfTheFleetSetupTests : IDisposable
         var loader = new SetupLoader();
         var catalog = loader.ReadCatalog(data);
         var scenario = SetupLoader.ReadScenario(data, Scenario);
-        edit(scenario.Attacker);
+        edit(scenario.Defender);
         return (loader.BuildScenario(catalog, scenario), loader);
     }
 }

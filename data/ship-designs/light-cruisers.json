@@ -125,6 +125,24 @@
         "mid_2_custom_slot": "ship_light_battery_3",
         "rear_1_custom_slot": "ship_light_battery_3"
       }
+    },
+    {
+      "id": "39lc_la_aa3",
+      "hullID": "ship_hull_cruiser_3",
+      "modules": {
+        "fixed_ship_battery_slot": "ship_light_medium_battery_3",
+        "fixed_ship_anti_air_slot": "ship_anti_air_3",
+        "fixed_ship_fire_control_system_slot": "ship_fire_control_system_2",
+        "fixed_ship_radar_slot": "ship_radar_2",
+        "fixed_ship_engine_slot": "cruiser_ship_engine_3",
+        "fixed_ship_secondaries_slot": "dp_ship_secondaries_2",
+        "fixed_ship_armor_slot": "ship_armor_cruiser_3",
+        "front_1_custom_slot": "ship_light_battery_3",
+        "mid_1_custom_slot": "ship_light_battery_3",
+        "mid_2_custom_slot": "ship_light_battery_3",
+        "rear_1_custom_slot": "ship_light_battery_3",
+        "rear_2_custom_slot": "ship_light_battery_3"
+      }
     }
   ]
 }

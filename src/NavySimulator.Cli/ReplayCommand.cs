@@ -16,6 +16,7 @@ public static class ReplayCommand
 
     public const string Usage = """
         Usage: NavySimulator replay --log <run folder> [--data <dir>] [--scenario <file>] [--defines <path>]... [--details <n>] [--shots <file>] [--states <file>] [--air <file>] [--region <file>]
+                                [--design <game name>=<design id>]...
 
           --log <dir>         A run folder of tools/ingame/run_battles.py (meta.json, raw.jsonl), logged with rolls
           --data <dir>        Data directory (default: ./data)
@@ -26,6 +27,8 @@ public static class ReplayCommand
           --states <file>     Write every end-of-hour ship value that differs, as CSV
           --air <file>        Write every air strike, game and engine side by side, as CSV
           --region <file>     Write the region air war check per wing and air hour (engine from the game's start, game), as CSV
+          --design <a>=<b>    The logged variant name a is the scenario's design b (a design renamed after the battle was
+                              recorded, docs/calibration.md). Repeatable.
 
         Each hour starts from the game's logged state and is fought with the game's rolls; the attacker is the game's.
         """;
@@ -41,6 +44,7 @@ public static class ReplayCommand
         string? statesFile = null;
         string? airFile = null;
         string? regionFile = null;
+        var designNames = new Dictionary<string, string>(StringComparer.Ordinal);
 
         for (var i = 0; i < args.Length; i++)
         {
@@ -86,6 +90,17 @@ public static class ReplayCommand
                 case "--region":
                     regionFile = args[++i];
                     break;
+                case "--design":
+                    var pair = args[++i].Split('=', 2);
+
+                    if (pair.Length != 2 || pair[0].Length == 0 || pair[1].Length == 0)
+                    {
+                        Console.Error.WriteLine($"--design expects <game name>=<design id>, got '{args[i]}'.");
+                        return 2;
+                    }
+
+                    designNames[pair[0]] = pair[1];
+                    break;
                 default:
                     Console.Error.WriteLine($"Unknown argument '{args[i]}'.");
                     Console.Error.WriteLine(Usage);
@@ -105,7 +120,7 @@ public static class ReplayCommand
 
         try
         {
-            log = GameBattleLog.Read(logDirectory);
+            log = GameBattleLog.Read(logDirectory, designNames);
             var loader = new SetupLoader();
             var catalog = loader.ReadCatalog(data);
             var scenarioDto = SetupLoader.ReadScenario(data, scenarioFile);

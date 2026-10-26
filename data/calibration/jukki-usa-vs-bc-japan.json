@@ -5,453 +5,675 @@
   "mods": [
     "Their Finest Bruh (local dev checkout over vanilla 1.19.3)"
   ],
-  "notes": "Mixed fleets generated into a save by tools/ingame/make_save.py (save jukki_usa_vs_bc_japan_battle_start.hoi4, Black Sea template, 1936.5.6.12): USA (BUL) 8 39_battleship_pure_la, 27 39lc_la, 6 shbb_4battery_2aa against Japan (ROM) 12 39_battlecruiser_pure_la, 54 dd_3_la, 5 shbb_4battery_2aa; 15 researches each, experience 20, Always Engage, Never repair. Weather off (the runner types 'weather'), so no night. The game makes ROM the combat attacker; the scenario's attacker is the USA. Seeds with rollLog replay with the game's own rolls (NavySimulator replay); all 11 match every shot as of 48972a4.",
+  "notes": "Mixed fleets generated into a save by tools/ingame/make_save.py (save jukki_usa_vs_bc_japan_battle_start.hoi4, Black Sea template, 1936.5.6.12): USA (BUL) 8 39_battleship_pure_la, 27 39lc_la_aa3, 6 shbb_4battery_2aa against Japan (ROM) 12 39_battlecruiser_pure_la, 54 dd_3_la, 5 shbb_4battery_2aa; 15 researches each, experience 20, Always Engage, Never repair. Weather off (the runner types 'weather'), so no night. The game makes ROM (Japan) the combat attacker, and so does the scenario (since 2026-10-20; before, the USA attacked in the simulator). Seeds with rollLog replay with the game's own rolls (NavySimulator replay); all 11 match every shot as of 3798b54. The recorded 39lc_la (AA 3, fire control 2, radar 2, DP secondaries 2) is the design 39lc_la_aa3 since the user's 39lc_la was upgraded on 2026-10-19; replay its seeds with --design 39lc_la=39lc_la_aa3.",
   "scenario": "jukki_usa_vs_bc_japan_no_doctrines.json",
-  "attackerCountry": "BUL",
+  "attackerCountry": "ROM",
   "conditions": {
     "startHourOfDay": 13,
     "weather": "clear",
     "weatherEnabled": false,
     "terrain": "ocean"
   },
-  "summary": {
-    "runs": 27,
-    "durationHours": {
-      "mean": 187.63,
-      "sd": 14.56,
-      "min": 161,
-      "max": 214
+  "summary": [
+    {
+      "runs": 27,
+      "durationHours": {
+        "mean": 187.63,
+        "sd": 14.56,
+        "min": 161,
+        "max": 214
+      },
+      "outcomes": {
+        "AttackerVictory": 27
+      },
+      "sides": [
+        {
+          "side": "attacker",
+          "hpLeft": {
+            "mean": 8307.36,
+            "sd": 558.49,
+            "min": 6865.0,
+            "max": 9204.5
+          },
+          "sunk": {
+            "mean": 3.7,
+            "sd": 1.77,
+            "min": 0,
+            "max": 7
+          }
+        },
+        {
+          "side": "defender",
+          "hpLeft": {
+            "mean": 466.07,
+            "sd": 149.67,
+            "min": 250.2,
+            "max": 763.5
+          },
+          "sunk": {
+            "mean": 25.37,
+            "sd": 3.18,
+            "min": 18,
+            "max": 30
+          }
+        }
+      ],
+      "designs": [
+        {
+          "side": "attacker",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "retreated": {
+            "mean": 0.19,
+            "sd": 0.4,
+            "min": 0,
+            "max": 1
+          },
+          "remaining": {
+            "mean": 11.81,
+            "sd": 0.4,
+            "min": 11,
+            "max": 12
+          },
+          "hpLeft": {
+            "mean": 3957.7,
+            "sd": 339.22,
+            "min": 3187.2,
+            "max": 4677.6
+          }
+        },
+        {
+          "side": "attacker",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": {
+            "mean": 3.7,
+            "sd": 1.77,
+            "min": 0,
+            "max": 7
+          },
+          "retreated": {
+            "mean": 18.26,
+            "sd": 3.97,
+            "min": 10,
+            "max": 26
+          },
+          "remaining": {
+            "mean": 32.04,
+            "sd": 3.86,
+            "min": 24,
+            "max": 39
+          },
+          "hpLeft": {
+            "mean": 1569.57,
+            "sd": 104.42,
+            "min": 1272.9,
+            "max": 1760.5
+          }
+        },
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "retreated": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "remaining": {
+            "mean": 5,
+            "sd": 0.0,
+            "min": 5,
+            "max": 5
+          },
+          "hpLeft": {
+            "mean": 2780.09,
+            "sd": 342.95,
+            "min": 2150.0,
+            "max": 3327.7
+          }
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": {
+            "mean": 6.37,
+            "sd": 1.01,
+            "min": 5,
+            "max": 8
+          },
+          "retreated": {
+            "mean": 1.63,
+            "sd": 1.01,
+            "min": 0,
+            "max": 3
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 73.53,
+            "sd": 58.26,
+            "min": 0.0,
+            "max": 175.8
+          }
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": {
+            "mean": 14.37,
+            "sd": 2.39,
+            "min": 9,
+            "max": 18
+          },
+          "retreated": {
+            "mean": 12.63,
+            "sd": 2.39,
+            "min": 9,
+            "max": 18
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 300.51,
+            "sd": 77.22,
+            "min": 169.5,
+            "max": 458.0
+          }
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": {
+            "mean": 4.63,
+            "sd": 1.04,
+            "min": 2,
+            "max": 6
+          },
+          "retreated": {
+            "mean": 1.37,
+            "sd": 1.04,
+            "min": 0,
+            "max": 4
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 92.03,
+            "sd": 86.64,
+            "min": 0.0,
+            "max": 282.5
+          }
+        }
+      ]
     },
-    "outcomes": {
-      "DefenderVictory": 27
-    },
-    "sides": [
-      {
-        "side": "attacker",
-        "hpLeft": {
-          "mean": 466.07,
-          "sd": 149.67,
-          "min": 250.2,
-          "max": 763.5
-        },
-        "sunk": {
-          "mean": 25.37,
-          "sd": 3.18,
-          "min": 18,
-          "max": 30
-        }
+    {
+      "runs": 200,
+      "durationHours": {
+        "mean": 192.59,
+        "sd": 18.56,
+        "min": 150,
+        "max": 287
       },
-      {
-        "side": "defender",
-        "hpLeft": {
-          "mean": 8307.36,
-          "sd": 558.49,
-          "min": 6865.0,
-          "max": 9204.5
-        },
-        "sunk": {
-          "mean": 3.7,
-          "sd": 1.77,
-          "min": 0,
-          "max": 7
-        }
-      }
-    ],
-    "designs": [
-      {
-        "side": "attacker",
-        "design": "39_battleship_pure_la",
-        "count": 8,
-        "sunk": {
-          "mean": 6.37,
-          "sd": 1.01,
-          "min": 5,
-          "max": 8
-        },
-        "retreated": {
-          "mean": 1.63,
-          "sd": 1.01,
-          "min": 0,
-          "max": 3
-        },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "hpLeft": {
-          "mean": 73.53,
-          "sd": 58.26,
-          "min": 0.0,
-          "max": 175.8
-        }
+      "outcomes": {
+        "AttackerVictory": 200
       },
-      {
-        "side": "attacker",
-        "design": "39lc_la",
-        "count": 27,
-        "sunk": {
-          "mean": 14.37,
-          "sd": 2.39,
-          "min": 9,
-          "max": 18
+      "sides": [
+        {
+          "side": "attacker",
+          "hpLeft": {
+            "mean": 8061.11,
+            "sd": 597.88,
+            "min": 5757.6,
+            "max": 9609.3
+          },
+          "sunk": {
+            "mean": 4.09,
+            "sd": 2.15,
+            "min": 0,
+            "max": 10
+          }
         },
-        "retreated": {
-          "mean": 12.63,
-          "sd": 2.39,
-          "min": 9,
-          "max": 18
-        },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "hpLeft": {
-          "mean": 300.51,
-          "sd": 77.22,
-          "min": 169.5,
-          "max": 458.0
+        {
+          "side": "defender",
+          "hpLeft": {
+            "mean": 468.95,
+            "sd": 127.9,
+            "min": 199.4,
+            "max": 967.9
+          },
+          "sunk": {
+            "mean": 25.48,
+            "sd": 3.1,
+            "min": 15,
+            "max": 32
+          }
         }
-      },
-      {
-        "side": "attacker",
-        "design": "shbb_4battery_2aa",
-        "count": 6,
-        "sunk": {
-          "mean": 4.63,
-          "sd": 1.04,
-          "min": 2,
-          "max": 6
+      ],
+      "designs": [
+        {
+          "side": "attacker",
+          "design": "39_battlecruiser_pure_la",
+          "count": 12,
+          "sunk": {
+            "mean": 0.04,
+            "sd": 0.2,
+            "min": 0,
+            "max": 1
+          },
+          "retreated": {
+            "mean": 0.28,
+            "sd": 0.51,
+            "min": 0,
+            "max": 2
+          },
+          "remaining": {
+            "mean": 11.69,
+            "sd": 0.54,
+            "min": 10,
+            "max": 12
+          },
+          "hpLeft": {
+            "mean": 3851.61,
+            "sd": 372.9,
+            "min": 2897.5,
+            "max": 4751.1
+          }
         },
-        "retreated": {
-          "mean": 1.37,
-          "sd": 1.04,
-          "min": 0,
-          "max": 4
+        {
+          "side": "attacker",
+          "design": "dd_3_la",
+          "count": 54,
+          "sunk": {
+            "mean": 4.04,
+            "sd": 2.14,
+            "min": 0,
+            "max": 10
+          },
+          "retreated": {
+            "mean": 18.33,
+            "sd": 3.89,
+            "min": 10,
+            "max": 31
+          },
+          "remaining": {
+            "mean": 31.63,
+            "sd": 4.59,
+            "min": 19,
+            "max": 41
+          },
+          "hpLeft": {
+            "mean": 1539.64,
+            "sd": 153.79,
+            "min": 1149.7,
+            "max": 1879.3
+          }
         },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
+        {
+          "side": "attacker",
+          "design": "shbb_4battery_2aa",
+          "count": 5,
+          "sunk": {
+            "mean": 0.01,
+            "sd": 0.1,
+            "min": 0,
+            "max": 1
+          },
+          "retreated": {
+            "mean": 0.04,
+            "sd": 0.23,
+            "min": 0,
+            "max": 2
+          },
+          "remaining": {
+            "mean": 4.95,
+            "sd": 0.25,
+            "min": 3,
+            "max": 5
+          },
+          "hpLeft": {
+            "mean": 2669.86,
+            "sd": 326.95,
+            "min": 1373.1,
+            "max": 3438.5
+          }
         },
-        "hpLeft": {
-          "mean": 92.03,
-          "sd": 86.64,
-          "min": 0.0,
-          "max": 282.5
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": {
+            "mean": 6.04,
+            "sd": 1.12,
+            "min": 3,
+            "max": 8
+          },
+          "retreated": {
+            "mean": 1.96,
+            "sd": 1.12,
+            "min": 0,
+            "max": 5
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 95.14,
+            "sd": 63.89,
+            "min": 0.0,
+            "max": 359.2
+          }
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": {
+            "mean": 14.81,
+            "sd": 2.76,
+            "min": 5,
+            "max": 21
+          },
+          "retreated": {
+            "mean": 12.19,
+            "sd": 2.76,
+            "min": 6,
+            "max": 22
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 282.36,
+            "sd": 71.76,
+            "min": 106.4,
+            "max": 532.1
+          }
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": {
+            "mean": 4.63,
+            "sd": 1.14,
+            "min": 1,
+            "max": 6
+          },
+          "retreated": {
+            "mean": 1.37,
+            "sd": 1.14,
+            "min": 0,
+            "max": 5
+          },
+          "remaining": {
+            "mean": 0,
+            "sd": 0.0,
+            "min": 0,
+            "max": 0
+          },
+          "hpLeft": {
+            "mean": 91.45,
+            "sd": 84.98,
+            "min": 0.0,
+            "max": 443.5
+          }
         }
-      },
-      {
-        "side": "defender",
-        "design": "39_battlecruiser_pure_la",
-        "count": 12,
-        "sunk": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "retreated": {
-          "mean": 0.19,
-          "sd": 0.4,
-          "min": 0,
-          "max": 1
-        },
-        "remaining": {
-          "mean": 11.81,
-          "sd": 0.4,
-          "min": 11,
-          "max": 12
-        },
-        "hpLeft": {
-          "mean": 3957.7,
-          "sd": 339.22,
-          "min": 3187.2,
-          "max": 4677.6
-        }
-      },
-      {
-        "side": "defender",
-        "design": "dd_3_la",
-        "count": 54,
-        "sunk": {
-          "mean": 3.7,
-          "sd": 1.77,
-          "min": 0,
-          "max": 7
-        },
-        "retreated": {
-          "mean": 18.26,
-          "sd": 3.97,
-          "min": 10,
-          "max": 26
-        },
-        "remaining": {
-          "mean": 32.04,
-          "sd": 3.86,
-          "min": 24,
-          "max": 39
-        },
-        "hpLeft": {
-          "mean": 1569.57,
-          "sd": 104.42,
-          "min": 1272.9,
-          "max": 1760.5
-        }
-      },
-      {
-        "side": "defender",
-        "design": "shbb_4battery_2aa",
-        "count": 5,
-        "sunk": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "retreated": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "remaining": {
-          "mean": 5,
-          "sd": 0.0,
-          "min": 5,
-          "max": 5
-        },
-        "hpLeft": {
-          "mean": 2780.09,
-          "sd": 342.95,
-          "min": 2150.0,
-          "max": 3327.7
-        }
-      }
-    ]
-  },
+      ]
+    }
+  ],
   "simulatorReference": {
-    "commit": "48972a4",
+    "commit": "3798b54",
     "seeds": "1..200",
     "runs": 200,
     "durationHours": {
-      "mean": 190.77,
-      "sd": 17.54,
-      "min": 149,
-      "max": 241
+      "mean": 192.59,
+      "sd": 18.56,
+      "min": 150,
+      "max": 287
     },
     "outcomes": {
-      "DefenderVictory": 200
+      "AttackerVictory": 200
     },
     "sides": [
       {
         "side": "attacker",
         "hpLeft": {
-          "mean": 463.58,
-          "sd": 125.85,
-          "min": 204.0,
-          "max": 923.7
+          "mean": 8061.11,
+          "sd": 597.88,
+          "min": 5757.6,
+          "max": 9609.3
         },
         "sunk": {
-          "mean": 25.61,
-          "sd": 2.87,
-          "min": 17,
-          "max": 34
+          "mean": 4.09,
+          "sd": 2.15,
+          "min": 0,
+          "max": 10
         }
       },
       {
         "side": "defender",
         "hpLeft": {
-          "mean": 8044.82,
-          "sd": 524.36,
-          "min": 6516.7,
-          "max": 9128.8
+          "mean": 468.95,
+          "sd": 127.9,
+          "min": 199.4,
+          "max": 967.9
         },
         "sunk": {
-          "mean": 4.17,
-          "sd": 2.13,
-          "min": 0,
-          "max": 11
+          "mean": 25.48,
+          "sd": 3.1,
+          "min": 15,
+          "max": 32
         }
       }
     ],
     "designs": [
       {
         "side": "attacker",
-        "design": "39_battleship_pure_la",
-        "count": 8,
-        "sunk": {
-          "mean": 5.97,
-          "sd": 1.14,
-          "min": 2,
-          "max": 8
-        },
-        "retreated": {
-          "mean": 2.02,
-          "sd": 1.14,
-          "min": 0,
-          "max": 6
-        },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "hpLeft": {
-          "mean": 94.21,
-          "sd": 66.2,
-          "min": 0.0,
-          "max": 370.0
-        }
-      },
-      {
-        "side": "attacker",
-        "design": "39lc_la",
-        "count": 27,
-        "sunk": {
-          "mean": 15,
-          "sd": 2.57,
-          "min": 7,
-          "max": 21
-        },
-        "retreated": {
-          "mean": 12,
-          "sd": 2.57,
-          "min": 6,
-          "max": 20
-        },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "hpLeft": {
-          "mean": 287.27,
-          "sd": 77.13,
-          "min": 91.8,
-          "max": 510.0
-        }
-      },
-      {
-        "side": "attacker",
-        "design": "shbb_4battery_2aa",
-        "count": 6,
-        "sunk": {
-          "mean": 4.63,
-          "sd": 1.01,
-          "min": 1,
-          "max": 6
-        },
-        "retreated": {
-          "mean": 1.36,
-          "sd": 1.01,
-          "min": 0,
-          "max": 5
-        },
-        "remaining": {
-          "mean": 0,
-          "sd": 0.0,
-          "min": 0,
-          "max": 0
-        },
-        "hpLeft": {
-          "mean": 82.1,
-          "sd": 73.51,
-          "min": 0.0,
-          "max": 308.6
-        }
-      },
-      {
-        "side": "defender",
         "design": "39_battlecruiser_pure_la",
         "count": 12,
         "sunk": {
-          "mean": 0.06,
-          "sd": 0.24,
+          "mean": 0.04,
+          "sd": 0.2,
           "min": 0,
           "max": 1
         },
         "retreated": {
-          "mean": 0.33,
-          "sd": 0.58,
+          "mean": 0.28,
+          "sd": 0.51,
           "min": 0,
-          "max": 3
+          "max": 2
         },
         "remaining": {
-          "mean": 11.62,
-          "sd": 0.64,
-          "min": 9,
+          "mean": 11.69,
+          "sd": 0.54,
+          "min": 10,
           "max": 12
         },
         "hpLeft": {
-          "mean": 3843.2,
-          "sd": 365.36,
-          "min": 2767.0,
-          "max": 4659.1
+          "mean": 3851.61,
+          "sd": 372.9,
+          "min": 2897.5,
+          "max": 4751.1
         }
       },
       {
-        "side": "defender",
+        "side": "attacker",
         "design": "dd_3_la",
         "count": 54,
         "sunk": {
-          "mean": 4.11,
-          "sd": 2.11,
+          "mean": 4.04,
+          "sd": 2.14,
           "min": 0,
           "max": 10
         },
         "retreated": {
-          "mean": 18.45,
-          "sd": 3.76,
+          "mean": 18.33,
+          "sd": 3.89,
           "min": 10,
-          "max": 28
+          "max": 31
         },
         "remaining": {
-          "mean": 31.44,
-          "sd": 4.27,
-          "min": 20,
+          "mean": 31.63,
+          "sd": 4.59,
+          "min": 19,
           "max": 41
         },
         "hpLeft": {
-          "mean": 1530.18,
-          "sd": 145.28,
-          "min": 1130.1,
-          "max": 1874.5
+          "mean": 1539.64,
+          "sd": 153.79,
+          "min": 1149.7,
+          "max": 1879.3
+        }
+      },
+      {
+        "side": "attacker",
+        "design": "shbb_4battery_2aa",
+        "count": 5,
+        "sunk": {
+          "mean": 0.01,
+          "sd": 0.1,
+          "min": 0,
+          "max": 1
+        },
+        "retreated": {
+          "mean": 0.04,
+          "sd": 0.23,
+          "min": 0,
+          "max": 2
+        },
+        "remaining": {
+          "mean": 4.95,
+          "sd": 0.25,
+          "min": 3,
+          "max": 5
+        },
+        "hpLeft": {
+          "mean": 2669.86,
+          "sd": 326.95,
+          "min": 1373.1,
+          "max": 3438.5
         }
       },
       {
         "side": "defender",
-        "design": "shbb_4battery_2aa",
-        "count": 5,
+        "design": "39_battleship_pure_la",
+        "count": 8,
         "sunk": {
+          "mean": 6.04,
+          "sd": 1.12,
+          "min": 3,
+          "max": 8
+        },
+        "retreated": {
+          "mean": 1.96,
+          "sd": 1.12,
+          "min": 0,
+          "max": 5
+        },
+        "remaining": {
           "mean": 0,
           "sd": 0.0,
           "min": 0,
           "max": 0
         },
+        "hpLeft": {
+          "mean": 95.14,
+          "sd": 63.89,
+          "min": 0.0,
+          "max": 359.2
+        }
+      },
+      {
+        "side": "defender",
+        "design": "39lc_la_aa3",
+        "count": 27,
+        "sunk": {
+          "mean": 14.81,
+          "sd": 2.76,
+          "min": 5,
+          "max": 21
+        },
         "retreated": {
-          "mean": 0.04,
-          "sd": 0.18,
-          "min": 0,
-          "max": 1
+          "mean": 12.19,
+          "sd": 2.76,
+          "min": 6,
+          "max": 22
         },
         "remaining": {
-          "mean": 4.96,
-          "sd": 0.18,
-          "min": 4,
-          "max": 5
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
         },
         "hpLeft": {
-          "mean": 2671.44,
-          "sd": 308.71,
-          "min": 1665.5,
-          "max": 3397.6
+          "mean": 282.36,
+          "sd": 71.76,
+          "min": 106.4,
+          "max": 532.1
+        }
+      },
+      {
+        "side": "defender",
+        "design": "shbb_4battery_2aa",
+        "count": 6,
+        "sunk": {
+          "mean": 4.63,
+          "sd": 1.14,
+          "min": 1,
+          "max": 6
+        },
+        "retreated": {
+          "mean": 1.37,
+          "sd": 1.14,
+          "min": 0,
+          "max": 5
+        },
+        "remaining": {
+          "mean": 0,
+          "sd": 0.0,
+          "min": 0,
+          "max": 0
+        },
+        "hpLeft": {
+          "mean": 91.45,
+          "sd": 84.98,
+          "min": 0.0,
+          "max": 443.5
         }
       }
     ]
@@ -463,37 +685,10 @@
       "log": "output/ingame/replay_test/jukki_usa_vs_bc_japan_battle_start_20261019_144911/s1",
       "rollLog": true,
       "durationHours": 174,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 93.1
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 14,
-          "retreated": 13,
-          "remaining": 0,
-          "hpLeft": 341.8
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -502,7 +697,7 @@
           "hpLeft": 3609.3
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -511,50 +706,77 @@
           "hpLeft": 1685.9
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3236.6
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 93.1
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 341.8
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.878,
-          "defenderHpFraction": 0.9215
+          "attackerHpFraction": 0.9215,
+          "defenderHpFraction": 0.878
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7261,
-          "defenderHpFraction": 0.8564
+          "attackerHpFraction": 0.8564,
+          "defenderHpFraction": 0.7261
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5689,
-          "defenderHpFraction": 0.8291
+          "attackerHpFraction": 0.8291,
+          "defenderHpFraction": 0.5689
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4266,
-          "defenderHpFraction": 0.7774
+          "attackerHpFraction": 0.7774,
+          "defenderHpFraction": 0.4266
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3247,
-          "defenderHpFraction": 0.752
+          "attackerHpFraction": 0.752,
+          "defenderHpFraction": 0.3247
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1979,
-          "defenderHpFraction": 0.7371
+          "attackerHpFraction": 0.7371,
+          "defenderHpFraction": 0.1979
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0538,
-          "defenderHpFraction": 0.7212
+          "attackerHpFraction": 0.7212,
+          "defenderHpFraction": 0.0538
         }
       ]
     },
@@ -564,37 +786,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140503/s2",
       "rollLog": false,
       "durationHours": 181,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 80.7
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 17,
-          "retreated": 10,
-          "remaining": 0,
-          "hpLeft": 169.5
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -603,7 +798,7 @@
           "hpLeft": 3847.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 4,
@@ -612,50 +807,77 @@
           "hpLeft": 1647.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2776.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 80.7
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 169.5
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8618,
-          "defenderHpFraction": 0.9339
+          "attackerHpFraction": 0.9339,
+          "defenderHpFraction": 0.8618
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6969,
-          "defenderHpFraction": 0.8579
+          "attackerHpFraction": 0.8579,
+          "defenderHpFraction": 0.6969
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5458,
-          "defenderHpFraction": 0.7913
+          "attackerHpFraction": 0.7913,
+          "defenderHpFraction": 0.5458
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.3933,
-          "defenderHpFraction": 0.7402
+          "attackerHpFraction": 0.7402,
+          "defenderHpFraction": 0.3933
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2887,
-          "defenderHpFraction": 0.7184
+          "attackerHpFraction": 0.7184,
+          "defenderHpFraction": 0.2887
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.149,
-          "defenderHpFraction": 0.7061
+          "attackerHpFraction": 0.7061,
+          "defenderHpFraction": 0.149
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.065,
-          "defenderHpFraction": 0.6992
+          "attackerHpFraction": 0.6992,
+          "defenderHpFraction": 0.065
         }
       ]
     },
@@ -665,37 +887,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s3",
       "rollLog": false,
       "durationHours": 214,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 150.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 10,
-          "retreated": 17,
-          "remaining": 0,
-          "hpLeft": 388.0
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 198.1
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -704,7 +899,7 @@
           "hpLeft": 3802.8
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -713,55 +908,82 @@
           "hpLeft": 1662.3
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2667.7
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 150.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 10,
+          "retreated": 17,
+          "remaining": 0,
+          "hpLeft": 388.0
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 198.1
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8488,
-          "defenderHpFraction": 0.9354
+          "attackerHpFraction": 0.9354,
+          "defenderHpFraction": 0.8488
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7283,
-          "defenderHpFraction": 0.884
+          "attackerHpFraction": 0.884,
+          "defenderHpFraction": 0.7283
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.6025,
-          "defenderHpFraction": 0.827
+          "attackerHpFraction": 0.827,
+          "defenderHpFraction": 0.6025
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.488,
-          "defenderHpFraction": 0.7837
+          "attackerHpFraction": 0.7837,
+          "defenderHpFraction": 0.488
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.4139,
-          "defenderHpFraction": 0.7516
+          "attackerHpFraction": 0.7516,
+          "defenderHpFraction": 0.4139
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2883,
-          "defenderHpFraction": 0.7275
+          "attackerHpFraction": 0.7275,
+          "defenderHpFraction": 0.2883
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1848,
-          "defenderHpFraction": 0.7149
+          "attackerHpFraction": 0.7149,
+          "defenderHpFraction": 0.1848
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.1131,
-          "defenderHpFraction": 0.6919
+          "attackerHpFraction": 0.6919,
+          "defenderHpFraction": 0.1131
         }
       ]
     },
@@ -771,37 +993,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s4",
       "rollLog": false,
       "durationHours": 193,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 8,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 17,
-          "retreated": 10,
-          "remaining": 0,
-          "hpLeft": 266.3
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 2,
-          "retreated": 4,
-          "remaining": 0,
-          "hpLeft": 282.5
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -810,7 +1005,7 @@
           "hpLeft": 4677.6
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 4,
@@ -819,55 +1014,82 @@
           "hpLeft": 1478.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2917.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 266.3
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 2,
+          "retreated": 4,
+          "remaining": 0,
+          "hpLeft": 282.5
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8355,
-          "defenderHpFraction": 0.9628
+          "attackerHpFraction": 0.9628,
+          "defenderHpFraction": 0.8355
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6976,
-          "defenderHpFraction": 0.9128
+          "attackerHpFraction": 0.9128,
+          "defenderHpFraction": 0.6976
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5538,
-          "defenderHpFraction": 0.8749
+          "attackerHpFraction": 0.8749,
+          "defenderHpFraction": 0.5538
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4338,
-          "defenderHpFraction": 0.8179
+          "attackerHpFraction": 0.8179,
+          "defenderHpFraction": 0.4338
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2956,
-          "defenderHpFraction": 0.7923
+          "attackerHpFraction": 0.7923,
+          "defenderHpFraction": 0.2956
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.228,
-          "defenderHpFraction": 0.7849
+          "attackerHpFraction": 0.7849,
+          "defenderHpFraction": 0.228
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1316,
-          "defenderHpFraction": 0.776
+          "attackerHpFraction": 0.776,
+          "defenderHpFraction": 0.1316
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0558,
-          "defenderHpFraction": 0.767
+          "attackerHpFraction": 0.767,
+          "defenderHpFraction": 0.0558
         }
       ]
     },
@@ -877,37 +1099,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s5",
       "rollLog": false,
       "durationHours": 163,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 41.6
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 16,
-          "retreated": 11,
-          "remaining": 0,
-          "hpLeft": 233.4
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -916,7 +1111,7 @@
           "hpLeft": 4135.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -925,45 +1120,72 @@
           "hpLeft": 1603.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3048.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 41.6
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 233.4
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.856,
-          "defenderHpFraction": 0.9217
+          "attackerHpFraction": 0.9217,
+          "defenderHpFraction": 0.856
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7048,
-          "defenderHpFraction": 0.8706
+          "attackerHpFraction": 0.8706,
+          "defenderHpFraction": 0.7048
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5451,
-          "defenderHpFraction": 0.8297
+          "attackerHpFraction": 0.8297,
+          "defenderHpFraction": 0.5451
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.3684,
-          "defenderHpFraction": 0.7862
+          "attackerHpFraction": 0.7862,
+          "defenderHpFraction": 0.3684
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.1945,
-          "defenderHpFraction": 0.7689
+          "attackerHpFraction": 0.7689,
+          "defenderHpFraction": 0.1945
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.114,
-          "defenderHpFraction": 0.7636
+          "attackerHpFraction": 0.7636,
+          "defenderHpFraction": 0.114
         }
       ]
     },
@@ -973,37 +1195,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s6",
       "rollLog": false,
       "durationHours": 205,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 167.1
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 16,
-          "retreated": 11,
-          "remaining": 0,
-          "hpLeft": 235.6
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 144.4
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1012,7 +1207,7 @@
           "hpLeft": 3891.6
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -1021,55 +1216,82 @@
           "hpLeft": 1667.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2764.3
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 167.1
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 235.6
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 144.4
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8638,
-          "defenderHpFraction": 0.9371
+          "attackerHpFraction": 0.9371,
+          "defenderHpFraction": 0.8638
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6981,
-          "defenderHpFraction": 0.8796
+          "attackerHpFraction": 0.8796,
+          "defenderHpFraction": 0.6981
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5625,
-          "defenderHpFraction": 0.8071
+          "attackerHpFraction": 0.8071,
+          "defenderHpFraction": 0.5625
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4234,
-          "defenderHpFraction": 0.7718
+          "attackerHpFraction": 0.7718,
+          "defenderHpFraction": 0.4234
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3453,
-          "defenderHpFraction": 0.7486
+          "attackerHpFraction": 0.7486,
+          "defenderHpFraction": 0.3453
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2242,
-          "defenderHpFraction": 0.7209
+          "attackerHpFraction": 0.7209,
+          "defenderHpFraction": 0.2242
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1537,
-          "defenderHpFraction": 0.706
+          "attackerHpFraction": 0.706,
+          "defenderHpFraction": 0.1537
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0783,
-          "defenderHpFraction": 0.7035
+          "attackerHpFraction": 0.7035,
+          "defenderHpFraction": 0.0783
         }
       ]
     },
@@ -1079,37 +1301,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s7",
       "rollLog": false,
       "durationHours": 196,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 90.4
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 15,
-          "retreated": 12,
-          "remaining": 0,
-          "hpLeft": 312.6
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1118,7 +1313,7 @@
           "hpLeft": 4193.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -1127,55 +1322,82 @@
           "hpLeft": 1576.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2823.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 90.4
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 312.6
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8548,
-          "defenderHpFraction": 0.9315
+          "attackerHpFraction": 0.9315,
+          "defenderHpFraction": 0.8548
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6973,
-          "defenderHpFraction": 0.8634
+          "attackerHpFraction": 0.8634,
+          "defenderHpFraction": 0.6973
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5217,
-          "defenderHpFraction": 0.8173
+          "attackerHpFraction": 0.8173,
+          "defenderHpFraction": 0.5217
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4365,
-          "defenderHpFraction": 0.7875
+          "attackerHpFraction": 0.7875,
+          "defenderHpFraction": 0.4365
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.314,
-          "defenderHpFraction": 0.7616
+          "attackerHpFraction": 0.7616,
+          "defenderHpFraction": 0.314
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2129,
-          "defenderHpFraction": 0.7563
+          "attackerHpFraction": 0.7563,
+          "defenderHpFraction": 0.2129
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1467,
-          "defenderHpFraction": 0.7264
+          "attackerHpFraction": 0.7264,
+          "defenderHpFraction": 0.1467
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0546,
-          "defenderHpFraction": 0.7264
+          "attackerHpFraction": 0.7264,
+          "defenderHpFraction": 0.0546
         }
       ]
     },
@@ -1185,37 +1407,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s8",
       "rollLog": false,
       "durationHours": 199,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 50.4
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 13,
-          "retreated": 14,
-          "remaining": 0,
-          "hpLeft": 274.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 3,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 230.5
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1224,7 +1419,7 @@
           "hpLeft": 3769.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 6,
@@ -1233,55 +1428,82 @@
           "hpLeft": 1458.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2570.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 50.4
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 274.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 3,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 230.5
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.9011,
-          "defenderHpFraction": 0.88
+          "attackerHpFraction": 0.88,
+          "defenderHpFraction": 0.9011
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7304,
-          "defenderHpFraction": 0.8149
+          "attackerHpFraction": 0.8149,
+          "defenderHpFraction": 0.7304
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5792,
-          "defenderHpFraction": 0.7749
+          "attackerHpFraction": 0.7749,
+          "defenderHpFraction": 0.5792
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.418,
-          "defenderHpFraction": 0.7292
+          "attackerHpFraction": 0.7292,
+          "defenderHpFraction": 0.418
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.301,
-          "defenderHpFraction": 0.7108
+          "attackerHpFraction": 0.7108,
+          "defenderHpFraction": 0.301
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2194,
-          "defenderHpFraction": 0.6912
+          "attackerHpFraction": 0.6912,
+          "defenderHpFraction": 0.2194
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1485,
-          "defenderHpFraction": 0.6661
+          "attackerHpFraction": 0.6661,
+          "defenderHpFraction": 0.1485
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0664,
-          "defenderHpFraction": 0.6592
+          "attackerHpFraction": 0.6592,
+          "defenderHpFraction": 0.0664
         }
       ]
     },
@@ -1291,37 +1513,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s9",
       "rollLog": false,
       "durationHours": 187,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 66.6
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 17,
-          "retreated": 10,
-          "remaining": 0,
-          "hpLeft": 276.9
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 118.9
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1330,7 +1525,7 @@
           "hpLeft": 3187.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 0,
@@ -1339,50 +1534,77 @@
           "hpLeft": 1584.0
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2901.1
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 66.6
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 276.9
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 118.9
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.863,
-          "defenderHpFraction": 0.9315
+          "attackerHpFraction": 0.9315,
+          "defenderHpFraction": 0.863
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7135,
-          "defenderHpFraction": 0.8568
+          "attackerHpFraction": 0.8568,
+          "defenderHpFraction": 0.7135
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5899,
-          "defenderHpFraction": 0.7836
+          "attackerHpFraction": 0.7836,
+          "defenderHpFraction": 0.5899
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.47,
-          "defenderHpFraction": 0.7345
+          "attackerHpFraction": 0.7345,
+          "defenderHpFraction": 0.47
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3199,
-          "defenderHpFraction": 0.6888
+          "attackerHpFraction": 0.6888,
+          "defenderHpFraction": 0.3199
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2179,
-          "defenderHpFraction": 0.665
+          "attackerHpFraction": 0.665,
+          "defenderHpFraction": 0.2179
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1202,
-          "defenderHpFraction": 0.6586
+          "attackerHpFraction": 0.6586,
+          "defenderHpFraction": 0.1202
         }
       ]
     },
@@ -1392,37 +1614,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s10",
       "rollLog": false,
       "durationHours": 181,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 130.5
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 9,
-          "retreated": 18,
-          "remaining": 0,
-          "hpLeft": 401.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 231.9
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1431,7 +1626,7 @@
           "hpLeft": 4483.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -1440,50 +1635,77 @@
           "hpLeft": 1717.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2496.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 130.5
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 9,
+          "retreated": 18,
+          "remaining": 0,
+          "hpLeft": 401.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 231.9
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8723,
-          "defenderHpFraction": 0.9502
+          "attackerHpFraction": 0.9502,
+          "defenderHpFraction": 0.8723
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7109,
-          "defenderHpFraction": 0.8919
+          "attackerHpFraction": 0.8919,
+          "defenderHpFraction": 0.7109
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5852,
-          "defenderHpFraction": 0.8312
+          "attackerHpFraction": 0.8312,
+          "defenderHpFraction": 0.5852
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4475,
-          "defenderHpFraction": 0.7901
+          "attackerHpFraction": 0.7901,
+          "defenderHpFraction": 0.4475
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3462,
-          "defenderHpFraction": 0.7564
+          "attackerHpFraction": 0.7564,
+          "defenderHpFraction": 0.3462
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2889,
-          "defenderHpFraction": 0.7443
+          "attackerHpFraction": 0.7443,
+          "defenderHpFraction": 0.2889
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.178,
-          "defenderHpFraction": 0.7415
+          "attackerHpFraction": 0.7415,
+          "defenderHpFraction": 0.178
         }
       ]
     },
@@ -1493,37 +1715,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s11",
       "rollLog": false,
       "durationHours": 190,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 8,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 13,
-          "retreated": 14,
-          "remaining": 0,
-          "hpLeft": 249.8
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 197.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1532,7 +1727,7 @@
           "hpLeft": 3677.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -1541,50 +1736,77 @@
           "hpLeft": 1656.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3238.6
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 249.8
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 197.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8776,
-          "defenderHpFraction": 0.9243
+          "attackerHpFraction": 0.9243,
+          "defenderHpFraction": 0.8776
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7572,
-          "defenderHpFraction": 0.8544
+          "attackerHpFraction": 0.8544,
+          "defenderHpFraction": 0.7572
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5972,
-          "defenderHpFraction": 0.8334
+          "attackerHpFraction": 0.8334,
+          "defenderHpFraction": 0.5972
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4581,
-          "defenderHpFraction": 0.782
+          "attackerHpFraction": 0.782,
+          "defenderHpFraction": 0.4581
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3602,
-          "defenderHpFraction": 0.7611
+          "attackerHpFraction": 0.7611,
+          "defenderHpFraction": 0.3602
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2748,
-          "defenderHpFraction": 0.7355
+          "attackerHpFraction": 0.7355,
+          "defenderHpFraction": 0.2748
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1299,
-          "defenderHpFraction": 0.7297
+          "attackerHpFraction": 0.7297,
+          "defenderHpFraction": 0.1299
         }
       ]
     },
@@ -1594,37 +1816,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_140932/s12",
       "rollLog": false,
       "durationHours": 180,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 5.3
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 16,
-          "retreated": 11,
-          "remaining": 0,
-          "hpLeft": 212.2
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 41.6
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1633,7 +1828,7 @@
           "hpLeft": 4229.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 7,
@@ -1642,50 +1837,77 @@
           "hpLeft": 1500.4
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2870.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 5.3
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 212.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 41.6
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8377,
-          "defenderHpFraction": 0.9285
+          "attackerHpFraction": 0.9285,
+          "defenderHpFraction": 0.8377
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6901,
-          "defenderHpFraction": 0.8483
+          "attackerHpFraction": 0.8483,
+          "defenderHpFraction": 0.6901
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5408,
-          "defenderHpFraction": 0.8168
+          "attackerHpFraction": 0.8168,
+          "defenderHpFraction": 0.5408
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.419,
-          "defenderHpFraction": 0.7756
+          "attackerHpFraction": 0.7756,
+          "defenderHpFraction": 0.419
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2697,
-          "defenderHpFraction": 0.7516
+          "attackerHpFraction": 0.7516,
+          "defenderHpFraction": 0.2697
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1676,
-          "defenderHpFraction": 0.7323
+          "attackerHpFraction": 0.7323,
+          "defenderHpFraction": 0.1676
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0839,
-          "defenderHpFraction": 0.7308
+          "attackerHpFraction": 0.7308,
+          "defenderHpFraction": 0.0839
         }
       ]
     },
@@ -1695,37 +1917,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144129/s13",
       "rollLog": false,
       "durationHours": 166,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 141.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 15,
-          "retreated": 12,
-          "remaining": 0,
-          "hpLeft": 285.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1734,7 +1929,7 @@
           "hpLeft": 3743.9
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 4,
@@ -1743,45 +1938,72 @@
           "hpLeft": 1549.0
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3185.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 141.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 285.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8634,
-          "defenderHpFraction": 0.9422
+          "attackerHpFraction": 0.9422,
+          "defenderHpFraction": 0.8634
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7278,
-          "defenderHpFraction": 0.8781
+          "attackerHpFraction": 0.8781,
+          "defenderHpFraction": 0.7278
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5742,
-          "defenderHpFraction": 0.8259
+          "attackerHpFraction": 0.8259,
+          "defenderHpFraction": 0.5742
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.3951,
-          "defenderHpFraction": 0.7563
+          "attackerHpFraction": 0.7563,
+          "defenderHpFraction": 0.3951
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.241,
-          "defenderHpFraction": 0.7279
+          "attackerHpFraction": 0.7279,
+          "defenderHpFraction": 0.241
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1318,
-          "defenderHpFraction": 0.7179
+          "attackerHpFraction": 0.7179,
+          "defenderHpFraction": 0.1318
         }
       ]
     },
@@ -1791,37 +2013,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144129/s14",
       "rollLog": false,
       "durationHours": 196,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 175.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 16,
-          "retreated": 11,
-          "remaining": 0,
-          "hpLeft": 284.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 136.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1830,7 +2025,7 @@
           "hpLeft": 4108.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 3,
@@ -1839,55 +2034,82 @@
           "hpLeft": 1535.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2324.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 175.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 16,
+          "retreated": 11,
+          "remaining": 0,
+          "hpLeft": 284.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 136.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8594,
-          "defenderHpFraction": 0.9177
+          "attackerHpFraction": 0.9177,
+          "defenderHpFraction": 0.8594
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7093,
-          "defenderHpFraction": 0.8712
+          "attackerHpFraction": 0.8712,
+          "defenderHpFraction": 0.7093
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5626,
-          "defenderHpFraction": 0.8288
+          "attackerHpFraction": 0.8288,
+          "defenderHpFraction": 0.5626
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4482,
-          "defenderHpFraction": 0.7782
+          "attackerHpFraction": 0.7782,
+          "defenderHpFraction": 0.4482
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3262,
-          "defenderHpFraction": 0.7143
+          "attackerHpFraction": 0.7143,
+          "defenderHpFraction": 0.3262
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2418,
-          "defenderHpFraction": 0.7011
+          "attackerHpFraction": 0.7011,
+          "defenderHpFraction": 0.2418
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1571,
-          "defenderHpFraction": 0.681
+          "attackerHpFraction": 0.681,
+          "defenderHpFraction": 0.1571
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.063,
-          "defenderHpFraction": 0.6735
+          "attackerHpFraction": 0.6735,
+          "defenderHpFraction": 0.063
         }
       ]
     },
@@ -1897,37 +2119,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s15",
       "rollLog": false,
       "durationHours": 169,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 57.9
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 12,
-          "retreated": 15,
-          "remaining": 0,
-          "hpLeft": 308.0
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -1936,7 +2131,7 @@
           "hpLeft": 4140.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -1945,50 +2140,77 @@
           "hpLeft": 1760.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2943.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 57.9
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 308.0
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8381,
-          "defenderHpFraction": 0.9226
+          "attackerHpFraction": 0.9226,
+          "defenderHpFraction": 0.8381
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6731,
-          "defenderHpFraction": 0.8658
+          "attackerHpFraction": 0.8658,
+          "defenderHpFraction": 0.6731
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5343,
-          "defenderHpFraction": 0.8161
+          "attackerHpFraction": 0.8161,
+          "defenderHpFraction": 0.5343
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4111,
-          "defenderHpFraction": 0.7939
+          "attackerHpFraction": 0.7939,
+          "defenderHpFraction": 0.4111
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2445,
-          "defenderHpFraction": 0.7721
+          "attackerHpFraction": 0.7721,
+          "defenderHpFraction": 0.2445
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1622,
-          "defenderHpFraction": 0.7593
+          "attackerHpFraction": 0.7593,
+          "defenderHpFraction": 0.1622
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0357,
-          "defenderHpFraction": 0.7476
+          "attackerHpFraction": 0.7476,
+          "defenderHpFraction": 0.0357
         }
       ]
     },
@@ -1998,37 +2220,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s16",
       "rollLog": false,
       "durationHours": 183,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 155.5
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 17,
-          "retreated": 10,
-          "remaining": 0,
-          "hpLeft": 299.6
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 17.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2037,7 +2232,7 @@
           "hpLeft": 3878.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -2046,50 +2241,77 @@
           "hpLeft": 1505.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3312.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 155.5
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 17,
+          "retreated": 10,
+          "remaining": 0,
+          "hpLeft": 299.6
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 17.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.864,
-          "defenderHpFraction": 0.9511
+          "attackerHpFraction": 0.9511,
+          "defenderHpFraction": 0.864
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7114,
-          "defenderHpFraction": 0.8833
+          "attackerHpFraction": 0.8833,
+          "defenderHpFraction": 0.7114
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5912,
-          "defenderHpFraction": 0.8506
+          "attackerHpFraction": 0.8506,
+          "defenderHpFraction": 0.5912
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4756,
-          "defenderHpFraction": 0.7891
+          "attackerHpFraction": 0.7891,
+          "defenderHpFraction": 0.4756
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3187,
-          "defenderHpFraction": 0.7609
+          "attackerHpFraction": 0.7609,
+          "defenderHpFraction": 0.3187
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.216,
-          "defenderHpFraction": 0.7482
+          "attackerHpFraction": 0.7482,
+          "defenderHpFraction": 0.216
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0936,
-          "defenderHpFraction": 0.7377
+          "attackerHpFraction": 0.7377,
+          "defenderHpFraction": 0.0936
         }
       ]
     },
@@ -2099,37 +2321,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_144442/s17",
       "rollLog": false,
       "durationHours": 187,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 46.3
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 14,
-          "retreated": 13,
-          "remaining": 0,
-          "hpLeft": 174.7
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 39.2
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2138,7 +2333,7 @@
           "hpLeft": 4191.9
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -2147,50 +2342,77 @@
           "hpLeft": 1612.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2642.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 46.3
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 174.7
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 39.2
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8443,
-          "defenderHpFraction": 0.9636
+          "attackerHpFraction": 0.9636,
+          "defenderHpFraction": 0.8443
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6991,
-          "defenderHpFraction": 0.9114
+          "attackerHpFraction": 0.9114,
+          "defenderHpFraction": 0.6991
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5566,
-          "defenderHpFraction": 0.8434
+          "attackerHpFraction": 0.8434,
+          "defenderHpFraction": 0.5566
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4497,
-          "defenderHpFraction": 0.7843
+          "attackerHpFraction": 0.7843,
+          "defenderHpFraction": 0.4497
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.4058,
-          "defenderHpFraction": 0.7718
+          "attackerHpFraction": 0.7718,
+          "defenderHpFraction": 0.4058
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2941,
-          "defenderHpFraction": 0.745
+          "attackerHpFraction": 0.745,
+          "defenderHpFraction": 0.2941
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.119,
-          "defenderHpFraction": 0.7181
+          "attackerHpFraction": 0.7181,
+          "defenderHpFraction": 0.119
         }
       ]
     },
@@ -2200,37 +2422,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s18",
       "rollLog": true,
       "durationHours": 205,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 45.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 14,
-          "retreated": 13,
-          "remaining": 0,
-          "hpLeft": 307.7
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 118.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2239,7 +2434,7 @@
           "hpLeft": 3479.9
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 7,
@@ -2248,55 +2443,82 @@
           "hpLeft": 1438.4
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2230.5
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 45.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 307.7
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 118.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8689,
-          "defenderHpFraction": 0.9045
+          "attackerHpFraction": 0.9045,
+          "defenderHpFraction": 0.8689
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7012,
-          "defenderHpFraction": 0.8007
+          "attackerHpFraction": 0.8007,
+          "defenderHpFraction": 0.7012
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5474,
-          "defenderHpFraction": 0.7488
+          "attackerHpFraction": 0.7488,
+          "defenderHpFraction": 0.5474
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4582,
-          "defenderHpFraction": 0.6991
+          "attackerHpFraction": 0.6991,
+          "defenderHpFraction": 0.4582
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3523,
-          "defenderHpFraction": 0.6567
+          "attackerHpFraction": 0.6567,
+          "defenderHpFraction": 0.3523
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2723,
-          "defenderHpFraction": 0.6327
+          "attackerHpFraction": 0.6327,
+          "defenderHpFraction": 0.2723
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1786,
-          "defenderHpFraction": 0.609
+          "attackerHpFraction": 0.609,
+          "defenderHpFraction": 0.1786
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0795,
-          "defenderHpFraction": 0.6043
+          "attackerHpFraction": 0.6043,
+          "defenderHpFraction": 0.0795
         }
       ]
     },
@@ -2306,37 +2528,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s19",
       "rollLog": true,
       "durationHours": 207,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 11.2
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 15,
-          "retreated": 12,
-          "remaining": 0,
-          "hpLeft": 226.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 89.1
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2345,7 +2540,7 @@
           "hpLeft": 4169.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 3,
@@ -2354,55 +2549,82 @@
           "hpLeft": 1573.6
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2700.6
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 11.2
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 15,
+          "retreated": 12,
+          "remaining": 0,
+          "hpLeft": 226.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 89.1
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8767,
-          "defenderHpFraction": 0.9472
+          "attackerHpFraction": 0.9472,
+          "defenderHpFraction": 0.8767
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7253,
-          "defenderHpFraction": 0.8802
+          "attackerHpFraction": 0.8802,
+          "defenderHpFraction": 0.7253
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.6096,
-          "defenderHpFraction": 0.8344
+          "attackerHpFraction": 0.8344,
+          "defenderHpFraction": 0.6096
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4914,
-          "defenderHpFraction": 0.7915
+          "attackerHpFraction": 0.7915,
+          "defenderHpFraction": 0.4914
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.376,
-          "defenderHpFraction": 0.7529
+          "attackerHpFraction": 0.7529,
+          "defenderHpFraction": 0.376
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2598,
-          "defenderHpFraction": 0.7453
+          "attackerHpFraction": 0.7453,
+          "defenderHpFraction": 0.2598
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1717,
-          "defenderHpFraction": 0.7376
+          "attackerHpFraction": 0.7376,
+          "defenderHpFraction": 0.1717
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.0782,
-          "defenderHpFraction": 0.7198
+          "attackerHpFraction": 0.7198,
+          "defenderHpFraction": 0.0782
         }
       ]
     },
@@ -2412,37 +2634,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s20",
       "rollLog": true,
       "durationHours": 181,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 20.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 12,
-          "retreated": 15,
-          "remaining": 0,
-          "hpLeft": 458.0
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 29.8
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2451,7 +2646,7 @@
           "hpLeft": 4190.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -2460,50 +2655,77 @@
           "hpLeft": 1392.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2227.9
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 20.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 458.0
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 29.8
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8831,
-          "defenderHpFraction": 0.927
+          "attackerHpFraction": 0.927,
+          "defenderHpFraction": 0.8831
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.753,
-          "defenderHpFraction": 0.884
+          "attackerHpFraction": 0.884,
+          "defenderHpFraction": 0.753
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.6263,
-          "defenderHpFraction": 0.8093
+          "attackerHpFraction": 0.8093,
+          "defenderHpFraction": 0.6263
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.5265,
-          "defenderHpFraction": 0.7557
+          "attackerHpFraction": 0.7557,
+          "defenderHpFraction": 0.5265
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3568,
-          "defenderHpFraction": 0.7034
+          "attackerHpFraction": 0.7034,
+          "defenderHpFraction": 0.3568
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2118,
-          "defenderHpFraction": 0.6811
+          "attackerHpFraction": 0.6811,
+          "defenderHpFraction": 0.2118
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1081,
-          "defenderHpFraction": 0.6674
+          "attackerHpFraction": 0.6674,
+          "defenderHpFraction": 0.1081
         }
       ]
     },
@@ -2513,37 +2735,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s21",
       "rollLog": true,
       "durationHours": 161,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 8,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 14,
-          "retreated": 13,
-          "remaining": 0,
-          "hpLeft": 362.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 6,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2552,7 +2747,7 @@
           "hpLeft": 4321.6
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -2561,45 +2756,72 @@
           "hpLeft": 1555.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3327.7
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 362.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 6,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8802,
-          "defenderHpFraction": 0.943
+          "attackerHpFraction": 0.943,
+          "defenderHpFraction": 0.8802
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6837,
-          "defenderHpFraction": 0.8912
+          "attackerHpFraction": 0.8912,
+          "defenderHpFraction": 0.6837
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5679,
-          "defenderHpFraction": 0.8475
+          "attackerHpFraction": 0.8475,
+          "defenderHpFraction": 0.5679
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4106,
-          "defenderHpFraction": 0.8086
+          "attackerHpFraction": 0.8086,
+          "defenderHpFraction": 0.4106
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2381,
-          "defenderHpFraction": 0.7909
+          "attackerHpFraction": 0.7909,
+          "defenderHpFraction": 0.2381
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1053,
-          "defenderHpFraction": 0.7836
+          "attackerHpFraction": 0.7836,
+          "defenderHpFraction": 0.1053
         }
       ]
     },
@@ -2609,37 +2831,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s22",
       "rollLog": true,
       "durationHours": 191,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 6,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 73.0
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 12,
-          "retreated": 15,
-          "remaining": 0,
-          "hpLeft": 362.8
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 64.1
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2648,7 +2843,7 @@
           "hpLeft": 4087.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 3,
@@ -2657,50 +2852,77 @@
           "hpLeft": 1600.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2755.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 6,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 73.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 12,
+          "retreated": 15,
+          "remaining": 0,
+          "hpLeft": 362.8
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 64.1
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8887,
-          "defenderHpFraction": 0.9472
+          "attackerHpFraction": 0.9472,
+          "defenderHpFraction": 0.8887
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7525,
-          "defenderHpFraction": 0.8642
+          "attackerHpFraction": 0.8642,
+          "defenderHpFraction": 0.7525
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5876,
-          "defenderHpFraction": 0.8245
+          "attackerHpFraction": 0.8245,
+          "defenderHpFraction": 0.5876
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.456,
-          "defenderHpFraction": 0.7693
+          "attackerHpFraction": 0.7693,
+          "defenderHpFraction": 0.456
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3446,
-          "defenderHpFraction": 0.7405
+          "attackerHpFraction": 0.7405,
+          "defenderHpFraction": 0.3446
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2522,
-          "defenderHpFraction": 0.7284
+          "attackerHpFraction": 0.7284,
+          "defenderHpFraction": 0.2522
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1428,
-          "defenderHpFraction": 0.7225
+          "attackerHpFraction": 0.7225,
+          "defenderHpFraction": 0.1428
         }
       ]
     },
@@ -2710,37 +2932,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s23",
       "rollLog": true,
       "durationHours": 211,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 90.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 14,
-          "retreated": 13,
-          "remaining": 0,
-          "hpLeft": 428.6
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 135.6
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2749,7 +2944,7 @@
           "hpLeft": 3442.1
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 4,
@@ -2758,55 +2953,82 @@
           "hpLeft": 1272.9
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2150.0
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 90.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 14,
+          "retreated": 13,
+          "remaining": 0,
+          "hpLeft": 428.6
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 135.6
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8823,
-          "defenderHpFraction": 0.9183
+          "attackerHpFraction": 0.9183,
+          "defenderHpFraction": 0.8823
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7233,
-          "defenderHpFraction": 0.8548
+          "attackerHpFraction": 0.8548,
+          "defenderHpFraction": 0.7233
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.607,
-          "defenderHpFraction": 0.748
+          "attackerHpFraction": 0.748,
+          "defenderHpFraction": 0.607
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4956,
-          "defenderHpFraction": 0.6907
+          "attackerHpFraction": 0.6907,
+          "defenderHpFraction": 0.4956
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3843,
-          "defenderHpFraction": 0.6442
+          "attackerHpFraction": 0.6442,
+          "defenderHpFraction": 0.3843
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.297,
-          "defenderHpFraction": 0.6183
+          "attackerHpFraction": 0.6183,
+          "defenderHpFraction": 0.297
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.2144,
-          "defenderHpFraction": 0.6033
+          "attackerHpFraction": 0.6033,
+          "defenderHpFraction": 0.2144
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.1231,
-          "defenderHpFraction": 0.5844
+          "attackerHpFraction": 0.5844,
+          "defenderHpFraction": 0.1231
         }
       ]
     },
@@ -2816,37 +3038,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s24",
       "rollLog": true,
       "durationHours": 179,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 7,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 21.8
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 18,
-          "retreated": 9,
-          "remaining": 0,
-          "hpLeft": 283.1
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 5,
-          "retreated": 1,
-          "remaining": 0,
-          "hpLeft": 5.4
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2855,7 +3050,7 @@
           "hpLeft": 4042.4
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 6,
@@ -2864,50 +3059,77 @@
           "hpLeft": 1629.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3041.4
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 7,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 21.8
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 18,
+          "retreated": 9,
+          "remaining": 0,
+          "hpLeft": 283.1
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 5,
+          "retreated": 1,
+          "remaining": 0,
+          "hpLeft": 5.4
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8739,
-          "defenderHpFraction": 0.9261
+          "attackerHpFraction": 0.9261,
+          "defenderHpFraction": 0.8739
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7448,
-          "defenderHpFraction": 0.9014
+          "attackerHpFraction": 0.9014,
+          "defenderHpFraction": 0.7448
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5946,
-          "defenderHpFraction": 0.8513
+          "attackerHpFraction": 0.8513,
+          "defenderHpFraction": 0.5946
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4816,
-          "defenderHpFraction": 0.8049
+          "attackerHpFraction": 0.8049,
+          "defenderHpFraction": 0.4816
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3159,
-          "defenderHpFraction": 0.7683
+          "attackerHpFraction": 0.7683,
+          "defenderHpFraction": 0.3159
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1702,
-          "defenderHpFraction": 0.7654
+          "attackerHpFraction": 0.7654,
+          "defenderHpFraction": 0.1702
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0481,
-          "defenderHpFraction": 0.7365
+          "attackerHpFraction": 0.7365,
+          "defenderHpFraction": 0.0481
         }
       ]
     },
@@ -2917,37 +3139,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s25",
       "rollLog": true,
       "durationHours": 175,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 8,
-          "retreated": 0,
-          "remaining": 0,
-          "hpLeft": 0.0
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 18,
-          "retreated": 9,
-          "remaining": 0,
-          "hpLeft": 216.2
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 102.8
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -2956,7 +3151,7 @@
           "hpLeft": 4024.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 5,
@@ -2965,50 +3160,77 @@
           "hpLeft": 1527.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 3013.1
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 8,
+          "retreated": 0,
+          "remaining": 0,
+          "hpLeft": 0.0
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 18,
+          "retreated": 9,
+          "remaining": 0,
+          "hpLeft": 216.2
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 102.8
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8388,
-          "defenderHpFraction": 0.9418
+          "attackerHpFraction": 0.9418,
+          "defenderHpFraction": 0.8388
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.6967,
-          "defenderHpFraction": 0.8723
+          "attackerHpFraction": 0.8723,
+          "defenderHpFraction": 0.6967
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5739,
-          "defenderHpFraction": 0.8417
+          "attackerHpFraction": 0.8417,
+          "defenderHpFraction": 0.5739
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4504,
-          "defenderHpFraction": 0.8066
+          "attackerHpFraction": 0.8066,
+          "defenderHpFraction": 0.4504
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.2941,
-          "defenderHpFraction": 0.7617
+          "attackerHpFraction": 0.7617,
+          "defenderHpFraction": 0.2941
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.1645,
-          "defenderHpFraction": 0.7375
+          "attackerHpFraction": 0.7375,
+          "defenderHpFraction": 0.1645
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.0462,
-          "defenderHpFraction": 0.724
+          "attackerHpFraction": 0.724,
+          "defenderHpFraction": 0.0462
         }
       ]
     },
@@ -3018,37 +3240,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s26",
       "rollLog": true,
       "durationHours": 202,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 157.7
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 13,
-          "retreated": 14,
-          "remaining": 0,
-          "hpLeft": 321.8
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 138.8
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -3057,7 +3252,7 @@
           "hpLeft": 4064.3
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 3,
@@ -3066,55 +3261,82 @@
           "hpLeft": 1571.5
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2568.8
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 157.7
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 13,
+          "retreated": 14,
+          "remaining": 0,
+          "hpLeft": 321.8
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 138.8
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8284,
-          "defenderHpFraction": 0.9456
+          "attackerHpFraction": 0.9456,
+          "defenderHpFraction": 0.8284
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.681,
-          "defenderHpFraction": 0.8863
+          "attackerHpFraction": 0.8863,
+          "defenderHpFraction": 0.681
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.5787,
-          "defenderHpFraction": 0.838
+          "attackerHpFraction": 0.838,
+          "defenderHpFraction": 0.5787
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4661,
-          "defenderHpFraction": 0.7882
+          "attackerHpFraction": 0.7882,
+          "defenderHpFraction": 0.4661
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3439,
-          "defenderHpFraction": 0.7508
+          "attackerHpFraction": 0.7508,
+          "defenderHpFraction": 0.3439
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2384,
-          "defenderHpFraction": 0.7319
+          "attackerHpFraction": 0.7319,
+          "defenderHpFraction": 0.2384
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1372,
-          "defenderHpFraction": 0.7127
+          "attackerHpFraction": 0.7127,
+          "defenderHpFraction": 0.1372
         },
         {
           "hour": 192,
-          "attackerHpFraction": 0.07,
-          "defenderHpFraction": 0.6935
+          "attackerHpFraction": 0.6935,
+          "defenderHpFraction": 0.07
         }
       ]
     },
@@ -3124,37 +3346,10 @@
       "log": "output/ingame/jukki_usa_vs_bc_japan_battle_start_20261019_160212/s27",
       "rollLog": true,
       "durationHours": 190,
-      "outcome": "DefenderVictory",
+      "outcome": "AttackerVictory",
       "ships": [
         {
           "side": "attacker",
-          "design": "39_battleship_pure_la",
-          "count": 8,
-          "sunk": 5,
-          "retreated": 3,
-          "remaining": 0,
-          "hpLeft": 110.3
-        },
-        {
-          "side": "attacker",
-          "design": "39lc_la",
-          "count": 27,
-          "sunk": 11,
-          "retreated": 16,
-          "remaining": 0,
-          "hpLeft": 434.7
-        },
-        {
-          "side": "attacker",
-          "design": "shbb_4battery_2aa",
-          "count": 6,
-          "sunk": 4,
-          "retreated": 2,
-          "remaining": 0,
-          "hpLeft": 164.2
-        },
-        {
-          "side": "defender",
           "design": "39_battlecruiser_pure_la",
           "count": 12,
           "sunk": 0,
@@ -3163,7 +3358,7 @@
           "hpLeft": 3469.2
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "dd_3_la",
           "count": 54,
           "sunk": 2,
@@ -3172,50 +3367,77 @@
           "hpLeft": 1618.7
         },
         {
-          "side": "defender",
+          "side": "attacker",
           "design": "shbb_4battery_2aa",
           "count": 5,
           "sunk": 0,
           "retreated": 0,
           "remaining": 5,
           "hpLeft": 2324.2
+        },
+        {
+          "side": "defender",
+          "design": "39_battleship_pure_la",
+          "count": 8,
+          "sunk": 5,
+          "retreated": 3,
+          "remaining": 0,
+          "hpLeft": 110.3
+        },
+        {
+          "side": "defender",
+          "design": "39lc_la_aa3",
+          "count": 27,
+          "sunk": 11,
+          "retreated": 16,
+          "remaining": 0,
+          "hpLeft": 434.7
+        },
+        {
+          "side": "defender",
+          "design": "shbb_4battery_2aa",
+          "count": 6,
+          "sunk": 4,
+          "retreated": 2,
+          "remaining": 0,
+          "hpLeft": 164.2
         }
       ],
       "hourly": [
         {
           "hour": 24,
-          "attackerHpFraction": 0.8534,
-          "defenderHpFraction": 0.9236
+          "attackerHpFraction": 0.9236,
+          "defenderHpFraction": 0.8534
         },
         {
           "hour": 48,
-          "attackerHpFraction": 0.7017,
-          "defenderHpFraction": 0.8125
+          "attackerHpFraction": 0.8125,
+          "defenderHpFraction": 0.7017
         },
         {
           "hour": 72,
-          "attackerHpFraction": 0.564,
-          "defenderHpFraction": 0.7496
+          "attackerHpFraction": 0.7496,
+          "defenderHpFraction": 0.564
         },
         {
           "hour": 96,
-          "attackerHpFraction": 0.4466,
-          "defenderHpFraction": 0.7
+          "attackerHpFraction": 0.7,
+          "defenderHpFraction": 0.4466
         },
         {
           "hour": 120,
-          "attackerHpFraction": 0.3688,
-          "defenderHpFraction": 0.6686
+          "attackerHpFraction": 0.6686,
+          "defenderHpFraction": 0.3688
         },
         {
           "hour": 144,
-          "attackerHpFraction": 0.2659,
-          "defenderHpFraction": 0.6559
+          "attackerHpFraction": 0.6559,
+          "defenderHpFraction": 0.2659
         },
         {
           "hour": 168,
-          "attackerHpFraction": 0.1617,
-          "defenderHpFraction": 0.6386
+          "attackerHpFraction": 0.6386,
+          "defenderHpFraction": 0.1617
         }
       ]
     }

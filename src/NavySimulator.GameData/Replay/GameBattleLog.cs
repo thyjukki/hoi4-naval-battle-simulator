@@ -69,15 +69,20 @@ public sealed class GameBattleLog
     /// </summary>
     public int HourCount => hours.Count;
 
-    public static GameBattleLog Read(string runDirectory)
+    /// <summary>
+    /// Reads a logged run. <paramref name="designNames"/> maps the game's variant names to the scenario's design IDs where
+    /// they differ (a design renamed after the battle was recorded); other names are the design IDs.
+    /// </summary>
+    public static GameBattleLog Read(string runDirectory, IReadOnlyDictionary<string, string>? designNames = null)
     {
         using var meta = JsonDocument.Parse(File.ReadAllText(Path.Combine(runDirectory, "meta.json")));
         var ships = new Dictionary<uint, (string Country, string Design)>();
 
         foreach (var ship in meta.RootElement.GetProperty("ships").EnumerateObject())
         {
+            var design = ship.Value.GetProperty("design").GetString() ?? string.Empty;
             ships[uint.Parse(ship.Name)] = (ship.Value.GetProperty("country").GetString() ?? string.Empty,
-                ship.Value.GetProperty("design").GetString() ?? string.Empty);
+                designNames?.GetValueOrDefault(design) ?? design);
         }
 
         var records = new List<JsonElement>();

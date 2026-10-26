@@ -12,7 +12,7 @@
       "startHourOfDay": 13
     },
     "attacker": {
-      "fleetID": "Jukki_bb_fleet_usa",
+      "fleetID": "japan_bc_dd_shbb_20261019",
       "researchIDs": [
         "damage_control_1",
         "damage_control_2",
@@ -35,7 +35,7 @@
       "repairPriority": "NeverRepair"
     },
     "defender": {
-      "fleetID": "japan_bc_dd_shbb",
+      "fleetID": "Jukki_bb_fleet_usa_20261019",
       "researchIDs": [
         "damage_control_1",
         "damage_control_2",

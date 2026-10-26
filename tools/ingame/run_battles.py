@@ -141,10 +141,13 @@ def point_continue_at(save_name, title):
     }, indent="\t"), encoding="utf-8")
 
 
-def wait_for_load(started, timeout):
+def wait_for_load(game, started, timeout):
     log = USER_DIR / "logs" / "game.log"
     deadline = time.time() + timeout
     while time.time() < deadline:
+        if game.poll() is not None:
+            # the game crashed while loading; a locked or disconnected Windows session has no display for it
+            raise RuntimeError(f"the game exited while loading (code {game.returncode}); see the crashes folder")
         if log.exists() and log.stat().st_mtime > started:
             text = log.read_text(encoding="utf-8", errors="replace")
             launch = text.rfind("Launching SINGLEPLAYER-game")
@@ -167,7 +170,7 @@ def run_one(save_path, seed, out_dir, args):
     game = subprocess.Popen([str(GAME_DIR / "hoi4.exe"), "-continuelastsave"], cwd=GAME_DIR)
     if args.setup_only:
         # load and type the commands, then leave the game paused and running, with its save copy
-        wait_for_load(started, args.load_timeout)
+        wait_for_load(game, started, args.load_timeout)
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -181,7 +184,7 @@ def run_one(save_path, seed, out_dir, args):
     messages = queue.Queue()
     session = None
     try:
-        wait_for_load(started, args.load_timeout)
+        wait_for_load(game, started, args.load_timeout)
         session = frida.attach(game.pid)
         script = session.create_script(AGENT.read_text(encoding="utf-8"))
         script.on("message", lambda message, _data: messages.put(message))

@@ -5,7 +5,7 @@
   "mods": [
     "Their Finest Bruh (local dev checkout over vanilla 1.19.3)"
   ],
-  "notes": "The user's hand-made TFB battle (save light_attack_vs_torp_cruiser_battle_start.hoi4, Black Sea, province 7906, 1936.5.6.12): 75 light-attack CL3 (BUL, 39lc_la) against 75 torpedo CL3 (ROM, 39lc_torp), identical techs incl. smoke_generator, no doctrines or admirals, experience 0, Always Engage, Never repair. Weather off, so no night. The recorded manual battle (BUL 7464 HP left) was a lucky roll; these are 12 automated seeds without roll logs. The simulator reference predates 48972a4 (radar penalties, fixed-point target picks).",
+  "notes": "The user's hand-made TFB battle (save light_attack_vs_torp_cruiser_battle_start.hoi4, Black Sea, province 7906, 1936.5.6.12): 75 light-attack CL3 (BUL, 39lc_la_aa3) against 75 torpedo CL3 (ROM, 39lc_torp), identical techs incl. smoke_generator, no doctrines or admirals, experience 0, Always Engage, Never repair. Weather off, so no night. The recorded manual battle (BUL 7464 HP left) was a lucky roll; these are 12 automated seeds without roll logs. The recorded 39lc_la (AA 3, fire control 2, radar 2, DP secondaries 2) is the design 39lc_la_aa3 since the user's 39lc_la was upgraded on 2026-10-19; replay its seeds with --design 39lc_la=39lc_la_aa3.",
   "scenario": "battle-scenario-la-vs-torp-cl3.json",
   "attackerCountry": "BUL",
   "conditions": {
@@ -60,7 +60,7 @@
     "designs": [
       {
         "side": "attacker",
-        "design": "39lc_la",
+        "design": "39lc_la_aa3",
         "count": 75,
         "sunk": {
           "mean": 0,
@@ -119,12 +119,12 @@
     ]
   },
   "simulatorReference": {
-    "commit": "c36e409",
+    "commit": "3798b54",
     "seeds": "1..200",
     "runs": 200,
     "durationHours": {
-      "mean": 338.66,
-      "sd": 22.56,
+      "mean": 338.13,
+      "sd": 22.59,
       "min": 273,
       "max": 389
     },
@@ -135,10 +135,10 @@
       {
         "side": "attacker",
         "hpLeft": {
-          "mean": 7100.76,
-          "sd": 171.19,
+          "mean": 7099.29,
+          "sd": 169.49,
           "min": 6630.8,
-          "max": 7505.4
+          "max": 7490.1
         },
         "sunk": {
           "mean": 0,
@@ -150,23 +150,23 @@
       {
         "side": "defender",
         "hpLeft": {
-          "mean": 2804.51,
-          "sd": 88.8,
+          "mean": 2802.82,
+          "sd": 88.49,
           "min": 2597.3,
           "max": 3042.3
         },
         "sunk": {
-          "mean": 0.91,
-          "sd": 0.73,
+          "mean": 0.92,
+          "sd": 0.76,
           "min": 0,
-          "max": 3
+          "max": 4
         }
       }
     ],
     "designs": [
       {
         "side": "attacker",
-        "design": "39lc_la",
+        "design": "39lc_la_aa3",
         "count": 75,
         "sunk": {
           "mean": 0,
@@ -175,22 +175,22 @@
           "max": 0
         },
         "retreated": {
-          "mean": 1.62,
-          "sd": 1.32,
+          "mean": 1.6,
+          "sd": 1.3,
           "min": 0,
           "max": 5
         },
         "remaining": {
-          "mean": 73.38,
-          "sd": 1.32,
+          "mean": 73.4,
+          "sd": 1.3,
           "min": 70,
           "max": 75
         },
         "hpLeft": {
-          "mean": 7100.76,
-          "sd": 171.19,
+          "mean": 7099.29,
+          "sd": 169.49,
           "min": 6630.8,
-          "max": 7505.4
+          "max": 7490.1
         }
       },
       {
@@ -198,15 +198,15 @@
         "design": "39lc_torp",
         "count": 75,
         "sunk": {
-          "mean": 0.91,
-          "sd": 0.73,
+          "mean": 0.92,
+          "sd": 0.76,
           "min": 0,
-          "max": 3
+          "max": 4
         },
         "retreated": {
-          "mean": 74.09,
-          "sd": 0.73,
-          "min": 72,
+          "mean": 74.08,
+          "sd": 0.76,
+          "min": 71,
           "max": 75
         },
         "remaining": {
@@ -216,8 +216,8 @@
           "max": 0
         },
         "hpLeft": {
-          "mean": 2804.51,
-          "sd": 88.8,
+          "mean": 2802.82,
+          "sd": 88.49,
           "min": 2597.3,
           "max": 3042.3
         }
@@ -235,7 +235,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
@@ -335,7 +335,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
@@ -435,7 +435,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
@@ -525,7 +525,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 4,
@@ -625,7 +625,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 0,
@@ -715,7 +715,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 3,
@@ -815,7 +815,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 0,
@@ -915,7 +915,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 3,
@@ -1015,7 +1015,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
@@ -1110,7 +1110,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
@@ -1205,7 +1205,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 3,
@@ -1300,7 +1300,7 @@
       "ships": [
         {
           "side": "attacker",
-          "design": "39lc_la",
+          "design": "39lc_la_aa3",
           "count": 75,
           "sunk": 0,
           "retreated": 1,
