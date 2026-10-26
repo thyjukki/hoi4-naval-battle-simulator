@@ -58,6 +58,7 @@ public sealed class StaticModifiers
     public const string NavyAntiAirAttack = "navy_anti_air_attack";
     public const string NavyAntiAirAttackFactor = "navy_anti_air_attack_factor";
     public const string NavyVisibility = "navy_visibility";
+    public const string NavalDetection = "naval_detection";
     public const string NavyCasualtyOnHit = "navy_casualty_on_hit";
     public const string NavalStrikeAttackFactor = "naval_strike_attack_factor";
     public const string NavalStrikeTargettingFactor = "naval_strike_targetting_factor";

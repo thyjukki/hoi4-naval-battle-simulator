@@ -355,7 +355,7 @@ public sealed class BattleSession
             var enemyAir = airPhase.CarrierAirStrength(enemy, hour, environment);
             var ownAir = enemyAir.A > 0 ? airPhase.CarrierAirStrength(own, hour, environment).A : 0;
             own.Positioning = PositioningRules.Calculate(own.Lines, enemy.Lines, defines, ownAir, enemyAir,
-                SideModifier(own, StaticModifiers.Positioning), FleetSizePenaltyFactor(enemy));
+                SideModifier(own, StaticModifiers.Positioning), FleetSizePenaltyFactor(enemy), environment);
             // [RE + LOG] A-AA-REDUCE: the fleet AA term is fixed here for the hour, so ships sunk during it still count.
             own.FleetAntiAir = AirRules.FleetAntiAir(own.Ships, own.Positioning, defines);
             own.Screening = ScreeningRules.Calculate(own.Lines, own.Positioning, defines,

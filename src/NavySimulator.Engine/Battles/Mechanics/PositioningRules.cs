@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Environment;
 
 namespace NavySimulator.Engine.Battles.Mechanics;
 
@@ -16,14 +17,15 @@ public static class PositioningRules
         double ownCarrierAir = 0,
         (double A, double B) enemyCarrierAir = default,
         double positioningModifier = 0,
-        double enemyFleetSizePenaltyFactor = 0)
+        double enemyFleetSizePenaltyFactor = 0,
+        BattleEnvironment environment = default)
     {
         // S-POS-MOD [RE] 0x161bb4c: the side's positioning modifier (country: doctrines, spirits; admiral) joins the sum
         // before the clamp.
         var positioning = defines.NNavy.BASE_POSITIONING + positioningModifier;
         positioning -= FleetSizePenalty(own.Count, enemy.Count, defines, enemyFleetSizePenaltyFactor);
         positioning -= CarrierRatioPenalty(ownCarrierAir, enemyCarrierAir.A, enemyCarrierAir.B, defines);
-        positioning += DetectionBonus(own, enemy, defines);
+        positioning += DetectionBonus(own, enemy, defines, environment);
         return Math.Clamp(positioning, 0, 1);
     }
 
@@ -57,14 +59,15 @@ public static class PositioningRules
         return Math.Clamp(penalty, 0, navy.MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO);
     }
 
-    // S-POS-DETECT [RE]: summed surface detection of all ships in the battle, difference / 100 * factor, only if positive.
+    // S-POS-DETECT [RE]: summed effective surface detection (0xc3aae0, with naval_detection: the weather's lowers it) of
+    // all ships in the battle, difference / 100 * factor, only if positive.
     // [CAL] With damaged parts' penalties (S-STATS-PARTS): a short-circuited radar (−7) takes its ship's detection to 0,
     // and the enemy's logged positioning rose by exactly that share.
-    public static double DetectionBonus(BattleLines own, BattleLines enemy, GameDefines defines)
+    public static double DetectionBonus(BattleLines own, BattleLines enemy, GameDefines defines, BattleEnvironment environment = default)
     {
         var navy = defines.NNavy;
-        var ownDetection = own.All.Sum(ship => ship.GetFinalStats().SurfaceDetection);
-        var enemyDetection = enemy.All.Sum(ship => ship.GetFinalStats().SurfaceDetection);
+        var ownDetection = own.All.Sum(ship => CombatStatRules.SurfaceDetection(ship, defines, environment));
+        var enemyDetection = enemy.All.Sum(ship => CombatStatRules.SurfaceDetection(ship, defines, environment));
         var bonus = (ownDetection - enemyDetection) / defines.Hardcoded.DetectionPositioningDivisor *
                     navy.RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR;
         return bonus > 0 ? Math.Min(bonus, navy.MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION) : 0;

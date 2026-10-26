@@ -123,6 +123,17 @@ public static class CombatStatRules
         return Math.Max(0, (submerged ? stats.SubVisibility : stats.SurfaceVisibility) * factor);
     }
 
+    /// <summary>
+    /// [RE + CAL] 0xc3aae0: effective surface detection <c>max(0, stat × (1 + naval_detection))</c>, through the ship
+    /// modifier sum (so the region's weather × the ship's weather factor, S-WEATHER); S-POS-DETECT sums it. The carrier
+    /// part (carrier_surface_detection × deck fill, medium confidence) is not added.
+    /// </summary>
+    public static double SurfaceDetection(Ship ship, GameDefines defines, BattleEnvironment environment = default)
+    {
+        var factor = 1 + MemberModifierRules.ShipModifier(ship, StaticModifiers.NavalDetection, environment, defines);
+        return Math.Max(0, ship.GetFinalStats().SurfaceDetection * factor);
+    }
+
     // The sub-unit type keywords (common/units type = { ... }) that gate the combat getter's factors.
     private const string SubmarineType = "submarine";
     private const string CapitalShipType = "capital_ship";

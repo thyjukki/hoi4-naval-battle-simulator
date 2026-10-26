@@ -104,6 +104,22 @@ public class WeatherRulesTests
     }
 
     [Fact]
+    public void Rain_LowersSurfaceDetection_AndSoTheDetectionPositioningBonus()
+    {
+        // S-POS-DETECT [RE + CAL] 0xc3aae0: detection × (1 + naval_detection); light rain −0.1 on a ship taking the weather
+        // whole, none on one without the weather factor (TFB's super-heavies).
+        var exposed = Screen("dd", 1);
+        var immune = Screen("shbb", 0);
+        var own = new BattleLines(Enumerable.Range(0, 10).Select(i => Screen($"own{i}", 1)));
+        var enemy = new BattleLines(Enumerable.Range(0, 5).Select(i => Screen($"enemy{i}", 1)));
+
+        Assert.Equal(18, CombatStatRules.SurfaceDetection(exposed, defines, Rain()), 9);
+        Assert.Equal(20, CombatStatRules.SurfaceDetection(immune, defines, Rain()), 9);
+        Assert.Equal(0.01, PositioningRules.DetectionBonus(own, enemy, defines), 9);
+        Assert.Equal(0.009, PositioningRules.DetectionBonus(own, enemy, defines, Rain()), 9);
+    }
+
+    [Fact]
     public void Terrain_AdjustsAttackArmorAndSpeedBySubUnit_AndAddsItsKeys()
     {
         var terrain = new NavalTerrain("water_deep_ocean", new ModifierSet([new(StaticModifiers.Positioning, -0.05)]),
