@@ -92,6 +92,11 @@
                 <span class="hint">When the task force goes home for repairs. Recorded with the setup; combat does not use it.</span>
             </div>
             <div class="field">
+                <label title="S-DOMINANCE-DAILY: the side's current naval dominance in the battle region when the battle starts (the save's region value)">Naval dominance at the start</label>
+                <input type="number" min="0" step="1" placeholder="fleet's sum" @bind="Side.NavalDominanceStart" @bind:after="Changed" />
+                <span class="hint">With naval dominance on: follows the ships afloat every midnight; the higher side regains organization faster.</span>
+            </div>
+            <div class="field">
                 <label>Ship experience level</label>
                 <select @bind="Side.ShipExperienceLevel" @bind:after="Changed">
                     <option value="">Fleet's levels (default 2)</option>

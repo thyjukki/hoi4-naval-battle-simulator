@@ -181,6 +181,8 @@ public static class ListShipsCommand
             // S-ADMIRAL: the set skill levels (before trait adds) and trait IDs, as a character's navy_leader block has them.
             // S-POTF: the side's pride of the fleet: the simulator's ship ID and its design (the design's first ship).
             prideOfTheFleet = side.PrideOfTheFleet is { } pride ? new { ship = pride.ID, design = pride.Design.ID } : null,
+            // S-DOMINANCE-DAILY: the side's start value in the battle region, when the scenario sets one (else the ships' sum).
+            navalDominanceStart = side.NavalDominanceStart,
             admiral = side.Admiral is { } admiral
                 ? new { id = admiral.ID, name = admiral.Name, skills = admiral.BaseSkills, traits = admiral.Traits.Select(trait => trait.ID).ToList() }
                 : null,

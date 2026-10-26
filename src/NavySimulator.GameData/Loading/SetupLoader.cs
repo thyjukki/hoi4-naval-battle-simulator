@@ -1214,6 +1214,11 @@ public class SetupLoader
             errors.Add($"battleScenario.{role}.radarCoverage must be between 0 and 1.");
         }
 
+        if (participant.NavalDominanceStart is < 0)
+        {
+            errors.Add($"battleScenario.{role}.navalDominanceStart must not be negative.");
+        }
+
         foreach (var (planeId, count) in participant.PlaneStockpile)
         {
             if (!planeIds.Contains(planeId))
@@ -1273,7 +1278,8 @@ public class SetupLoader
             participant.CarrierWingsOnRegionMission,
             participant.CarrierMissionEfficiency ?? 1.0,
             participant.RadarCoverage ?? 0,
-            BuildAirBases(participant, catalog));
+            BuildAirBases(participant, catalog),
+            participant.NavalDominanceStart);
     }
 
     /// <summary>

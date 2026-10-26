@@ -13,6 +13,7 @@
     },
     "attacker": {
       "fleetID": "japan_bc_dd_shbb_20261019",
+      "navalDominanceStart": 17238,
       "researchIDs": [
         "damage_control_1",
         "damage_control_2",
@@ -36,6 +37,7 @@
     },
     "defender": {
       "fleetID": "Jukki_bb_fleet_usa_20261019",
+      "navalDominanceStart": 17376.9375,
       "researchIDs": [
         "damage_control_1",
         "damage_control_2",

@@ -55,6 +55,12 @@ public class BattleParticipantDto
 
     /// <summary>A-DETECT-RAD: share of the battle region's provinces the side's radars cover, 0..1 (null: 0).</summary>
     public double? RadarCoverage { get; set; }
+
+    /// <summary>
+    /// S-DOMINANCE-DAILY: the side's current naval dominance in the battle's region at the start, as the save's region
+    /// block has it (null: its ships' sum). Read with <c>rules.navalDominanceEnabled</c>.
+    /// </summary>
+    public double? NavalDominanceStart { get; set; }
 }
 
 

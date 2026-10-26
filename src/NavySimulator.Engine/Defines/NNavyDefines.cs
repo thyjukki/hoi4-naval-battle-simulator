@@ -407,4 +407,10 @@ public sealed class NNavyDefines
 
     /// <summary>S-DOMINANCE: bonus to dominance per point of heavy attack.</summary>
     public double DOMINANCE_PER_SHIP_PER_HEAVY_GUN_ATTACK { get; set; } = 0.01;
+
+    /// <summary>S-DOMINANCE-DAILY: daily dominance gain, as a fraction of the target value.</summary>
+    public double DOMINANCE_DAILY_GAIN_FACTOR { get; set; } = 0.02;
+
+    /// <summary>S-DOMINANCE-DAILY: daily dominance loss without a target, as a fraction of the value the decline started from.</summary>
+    public double DOMINANCE_DAILY_LOSS_FACTOR { get; set; } = 0.04;
 }

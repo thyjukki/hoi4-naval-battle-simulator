@@ -1182,8 +1182,12 @@ def main():
         if records and deployment == "after units":
             warnings.append(f"{role}: {tf.country}'s deployment block stays after its units; ships load clamped to their organisation without the doctrine bonus")
 
-    dominance = {tf.country: sum(d["count"] * d["navalDominance"] for d in ships[role]["designs"])
-                 for role, tf in (("attacker", attacker_tf), ("defender", defender_tf))}
+    # S-DOMINANCE-DAILY: the scenario's start value where it sets one, else the side's ships' sum
+    def start_dominance(side):
+        start = side.get("navalDominanceStart")
+        return start if start is not None else sum(d["count"] * d["navalDominance"] for d in side["designs"])
+
+    dominance = {tf.country: start_dominance(ships[role]) for role, tf in (("attacker", attacker_tf), ("defender", defender_tf))}
     region = write_dominance(save, dominance)
     if region is None:
         warnings.append("no single region lists both countries' naval dominance; the game keeps the template's values")

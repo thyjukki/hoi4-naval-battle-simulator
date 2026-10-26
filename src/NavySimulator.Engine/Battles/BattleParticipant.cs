@@ -175,6 +175,12 @@ public class BattleParticipant
     /// </summary>
     public readonly double RadarCoverage;
 
+    /// <summary>
+    /// S-DOMINANCE-DAILY: the side's current naval dominance in the battle's region when the battle starts (the save's
+    /// region value); null: its ships' sum, as after a patrol long enough to reach the target.
+    /// </summary>
+    public readonly double? NavalDominanceStart;
+
     /// <summary>A-COVERAGE: the side's air bases, one per state its land-based wings fly from.</summary>
     public readonly IReadOnlyList<AirBaseSetup> AirBases;
 
@@ -197,7 +203,8 @@ public class BattleParticipant
         bool? carrierWingsOnRegionMission = null,
         double carrierMissionEfficiency = 1.0,
         double radarCoverage = 0,
-        IReadOnlyList<AirBaseSetup>? airBases = null)
+        IReadOnlyList<AirBaseSetup>? airBases = null,
+        double? navalDominanceStart = null)
     {
         if (prideOfTheFleet is not null && !fleet.Ships.Contains(prideOfTheFleet))
         {
@@ -217,6 +224,7 @@ public class BattleParticipant
         CarrierWingsOnRegionMission = carrierWingsOnRegionMission;
         CarrierMissionEfficiency = carrierMissionEfficiency;
         RadarCoverage = Math.Clamp(radarCoverage, 0, 1);
+        NavalDominanceStart = navalDominanceStart;
         AirBases = airBases ?? [];
         Doctrines = doctrines ?? [];
         Mios = mios ?? [];

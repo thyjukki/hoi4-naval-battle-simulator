@@ -31,8 +31,11 @@ public sealed class BattleSide
     /// <summary>S-SUB: this side's submarine detection value (mean sub detection of ships that have any).</summary>
     public double SubmarineDetection { get; set; }
 
-    /// <summary>S-DOMINANCE: this side's naval dominance at the start of the battle (0 with the rule off).</summary>
+    /// <summary>S-DOMINANCE-DAILY: this side's current naval dominance in the region (0 with the rule off).</summary>
     public double NavalDominance { get; set; }
+
+    /// <summary>S-DOMINANCE-DAILY: the value a decline without a target starts from (the last target, or the start value).</summary>
+    public double NavalDominanceDeclineFrom { get; set; }
 
     /// <summary>S-DOMINANCE: whether this side has naval dominance in the battle's region (S-ORG-REGAIN bonus).</summary>
     public bool HasNavalDominance { get; set; }

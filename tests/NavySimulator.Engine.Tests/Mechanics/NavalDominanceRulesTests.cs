@@ -54,6 +54,19 @@ public class NavalDominanceRulesTests
     }
 
     [Fact]
+    public void DailyUpdate_GainsAShareOfTheTarget_CappedAtIt_AndLosesOnlyWithoutATarget()
+    {
+        // S-DOMINANCE-DAILY [RE + LOG] 0x1003c50, vanilla gain 0.02, loss 0.04.
+        // Below the target: + trunc(25925.0592 × 0.02) = + 518.50118.
+        Assert.Equal((17238 + 518.50118, 25925.0592), NavalDominanceRules.DailyUpdate(17238, 25925.0592, 17238, defines));
+        // Ships sunk: the cap takes the value straight down to the new target.
+        Assert.Equal((2766.0, 2766.0), NavalDominanceRules.DailyUpdate(17984, 2766, 20228, defines));
+        // No task force left: − 4 % of the value the decline starts from, down to 0.
+        Assert.Equal((17984 - 809.12, 20228.0), NavalDominanceRules.DailyUpdate(17984, 0, 20228, defines));
+        Assert.Equal((0.0, 20228.0), NavalDominanceRules.DailyUpdate(500, 0, 20228, defines));
+    }
+
+    [Fact]
     public void SideDominance_LeavesOutSunkShips()
     {
         var first = Ship(100, new ShipStats(Speed: 20, NavalRange: 2000, Hp: 100));

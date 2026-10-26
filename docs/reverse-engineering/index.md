@@ -197,6 +197,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xdd3a50 | "LOADING_MAIN_MENU" / "EXITING_TO_FRONTEND": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
 | 0xdd9b20 | "on_startup" (`ingameidler.cpp`): sets HasGameStarted = 1 via 0x1edff0, before the on_action fires | S-MANPOWER | [XP/mp] |
 | 0xdda5d0 | "LOADING_SAVEGAME": clears HasGameStarted via 0x1edff0 | S-MANPOWER | [XP/mp] |
+| 0xe22660 | strategic region: daily dominance update thunk (`region+0xe8` → 0x1003c50); from 0x1d4810 ("daily.strategic_region_update") and 0x1beae0 | S-DOMINANCE-DAILY | [DOM] |
 | 0xe23bb0 | strategic region init: `region+0x140 = region+0x60 mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT)` | A-CADENCE | [AIR/cadence] |
 | 0xe24530 | air clock: is this an air hour for the region | A-CADENCE | [AIR/cadence] |
 | 0xf11390 | weather cell (per province) hourly update: period temperature mid + random walk (`temperature_variation`, clamp `max_temperature_change`), snow depth from the region's snow / blizzard flag | S-WEATHER | [WSIM/hourly] |
@@ -239,7 +240,14 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xf9f9c0 | character → unit-leader role (`character+0xa8`; leaf) | — | [STC/leader] |
 | 0xfa50b0 | character parser (`unit_medals` → `character+0xd0`) | — | [STC/leader] |
 | 0xfafda0 | a mission's dominance in a region: Σ ship dominance × efficiency × MISSION_DOMINANCE_RATIOS[type] | S-DOMINANCE | [DOM] |
-| 0x1003c50 / 0x1005296 | daily dominance gain / loss (not decoded) | S-DOMINANCE | [DOM] |
+| 0xfb3220 | a mission's dominance for the daily target: Σ ship dominance of the task force × efficiency (patrol in its region 1.0), no mission ratio | S-DOMINANCE-DAILY | [DOM] |
+| 0x1002d60 | daily dominance: loss set (countries with an entry minus those with a target) | S-DOMINANCE-DAILY | [DOM] |
+| 0x1002fe0 | daily dominance: every country's target (0x10033e0); target > 0 → entry, 0x19de3c0, gain set | S-DOMINANCE-DAILY | [DOM] |
+| 0x10033e0 | a country's target in a region: Σ kind-1 mission dominance (0xfb3220) × (multiplier 0x19dd350 + strike-force terms 0x1003760) | S-DOMINANCE-DAILY | [DOM] |
+| 0x1003760 | strike-force dominance term (STRIKE_FORCE_FRACTION / _MULTIREGION_DECAY; not decoded) | S-DOMINANCE-DAILY | [DOM] |
+| 0x1003c50 | a region's daily dominance update: targets; `current = clamp(current + trunc(target × GAIN), 0, target)` for countries with a target, the loss step for the rest; individual ratio; snapshot 0x1006280 | S-DOMINANCE-DAILY | [DOM] |
+| 0x1005280 (0x1005296) | daily loss: `current −= trunc(decline_from × LOSS)` (0x24ef6f0 negates), target 0, entry removed at 0 | S-DOMINANCE-DAILY | [DOM] |
+| 0x1006280 | control snapshot: value table → array `+0x40` (stride 0x50) that 0x1003f50 reads | S-DOMINANCE-DAILY | [DOM] |
 | 0x1003f50 | region control for a country: 0 none, 1 own side (ties included), 2 enemies; needs `own × t/(1 − t)` | S-DOMINANCE, S-ORG-REGAIN | [DOM] |
 | 0x10055a0 | region dominance state | S-POS | [POS/convoy] |
 | 0x10109b0 | equipment list has a type flag `(list, mask)`: an entry `{equipment*, amount}` (list+0x20, count +0x2c) with `equipment+0x408 & mask` and amount > 0 | S-POTF | [POTF/assign] |
@@ -377,6 +385,9 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x1989c60 | aggressiveness-check strength score (not decoded) | S-RETREAT | [ACT/retreat] |
 | 0x1989fe0 | aggressiveness-check ratio `min(own/max(enemy, 0.1), 10)` | S-RETREAT | [ACT/retreat] |
 | 0x198a080 | update fleet distance (+0x118) | S-HOUR | [HOUR/hour] |
+| 0x19dd200 | dominance value step: previous = current; current += delta (positive capped at target), floored at 0 | S-DOMINANCE-DAILY | [DOM] |
+| 0x19dd350 | dominance multiplier (1 + air base)(1 + naval base)(1 + radar) via 0x19dd240 / 0x19dd440 / 0x19dd550 × the *_DOMINANCE_FACTOR defines | S-DOMINANCE-DAILY | [DOM] |
+| 0x19de3c0 | dominance set target (V, target, base); decline_from = target if > 0 | S-DOMINANCE-DAILY | [DOM] |
 | 0x1a68d40 | AI: a country without a PotF (feature 0xf) scores every eligible ship (0xc33a50) and assigns one by command | S-POTF | [POTF/assign] |
 | 0x1aa8f60..0x1ab5598 | tooltips/script triggers reading ship level | S-XP-EFFECT | [XP/effect] |
 | 0x1ad7f00 | convoy hit profile | S-HIT-SHIP | [HIT/ship] |
@@ -1274,7 +1285,9 @@ From [A-MIXED-plane-variants-in-a-wing.md][MIX]: which variants refill a wing, h
 | variant | +0x408 bit 7 | dominance reads stat 0x49 instead of carrier size 0x48 (meaning open) | [DOM] |
 | mission | +0x8 / +0x14 / +0x30 / +0x70 / +0xc8, +0xd4 | task force / type (MISSION_DOMINANCE_RATIOS index; save `mission=1` patrol) / active / region (one type) / regions, count | [DOM] |
 | strategic region | +0xe8 | region dominance | [DOM] |
-| region dominance | +0x40 / +0x4c / +0x78 | entries (stride 0x50: country, +0x20 value, presumably `current`) / count / the region's own value | [DOM] |
+| region dominance | +0x40 / +0x4c / +0x78 | control snapshot (stride 0x50: country, +0x20 `current`; rebuilt daily by 0x1006280) / count / the region's own value | [DOM] |
+| region dominance | +0x20 | value table (robin hood, entries 0x58; the value block V at entry+0x10) | [DOM] |
+| dominance value V | +0x8 / +0x18 / +0x20 / +0x28 / +0x30 / +0x38 / +0x40 | country / current / base_target / target / individual_ratio / previous / decline_from | [DOM] |
 | global | 0x332f260 | gamestate pointer | [LOG] |
 | global | 0x3452520 / 0x3452524 | RNG counter / seed (the save's `multiplayer_random_count` / `multiplayer_random_seed`, observed) | [LOG] |
 | global | 0x3452529 | log every `random_fixed` call (console `randomlog`) | [LOG] |
@@ -1686,7 +1699,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | MISSION_DOMINANCE_RATIOS | 0xfafde3 | mission multiplier | [DOM] |
 | DOMINANCE_CONTROLLED_THRESHOLD_RATIO | 0x1003ff9 (also 0x1003690.., 0x161ab40) | control minimum `t/(1 − t)` × own value | [DOM], [POS/convoy] |
 | NAVAL_DOMINANCE_ORG_RECOVERY | 0xc39943 | regain factor of the controlling side | [DOM], [LOG] |
-| DOMINANCE_DAILY_GAIN_FACTOR / _LOSS_FACTOR | 0x1003cf1 / 0x1005301 | daily update (not decoded; [CAL] in the finding) | [DOM] |
+| DOMINANCE_DAILY_GAIN_FACTOR / _LOSS_FACTOR | 0x1003cf1 / 0x1005301 | daily update: gain × target (capped at the target), loss × decline_from (no target left) | [DOM] |
 | BASE_POSITIONING | 0x161b99b | positioning base | [POS/pos] |
 | RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR, MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION | 0x161b960 | detection bonus (who.py misses) | [POS/detect] |
 | MIN_SHIPS_FOR_HIGHER_SHIP_RATIO_PENALTY, HIGHER_SHIP_RATIO_POSITIONING_PENALTY_FACTOR, MAX_POSITIONING_PENALTY_FROM_HIGHER_SHIP_RATIO | 0x161b960 (0x161bf69..) | ship-ratio penalty | [POS/size] |
@@ -1853,7 +1866,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - Ship `+0x738` link; damage to non-ship targets (`0x1ad8610`). [DMG/open]
 - Experience-level damage bonus location (DMG: not in the hit path; XP: only through `naval_damage_factor`/`naval_defense_factor` modifiers). [DMG/open], [XP/effect]
 - Refresh frequency of the enemy count snapshot (0x161f810) vs the firing loop. [TGT/bb]
-- ~~Convoy-escort dominance helper 0x143c720~~ decoded (`own × t/(1 − t)`); the mission efficiency functions, the daily dominance update and where MISSION_DOMINANCE_RATIOS enters the saved target. [POS/convoy], [DOM]
+- ~~Convoy-escort dominance helper 0x143c720~~ decoded (`own × t/(1 − t)`); the mission efficiency functions; ~~the daily dominance update~~ decoded (S-DOMINANCE-DAILY; MISSION_DOMINANCE_RATIOS is not on the daily target's path). [POS/convoy], [DOM]
 - Order of the task-force update 0xd705f0 vs the combat hour (this hour's shots or last hour's). [XP/open]
 - `combat+0x120` setter; `region+0x60` = region id? [AIR/open]
 - `airfx+0xe8` name (equipment +0x260). [AIR/open]

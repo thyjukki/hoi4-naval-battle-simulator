@@ -238,6 +238,7 @@ public sealed class BattleSession
         SideTurn(attacker, defender, hour, tick);
         SideTurn(defender, attacker, hour, tick);
         ApplyExperienceGain(hour);
+        UpdateNavalDominance(hour);
         ApplyOrganizationRegain();
         LogHour(hour, hourStartShots);
         ApplyDailyManpowerGain(hour);
@@ -673,8 +674,8 @@ public sealed class BattleSession
         }
     }
 
-    // S-DOMINANCE [RE + ASSUMED]: each side's dominance from its ships at the start; the larger one (both on a tie) has
-    // dominance for the whole battle.
+    // S-DOMINANCE [RE + ASSUMED]: each side starts with its scenario value, else its ships' sum; the larger one (both on a
+    // tie) controls the region until the daily update (S-DOMINANCE-DAILY) changes it.
     private void SetNavalDominance()
     {
         if (!rules.NavalDominanceEnabled)
@@ -682,10 +683,52 @@ public sealed class BattleSession
             return;
         }
 
-        attacker.NavalDominance = NavalDominanceRules.SideDominance(attacker.Ships, defines);
-        defender.NavalDominance = NavalDominanceRules.SideDominance(defender.Ships, defines);
+        foreach (var side in new[] { attacker, defender })
+        {
+            side.NavalDominance = side.Participant.NavalDominanceStart ?? NavalDominanceRules.SideDominance(side.Ships, defines);
+            side.NavalDominanceDeclineFrom = side.NavalDominance;
+        }
+
+        SetNavalControl();
+    }
+
+    // S-DOMINANCE-DAILY [RE + LOG] 0x1003c50: in the tick where the day changes, after its combat hour and before the
+    // regain, each side's current value follows its target (its ships not sunk: escaped and retreating ones are still in
+    // the task force) and control is decided again from the current values.
+    private void UpdateNavalDominance(int hour)
+    {
+        if (!rules.NavalDominanceEnabled || HourOfDay(hour) != 0)
+        {
+            return;
+        }
+
+        foreach (var side in new[] { attacker, defender })
+        {
+            var target = NavalDominanceRules.SideDominance(side.Ships, defines);
+            (side.NavalDominance, side.NavalDominanceDeclineFrom) =
+                NavalDominanceRules.DailyUpdate(side.NavalDominance, target, side.NavalDominanceDeclineFrom, defines);
+        }
+
+        var before = (attacker.HasNavalDominance, defender.HasNavalDominance);
+        SetNavalControl();
+
+        if (before != (attacker.HasNavalDominance, defender.HasNavalDominance))
+        {
+            log.Add(FormattableString.Invariant($"Hour {hour}: naval dominance attacker {attacker.NavalDominance:0.#}, defender {defender.NavalDominance:0.#}; ") +
+                    $"control now {ControlText()}");
+        }
+    }
+
+    private void SetNavalControl()
+    {
         attacker.HasNavalDominance = NavalDominanceRules.IsDominant(attacker.NavalDominance, defender.NavalDominance);
         defender.HasNavalDominance = NavalDominanceRules.IsDominant(defender.NavalDominance, attacker.NavalDominance);
+    }
+
+    private string ControlText()
+    {
+        var holders = new[] { attacker, defender }.Where(side => side.HasNavalDominance).Select(side => side.Label).ToList();
+        return holders.Count == 0 ? "neither side" : string.Join(" and ", holders);
     }
 
     // S-MANPOWER [RE]: the daily update runs after the combat hour of the tick that starts a new day (00:00) and refills
@@ -996,7 +1039,8 @@ public sealed class BattleSession
         {
             var holders = new[] { attacker, defender }.Where(side => side.HasNavalDominance).Select(side => side.Label).ToList();
             notes.Add(FormattableString.Invariant($"Naval dominance at the start: attacker {attacker.NavalDominance:0.#}, defender {defender.NavalDominance:0.#}; ") +
-                      (holders.Count == 0 ? "neither side has it." : $"{string.Join(" and ", holders)} regain{(holders.Count == 1 ? "s" : "")} organization with it."));
+                      (holders.Count == 0 ? "neither side has it" : $"{string.Join(" and ", holders)} regain{(holders.Count == 1 ? "s" : "")} organization with it") +
+                      "; the values follow the ships afloat every midnight (S-DOMINANCE-DAILY).");
         }
 
         AddLocationNotes();
