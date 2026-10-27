@@ -17,6 +17,9 @@ public enum BattleEventKind
     /// <summary>The ship was sunk by a shot or an air strike.</summary>
     Sunk,
 
+    /// <summary>S-RECOVERY: the ship sank and was recovered: out of the battle, but not lost.</summary>
+    Recovered,
+
     /// <summary>A side fully retreated and the escaped ships were put back in (tooling option ContinueAfterRetreat).</summary>
     Reengaged
 }

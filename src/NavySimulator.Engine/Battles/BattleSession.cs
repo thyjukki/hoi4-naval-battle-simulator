@@ -474,11 +474,7 @@ public sealed class BattleSession
 
             if (applied.Sunk)
             {
-                tallies[target].SunkHour = hour;
-                airPhase.CarrierLeft(enemy, target);
-                events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
-                    $"sunk by an air strike from {record.Source}{PrideNote(target)}", record.Source));
-                ReinforceAfterSinking(enemy, hour);
+                LeaveBySinking(enemy, target, hour, $"sunk by an air strike from {record.Source}", record.Source);
             }
 
             log.Add($"Hour {hour}: {own.Label} air strike from {record.Source}: {record.Flying} flying, {record.Intercepted} intercepted, " +
@@ -565,11 +561,8 @@ public sealed class BattleSession
 
             if (applied.Sunk)
             {
-                tallies[target].SunkHour = hour;
-                airPhase.CarrierLeft(enemy, target);
-                events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
-                    $"sunk by {shooter.ID} ({weapon}){PrideNote(target)}", shooter.ID));
-                ReinforceAfterSinking(enemy, hour);
+                RecoveryRules.TryRecover(target, enemy, defines, random);
+                LeaveBySinking(enemy, target, hour, $"sunk by {shooter.ID} ({weapon})", shooter.ID);
             }
 
             shots.Add(new ShotRecord(
@@ -661,6 +654,26 @@ public sealed class BattleSession
 
     // S-MANPOWER [CAL]: a sinking refills the rest of the sunk ship's task force at once, as the daily update does
     // (a logged TFB battle: every refill outside 00:00 came with a sinking, and later shots that hour saw the new crews).
+    // S-MANPOWER, S-RECOVERY [RE]: a sunk ship leaves the battle (its carrier's air objects too); the task force refills,
+    // unless the ship was recovered (0xd78247 returns before the refill 0xd7a7e0).
+    private void LeaveBySinking(BattleSide side, Ship target, int hour, string cause, string source)
+    {
+        airPhase.CarrierLeft(side, target);
+
+        if (target.IsRecovered)
+        {
+            tallies[target].RecoveredHour = hour;
+            log.Add($"Hour {hour}: {side.Label} {target.ID} {cause}, recovered with {target.CurrentHP:F1} HP");
+            events.Add(new BattleEvent(hour, side.Label, target.ID, BattleEventKind.Recovered,
+                $"{cause}, recovered with {target.CurrentHP:F1} HP", source));
+            return;
+        }
+
+        tallies[target].SunkHour = hour;
+        events.Add(new BattleEvent(hour, side.Label, target.ID, BattleEventKind.Sunk, $"{cause}{PrideNote(target)}", source));
+        ReinforceAfterSinking(side, hour);
+    }
+
     private void ReinforceAfterSinking(BattleSide side, int hour)
     {
         var gained = side.Ships.Where(ship => !ship.IsSunk).Sum(ship => ExperienceRules.DailyManpowerGain(ship, defines));
@@ -949,7 +962,7 @@ public sealed class BattleSession
             side.Ships.Count(ship => ship.IsInBattle),
             side.Ships.Count(ship => ship.IsSunk),
             side.Ships.Count(ship => !ship.IsSunk && ship.CurrentStatus == ShipStatus.Retreated),
-            side.Ships.Sum(ship => Math.Max(0, ship.CurrentHP)),
+            side.Ships.Where(ship => !ship.IsRecovered).Sum(ship => Math.Max(0, ship.CurrentHP)),
             side.Ships.Where(ship => !ship.IsSunk).Sum(ship => Math.Max(0, ship.CurrentOrganization)),
             fired,
             hits,
@@ -1105,7 +1118,7 @@ public sealed class BattleSession
             tally.StartExperience,
             ship.Experience,
             ship.CurrentStatus,
-            ship.IsSunk,
+            ship.IsSunk && !ship.IsRecovered,
             tally.SunkHour,
             tally.RetreatedHour,
             tally.ShotsFired,
@@ -1113,7 +1126,9 @@ public sealed class BattleSession
             tally.DamageDealt,
             tally.HpDamageDealt,
             tally.HpDamageTaken,
-            stats.ProductionCost);
+            stats.ProductionCost,
+            ship.IsRecovered,
+            tally.RecoveredHour);
     }
 
     private SideResult BuildSideResult(BattleSide side)
@@ -1122,12 +1137,13 @@ public sealed class BattleSession
             side.Label,
             side.Participant.Fleet.ID,
             side.Ships.Count,
-            side.Ships.Count(ship => ship.IsSunk),
+            side.Ships.Count(ship => ship.IsSunk && !ship.IsRecovered),
             side.Ships.Count(ship => !ship.IsSunk && ship.CurrentStatus == ShipStatus.Retreated),
             side.Ships.Count(ship => ship.IsInBattle),
             side.Ships.Sum(ship => startHp[ship]),
             side.Ships.Sum(ship => startHp[ship] - ship.CurrentHP),
-            side.Ships.Sum(ship => tallies[ship].HpDamageDealt));
+            side.Ships.Sum(ship => tallies[ship].HpDamageDealt),
+            side.Ships.Count(ship => ship.IsRecovered));
     }
 
     private sealed class ShipTally
@@ -1139,6 +1155,7 @@ public sealed class BattleSession
         public double HpDamageDealt;
         public double HpDamageTaken;
         public int? SunkHour;
+        public int? RecoveredHour;
         public int? RetreatedHour;
         public bool FiredThisHour;
         public bool LastTargetWasConvoy;

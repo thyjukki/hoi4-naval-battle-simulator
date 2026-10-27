@@ -396,6 +396,18 @@ public sealed class NNavyDefines
     /// <summary>S-ORG-REGAIN: added to the organization regain factor of the side with naval dominance in the region.</summary>
     public double NAVAL_DOMINANCE_ORG_RECOVERY { get; set; } = 0.1;
 
+    /// <summary>
+    /// S-RECOVERY: added to the ship recovery chance of a task force whose province's controller has naval dominance in
+    /// the region; a sea province has none, so it never applies in a battle at sea [RE + LOG].
+    /// </summary>
+    public double NAVAL_DOMINANCE_SHIP_RECOVERY_CHANCE { get; set; } = 0.1;
+
+    /// <summary>
+    /// S-RECOVERY: a recovered ship's HP as a share of its task force's summed maximum HP (the game's comment says the
+    /// ship's own maximum; the code reads the task force's), at most the ship's maximum [RE + LOG].
+    /// </summary>
+    public double SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR { get; set; } = 0.01;
+
     /// <summary>S-DOMINANCE: ship range where there is no penalty nor bonus to naval dominance.</summary>
     public double DOMINANCE_PER_SHIP_PER_RANGE_NEUTRAL { get; set; } = 2000.0;
 

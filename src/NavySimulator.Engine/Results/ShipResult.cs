@@ -21,4 +21,6 @@ public sealed record ShipResult(
     double DamageDealt,
     double HpDamageDealt,
     double HpDamageTaken,
-    double ProductionCost);
+    double ProductionCost,
+    bool Recovered = false,
+    int? RecoveredHour = null);

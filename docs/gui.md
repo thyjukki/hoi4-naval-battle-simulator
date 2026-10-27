@@ -34,7 +34,7 @@ The GUI keeps one shared state for every browser tab: reloading the page or swit
 - **Ship panel**: HP, organization, experience, totals, the ship's stats after researches, an HP/organization chart and the ship's own combat log: shots it fired and took (hit chance, hit or miss, crit, piercing tier, damage, HP and organization damage, killing blow), air strikes, and its activation, retreat, escape or sinking. Filter it to fired, received or events. Click another ship's name to jump to it.
 - **Combat log** tabs, all up to the shown hour:
   - **Hours**: one row per hour, newest first: lines per side, positioning, screening, shots and hits, HP damage each way, ships in battle, events.
-  - **Events**: activations, retreat decisions, escapes, disengagements, sinkings (with the killer) and re-engagements, filterable by kind and ship.
+  - **Events**: activations, retreat decisions, escapes, disengagements, sinkings (with the killer), recoveries (S-RECOVERY: a sunk ship recovered, out of the battle with its new HP) and re-engagements, filterable by kind and ship.
   - **Shots**: every shot with hit chance, profile factor and modifier, result, damage, piercing tier, HP and organization damage. Filter by hours, side, weapon, ship name, hits, crits or killing blows; the bar sums the filtered shots.
   - **Air**: air strikes (planes flying, intercepted, shot down by AA, hits, AA reduction, damage).
   - **Raw log**: the CLI's `hourly.log` lines.

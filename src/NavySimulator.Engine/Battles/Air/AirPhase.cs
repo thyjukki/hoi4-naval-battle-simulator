@@ -280,6 +280,12 @@ public sealed class AirPhase
             var critical = RollCritical(target, hits, receive, ref strDamage, ref orgDamage, random);
             var applied = DamageRules.Apply(target, strDamage, orgDamage, defines);
 
+            // S-RECOVERY [RE]: the sink handler rolls the recovery inside the strike, before its ace rolls.
+            if (applied.Sunk)
+            {
+                RecoveryRules.TryRecover(target, enemy, defines, random);
+            }
+
             results.Add((new AirStrikeRecord(hour, own.Label, source, target.ID, flying, intercepted, shotDown, hits, reduction, critical,
                 applied.HpDamage, applied.OrganizationDamage, applied.Sunk), target, applied));
             RollAces(own, group, intercepted + shotDown, (int)Math.Floor(applied.HpDamage + 1e-9), hour, random);

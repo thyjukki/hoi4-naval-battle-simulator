@@ -102,6 +102,8 @@ public sealed class StaticModifiers
     public const string NavyOrgFactor = "navy_org_factor";
     public const string NavalMorale = "naval_morale";
     public const string NavalMoraleFactor = "naval_morale_factor";
+    public const string NavalShipRecoveryChance = "naval_ship_recovery_chance";
+    public const string NavalShipRecoveryChanceFactor = "naval_ship_recovery_chance_factor";
     public const string NavalRetreatChance = "naval_retreat_chance";
     public const string NavalRetreatChanceAfterInitialCombat = "naval_retreat_chance_after_initial_combat";
     public const string NavalEnemyRetreatChance = "naval_enemy_retreat_chance";

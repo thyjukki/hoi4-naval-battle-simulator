@@ -140,6 +140,10 @@ catch a second engagement), closes the game and deletes the copy. `continue_game
 `--setup-only` loads one save and seed, types the console commands and leaves the game paused and running on the copy
 (nothing is logged; unpausing starts the battle), for looking at a new setup in the game first.
 
+`--force-recovery C` (S-RECOVERY probe) forces the ship recovery chance before the country's factor to C at every
+sinking, and `--force-recovery-factor F` also the factor (0 in every country of 1.19.3, which makes recovery
+impossible); every sinking's chance, factor, roll and outcome is logged in `raw.jsonl` (`recovery` of the hour record).
+
 `--constant-roll U` makes every roll the engine also makes return U (whole 1e-5 steps; the air target pick's integer
 draw floor(U × 2^31)), for a battle the engine must fight identically: the surface and air rolls of the combat update,
 and the region air war's rolls outside it (forced by call site). It also switches the game's air accident pass off

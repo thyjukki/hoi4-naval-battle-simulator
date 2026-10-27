@@ -263,7 +263,7 @@
 @code {
     private string tab = "hours";
     private readonly ShotFilter filter = new();
-    private readonly HashSet<BattleEventKind> eventKinds = [BattleEventKind.RetreatStarted, BattleEventKind.Escaped, BattleEventKind.Disengaged, BattleEventKind.Sunk, BattleEventKind.Reengaged];
+    private readonly HashSet<BattleEventKind> eventKinds = [BattleEventKind.RetreatStarted, BattleEventKind.Escaped, BattleEventKind.Disengaged, BattleEventKind.Sunk, BattleEventKind.Recovered, BattleEventKind.Reengaged];
     private string eventSearch = string.Empty;
     private List<ShotRecord> shots = [];
     private Dictionary<int, int> eventsByHour = [];

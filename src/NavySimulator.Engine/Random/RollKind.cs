@@ -92,5 +92,11 @@ public enum RollKind
     AirBookkeeping,
 
     /// <summary>Rolls the game makes when a ship sinks (game line 0x40e, 6–9 per sinking); no combat effect, the engine makes none.</summary>
-    Sinking
+    Sinking,
+
+    /// <summary>
+    /// S-RECOVERY: the ship recovery roll at a sinking (taskforce.cpp line 0xb31, an integer draw mixed into 0..99999),
+    /// made only when the chance before the factor is above 0.
+    /// </summary>
+    ShipRecovery
 }

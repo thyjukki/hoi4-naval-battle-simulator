@@ -9,4 +9,5 @@ public sealed record SideResult(
     int ShipsRemaining,
     double HpAtStart,
     double HpLost,
-    double HpDamageDealt);
+    double HpDamageDealt,
+    int ShipsRecovered = 0);

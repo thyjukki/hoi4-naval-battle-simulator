@@ -74,6 +74,15 @@ public class GameBattleLogTests
     }
 
     [Fact]
+    public void RecoveryRoll_MixesTheIntegerDraw_AsTheGameDoes()
+    {
+        // S-RECOVERY [RE + LOG]: logged draws (taskforce.cpp 0xb31) and the rolls the game compared (recovery probe battle).
+        Assert.Equal(68643, GameBattleLog.RecoveryRoll(418316961));
+        Assert.Equal(72123, GameBattleLog.RecoveryRoll(1471819449));
+        Assert.Equal(93257, GameBattleLog.RecoveryRoll(626927253));
+    }
+
+    [Fact]
     public void AirStrikes_KeepTheirOwnDamage_AndAMissDoesNotTakeAnotherStrikesFromTheHourList()
     {
         var directory = Path.Combine(Path.GetTempPath(), "navysim-replay-" + Guid.NewGuid().ToString("N"));

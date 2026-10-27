@@ -187,10 +187,11 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xd6d0c0 | task force's current naval combat (first combat of type 2) | S-STATS-COMBAT | [STATS/getter] |
 | 0xd6eeb0 | unit ship list | S-POS | [POS/joined] |
 | 0xd6eee0 | task-force naval-terrain movement fallback (as 0xd6b1b0, for speed) | S-TERRAIN | [TER/terrain] |
-| 0xd6fa50 | task-force modifiers | S-DMG | [DMG/dmg] |
+| 0xd6fa50 | task-force modifiers `(tf, out, id, tooltip)`: Σ over the support entries `tf+0x640` of `clamp(0x196a360(entry) / entry+0x28, 0, 1) × 0x196a3f0(static modifier entry+0x30 [id])` (`naval_general_support`, `naval_repair_support`) | S-DMG, S-RECOVERY | [DMG/dmg], [REC] |
 | 0xd70270 | task force holds its owner's PotF: `resolve(country(tf+0x1d8)+0x250)+0x728 == tf` (UI and AI only) | S-POTF | [POTF/readers] |
 | 0xd705f0 | CTaskForce update (vtable slot 18): per-ship XP | S-XP-GAIN | [XP/gain], [HOUR/hour] |
 | 0xd76bd0 | scuttle a ship through its task force (from 0xd69090); the PotF counts as lost (0x70c760 at 0xd76c91) | S-POTF | [POTF/sink] |
+| 0xd77ff0 | (update, [REC]) first the ship recovery: chance = 0xd6fa50(tf, 0x27f) + owner 0x27f (+ NAVAL_DOMINANCE_SHIP_RECOVERY_CHANCE for the province controller's dominance, 0xe796b0); if > 0: roll = mix(random_int(taskforce.cpp 0xb31)) % 100000 < trunc(chance × owner 0x280) → HP = trunc(tf.vt+0x108 × SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR) (0xc3dc10), 0xd72580, return (no refill) | S-RECOVERY | [REC] |
 | 0xd77ff0 | task force: remove a sunk ship; returns manpower to the pool, then refills the task force `0xd7a7e0(tf, false)` (0xd78b71). PotF (0xd78408): 0x70c760(owner), on_action `on_pride_of_the_fleet_sunk` (ROOT owner, FROM sinker, sinker tag > 0), career stat 0xcd6800; the ship object is deleted at 0xd78a64 (dtor clears `country+0x250`) | S-XP, S-MANPOWER | [DMG/xp], [LOG], [POTF/sink] |
 | 0xd7a7e0 | refill task-force manpower `(tf, force)`: every ship if HasGameStarted() or force | S-MANPOWER | [XP/mp] |
 | 0xdd70ae | CInGameIdler::InitData | S-MANPOWER | [XP/mp] |
@@ -1072,6 +1073,18 @@ From [A-ACCIDENT-land-wing-accidents.md][ACC]: the hourly accident pass, its loc
 | 0xf63e00 | wing XP average after a plane-count change: `xp = n > 0 ? max(0, (old × xp + (n − old) × xpNew) / n) : 0` (raw integer division); losses pass xpKilled, refills 0 | A-ACCIDENT, A-XP | [ACC/effect], [XP/xp] |
 | 0xf80920 | mission active with a region | A-ACCIDENT | [ACC/chance] |
 
+### Ship recovery (S-RECOVERY)
+
+From [S-RECOVERY-ship-recovery-chance.md][REC]: the recovery roll at a sinking, its chance, factor and the recovered HP. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0xc3dc10 | set a ship's strength `(ship, value)` (the recovered HP) | S-RECOVERY | [REC] |
+| 0xd72580 | move a recovered ship out of its task force `(tf, &ship, 1, tf, 1, 2, 2, 0, 0, 0)`; not decoded | S-RECOVERY | [REC] |
+| 0xd78140..0xd781bb | recovery roll: bit mix of the integer draw (×0x7eb8da44, +0x10d8365e, ×0x6d22f31b, +0x68e31da4, ×0x1b56c4e9, ×0x92d68ca2, xor-shifts by 8), bit 31 cleared, % 100000 | S-RECOVERY | [REC] |
+| 0xe796b0 | province → `[[province+0xc0]+0xc8]` (state owner's tag?) or no tag; the dominance term's country | S-RECOVERY | [REC] |
+| task force vt+0x108 | summed maximum strength of the ships still in the task force | S-RECOVERY | [REC] |
+
 ### Air objects leaving the strike list (A-ORDER)
 
 From [A-ORDER-air-objects-leaving-the-strike-list.md][ORD]: how a sunk or escaped carrier's air objects leave the group's list (strike order, stacking), and the experience share's 0.1 steps. Sorted by RVA.
@@ -1618,6 +1631,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 
 | Id | Name | Reader | Finding |
 |---|---|---|---|
+| 0x27f / 0x280 | `naval_ship_recovery_chance` / `naval_ship_recovery_chance_factor` (country; 0x27f also task force support) | 0xd77ff0: `trunc(chance × factor)`, the factor not 1 + it (0 in every country) | [REC] |
 | 0x2 | `air_maximum_speed_factor` (ace) | 0xf60760 (interception speed) | [ACE/stats] |
 | 0x7 | `air_ace_generation_chance_factor` (country) | 0xf80f60 (`× (1 + v)` on the earn chance) | [ACE/rolls] |
 | 0xb / 0xd / 0xf / 0x10 | `air_superiority_efficiency` / `air_intercept_efficiency` / `air_cas_efficiency` / `air_nav_efficiency` (country) | 0xf7ed40 (naval attack and agility, with a mission region) | [ACE/stats] |
@@ -1715,6 +1729,8 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | MISSION_DOMINANCE_RATIOS | 0xfafde3 | mission multiplier | [DOM] |
 | DOMINANCE_CONTROLLED_THRESHOLD_RATIO | 0x1003ff9 (also 0x1003690.., 0x161ab40) | control minimum `t/(1 − t)` × own value | [DOM], [POS/convoy] |
 | NAVAL_DOMINANCE_ORG_RECOVERY | 0xc39943 | regain factor of the controlling side | [DOM], [LOG] |
+| NAVAL_DOMINANCE_SHIP_RECOVERY_CHANCE | 0xd780cf (also the dominance tooltip 0xe0fb0a) | recovery chance, the province controller's dominance only | [REC] |
+| SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR | 0xd781e4 | recovered HP × the task force's summed maximum | [REC] |
 | DOMINANCE_DAILY_GAIN_FACTOR / _LOSS_FACTOR | 0x1003cf1 / 0x1005301 | daily update: gain × target (capped at the target), loss × decline_from (no target left) | [DOM] |
 | BASE_POSITIONING | 0x161b99b | positioning base | [POS/pos] |
 | RELATIVE_SURFACE_DETECTION_TO_POSITIONING_FACTOR, MAX_POSITIONING_BONUS_FROM_SURFACE_DETECTION | 0x161b960 | detection bonus (who.py misses) | [POS/detect] |
@@ -1849,7 +1865,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | fixed → int | 0x24ed730 | round half away from zero | [DMG/conv], [AIR/conv] |
 | negate | 0x24ef6f0 | stores `-x`; −1.0 is the "no value" sentinel | [DMG/conv] |
 | RNG | 0x2233db0 | `random_fixed(out, file, line)`: hash of seed + counter, 31 bits, `% 100000` → U ∈ {0, …, 0.99999}; (file, line) tag per call. A save replays the identical battle; editing its `multiplayer_random_seed` gives a different one | [DMG/conv], [HIT/map], [LOG] |
-| RNG lines | naval combat update | 0x37b target pick, 0x3d9 torpedo line, 0x587 hit, 0x593 damage randomness, 0x59f crit, 0x2f4 part damage, 0x78f part pick, 0xa83 retreat decision, 0x40e sinking (6–9 per sinking, no combat effect); identified from call order in the logs | [LOG] |
+| RNG lines | naval combat update | 0x37b target pick, 0x3d9 torpedo line, 0x587 hit, 0x593 damage randomness, 0x59f crit, 0x2f4 part damage, 0x78f part pick, 0xa83 retreat decision, 0x40e sinking (6–9 per sinking, no combat effect); integer draws: 0xb31 (taskforce.cpp) the ship recovery roll, only when its chance before the factor is above 0 ([REC]); identified from call order in the logs | [LOG] |
 | RNG int | 0x2233fa0 | random int31 | [AIR/conv] |
 | weighted draw | 0x24f08a0 | air target pick | [AIR/target] |
 | chance checks | — | ACT: `roll <= chance`; hit: `100·U < hc`; crit: `U <= p`; part: `U < p` | [ACT], [HIT/crit], [DMG/rng] |
@@ -2153,6 +2169,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [COV/refill]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-refill-the-region-change-penalty-of-refilled-planes
 [MIX]: findings/A-MIXED-plane-variants-in-a-wing.md
 [ORD]: findings/A-ORDER-air-objects-leaving-the-strike-list.md
+[REC]: findings/S-RECOVERY-ship-recovery-chance.md
 [ORD/list]: findings/A-ORDER-air-objects-leaving-the-strike-list.md#removing-a-carriers-air-objects-0x1c6ae50-sink-0x1c6cc50-escape
 [ORD/xp]: findings/A-ORDER-air-objects-leaving-the-strike-list.md#a-stats-xp-correction-v-in-steps-of-01-0xf65f20
 [MIX/stock]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-stock-which-variants-the-day-tick-gives-a-reinforce

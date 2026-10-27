@@ -29,6 +29,11 @@ const RVA = {
   carrierRatio: 0x161eeb0, // S-POS carrier-ratio helper (side, &A, &B): sortie x planes over the side's air objects
   airHits: 0x197ac80, // A-HIT / A-DMG (..., strikers in r9d, ...): returns the HP damage dealt, truncated to an integer
   accidentEntry: 0xc60290, // A-ACCIDENT (entry, local generator state): one (air base, country) entry's accident roll
+  removeSunk: 0xd77ff0, // S-RECOVERY task force: remove a sunk ship (tf, ship, ...); the ship recovery roll
+  recoveryChance: 0xd780e3, // S-RECOVERY: rbx = support + country chance, rsi = r15 = that + the dominance bonus
+  recoveryFactor: 0xd7810d, // S-RECOVERY: rax -> the country's naval_ship_recovery_chance_factor (0x280)
+  recoveryRoll: 0xd781c1, // S-RECOVERY: rcx = the roll 0..99999, rbx = the final chance; recovered if rcx < rbx
+  recovered: 0xd781ca, // S-RECOVERY: the recovered branch (HP set to SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR)
 };
 
 const resolveHandle = new NativeFunction(base.add(RVA.resolveHandle), 'pointer', ['pointer']);
@@ -196,6 +201,10 @@ let noAccidents = null;
 // A-REGION: land-based wings to read every combat hour by handle {69, id} (run_battles.py: every land wing with a mission
 // over the battle's region), so the air superiority wings, which never enter the combat, are logged too.
 let watchedWings = [];
+let forcedRecovery = null; // S-RECOVERY probe: the chance before the factor forced to this (fx5), or null
+let forcedRecoveryFactor = null; // S-RECOVERY probe: the country's factor forced to this (fx5), or null
+let recoveryLog = []; // removed sunk ships since the last hour record
+let removing = null; // the remove-sunk-ship call in progress (its record)
 const watchHandle = Memory.alloc(8);
 
 function landWings() {
@@ -276,7 +285,9 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       airObjects: [airObjects(combat.add(0x28).readPointer()), airObjects(combat.add(0x30).readPointer())],
       forcedOutside,
       landWingsStart: current && current.key === combat.toString() ? current.landWings : [],
+      recovery: recoveryLog,
     };
+    recoveryLog = [];
     forcedOutside = 0;
     airLog = [];
     ratioLog = [];
@@ -539,6 +550,56 @@ Interceptor.attach(base.add(RVA.airHits), {
   onLeave: guard(function hitsLeave(retval) { if (this.active && striking) striking.damageInt = retval.toInt32(); }),
 });
 
+// S-RECOVERY: the ship recovery roll in the task force's remove-sunk-ship function (instruction probes inside it).
+Interceptor.attach(base.add(RVA.removeSunk), {
+  onEnter: guard(function removeSunkEnter(args) {
+    this.ship = args[1];
+    removing = { tick: ticks, ship: args[1].add(0xc).readU32(), maxHp: s64(args[1].add(0x308)), rolled: false, recovered: false };
+  }),
+  onLeave: guard(function removeSunkLeave() {
+    if (!removing) return;
+    if (removing.recovered) {
+      removing.hpAfter = s64(this.ship.add(0x6f8));
+      removing.orgAfter = s64(this.ship.add(0x6f8 + 8));
+    }
+    recoveryLog.push(removing);
+    removing = null;
+  }),
+});
+Interceptor.attach(base.add(RVA.recoveryChance), {
+  onEnter: guard(function recoveryChanceEnter() {
+    if (!removing) return;
+    removing.chance = argS64(this.context.rbx);
+    removing.withDominance = argS64(this.context.rsi);
+    if (forcedRecovery !== null) {
+      this.context.rsi = ptr(forcedRecovery);
+      this.context.r15 = ptr(forcedRecovery);
+      removing.forced = forcedRecovery;
+    }
+  }),
+});
+Interceptor.attach(base.add(RVA.recoveryFactor), {
+  onEnter: guard(function recoveryFactorEnter() {
+    if (!removing) return;
+    removing.factor = s64(this.context.rax);
+    if (forcedRecoveryFactor !== null) {
+      this.context.rax.writeS64(int64(forcedRecoveryFactor));
+      removing.forcedFactor = forcedRecoveryFactor;
+    }
+  }),
+});
+Interceptor.attach(base.add(RVA.recoveryRoll), {
+  onEnter: guard(function recoveryRollEnter() {
+    if (!removing) return;
+    removing.rolled = true;
+    removing.roll = argS64(this.context.rcx);
+    removing.finalChance = argS64(this.context.rbx);
+  }),
+});
+Interceptor.attach(base.add(RVA.recovered), {
+  onEnter: guard(function recoveredEnter() { if (removing) removing.recovered = true; }),
+});
+
 rpc.exports = {
   ping() { return { base: base.toString(), ticks }; },
   forceRoll(raw) {
@@ -547,6 +608,7 @@ rpc.exports = {
     return { fixed: forcedRoll, int: forcedInt };
   },
   watchWings(ids) { watchedWings = ids; return watchedWings.length; },
+  forceRecovery(raw, factor) { forcedRecovery = raw; forcedRecoveryFactor = factor; return [forcedRecovery, forcedRecoveryFactor]; },
   disableAccidents() {
     if (noAccidents === null) {
       noAccidents = new NativeCallback(() => {}, 'void', ['pointer', 'pointer']); // kept referenced while replaced

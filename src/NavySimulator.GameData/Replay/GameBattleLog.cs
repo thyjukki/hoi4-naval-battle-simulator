@@ -53,6 +53,31 @@ public sealed class GameBattleLog
     // Game fixed point: values are raw / 100000.
     private const double Fx = 100000.0;
 
+    /// <summary>S-RECOVERY: the source line of the ship recovery roll's integer draw (taskforce.cpp 0xb31).</summary>
+    public const int RecoveryRollLine = 0xb31;
+
+    /// <summary>
+    /// [RE + LOG] S-RECOVERY 0xd78140..0xd781bb: the recovery roll 0..99999 the game makes of an integer draw: a bit mix of
+    /// the draw (bit 31 cleared), then the remainder of 100000. Checked against 43 logged rolls.
+    /// </summary>
+    public static int RecoveryRoll(long draw)
+    {
+        var x = (uint)(draw & 0x7fffffff) * 0x7eb8da44u;
+        x = (x >> 8) ^ x;
+        x += 0x10d8365eu;
+        x = (x << 8) ^ x;
+        x *= 0x6d22f31bu;
+        x = (x >> 8) ^ x;
+        x = (x >> 8) ^ x;
+        x += 0x68e31da4u;
+        x = (x << 8) ^ x;
+        x *= 0x1b56c4e9u;
+        x = (x >> 8) ^ x;
+        x *= 0x92d68ca2u;
+        x = ((x >> 8) ^ x) & 0x7fffffffu;
+        return (int)(x % 100000);
+    }
+
     private readonly List<JsonElement> hours;
     private readonly Dictionary<uint, (string Country, string Design)> ships;
 
@@ -446,9 +471,14 @@ public sealed class GameBattleLog
             {
                 var line = roll.GetProperty("line").GetInt32();
 
-                // An integer draw n is used as U = n / 2^31 (0x24f04f0).
+                // An integer draw n is used as U = n / 2^31 (0x24f04f0); the ship recovery roll mixes it first.
                 if (roll.TryGetProperty("int", out var integer) && integer.GetBoolean())
                 {
+                    if (line == RecoveryRollLine)
+                    {
+                        return new ReplayRoll(RollKind.ShipRecovery, RecoveryRoll(roll.GetProperty("value").GetInt64()) / Fx, line);
+                    }
+
                     return new ReplayRoll(IntegerRollLines.GetValueOrDefault(line, RollKind.Unspecified), roll.GetProperty("value").GetInt64() / 2147483648.0, line);
                 }
 

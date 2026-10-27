@@ -198,6 +198,10 @@ def run_one(save_path, seed, out_dir, args):
             script.exports_sync.force_roll(round(args.constant_roll * FX))
             if not args.keep_accidents:
                 script.exports_sync.disable_accidents()
+        if args.force_recovery is not None:
+            # S-RECOVERY probe: every sinking rolls for recovery with this chance before the country's factor
+            script.exports_sync.force_recovery(round(args.force_recovery * FX),
+                                               None if args.force_recovery_factor is None else round(args.force_recovery_factor * FX))
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -220,6 +224,7 @@ def run_one(save_path, seed, out_dir, args):
         "save": str(save_path), "seed": seed if seed is not None else save.seed, "date": save.date,
         "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256, "constantRoll": args.constant_roll,
         "accidentsDisabled": args.constant_roll is not None and not args.keep_accidents,
+        "forcedRecovery": args.force_recovery, "forcedRecoveryFactor": args.force_recovery_factor,
     })
 
 
@@ -433,6 +438,12 @@ def main():
     parser.add_argument("--constant-roll", type=float,
                         help="every combat roll the engine also makes is this U in [0, 1) (whole fx5 steps); "
                              "compare with NavySimulator replay --constant-roll U")
+    parser.add_argument("--force-recovery", type=float,
+                        help="S-RECOVERY probe: force the ship recovery chance before the country's "
+                             "naval_ship_recovery_chance_factor to this value at every sinking (logged in raw.jsonl)")
+    parser.add_argument("--force-recovery-factor", type=float,
+                        help="with --force-recovery, also force the country's naval_ship_recovery_chance_factor "
+                             "(0 in every country of 1.19.3, which makes recovery impossible)")
     parser.add_argument("--keep-accidents", action="store_true",
                         help="with --constant-roll, leave the game's air accident pass on (the engine cannot follow it)")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")

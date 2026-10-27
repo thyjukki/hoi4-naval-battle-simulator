@@ -69,7 +69,13 @@ public class Ship
     /// <summary>S-SUB: hours a submarine stays revealed; 0 = hidden. Always -1 for surface ships.</summary>
     public int RevealTimer { get; set; }
 
-    public bool IsSunk => CurrentHP <= 0;
+    /// <summary>
+    /// S-RECOVERY: the ship was recovered when it sank. It is out of the battle as a sunk ship is (the game's member state
+    /// stays sunk), with the HP it was recovered with.
+    /// </summary>
+    public bool IsRecovered { get; set; }
+
+    public bool IsSunk => CurrentHP <= 0 || IsRecovered;
     public bool IsInBattle => !IsSunk && CurrentStatus != ShipStatus.Retreated;
     public bool IsVisible => RevealTimer != 0;
 

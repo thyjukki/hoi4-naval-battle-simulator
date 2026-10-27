@@ -43,7 +43,9 @@ public class BattleParticipant
         StaticModifiers.AirSuperiorityDetectFactor, StaticModifiers.AirInterceptionDetectFactor, StaticModifiers.AirUntrainedPilotsPenaltyFactor,
         StaticModifiers.AirNightPenalty, StaticModifiers.AirWeatherPenalty, StaticModifiers.CarrierCapacityPenaltyReduction,
         // A-XP: the wings' experience gain in the region's air war and loss with killed planes.
-        StaticModifiers.AirMissionXpGainFactor, StaticModifiers.AirWingXpLossWhenKilledFactor
+        StaticModifiers.AirMissionXpGainFactor, StaticModifiers.AirWingXpLossWhenKilledFactor,
+        // S-RECOVERY: the ship recovery chance at a sinking and its factor.
+        StaticModifiers.NavalShipRecoveryChance, StaticModifiers.NavalShipRecoveryChanceFactor
     ], StringComparer.Ordinal);
 
     /// <summary>
