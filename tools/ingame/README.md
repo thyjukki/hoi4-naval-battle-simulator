@@ -138,7 +138,8 @@ changes the first two) and unpauses. It stops when every combat has ended (`--ex
 catch a second engagement), closes the game and deletes the copy. `continue_game.json` is restored at the end.
 
 `--setup-only` loads one save and seed, types the console commands and leaves the game paused and running on the copy
-(nothing is logged; unpausing starts the battle), for looking at a new setup in the game first.
+(nothing is logged; unpausing starts the battle), for looking at a new setup in the game first. `--keep-open` logs one
+save and seed as usual, then pauses the game and leaves it running on the copy, to look at the result.
 
 `--force-recovery C` (S-RECOVERY probe) forces the ship recovery chance before the country's factor to C at every
 sinking, and `--force-recovery-factor F` also the factor (0 in every country of 1.19.3, which makes recovery

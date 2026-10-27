@@ -8,7 +8,7 @@ seed, the runner:
   2. points continue_game.json at it and starts hoi4.exe -continuelastsave;
   3. waits for the game to load, attaches battle_logger.js with Frida, types the console commands (default: ai,
      weather) and unpauses at speed 5;
-  4. records every naval combat hour until the combats end, then closes the game.
+  4. records every naval combat hour until the combats end, then closes the game (--keep-open: pauses it instead).
 With --setup-only it stops after the console commands and leaves the game paused and running on the copy, to look at.
 Output per run in --out (default output/ingame/<save>_<timestamp>/<seed>/): meta.json, hours.csv, sides.csv, modifiers.csv, holders.csv,
 shots.csv and raw.jsonl. The game must not be running when it starts; the game window takes keyboard focus during a run.
@@ -212,15 +212,19 @@ def run_one(save_path, seed, out_dir, args):
         console(hwnd, [c for c in args.commands.split(";") if c] + [f"gamespeed {args.speed}"])
         hours = record(messages, hwnd, out_dir, args)
         write_land_wings(out_dir, hours, land_wings)
+        if args.keep_open:
+            focus(hwnd)
+            tap(SCAN_SPACE)
     finally:
         if session is not None:
             try:
                 session.detach()
             except frida.InvalidOperationError:
                 pass
-        game.kill()
-        game.wait()
-        if not args.keep_saves:
+        if not args.keep_open:
+            game.kill()
+            game.wait()
+        if not args.keep_saves and not args.keep_open:
             run_save.unlink(missing_ok=True)
 
     write_outputs(out_dir, hours, index, {
@@ -454,6 +458,8 @@ def main():
     parser.add_argument("--keep-accidents", action="store_true",
                         help="with --constant-roll, leave the game's air accident pass on (the engine cannot follow it)")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
+    parser.add_argument("--keep-open", action="store_true",
+                        help="leave the game running and paused after the battle (and its save copy); one save and seed")
     parser.add_argument("--setup-only", action="store_true",
                         help="load the first save and seed, type the commands and leave the game paused and running (nothing logged)")
     args = parser.parse_args()
@@ -461,8 +467,11 @@ def main():
         sys.exit("--constant-roll expects a value in [0, 1)")
     if args.setup_only and (len(args.saves) > 1 or args.seeds > 1):
         sys.exit("--setup-only loads one save with one seed")
+    if args.keep_open and (len(args.saves) > 1 or args.seeds > 1):
+        sys.exit("--keep-open runs one save with one seed")
 
-    check_exe()
+    if not args.setup_only:
+        check_exe()  # the logger's addresses are for one build; --setup-only attaches nothing
     if running_game_pids():
         sys.exit("hoi4.exe is already running; close it first (the runner starts its own game for each battle)")
     continue_file = USER_DIR / "continue_game.json"
