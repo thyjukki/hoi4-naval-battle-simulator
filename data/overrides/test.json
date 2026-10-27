@@ -1,0 +1,16 @@
+{
+  "$schema": "../schemas/override-set.schema.json",
+  "overrideSet": {
+    "id": "test",
+    "defines": {},
+    "staticModifiers": {},
+    "content": [
+      {
+        "collection": "doctrines",
+        "id": "naval",
+        "path": "subdoctrines[line_of_battle].rewards[flagships].effects.unitBonuses.battleship.hg_attack",
+        "value": 600
+      }
+    ]
+  }
+}
