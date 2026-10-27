@@ -2,11 +2,14 @@ using System.Text.Json;
 using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Battles.Mechanics;
+using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Mios;
 using NavySimulator.Engine.Stats;
 using NavySimulator.GameData;
 using NavySimulator.GameData.Contracts;
+using NavySimulator.GameData.Defines;
 using NavySimulator.GameData.Import;
+using NavySimulator.GameData.Overrides;
 
 namespace NavySimulator.Web.Services;
 
@@ -31,12 +34,20 @@ public sealed class Workspace
     // The catalog files' names, sizes and write times when the catalog last matched them (see CatalogStamp).
     private string catalogStamp = string.Empty;
 
+    // The content with the active override set, and the library built from it, for this catalog and set version.
+    private (int CatalogVersion, int OverridesVersion, string? File) contentKey = (-1, -1, null);
+    private ContentCatalog content = null!;
+    private ContentLibrary library = null!;
+    private IReadOnlyList<string> contentWarnings = [];
+    private (string Sources, GameDefines Defines)? baseDefines;
+
     public Workspace(WorkspaceOptions options, GuiSettingsStore settingsStore)
     {
         DataDirectory = options.DataDirectory;
         CommandLineDefineSources = options.CommandLineDefineSources;
         this.settingsStore = settingsStore;
         settings = settingsStore.Load();
+        Overrides = new OverrideSets(DataDirectory);
         LoadCatalog();
 
         var initial = new[] { settings.LastScenarioFile, DefaultScenarioFile }
@@ -66,8 +77,47 @@ public sealed class Workspace
 
     /// <summary>Where reports are written: the <c>output</c> folder next to the data directory, as the CLI uses from the repository root.</summary>
     public string OutputDirectory => Path.Combine(Path.GetDirectoryName(Path.GetFullPath(DataDirectory).TrimEnd(Path.DirectorySeparatorChar)) ?? DataDirectory, "output");
+    /// <summary>The data directory's content as on disk; editors change and save it.</summary>
     public ContentCatalog Catalog { get; private set; } = null!;
-    public ContentLibrary Library { get; private set; } = null!;
+
+    /// <summary>
+    /// The content battles and previews use: <see cref="Catalog"/> with the active override set's content changes
+    /// (the same catalog without a set). Designs, fleets and every item the set does not change are shared with it.
+    /// </summary>
+    public ContentCatalog Content
+    {
+        get
+        {
+            RefreshContent();
+            return content;
+        }
+    }
+
+    /// <summary>Engine objects of <see cref="Content"/> for previews.</summary>
+    public ContentLibrary Library
+    {
+        get
+        {
+            RefreshContent();
+            return library;
+        }
+    }
+
+    /// <summary>Changes of the active override set that could not be applied to the content.</summary>
+    public IReadOnlyList<string> ContentOverrideWarnings
+    {
+        get
+        {
+            RefreshContent();
+            return contentWarnings;
+        }
+    }
+
+    /// <summary>The override sets of <c>overrides/</c>, edited in memory.</summary>
+    public OverrideSets Overrides { get; }
+
+    /// <summary>The override set every battle uses (with its unsaved changes), or null.</summary>
+    public OverrideSetEntry? ActiveOverrides => Overrides.Find(settings.ActiveOverrideSet);
 
     /// <summary>Increases whenever the catalog changes, so views can tell their battle is out of date.</summary>
     public int CatalogVersion { get; private set; }
@@ -313,6 +363,58 @@ public sealed class Workspace
         }
     }
 
+    /// <summary>A copy of the active override set, for a battle or batch to keep while the set is edited.</summary>
+    public OverrideSetDto? OverridesSnapshot()
+    {
+        return ActiveOverrides is { } entry ? Clone(entry.Set) : null;
+    }
+
+    /// <summary>Makes <paramref name="file"/> (an <c>overrides/</c> file) the set every battle uses; null: none.</summary>
+    public void UseOverrideSet(string? file)
+    {
+        settings.ActiveOverrideSet = file;
+        SaveSettings();
+        Notify();
+    }
+
+    /// <summary>Call after editing an override set in place (or creating, saving or deleting one).</summary>
+    public void OverridesEdited()
+    {
+        Notify();
+    }
+
+    /// <summary>
+    /// The defines the edited scenario gets before any override set: vanilla, the scenario's define sources and the GUI's
+    /// (Simulate as). Override editors show these as the values a set changes.
+    /// </summary>
+    public GameDefines BaseDefines()
+    {
+        var sources = Scenario.Defines
+            .Select(source => Path.IsPathRooted(source) ? source : Path.Combine(DataDirectory, source))
+            .Concat(ExtraDefineSources)
+            .ToList();
+        var key = string.Join('\n', sources);
+
+        if (baseDefines is { } cached && cached.Sources == key)
+        {
+            return cached.Defines;
+        }
+
+        GameDefines defines;
+
+        try
+        {
+            defines = DefinesLoader.Load(sources).Defines;
+        }
+        catch (Exception exception) when (exception is IOException or FormatException or UnauthorizedAccessException or ArgumentException)
+        {
+            defines = GameDefines.Vanilla();
+        }
+
+        baseDefines = (key, defines);
+        return defines;
+    }
+
     /// <summary>Simulates with one mod's (or the game's) defines and static modifiers, or with vanilla when null.</summary>
     public void UseRuleset(string? source)
     {
@@ -446,16 +548,21 @@ public sealed class Workspace
         }
     }
 
-    /// <summary>Validates and builds the edited scenario (or <paramref name="scenario"/>) with fresh ships.</summary>
-    public ScenarioBuild BuildScenario(BattleScenarioDto? scenario = null)
+    /// <summary>
+    /// Validates and builds the edited scenario (or <paramref name="scenario"/>) with fresh ships, with the active
+    /// override set unless <paramref name="overrides"/> gives another set (a snapshot) or <paramref name="withOverrides"/>
+    /// is false.
+    /// </summary>
+    public ScenarioBuild BuildScenario(BattleScenarioDto? scenario = null, bool withOverrides = true, OverrideSetDto? overrides = null)
     {
         lock (sync)
         {
             var loader = new SetupLoader();
+            var set = withOverrides ? overrides ?? OverridesSnapshot() : null;
 
             try
             {
-                var built = loader.BuildScenario(Catalog, scenario ?? Scenario, ExtraDefineSources);
+                var built = loader.BuildScenario(Catalog, scenario ?? Scenario, ExtraDefineSources, set);
                 return new ScenarioBuild(built, [], loader.Warnings.ToList(), loader.DefinesReport);
             }
             catch (SetupValidationException exception)
@@ -481,7 +588,7 @@ public sealed class Workspace
 
     public MioDto? FindMio(string? id)
     {
-        return id is null ? null : Catalog.Mios.FirstOrDefault(mio => mio.ID == id);
+        return id is null ? null : Content.Mios.FirstOrDefault(mio => mio.ID == id);
     }
 
     /// <summary>
@@ -493,7 +600,7 @@ public sealed class Workspace
         var shipDesign = Library.TryCreateDesign(design);
         return shipDesign is null
             ? []
-            : Catalog.Mios.Where(mio => MioCountries.IsAvailable(mio, country) &&
+            : Content.Mios.Where(mio => MioCountries.IsAvailable(mio, country) &&
                                         Library.Mios.TryGetValue(mio.ID, out var engine) && MioRules.CanAssign(engine, shipDesign))
                 .ToList();
     }
@@ -536,7 +643,7 @@ public sealed class Workspace
     /// </summary>
     public IReadOnlyList<(CountryDto Country, bool HasOwnMios)> Countries()
     {
-        var withMios = Catalog.Mios.SelectMany(mio => mio.Countries ?? []).ToHashSet(StringComparer.Ordinal);
+        var withMios = Content.Mios.SelectMany(mio => mio.Countries ?? []).ToHashSet(StringComparer.Ordinal);
         return Catalog.Countries
             .Select(country => (Country: country, HasOwnMios: withMios.Contains(country.ID)))
             .OrderBy(entry => entry.HasOwnMios ? 0 : 1)
@@ -567,19 +674,19 @@ public sealed class Workspace
 
     /// <summary>S-ADMIRAL-TRAIT: the imported admiral traits, grouped as the editor lists them (basic first), then by name.</summary>
     public IReadOnlyList<LeaderTraitDto> LeaderTraits =>
-        Catalog.LeaderTraits.OrderBy(AdmiralInfo.GroupIndex).ThenBy(trait => trait.Name ?? trait.ID, StringComparer.CurrentCultureIgnoreCase).ToList();
+        Content.LeaderTraits.OrderBy(AdmiralInfo.GroupIndex).ThenBy(trait => trait.Name ?? trait.ID, StringComparer.CurrentCultureIgnoreCase).ToList();
 
     /// <summary>S-MIO-POLICY: the policies the MIO can take.</summary>
     public IReadOnlyList<MioPolicyDto> PoliciesFor(MioDto mio)
     {
         return Library.Mios.TryGetValue(mio.ID, out var engine)
-            ? Catalog.MioPolicies.Where(policy => Library.MioPolicies.TryGetValue(policy.ID, out var rule) && MioRules.PolicyAllowed(engine, rule)).ToList()
+            ? Content.MioPolicies.Where(policy => Library.MioPolicies.TryGetValue(policy.ID, out var rule) && MioRules.PolicyAllowed(engine, rule)).ToList()
             : [];
     }
 
     public HullDto? FindHull(string id)
     {
-        return Catalog.Hulls.FirstOrDefault(hull => hull.ID == id);
+        return Content.Hulls.FirstOrDefault(hull => hull.ID == id);
     }
 
     /// <summary>A module's category as the game's designer titles it, e.g. "Rapid Fire Guns".</summary>
@@ -598,7 +705,7 @@ public sealed class Workspace
     public (ShipTypeDto? Type, bool Matches) ShipTypeOf(ShipDesignDto design)
     {
         var check = Library.CheckDesign(design);
-        var type = check?.ShipType is { } shipType ? Catalog.ShipTypes.FirstOrDefault(candidate => candidate.ID == shipType.ID) : null;
+        var type = check?.ShipType is { } shipType ? Content.ShipTypes.FirstOrDefault(candidate => candidate.ID == shipType.ID) : null;
         return (type, check?.ShipTypeMatches ?? false);
     }
 
@@ -637,16 +744,16 @@ public sealed class Workspace
 
     /// <summary>The imported doctrine folders, the naval one (the one combat simulates) first.</summary>
     public IReadOnlyList<DoctrineFolderDto> DoctrineFolders =>
-        Catalog.DoctrineFolders.OrderBy(folder => folder.ID == BattleParticipant.NavalFolder ? 0 : 1).ToList();
+        Content.DoctrineFolders.OrderBy(folder => folder.ID == BattleParticipant.NavalFolder ? 0 : 1).ToList();
 
     /// <summary>The imported spirits, navy spirits before air spirits, each in the game's slot order.</summary>
     public IReadOnlyList<SpiritDto> Spirits =>
-        Catalog.Spirits.OrderBy(spirit => spirit.Category.StartsWith("air", StringComparison.Ordinal) ? 1 : 0).ToList();
+        Content.Spirits.OrderBy(spirit => spirit.Category.StartsWith("air", StringComparison.Ordinal) ? 1 : 0).ToList();
 
     /// <summary>The doctrine folder with this ID (<c>naval</c>, <c>air</c>), or null when it is not imported.</summary>
     public DoctrineFolderDto? DoctrineFolder(string id)
     {
-        return Catalog.DoctrineFolders.FirstOrDefault(folder => folder.ID == id);
+        return Content.DoctrineFolders.FirstOrDefault(folder => folder.ID == id);
     }
 
     // Previews use the vanilla defines (NDoctrines.DEFAULT_REWARD_MASTERY); battles use the scenario's.
@@ -820,8 +927,28 @@ public sealed class Workspace
 
     private void Rebuild()
     {
-        Library = ContentLibrary.From(Catalog);
         CatalogVersion++;
+        RefreshContent();
+    }
+
+    private void RefreshContent()
+    {
+        lock (sync)
+        {
+            var active = ActiveOverrides;
+            var key = (CatalogVersion, active is null ? 0 : Overrides.Version, active?.File);
+
+            if (key == contentKey)
+            {
+                return;
+            }
+
+            var warnings = new List<string>();
+            content = active is null ? Catalog : OverrideApplier.ApplyContent(Catalog, active.Set, warnings);
+            library = ContentLibrary.From(content);
+            contentWarnings = warnings;
+            contentKey = key;
+        }
     }
 
     /// <summary>

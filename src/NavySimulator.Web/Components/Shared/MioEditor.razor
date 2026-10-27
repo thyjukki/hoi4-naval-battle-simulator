@@ -57,7 +57,7 @@
                     <option value="@current">@current (not allowed for this MIO)</option>
                 }
             </select>
-            @if (setup?.Policy is { } attached && Workspace.Catalog.MioPolicies.FirstOrDefault(candidate => candidate.ID == attached) is { } dto)
+            @if (setup?.Policy is { } attached && Workspace.Content.MioPolicies.FirstOrDefault(candidate => candidate.ID == attached) is { } dto)
             {
                 <span class="small muted">@MioInfo.Summarize(dto)</span>
             }
@@ -146,7 +146,7 @@
 
     private string PolicyName(string id)
     {
-        return Workspace.Catalog.MioPolicies.FirstOrDefault(policy => policy.ID == id)?.Name ?? id;
+        return Workspace.Content.MioPolicies.FirstOrDefault(policy => policy.ID == id)?.Name ?? id;
     }
 
     private async Task Toggle(MioTraitState state)

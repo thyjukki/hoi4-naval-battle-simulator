@@ -133,7 +133,7 @@ else
                                 {
                                     <option value="@editing.HullID">@(string.IsNullOrEmpty(editing.HullID) ? "(choose a hull)" : $"{editing.HullID} (unknown)")</option>
                                 }
-                                @foreach (var group in Workspace.Catalog.Hulls.GroupBy(item => item.ArchetypeName ?? item.Archetype))
+                                @foreach (var group in Workspace.Content.Hulls.GroupBy(item => item.ArchetypeName ?? item.Archetype))
                                 {
                                     <optgroup label="@group.Key">
                                         @foreach (var item in group)
@@ -169,7 +169,7 @@ else
                                 {
                                     <span>Initial trait: @(MioInfo.Summarize(initial) is { Length: > 0 } effect ? effect : "no effect in battle"). </span>
                                 }
-                                @(Workspace.Catalog.Mios.Count == 0 ? "No MIOs imported (Settings → Data)." : "Only MIOs that cover this hull are listed. In the scenario editor each side can assign another MIO to the design and unlocks traits and a policy; the stats here have the initial trait only.")
+                                @(Workspace.Content.Mios.Count == 0 ? "No MIOs imported (Settings → Data)." : "Only MIOs that cover this hull are listed. In the scenario editor each side can assign another MIO to the design and unlocks traits and a policy; the stats here have the initial trait only.")
                             </span>
                         </div>
                         <div class="field span-2">
@@ -461,7 +461,7 @@ else
         saved = Workspace.Clone(design);
         editing = Workspace.Clone(design);
         originalJson = Workspace.Json(editing);
-        originalFile = Workspace.Catalog.SourceFileOf(design) ?? $"{CatalogWriter.ShipDesignsFolder}/custom.json";
+        originalFile = Workspace.Content.SourceFileOf(design) ?? $"{CatalogWriter.ShipDesignsFolder}/custom.json";
         file = originalFile;
         isNew = false;
         usedBy = Workspace.FleetsUsingDesign(id);
@@ -480,7 +480,7 @@ else
         selectedId = null;
         originalId = null;
         saved = null;
-        editing = new ShipDesignDto { ID = "new_design", HullID = Workspace.Catalog.Hulls.FirstOrDefault()?.ID ?? string.Empty };
+        editing = new ShipDesignDto { ID = "new_design", HullID = Workspace.Content.Hulls.FirstOrDefault()?.ID ?? string.Empty };
         DesignSlots.UseDefaults(Workspace.Catalog, editing);
         originalJson = string.Empty;
         originalFile = null;
@@ -602,7 +602,7 @@ else
 
     private string CategoryName(string category)
     {
-        return Workspace.Catalog.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
+        return Workspace.Content.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
     }
 
     private RenderFragment SlotOptions(SlotRow row) => __builder =>

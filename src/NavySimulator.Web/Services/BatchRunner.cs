@@ -24,7 +24,11 @@ public sealed class BatchRunner(Workspace workspace)
     public IReadOnlyList<string> Errors { get; private set; } = [];
     public BatchResult? Last { get; private set; }
 
-    public async Task RunAsync(int iterations, int baseSeed)
+    /// <summary>
+    /// Runs the batch with the active override set. With <paramref name="compareWithoutOverrides"/> and an active set,
+    /// the same seeds then run without the set too (<see cref="BatchResult.Baseline"/>), to show what the set changes.
+    /// </summary>
+    public async Task RunAsync(int iterations, int baseSeed, bool compareWithoutOverrides = false)
     {
         if (IsRunning || iterations <= 0)
         {
@@ -33,15 +37,20 @@ public sealed class BatchRunner(Workspace workspace)
 
         IsRunning = true;
         Errors = [];
-        Total = iterations;
         completed = 0;
+        var overrides = workspace.OverridesSnapshot();
+        var compare = compareWithoutOverrides && overrides is not null;
+        Total = compare ? 2 * iterations : iterations;
         Notify();
 
         // Ships carry battle state, so every worker needs its own scenario. Build them before the clock starts.
         var workers = Math.Clamp(Environment.ProcessorCount - 1, 1, iterations);
         var scenarioUsed = Workspace.Clone(workspace.Scenario);
         var scenarioFile = workspace.ScenarioFile;
-        var builds = await Task.Run(() => Enumerable.Range(0, workers).Select(_ => workspace.BuildScenario(scenarioUsed)).ToList());
+        var builds = await Task.Run(() => Enumerable.Range(0, workers)
+            .Select(_ => workspace.BuildScenario(scenarioUsed, overrides: overrides))
+            .Concat(Enumerable.Range(0, compare ? workers : 0).Select(_ => workspace.BuildScenario(scenarioUsed, withOverrides: false)))
+            .ToList());
 
         if (builds.Any(build => build.Scenario is null))
         {
@@ -53,30 +62,21 @@ public sealed class BatchRunner(Workspace workspace)
 
         var scenarios = builds.Select(build => build.Scenario!).ToList();
         var results = new BattleResult?[iterations];
+        var baselineResults = new BattleResult?[compare ? iterations : 0];
         using var stop = new CancellationTokenSource();
         cancellation = stop;
         var clock = Stopwatch.StartNew();
+        var elapsed = TimeSpan.Zero;
 
         try
         {
-            var work = Task.Run(() => Parallel.For(0, workers, new ParallelOptions { MaxDegreeOfParallelism = workers }, worker =>
-            {
-                var engine = new BattleEngine();
+            await RunAll(scenarios.Take(workers).ToList(), results, baseSeed, stop.Token);
+            elapsed = clock.Elapsed;
 
-                for (var run = worker; run < iterations && !stop.IsCancellationRequested; run += workers)
-                {
-                    results[run] = Strip(engine.Simulate(scenarios[worker], unchecked(baseSeed + run)));
-                    Interlocked.Increment(ref completed);
-                }
-            }), CancellationToken.None);
-
-            while (!work.IsCompleted)
+            if (compare)
             {
-                await Task.WhenAny(work, Task.Delay(300));
-                Notify();
+                await RunAll(scenarios.Skip(workers).ToList(), baselineResults, baseSeed, stop.Token);
             }
-
-            await work;
         }
         catch (Exception exception)
         {
@@ -93,12 +93,52 @@ public sealed class BatchRunner(Workspace workspace)
                 Requested = iterations,
                 Runs = results.OfType<BattleResult>().OrderBy(result => result.Seed).ToList(),
                 Cancelled = stop.IsCancellationRequested,
-                Elapsed = clock.Elapsed
+                Elapsed = elapsed == TimeSpan.Zero ? clock.Elapsed : elapsed,
+                Overrides = overrides,
+                Baseline = compare
+                    ? new BatchResult
+                    {
+                        Scenario = scenarios[workers],
+                        ScenarioUsed = scenarioUsed,
+                        ScenarioFile = scenarioFile,
+                        BaseSeed = baseSeed,
+                        Requested = iterations,
+                        Runs = baselineResults.OfType<BattleResult>().OrderBy(result => result.Seed).ToList(),
+                        Cancelled = stop.IsCancellationRequested,
+                        Elapsed = clock.Elapsed - elapsed,
+                        Overrides = null
+                    }
+                    : null
             };
             cancellation = null;
             IsRunning = false;
             Notify();
         }
+    }
+
+    // Run i on scenarios[i % workers] with seed baseSeed + i, reporting progress while the workers run.
+    private async Task RunAll(IReadOnlyList<BattleScenario> scenarios, BattleResult?[] results, int baseSeed, CancellationToken stop)
+    {
+        var workers = scenarios.Count;
+        var iterations = results.Length;
+        var work = Task.Run(() => Parallel.For(0, workers, new ParallelOptions { MaxDegreeOfParallelism = workers }, worker =>
+        {
+            var engine = new BattleEngine();
+
+            for (var run = worker; run < iterations && !stop.IsCancellationRequested; run += workers)
+            {
+                results[run] = Strip(engine.Simulate(scenarios[worker], unchecked(baseSeed + run)));
+                Interlocked.Increment(ref completed);
+            }
+        }), CancellationToken.None);
+
+        while (!work.IsCompleted)
+        {
+            await Task.WhenAny(work, Task.Delay(300));
+            Notify();
+        }
+
+        await work;
     }
 
     public void Stop()

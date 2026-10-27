@@ -28,7 +28,7 @@
     <div class="panel">
         <div class="panel-head"><input type="search" class="grow" placeholder="Filter fleets…" @bind="filter" @bind:event="oninput" /></div>
         <div class="list list-scroll">
-            @foreach (var group in Workspace.Catalog.Fleets.Where(Matches).GroupBy(item => Workspace.Catalog.SourceFileOf(item) ?? "(new)"))
+            @foreach (var group in Workspace.Catalog.Fleets.Where(Matches).GroupBy(item => Workspace.Content.SourceFileOf(item) ?? "(new)"))
             {
                 <div class="list-group">@group.Key</div>
                 @foreach (var item in group)
@@ -224,17 +224,17 @@
                                                     <tr>
                                                         <td>
                                                             <select @bind="wing.PlaneID" @bind:after="StateHasChanged">
-                                                                @if (Workspace.Catalog.Planes.All(plane => plane.ID != wing.PlaneID))
+                                                                @if (Workspace.Content.Planes.All(plane => plane.ID != wing.PlaneID))
                                                                 {
                                                                     <option value="@wing.PlaneID">@wing.PlaneID (unknown)</option>
                                                                 }
                                                                 <optgroup label="Carrier capable">
-                                                                    @foreach (var plane in Workspace.Catalog.Planes.Where(plane => plane.CarrierCapable))
+                                                                    @foreach (var plane in Workspace.Content.Planes.Where(plane => plane.CarrierCapable))
                                                                     {
                                                                         <option value="@plane.ID">@PlaneLabel(plane)</option>
                                                                     }
                                                                 </optgroup>
-                                                                @if (Workspace.Catalog.Planes.FirstOrDefault(plane => plane.ID == wing.PlaneID) is { CarrierCapable: false } landPlane)
+                                                                @if (Workspace.Content.Planes.FirstOrDefault(plane => plane.ID == wing.PlaneID) is { CarrierCapable: false } landPlane)
                                                                 {
                                                                     <option value="@landPlane.ID">@PlaneLabel(landPlane) (not carrier capable)</option>
                                                                 }
@@ -326,7 +326,7 @@
         originalId = id;
         editing = Workspace.Clone(fleet);
         originalJson = Workspace.Json(editing);
-        originalFile = Workspace.Catalog.SourceFileOf(fleet) ?? $"{CatalogWriter.FleetsFolder}/custom.json";
+        originalFile = Workspace.Content.SourceFileOf(fleet) ?? $"{CatalogWriter.FleetsFolder}/custom.json";
         file = originalFile;
         isNew = false;
     }
@@ -475,8 +475,8 @@
 
     private string DefaultCarrierPlane()
     {
-        var planes = Workspace.Catalog.Planes.Where(plane => plane.CarrierCapable).ToList();
-        return (planes.LastOrDefault(plane => plane.Archetype == "cv_nav_bomber_equipment") ?? planes.FirstOrDefault() ?? Workspace.Catalog.Planes.FirstOrDefault())?.ID ?? string.Empty;
+        var planes = Workspace.Content.Planes.Where(plane => plane.CarrierCapable).ToList();
+        return (planes.LastOrDefault(plane => plane.SubUnitTypes.Contains("naval_bomber")) ?? planes.FirstOrDefault() ?? Workspace.Content.Planes.FirstOrDefault())?.ID ?? string.Empty;
     }
 
     private static string PlaneLabel(PlaneDto plane)

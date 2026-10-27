@@ -20,7 +20,14 @@
         <input type="number" @bind="baseSeed" style="width: 110px" />
         <button class="icon" title="Random seed" @onclick="() => baseSeed = Random.Shared.Next(1, 1_000_000)">⚄</button>
     </div>
-    <button class="primary" @onclick="Run" disabled="@Batch.IsRunning">Run @iterations battles</button>
+    @if (Workspace.ActiveOverrides is { } overrides)
+    {
+        <label class="check" title="Run the same seeds again without the override set and compare the two batches">
+            <input type="checkbox" @bind="compare" />
+            <span>Compare with and without <strong>@overrides.DisplayName</strong></span>
+        </label>
+    }
+    <button class="primary" @onclick="Run" disabled="@Batch.IsRunning">Run @(CompareOn ? $"{iterations} × 2" : iterations.ToString()) battles</button>
     @if (Batch.IsRunning)
     {
         <button class="danger" @onclick="Batch.Stop">Stop</button>
@@ -68,6 +75,46 @@ else
             <span class="warn"> · the scenario has changed since</span>
         }
     </p>
+
+    @if (last.Baseline is { } baseline && baseline.Runs.Count > 0)
+    {
+        <div class="panel" style="margin-bottom: 14px">
+            <div class="panel-head">
+                <h2>Override set effect</h2>
+                <span class="muted small">
+                    @(last.Overrides is { } used ? NavySimulator.GameData.Overrides.OverrideApplier.DisplayName(used) : "the set"): the same @baseline.Runs.Count seeds without it, then with it.
+                    ± is the standard error of the change; bold changes are more than two standard errors (unlikely to be chance).
+                    The rest of the page shows the runs with the set.
+                </span>
+            </div>
+            <div class="panel-body flush scroll">
+                <table class="data compact">
+                    <thead><tr><th></th><th class="num">Without</th><th class="num">With</th><th class="num">Change</th><th class="num">±</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in BatchComparison.Of(runs, baseline.Runs))
+                        {
+                            <tr>
+                                <td class="@row.Side">@row.Label</td>
+                                <td class="num">@row.Without.ToString(row.Format)</td>
+                                <td class="num">@row.With.ToString(row.Format)</td>
+                                <td class="num">
+                                    @if (row.Significant)
+                                    {
+                                        <strong>@Signed(row.Change, row.Format)</strong>
+                                    }
+                                    else
+                                    {
+                                        <span class="faint">@Signed(row.Change, row.Format)</span>
+                                    }
+                                </td>
+                                <td class="num faint">@row.StandardError.ToString(row.Format)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
 
     <div class="grid-2" style="margin-bottom: 14px">
         <div class="panel">
@@ -188,6 +235,9 @@ else
     private string runSort = "seed";
     private string? message;
     private BatchResult? last;
+    private bool compare = true;
+
+    private bool CompareOn => compare && Workspace.ActiveOverrides is not null;
 
     protected override void OnInitialized()
     {
@@ -209,7 +259,7 @@ else
     private async Task Run()
     {
         message = null;
-        await Batch.RunAsync(Math.Max(1, iterations), baseSeed);
+        await Batch.RunAsync(Math.Max(1, iterations), baseSeed, CompareOn);
     }
 
     private void Export()
@@ -222,6 +272,11 @@ else
         {
             message = exception.Message;
         }
+    }
+
+    private static string Signed(double value, string format)
+    {
+        return (value > 0 ? "+" : "") + value.ToString(format);
     }
 
     private static IEnumerable<(BattleOutcome Outcome, int Count)> Outcomes(IReadOnlyList<BattleResult> runs)

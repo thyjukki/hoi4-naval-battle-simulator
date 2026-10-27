@@ -3,6 +3,7 @@ using NavySimulator.Engine;
 using NavySimulator.Engine.Battles;
 using NavySimulator.Engine.Random;
 using NavySimulator.GameData;
+using NavySimulator.GameData.Overrides;
 
 if (args.Length > 0 && args[0] == ImportShipDataCommand.Name)
 {
@@ -70,9 +71,10 @@ BattleScenario scenario;
 try
 {
     var defineSources = options.DefineSources.Select(source => ResolveDefinesSource(source, dataDirectory)).ToList();
-    scenario = loader.LoadScenarioFromDirectory(dataDirectory, options.ScenarioFile, defineSources);
+    var overrides = options.OverrideSet is null ? null : OverrideSetStore.Resolve(options.OverrideSet, dataDirectory);
+    scenario = loader.LoadScenarioFromDirectory(dataDirectory, options.ScenarioFile, defineSources, overrides);
 }
-catch (DirectoryNotFoundException exception)
+catch (Exception exception) when (exception is DirectoryNotFoundException or FileNotFoundException or InvalidDataException or System.Text.Json.JsonException)
 {
     Console.Error.WriteLine(exception.Message);
     return 1;

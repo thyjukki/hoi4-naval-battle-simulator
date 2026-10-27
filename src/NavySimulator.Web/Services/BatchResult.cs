@@ -18,4 +18,10 @@ public sealed class BatchResult
     public required IReadOnlyList<BattleResult> Runs { get; init; }
     public required bool Cancelled { get; init; }
     public required TimeSpan Elapsed { get; init; }
+
+    /// <summary>The override set the runs used, or null.</summary>
+    public OverrideSetDto? Overrides { get; init; }
+
+    /// <summary>The same seeds without the override set, when the batch compared them; null otherwise.</summary>
+    public BatchResult? Baseline { get; init; }
 }

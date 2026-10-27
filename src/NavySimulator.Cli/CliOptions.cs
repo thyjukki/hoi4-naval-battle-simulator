@@ -5,6 +5,7 @@ public sealed class CliOptions
     public string? DataDirectory { get; private set; }
     public string ScenarioFile { get; private set; } = "battle-scenario.json";
     public List<string> DefineSources { get; } = [];
+    public string? OverrideSet { get; private set; }
     public int? Iterations { get; private set; }
     public int? Seed { get; private set; }
     public double? ConstantRoll { get; private set; }
@@ -18,6 +19,8 @@ public sealed class CliOptions
           --scenario <file>   Scenario file inside the data directory (default: battle-scenario.json)
           --defines <path>    Extra define source applied after the scenario's: a .lua file, or a HOI4/mod root
                               directory (uses its common/defines/*.lua). Repeatable.
+          --overrides <set>   Override set applied over the defines and the data: a set file, or a name in
+                              <data>/overrides/ (docs/overrides.md)
           --iterations <n>    Override the scenario's iteration count
           --seed <n>          Base seed; run i uses seed + i - 1 (default: scenario seed, else random)
           --constant-roll <U> Every roll is U in [0, 1) instead of the seeded dice (S-REPLAY-CONSTANT)
@@ -62,6 +65,9 @@ public sealed class CliOptions
                     break;
                 case "--defines":
                     options.DefineSources.Add(NextValue());
+                    break;
+                case "--overrides":
+                    options.OverrideSet = NextValue();
                     break;
                 case "--iterations":
                     options.Iterations = int.Parse(NextValue());

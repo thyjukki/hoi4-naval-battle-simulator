@@ -8,6 +8,7 @@ using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Mios;
 using NavySimulator.GameData.Defines;
 using NavySimulator.GameData.Contracts;
+using NavySimulator.GameData.Overrides;
 
 namespace NavySimulator.GameData;
 
@@ -50,12 +51,13 @@ public class SetupLoader
     public BattleScenario LoadScenarioFromDirectory(
         string dataDirectoryPath,
         string scenarioFileName = "battle-scenario.json",
-        IReadOnlyList<string>? extraDefineSources = null)
+        IReadOnlyList<string>? extraDefineSources = null,
+        OverrideSetDto? overrides = null)
     {
         var catalog = ReadCatalog(dataDirectoryPath);
         var scenarioErrors = new List<string>();
         var battleScenarioFile = ReadJsonFile<BattleScenarioFileDto>(dataDirectoryPath, scenarioFileName, scenarioErrors) ?? new BattleScenarioFileDto();
-        return BuildScenario(catalog, battleScenarioFile.BattleScenario, extraDefineSources, scenarioErrors);
+        return BuildScenario(catalog, battleScenarioFile.BattleScenario, extraDefineSources, overrides, scenarioErrors);
     }
 
     /// <summary>Reads every content collection of a data directory, keeping read errors and warnings in the catalog.</summary>
@@ -222,19 +224,34 @@ public class SetupLoader
     /// Validates the catalog and the scenario together and builds the battle. Every call builds new fleets and ships, so
     /// two scenarios built from the same catalog can run at the same time. Throws <see cref="SetupValidationException"/>.
     /// </summary>
-    public BattleScenario BuildScenario(ContentCatalog catalog, BattleScenarioDto scenarioDto, IReadOnlyList<string>? extraDefineSources = null)
+    /// <summary>
+    /// Validates and builds a scenario. <paramref name="overrides"/>, when given, changes the content and the defines
+    /// (after every define source) for this build only; <paramref name="catalog"/> is not changed.
+    /// </summary>
+    public BattleScenario BuildScenario(
+        ContentCatalog catalog,
+        BattleScenarioDto scenarioDto,
+        IReadOnlyList<string>? extraDefineSources = null,
+        OverrideSetDto? overrides = null)
     {
-        return BuildScenario(catalog, scenarioDto, extraDefineSources, []);
+        return BuildScenario(catalog, scenarioDto, extraDefineSources, overrides, []);
     }
 
     private BattleScenario BuildScenario(
         ContentCatalog catalog,
         BattleScenarioDto scenarioDto,
         IReadOnlyList<string>? extraDefineSources,
+        OverrideSetDto? overrides,
         List<string> scenarioErrors)
     {
         warnings.Clear();
         warnings.AddRange(catalog.Warnings);
+
+        if (overrides is not null)
+        {
+            catalog = OverrideApplier.ApplyContent(catalog, overrides, warnings);
+        }
+
         var errors = new List<string>(catalog.ReadErrors);
         errors.AddRange(scenarioErrors);
 
@@ -248,7 +265,7 @@ public class SetupLoader
         var spirits = catalog.Spirits;
         var planes = catalog.Planes;
         var forceCompositionsFile = new ForceCompositionsFileDto { Fleets = catalog.Fleets };
-        var defines = LoadDefines(dataDirectoryPath, scenarioDto.Defines, extraDefineSources ?? [], errors);
+        var defines = LoadDefines(dataDirectoryPath, scenarioDto.Defines, extraDefineSources ?? [], overrides, errors);
         var rules = BuildRules(scenarioDto, errors);
 
         ValidateRequiredIds(hulls.Select(h => h.ID), "hulls", errors);
@@ -468,6 +485,7 @@ public class SetupLoader
         string dataDirectoryPath,
         IEnumerable<string> scenarioSources,
         IEnumerable<string> extraSources,
+        OverrideSetDto? overrides,
         List<string> errors)
     {
         var sources = (scenarioSources ?? [])
@@ -479,6 +497,12 @@ public class SetupLoader
         {
             var (defines, report) = DefinesLoader.Load(sources);
             DefinesReport = report;
+
+            if (overrides is not null)
+            {
+                OverrideApplier.ApplyDefines(defines, overrides, report, warnings);
+            }
+
             warnings.AddRange(report.TypeMismatches.Select(mismatch => $"defines: {mismatch}"));
             warnings.AddRange(report.ParseWarnings.Select(warning => $"defines: {warning}"));
             errors.AddRange(defines.Validate().Select(problem => $"defines: {problem}"));

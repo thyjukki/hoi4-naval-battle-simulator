@@ -6,6 +6,9 @@ public sealed class GuiSettings
     /// <summary>Define sources applied after the scenario's own, like the CLI's <c>--defines</c> (e.g. a mod folder).</summary>
     public List<string> ExtraDefineSources { get; set; } = [];
 
+    /// <summary>The override set every battle uses (<c>overrides/x.json</c>, data-directory relative); null: none.</summary>
+    public string? ActiveOverrideSet { get; set; }
+
     /// <summary>Scenario file opened on start, relative to the data directory.</summary>
     public string? LastScenarioFile { get; set; }
 }

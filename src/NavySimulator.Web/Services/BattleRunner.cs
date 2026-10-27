@@ -36,11 +36,15 @@ public sealed class BattleRunner(Workspace workspace)
     public int CatalogVersionUsed { get; private set; }
     public IReadOnlyList<string> DefineSourcesUsed { get; private set; } = [];
 
+    /// <summary>The override set the battle was built with (as JSON), or null.</summary>
+    public string? OverridesUsed { get; private set; }
+
     private BattleSession? Session { get; set; }
 
     /// <summary>True when the scenario or the content was edited after the battle started.</summary>
     public bool IsOutdated => HasBattle &&
                               (CatalogVersionUsed != workspace.CatalogVersion ||
+                               OverridesUsed != (workspace.ActiveOverrides is { } active ? Workspace.Json(active.Set) : null) ||
                                Workspace.Json(ScenarioUsed) != Workspace.Json(workspace.Scenario));
 
     /// <summary>
@@ -54,7 +58,8 @@ public sealed class BattleRunner(Workspace workspace)
             return false;
         }
 
-        var build = workspace.BuildScenario(scenario);
+        var overrides = workspace.OverridesSnapshot();
+        var build = workspace.BuildScenario(scenario, overrides: overrides);
         StartErrors = build.Errors;
         StartWarnings = build.Warnings;
         RunError = null;
@@ -73,6 +78,7 @@ public sealed class BattleRunner(Workspace workspace)
             ScenarioFileUsed = workspace.ScenarioFile;
             CatalogVersionUsed = workspace.CatalogVersion;
             DefineSourcesUsed = build.Scenario.Defines.Sources.ToList();
+            OverridesUsed = overrides is null ? null : Workspace.Json(overrides);
             Version++;
         }
 

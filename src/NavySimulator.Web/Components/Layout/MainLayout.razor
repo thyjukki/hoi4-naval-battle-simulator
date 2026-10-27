@@ -15,6 +15,7 @@
         <NavLink href="designs">Designs</NavLink>
         <NavLink href="batch">Batch</NavLink>
         <NavLink href="library">Library</NavLink>
+        <NavLink href="overrides">Overrides</NavLink>
         <NavLink href="settings">Settings</NavLink>
     </nav>
     <div class="topbar-status">
@@ -26,6 +27,18 @@
                 <span class="muted">+ scenario defines</span>
             }
         </a>
+        @if (Workspace.ActiveOverrides is { } overrides)
+        {
+            <a href="overrides" class="scenario-chip" title="The override set every battle uses (Overrides)">
+                <span class="muted">Overrides</span>
+                <strong>@overrides.DisplayName</strong>
+                <span class="muted">@overrides.ChangeCount changes</span>
+                @if (overrides.IsDirty)
+                {
+                    <span class="dot-dirty" title="Unsaved changes"></span>
+                }
+            </a>
+        }
         <a href="scenario" class="scenario-chip" title="Scenario being edited">
             <span class="muted">Scenario</span>
             <strong>@Workspace.Scenario.ID</strong>

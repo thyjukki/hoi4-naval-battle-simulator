@@ -23,7 +23,7 @@
                         {
                             <option value="@Side.FleetID">@(string.IsNullOrEmpty(Side.FleetID) ? "(choose a fleet)" : $"{Side.FleetID} (unknown)")</option>
                         }
-                        @foreach (var group in Workspace.Catalog.Fleets.GroupBy(item => Workspace.Catalog.SourceFileOf(item) ?? ""))
+                        @foreach (var group in Workspace.Catalog.Fleets.GroupBy(item => Workspace.Content.SourceFileOf(item) ?? ""))
                         {
                             <optgroup label="@group.Key">
                                 @foreach (var item in group)
@@ -219,7 +219,7 @@
             <summary><span class="label">Doctrines</span><span class="small muted">@DoctrineSummary()</span></summary>
             <div class="section-body stack">
                 <div class="row">
-                    @if (Workspace.Catalog.DoctrineFolders.Count == 0)
+                    @if (Workspace.Content.DoctrineFolders.Count == 0)
                     {
                         <span class="hint">No doctrines in the data directory: import them in Settings → Data (or <code>NavySimulator import-doctrines</code>).</span>
                     }
@@ -239,7 +239,7 @@
             <div class="section-body stack">
                 <div class="row">
                     <span class="hint">
-                        @if (Workspace.Catalog.Mios.Count == 0)
+                        @if (Workspace.Content.Mios.Count == 0)
                         {
                             <span>No MIOs in the data directory: import them in Settings → Data (or <code>NavySimulator import-mios</code>).</span>
                         }
@@ -250,7 +250,7 @@
                     </span>
                     <button class="small ghost right" @onclick="CopyMios" title="Use the other side's MIO assignments, traits and policies">Copy from @OtherLabel</button>
                 </div>
-                @if (Workspace.Catalog.Mios.Count > 0 && designs.Count > 0)
+                @if (Workspace.Content.Mios.Count > 0 && designs.Count > 0)
                 {
                     <table class="data compact">
                         <thead><tr><th>Design</th><th>MIO</th></tr></thead>
@@ -305,7 +305,7 @@
         </details>
 
         <details class="section">
-            <summary><span class="label">Spirits</span><span class="small muted">@SelectionSummary(Side.SpiritIDs.Select(id => Workspace.Catalog.Spirits.FirstOrDefault(spirit => spirit.ID == id)?.Name ?? id))</span></summary>
+            <summary><span class="label">Spirits</span><span class="small muted">@SelectionSummary(Side.SpiritIDs.Select(id => Workspace.Content.Spirits.FirstOrDefault(spirit => spirit.ID == id)?.Name ?? id))</span></summary>
             <div class="section-body stack">
                 <CheckList Items="SpiritItems()" Selected="Side.SpiritIDs" OnChanged="Changed" MaxHeight="220" />
             </div>
@@ -350,11 +350,11 @@
                                     <tr>
                                         <td>
                                             <select @bind="landBased.PlaneID" @bind:after="Changed" style="width: 100%; min-width: 170px; max-width: 240px">
-                                                @if (Workspace.Catalog.Planes.All(plane => plane.ID != landBased.PlaneID))
+                                                @if (Workspace.Content.Planes.All(plane => plane.ID != landBased.PlaneID))
                                                 {
                                                     <option value="@landBased.PlaneID">@landBased.PlaneID (unknown)</option>
                                                 }
-                                                @foreach (var group in Workspace.Catalog.Planes.GroupBy(plane => IsStriker(plane.ID) ? "Naval strike" : "Other (no naval strike)"))
+                                                @foreach (var group in Workspace.Content.Planes.GroupBy(plane => IsStriker(plane.ID) ? "Naval strike" : "Other (no naval strike)"))
                                                 {
                                                     <optgroup label="@group.Key">
                                                         @foreach (var plane in group)
@@ -426,7 +426,7 @@
                                 @foreach (var planeId in Side.PlaneStockpile.Keys.ToList())
                                 {
                                     <tr>
-                                        <td>@(Workspace.Catalog.Planes.FirstOrDefault(plane => plane.ID == planeId) is { } stocked ? PlaneLabel(stocked) : $"{planeId} (unknown)")</td>
+                                        <td>@(Workspace.Content.Planes.FirstOrDefault(plane => plane.ID == planeId) is { } stocked ? PlaneLabel(stocked) : $"{planeId} (unknown)")</td>
                                         <td class="num"><input type="number" min="0" @bind:get="Side.PlaneStockpile[planeId]" @bind:set="value => SetStockpile(planeId, value)" style="width: 80px" /></td>
                                         <td><button class="small icon danger" title="Remove" @onclick="() => RemoveStockpile(planeId)">✕</button></td>
                                     </tr>
@@ -691,13 +691,13 @@
     // "subdoctrine/reward" or "grand/track milestone".
     private string EffectSummary(string source)
     {
-        var folders = Workspace.Catalog.DoctrineFolders;
+        var folders = Workspace.Content.DoctrineFolders;
         var parts = source.Split('/');
         var milestone = parts.Length == 2 && parts[1].EndsWith(" milestone", StringComparison.Ordinal);
         var dto = parts.Length == 1
             ? folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == source)?.Effects
               ?? folders.SelectMany(folder => folder.Subdoctrines).FirstOrDefault(item => item.ID == source)?.Effects
-              ?? Workspace.Catalog.Spirits.FirstOrDefault(item => item.ID == source)?.Effects
+              ?? Workspace.Content.Spirits.FirstOrDefault(item => item.ID == source)?.Effects
             : milestone
                 ? folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == parts[0])?.Milestones
                     .GetValueOrDefault(parts[1][..^" milestone".Length])
@@ -708,7 +708,7 @@
 
     private string DoctrineName(string id)
     {
-        var folders = Workspace.Catalog.DoctrineFolders;
+        var folders = Workspace.Content.DoctrineFolders;
         return folders.SelectMany(folder => folder.GrandDoctrines).FirstOrDefault(item => item.ID == id)?.Name
                ?? folders.SelectMany(folder => folder.Subdoctrines).FirstOrDefault(item => item.ID == id)?.Name
                ?? id;
@@ -738,8 +738,8 @@
 
     private async Task AddLandBased()
     {
-        var striker = Workspace.Catalog.Planes.LastOrDefault(plane => plane.Archetype == "nav_bomber_equipment") ??
-                      Workspace.Catalog.Planes.FirstOrDefault(plane => IsStriker(plane.ID));
+        var striker = Workspace.Content.Planes.LastOrDefault(plane => !plane.CarrierCapable && plane.SubUnitTypes.Contains("naval_bomber")) ??
+                      Workspace.Content.Planes.FirstOrDefault(plane => IsStriker(plane.ID));
         Side.LandBasedAirwings.Add(new LandBasedAirwingDto { PlaneID = striker?.ID ?? string.Empty, Planes = 100 });
         await Changed();
     }
@@ -793,7 +793,7 @@
             ? fleet.CarrierAirwings.Values.SelectMany(loadouts => loadouts).SelectMany(loadout => loadout.Wings).Select(wing => wing.PlaneID)
             : [];
         var own = used.Concat(Side.LandBasedAirwings.Select(entry => entry.PlaneID)).ToHashSet(StringComparer.Ordinal);
-        return Workspace.Catalog.Planes.Where(plane => !Side.PlaneStockpile.ContainsKey(plane.ID)).OrderBy(plane => own.Contains(plane.ID) ? 0 : 1);
+        return Workspace.Content.Planes.Where(plane => !Side.PlaneStockpile.ContainsKey(plane.ID)).OrderBy(plane => own.Contains(plane.ID) ? 0 : 1);
     }
 
     private async Task AddStockpile(string planeId)
@@ -862,7 +862,7 @@
 
     private string MioSummary()
     {
-        if (Workspace.Catalog.Mios.Count == 0)
+        if (Workspace.Content.Mios.Count == 0)
         {
             return "not imported";
         }
@@ -893,12 +893,12 @@
 
     private IReadOnlyList<CheckItem> ResearchItems()
     {
-        return Workspace.Catalog.Researches
+        return Workspace.Content.Researches
             .Select(research => new CheckItem(
                 research.ID,
                 ModifierInfo.SummarizeResearch(research) + AppliesTo(research.AppliesToRoles, research.AppliesToTypes) +
                 (research.EquipmentBonus ? " · equipment bonus" : string.Empty),
-                Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research) ?? string.Empty)))
+                Path.GetFileNameWithoutExtension(Workspace.Content.SourceFileOf(research) ?? string.Empty)))
             .ToList();
     }
 

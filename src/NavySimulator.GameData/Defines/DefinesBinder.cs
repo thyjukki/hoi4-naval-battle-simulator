@@ -12,16 +12,7 @@ public static class DefinesBinder
     public static DefinesBindingReport Apply(DefinesTable table, GameDefines defines)
     {
         var report = new DefinesBindingReport();
-        var targets = new Dictionary<string, object>(StringComparer.Ordinal)
-        {
-            ["NNavy"] = defines.NNavy,
-            ["NAir"] = defines.NAir,
-            ["NMilitary"] = defines.NMilitary,
-            ["NDoctrines"] = defines.NDoctrines,
-            ["NGame"] = defines.NGame,
-            ["NBuildings"] = defines.NBuildings,
-            ["NGraphics"] = defines.NGraphics
-        };
+        var targets = Targets(defines);
 
         foreach (var category in table.Categories)
         {
@@ -56,6 +47,32 @@ public static class DefinesBinder
         }
 
         return report;
+    }
+
+    /// <summary>The define category objects by the game's category name (<c>NNavy</c>, <c>NAir</c>, ...).</summary>
+    public static IReadOnlyDictionary<string, object> Targets(GameDefines defines)
+    {
+        return new Dictionary<string, object>(StringComparer.Ordinal)
+        {
+            ["NNavy"] = defines.NNavy,
+            ["NAir"] = defines.NAir,
+            ["NMilitary"] = defines.NMilitary,
+            ["NDoctrines"] = defines.NDoctrines,
+            ["NGame"] = defines.NGame,
+            ["NBuildings"] = defines.NBuildings,
+            ["NGraphics"] = defines.NGraphics
+        };
+    }
+
+    /// <summary>Every define the simulator reads, as <c>Category.KEY</c>, with its type and current value.</summary>
+    public static IReadOnlyList<(string Key, Type Type, object? Value)> Values(GameDefines defines)
+    {
+        return Targets(defines)
+            .SelectMany(target => target.Value.GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(property => property.CanWrite)
+                .Select(property => ($"{target.Key}.{property.Name}", property.PropertyType, property.GetValue(target.Value))))
+            .ToList();
     }
 
     private static bool TryConvert(DefineValue value, Type targetType, out object? converted)

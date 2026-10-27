@@ -1,0 +1,140 @@
+@using System.Text.Json.Nodes
+@using NavySimulator.GameData.Overrides
+@inject Workspace Workspace
+
+@* The fields of one imported item (or of its part under PathPrefix) with their values in data/ and the override set's
+   changes, editable. Used by the Overrides page and the Library. *@
+
+@{
+    var fields = OverrideInfo.Fields(Workspace.Catalog, Collection, ItemId, PathPrefix);
+}
+@if (fields.Count == 0)
+{
+    <p class="muted">@Collection has no item '@ItemId'.</p>
+}
+else
+{
+    var shown = fields.Where(field => fieldFilter.Length == 0 || field.Path.Contains(fieldFilter, StringComparison.OrdinalIgnoreCase)).ToList();
+    <div class="row tight" style="margin-bottom: 6px">
+        <input type="search" class="grow" placeholder="Filter fields…" @bind="fieldFilter" @bind:event="oninput" />
+        <span class="small muted">@shown.Count of @fields.Count fields@(shown.Count > MaxFields ? $", first {MaxFields} shown" : "")</span>
+    </div>
+    <div class="scroll" style="max-height: @MaxHeight">
+        <table class="data compact">
+            <thead><tr><th>Field</th><th class="num">In data/</th><th>Override</th></tr></thead>
+            <tbody>
+                @foreach (var field in shown.Take(MaxFields))
+                {
+                    var path = field.Path;
+                    var existing = OverrideSets.FindContent(Set, Collection, ItemId, path);
+                    <tr class="@(existing is not null ? "changed" : "")">
+                        <td class="mono small" title="@path">@OverrideInfo.RelativePath(path, PathPrefix)</td>
+                        @if (field.Kind == ContentFieldKind.Dictionary)
+                        {
+                            <td class="faint small">@(field.Value is JsonObject entries ? $"{entries.Count} keys" : "empty")</td>
+                            <td>
+                                @if (newKeyPath == path)
+                                {
+                                    <div class="row tight">
+                                        <input type="text" class="mono" placeholder="key" @bind="newKey" />
+                                        <input type="text" class="mono" placeholder="value" @bind="newKeyValue" />
+                                        <button class="small" @onclick="() => AddKey(path)" disabled="@string.IsNullOrWhiteSpace(newKey)">Add</button>
+                                        <button class="small" @onclick="() => newKeyPath = null">Cancel</button>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <button class="small" @onclick="() => { newKeyPath = path; newKey = string.Empty; newKeyValue = string.Empty; }">+ key</button>
+                                }
+                            </td>
+                        }
+                        else
+                        {
+                            <td class="num mono faint">@OverrideValues.Format(field.Value)</td>
+                            <td>
+                                <input type="text" class="mono" placeholder="(unchanged)"
+                                       value="@(existing is null ? string.Empty : existing.Value is null ? "null" : OverrideValues.Format(existing.Value))"
+                                       @onchange="args => SetContent(path, args)" />
+                            </td>
+                        }
+                    </tr>
+                }
+                @foreach (var added in OverrideInfo.ChangesOf(Set, Collection, ItemId, PathPrefix).Where(change => fields.All(field => field.Path != change.Path)))
+                {
+                    var path = added.Path;
+                    <tr class="changed">
+                        <td class="mono small" title="@path">@OverrideInfo.RelativePath(path, PathPrefix) <span class="badge override">new key</span></td>
+                        <td class="num mono faint">(none)</td>
+                        <td>
+                            <input type="text" class="mono" value="@(added.Value is null ? "null" : OverrideValues.Format(added.Value))" @onchange="args => SetContent(path, args)" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private const int MaxFields = 300;
+
+    private string fieldFilter = string.Empty;
+    private string? newKeyPath;
+    private string newKey = string.Empty;
+    private string newKeyValue = string.Empty;
+    private string shownItem = string.Empty;
+
+    /// <summary>The set the edits go into.</summary>
+    [Parameter, EditorRequired] public OverrideSetDto Set { get; set; } = null!;
+
+    /// <summary>An override collection (data folder), e.g. <c>modules</c>.</summary>
+    [Parameter, EditorRequired] public string Collection { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired] public string ItemId { get; set; } = string.Empty;
+
+    /// <summary>Only the fields under this path (e.g. <c>subdoctrines[x]</c>); null: the whole item.</summary>
+    [Parameter] public string? PathPrefix { get; set; }
+
+    [Parameter] public string MaxHeight { get; set; } = "520px";
+
+    /// <summary>Raised after every change to the set.</summary>
+    [Parameter] public EventCallback OnEdited { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        var item = $"{Collection}/{ItemId}/{PathPrefix}";
+
+        if (item != shownItem)
+        {
+            shownItem = item;
+            fieldFilter = string.Empty;
+            newKeyPath = null;
+        }
+    }
+
+    // Empty text takes the change out of the set; "null" removes a key.
+    private async Task SetContent(string path, ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString() ?? string.Empty;
+
+        if (text.Trim().Length == 0)
+        {
+            Workspace.Overrides.RemoveContent(Set, Collection, ItemId, path);
+        }
+        else
+        {
+            Workspace.Overrides.SetContent(Set, Collection, ItemId, path, OverrideValues.Parse(text));
+        }
+
+        await OnEdited.InvokeAsync();
+    }
+
+    private async Task AddKey(string path)
+    {
+        var key = newKey.Trim();
+        var keyPath = path.Length == 0 ? key : $"{path}.{key}";
+        Workspace.Overrides.SetContent(Set, Collection, ItemId, keyPath, OverrideValues.Parse(newKeyValue) ?? JsonValue.Create(0.0));
+        newKeyPath = null;
+        await OnEdited.InvokeAsync();
+    }
+}

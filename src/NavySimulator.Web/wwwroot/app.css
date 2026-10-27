@@ -253,6 +253,10 @@ table.data tr.clickable { cursor: pointer; }
 table.data.compact td { padding: 3px 8px; height: 26px; }
 table.data td.diff-up { color: var(--ok); }
 table.data td.diff-down { color: var(--bad); }
+table.data tr.changed td { background: rgba(90, 162, 255, .07); }
+table.data tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.badge.override { background: var(--panel-3); color: var(--accent); }
+.library-item { border-bottom: 1px solid var(--border); background: var(--panel-2); }
 .scroll { overflow: auto; }
 .scroll-y { overflow-y: auto; }
 

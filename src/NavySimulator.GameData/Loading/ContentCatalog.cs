@@ -1,3 +1,4 @@
+using System.Collections;
 using NavySimulator.GameData.Contracts;
 
 namespace NavySimulator.GameData;
@@ -5,7 +6,7 @@ namespace NavySimulator.GameData;
 /// <summary>
 /// The content of a data directory (everything except scenarios) as read from JSON, before validation. Each item
 /// remembers the file it came from, so editors can write it back with <see cref="CatalogWriter"/>.
-/// Build a battle from it with <see cref="SetupLoader.BuildScenario(ContentCatalog, BattleScenarioDto, IReadOnlyList{string}?)"/>.
+/// Build a battle from it with <see cref="SetupLoader.BuildScenario(ContentCatalog, BattleScenarioDto, IReadOnlyList{string}?, OverrideSetDto?)"/>.
 /// </summary>
 public sealed class ContentCatalog
 {
@@ -78,6 +79,33 @@ public sealed class ContentCatalog
     public void SetSourceFile(object item, string relativePath)
     {
         sourceFiles[item] = relativePath.Replace('\\', '/');
+    }
+
+    /// <summary>
+    /// A shallow copy: new lists (every collection, read errors and warnings) holding the same items, with their source
+    /// files. An override set replaces the items it changes in such a copy.
+    /// </summary>
+    public ContentCatalog Copy()
+    {
+        var copy = new ContentCatalog(DataDirectory);
+
+        foreach (var property in typeof(ContentCatalog).GetProperties())
+        {
+            if (property.GetValue(this) is IList source && property.GetValue(copy) is IList target)
+            {
+                foreach (var item in source)
+                {
+                    target.Add(item);
+                }
+            }
+        }
+
+        foreach (var (item, file) in sourceFiles)
+        {
+            copy.sourceFiles[item] = file;
+        }
+
+        return copy;
     }
 
     /// <summary>The files a collection folder has, e.g. <c>ship-designs/battleships.json</c>, including empty ones.</summary>

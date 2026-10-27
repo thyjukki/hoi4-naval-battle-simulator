@@ -11,6 +11,7 @@ The engine reads every numeric combat constant from a `GameDefines` instance (`s
 1. Built-in defaults: vanilla **1.19.3**, generated from the game's own `00_defines.lua` and `00_static_modifiers.txt`.
 2. The scenario's `"defines"` list, in order.
 3. Each `--defines <path>` on the command line, in order.
+4. The override set, if any (CLI `--overrides`, GUI Overrides page): its defines and static modifier keys ([overrides.md](../overrides.md)).
 
 A source is a `.lua` file, a folder of `.lua` files, or a game/mod root. For a root, every `common/defines/*.lua` is applied in file-name order (as the game does), the static modifier blocks above are taken from `common/modifiers/*.txt` (a block found later replaces the earlier one completely), and the weather settings from `common/weather.txt` (each key found replaces the earlier value). `00_graphics.lua` defines its categories under `NDefines_Graphics`, which the game merges into `NDefines`; the parser reads both roots. Later sources override earlier ones, so list the game first and mods after it in load order:
 

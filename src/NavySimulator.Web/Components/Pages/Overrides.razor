@@ -1,0 +1,487 @@
+@page "/overrides"
+@using System.Text.Json.Nodes
+@using NavySimulator.GameData.Overrides
+@implements IDisposable
+@inject Workspace Workspace
+
+<PageTitle>Overrides · NavySimulator</PageTitle>
+
+<div class="page-head">
+    <h1>Overrides</h1>
+    <span class="muted">
+        Try a mod change without touching the game's or the mod's files: an override set changes defines, static modifiers and imported
+        content (modules, hulls, researches, doctrines, spirits, MIO and admiral traits, ...). The active set applies to every battle and batch,
+        over Simulate as (@Workspace.RulesetName).
+    </span>
+</div>
+
+@if (message is not null)
+{
+    <div class="message @(messageIsError ? "error" : "info")" style="margin-bottom: 14px">@message</div>
+}
+@foreach (var error in Workspace.Overrides.ReadErrors)
+{
+    <div class="message error" style="margin-bottom: 14px">@error</div>
+}
+
+<div class="split">
+    <div class="stack">
+        <div class="panel">
+            <div class="panel-head">
+                <h2>Override sets</h2>
+                <button class="small right" @onclick="Reload" title="Read the files in overrides/ again (unsaved changes are lost)">Reload</button>
+            </div>
+            <div class="panel-body stack">
+                <label class="ruleset @(Workspace.ActiveOverrides is null ? "on" : "")">
+                    <input type="radio" name="override-set" checked="@(Workspace.ActiveOverrides is null)" @onchange="() => Use(null)" />
+                    <span><strong>None</strong><span class="path">Battles use the data and defines as they are.</span></span>
+                </label>
+                @foreach (var entry in Workspace.Overrides.Entries)
+                {
+                    var active = Workspace.ActiveOverrides == entry;
+                    <label class="ruleset @(active ? "on" : "")">
+                        <input type="radio" name="override-set" checked="@active" @onchange="() => Use(entry)" />
+                        <span>
+                            <strong>@entry.DisplayName</strong>
+                            @if (entry.IsDirty)
+                            {
+                                <span class="dot-dirty" title="Unsaved changes"></span>
+                            }
+                            <span class="path">@entry.File · @entry.ChangeCount change@(entry.ChangeCount == 1 ? "" : "s")@(entry.SavedJson is null ? " · not saved yet" : "")</span>
+                        </span>
+                        <button class="small right" @onclick="() => Select(entry)" @onclick:preventDefault disabled="@(selected == entry)">@(selected == entry ? "Editing" : "Edit")</button>
+                    </label>
+                }
+                <div class="row tight">
+                    <input type="text" class="grow" placeholder="New set ID, e.g. cl-buff" @bind="newId" />
+                    <button @onclick="Create">New</button>
+                </div>
+                <p class="small muted">
+                    Sets are files in <code>overrides/</code> of the data directory. Battles use the active set with its unsaved changes;
+                    the choice is kept in the GUI settings. On the CLI: <code>--overrides &lt;set&gt;</code>.
+                    The Batch page can run the same seeds with and without the active set.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @if (selected is null)
+    {
+        <div class="panel"><p class="empty">Create an override set, or pick one to edit.</p></div>
+    }
+    else
+    {
+        var set = selected.Set;
+        var baseDefines = Workspace.BaseDefines();
+        <div class="stack">
+            <div class="panel">
+                <div class="panel-head">
+                    <h2>@selected.DisplayName</h2>
+                    @if (Workspace.ActiveOverrides == selected)
+                    {
+                        <span class="badge fighting">active</span>
+                    }
+                    else
+                    {
+                        <button class="small" @onclick="() => Use(selected)">Use for battles</button>
+                    }
+                    <div class="row tight right">
+                        <button class="small primary" @onclick="Save" disabled="@(!selected.IsDirty && selected.SavedJson is not null)">Save</button>
+                        <button class="small" @onclick="Revert" disabled="@(!selected.IsDirty)">Revert</button>
+                        <button class="small" @onclick="Duplicate">Duplicate</button>
+                        <button class="small danger" @onclick="Delete">Delete</button>
+                    </div>
+                </div>
+                <div class="panel-body stack">
+                    <div class="fields">
+                        <div class="field">
+                            <label>ID (file name)</label>
+                            <input type="text" value="@set.ID" @onchange="args => Edit(() => set.ID = args.Value?.ToString()?.Trim() ?? string.Empty)" />
+                        </div>
+                        <div class="field span-2">
+                            <label>Name</label>
+                            <input type="text" value="@set.Name" @onchange="args => Edit(() => set.Name = Text(args))" />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label>Description</label>
+                        <textarea rows="2" @onchange="args => Edit(() => set.Description = Text(args))">@set.Description</textarea>
+                    </div>
+                    @if (warnings.Count > 0)
+                    {
+                        <div class="message warning">
+                            <strong>Not applied:</strong>
+                            <ul>@foreach (var warning in warnings) { <li>@warning</li> }</ul>
+                        </div>
+                    }
+                    <p class="small muted">
+                        Values: a number (<code>0.25</code>), <code>true</code>/<code>false</code>, a list (<code>{ 3, 6, 2 }</code> or <code>[3, 6, 2]</code>)
+                        or text. Clearing a value takes the change out of the set; <code>null</code> removes a key (a static modifier or a dictionary entry).
+                        "Before" is the value without the set: the defines of Simulate as and the scenario, the content in <code>data/</code>.
+                    </p>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><h2>Defines</h2><span class="muted small">@set.Defines.Count changed</span></div>
+                <div class="panel-body flush scroll">
+                    <table class="data compact">
+                        <thead><tr><th>Define</th><th class="num">Before</th><th>Value</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var row in OverrideInfo.Defines(set, baseDefines))
+                            {
+                                <tr>
+                                    <td class="mono">@row.Key @if (!row.Known) { <span class="badge sunk">not read</span> }</td>
+                                    <td class="num mono faint">@OverrideValues.Format(row.Base)</td>
+                                    <td><input type="text" class="mono" value="@OverrideValues.Format(row.Value)" @onchange="args => SetDefine(row.Key, args)" /></td>
+                                    <td><button class="small icon danger" title="Take out of the set" @onclick="() => Edit(() => Workspace.Overrides.SetDefine(set, row.Key, null))">✕</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel-body row tight">
+                    <input type="text" class="grow mono" list="override-define-keys" placeholder="NNavy.COMBAT_BASE_HIT_CHANCE" @bind="newDefine" />
+                    <datalist id="override-define-keys">
+                        @foreach (var key in OverrideInfo.DefineKeys(baseDefines))
+                        {
+                            <option value="@key"></option>
+                        }
+                    </datalist>
+                    <button @onclick="AddDefine" disabled="@string.IsNullOrWhiteSpace(newDefine)">Add</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><h2>Static modifiers</h2><span class="muted small">keys of the blocks naval combat reads (00_static_modifiers.txt)</span></div>
+                <div class="panel-body flush scroll">
+                    <table class="data compact">
+                        <thead><tr><th>Block</th><th>Modifier</th><th class="num">Before</th><th>Value</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var row in OverrideInfo.StaticModifiers(set, baseDefines))
+                            {
+                                <tr>
+                                    <td class="mono">@row.Block @if (!row.BlockUsed) { <span class="badge sunk">not read</span> }</td>
+                                    <td class="mono">@row.Modifier</td>
+                                    <td class="num mono faint">@(row.Base is { } before ? OverrideValues.Format(before) : "(none)")</td>
+                                    <td><input type="text" class="mono" value="@(row.Value is { } value ? OverrideValues.Format(value) : "null")" @onchange="args => SetModifier(row.Block, row.Modifier, args)" /></td>
+                                    <td><button class="small icon danger" title="Take out of the set" @onclick="() => Edit(() => Workspace.Overrides.SetStaticModifier(set, row.Block, row.Modifier, null, remove: true))">✕</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel-body row tight">
+                    <select @bind="newBlock">
+                        @foreach (var block in NavySimulator.Engine.Defines.StaticModifiers.UsedBlocks.Order())
+                        {
+                            <option value="@block">@block</option>
+                        }
+                    </select>
+                    <input type="text" class="grow mono" list="override-modifier-keys" placeholder="modifier, e.g. naval_hit_chance" @bind="newModifier" />
+                    <datalist id="override-modifier-keys">
+                        @foreach (var key in OverrideInfo.ModifierKeys(baseDefines, newBlock))
+                        {
+                            <option value="@key"></option>
+                        }
+                    </datalist>
+                    <button @onclick="AddModifier" disabled="@string.IsNullOrWhiteSpace(newModifier)">Add</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><h2>Content</h2><span class="muted small">@set.Content.Count changed</span></div>
+                <div class="panel-body flush scroll">
+                    <table class="data compact">
+                        <thead><tr><th>Collection</th><th>Item</th><th>Field</th><th class="num">Before</th><th>Value</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var row in OverrideInfo.Content(set, Workspace.Catalog))
+                            {
+                                var change = row.Change;
+                                <tr>
+                                    <td>@row.CollectionLabel</td>
+                                    <td>
+                                        <a href="" @onclick="() => Browse(change.Collection, change.ID)" @onclick:preventDefault>@OverrideInfo.ItemLabel(change.ID, row.ItemName)</a>
+                                        @if (!row.ItemFound)
+                                        {
+                                            <span class="badge sunk">not found</span>
+                                        }
+                                    </td>
+                                    <td class="mono small">@change.Path</td>
+                                    <td class="num mono faint">@OverrideValues.Format(row.Base)</td>
+                                    <td><input type="text" class="mono" value="@(change.Value is null ? "null" : OverrideValues.Format(change.Value))" @onchange="args => SetContent(change.Collection, change.ID, change.Path, args)" /></td>
+                                    <td><button class="small icon danger" title="Take out of the set" @onclick="() => Edit(() => Workspace.Overrides.RemoveContent(set, change.Collection, change.ID, change.Path))">✕</button></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel-body stack">
+                    <div class="row tight">
+                        <span class="small muted">Change an item:</span>
+                        <select value="@browseCollection" @onchange="args => { browseCollection = args.Value?.ToString() ?? string.Empty; browseItem = string.Empty; }">
+                            @foreach (var collection in OverrideCollections.All)
+                            {
+                                <option value="@collection.Name">@collection.Label</option>
+                            }
+                        </select>
+                        <input type="text" class="grow" list="override-items" placeholder="Item name or ID" value="@ItemInput" @onchange="PickItem" />
+                        <datalist id="override-items">
+                            @foreach (var (id, name) in OverrideInfo.Items(Workspace.Catalog, browseCollection))
+                            {
+                                <option value="@OverrideInfo.ItemLabel(id, name)"></option>
+                            }
+                        </datalist>
+                    </div>
+                    @if (browseItem.Length > 0)
+                    {
+                        <OverrideItemEditor Set="set" Collection="@browseCollection" ItemId="@browseItem" OnEdited="Changed" />
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private OverrideSetEntry? selected;
+    private string? message;
+    private bool messageIsError;
+    private string newId = string.Empty;
+    private string newDefine = string.Empty;
+    private string newBlock = NavySimulator.Engine.Defines.StaticModifiers.ScreeningBonus;
+    private string newModifier = string.Empty;
+    private string browseCollection = "modules";
+    private string browseItem = string.Empty;
+    private IReadOnlyList<string> warnings = [];
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += Refresh;
+        selected = Workspace.ActiveOverrides ?? Workspace.Overrides.Entries.FirstOrDefault();
+        Check();
+    }
+
+    private string ItemInput =>
+        browseItem.Length == 0 ? string.Empty : OverrideInfo.ItemLabel(browseItem, OverrideInfo.Items(Workspace.Catalog, browseCollection).FirstOrDefault(item => item.Id == browseItem).Name);
+
+    private void Refresh()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Select(OverrideSetEntry entry)
+    {
+        selected = entry;
+        message = null;
+        Check();
+    }
+
+    private void Use(OverrideSetEntry? entry)
+    {
+        Workspace.UseOverrideSet(entry?.File);
+
+        if (entry is not null)
+        {
+            selected = entry;
+            Check();
+        }
+    }
+
+    private void Create()
+    {
+        selected = Workspace.Overrides.Create(newId);
+        newId = string.Empty;
+        message = $"Created {selected.Set.ID}; save it to write {selected.File}.";
+        messageIsError = false;
+        Changed();
+    }
+
+    private void Duplicate()
+    {
+        selected = Workspace.Overrides.Create(selected!.Set.ID + "-copy", selected.Set);
+        Changed();
+    }
+
+    private void Save()
+    {
+        Run(() =>
+        {
+            var wasActive = Workspace.ActiveOverrides == selected;
+            Workspace.Overrides.Save(selected!);
+
+            if (wasActive)
+            {
+                Workspace.UseOverrideSet(selected!.File);
+            }
+
+            message = $"Saved {selected!.File}.";
+        });
+    }
+
+    private void Revert()
+    {
+        Run(() =>
+        {
+            Workspace.Overrides.Revert(selected!);
+            selected = Workspace.Overrides.Entries.Contains(selected!) ? selected : Workspace.Overrides.Entries.FirstOrDefault();
+            message = null;
+        });
+    }
+
+    private void Delete()
+    {
+        Run(() =>
+        {
+            if (Workspace.ActiveOverrides == selected)
+            {
+                Workspace.UseOverrideSet(null);
+            }
+
+            var file = selected!.File;
+            Workspace.Overrides.Delete(selected!);
+            selected = Workspace.Overrides.Entries.FirstOrDefault();
+            message = $"Deleted {file}.";
+        });
+    }
+
+    private void Reload()
+    {
+        var file = selected?.File;
+        Workspace.Overrides.Reload();
+        selected = Workspace.Overrides.Find(file) ?? Workspace.Overrides.Entries.FirstOrDefault();
+        Changed();
+    }
+
+    private void SetDefine(string key, ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString() ?? string.Empty;
+        Edit(() => Workspace.Overrides.SetDefine(selected!.Set, key, text.Trim().Length == 0 ? null : OverrideValues.Parse(text)));
+    }
+
+    private void AddDefine()
+    {
+        var key = newDefine.Trim();
+        var value = OverrideInfo.DefineValue(Workspace.BaseDefines(), key) ?? JsonValue.Create(0.0);
+        Edit(() => Workspace.Overrides.SetDefine(selected!.Set, key, value));
+        newDefine = string.Empty;
+    }
+
+    private void SetModifier(string block, string modifier, ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString()?.Trim() ?? string.Empty;
+
+        if (text.Length == 0)
+        {
+            Edit(() => Workspace.Overrides.SetStaticModifier(selected!.Set, block, modifier, null, remove: true));
+        }
+        else if (text == "null")
+        {
+            Edit(() => Workspace.Overrides.SetStaticModifier(selected!.Set, block, modifier, null));
+        }
+        else if (OverrideValues.Parse(text) is JsonValue value && value.GetValueKind() == System.Text.Json.JsonValueKind.Number)
+        {
+            Edit(() => Workspace.Overrides.SetStaticModifier(selected!.Set, block, modifier, OverrideValues.Number(value)));
+        }
+        else
+        {
+            Show($"{block}.{modifier}: '{text}' is not a number.", true);
+        }
+    }
+
+    private void AddModifier()
+    {
+        var modifier = newModifier.Trim();
+        var current = Workspace.BaseDefines().StaticModifiers.Get(newBlock, modifier);
+        Edit(() => Workspace.Overrides.SetStaticModifier(selected!.Set, newBlock, modifier, current));
+        newModifier = string.Empty;
+    }
+
+    private void SetContent(string collection, string id, string path, ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString() ?? string.Empty;
+
+        if (text.Trim().Length == 0)
+        {
+            Edit(() => Workspace.Overrides.RemoveContent(selected!.Set, collection, id, path));
+        }
+        else
+        {
+            Edit(() => Workspace.Overrides.SetContent(selected!.Set, collection, id, path, OverrideValues.Parse(text)));
+        }
+    }
+
+    private void PickItem(ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString()?.Trim() ?? string.Empty;
+        var items = OverrideInfo.Items(Workspace.Catalog, browseCollection);
+        var match = items.FirstOrDefault(item => OverrideInfo.ItemLabel(item.Id, item.Name) == text || item.Id == text);
+        browseItem = match.Id ?? items.FirstOrDefault(item => string.Equals(item.Name, text, StringComparison.CurrentCultureIgnoreCase)).Id ?? text;
+    }
+
+    private void Browse(string collection, string id)
+    {
+        browseCollection = OverrideCollections.Find(collection)?.Name ?? collection;
+        browseItem = id;
+    }
+
+    private void Edit(Action change)
+    {
+        change();
+        Workspace.Overrides.Edited();
+        Changed();
+    }
+
+    private void Changed()
+    {
+        Check();
+        Workspace.OverridesEdited();
+    }
+
+    // The changes the set could not apply. Define and block checks need no base values, so vanilla defines serve.
+    private void Check()
+    {
+        if (selected is null)
+        {
+            warnings = [];
+            return;
+        }
+
+        var found = new List<string>();
+        OverrideApplier.ApplyContent(Workspace.Catalog, selected.Set, found);
+        OverrideApplier.ApplyDefines(NavySimulator.Engine.Defines.GameDefines.Vanilla(), selected.Set, null, found);
+        warnings = found;
+    }
+
+    private void Run(Action action)
+    {
+        try
+        {
+            action();
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            Show(exception.Message, true);
+        }
+
+        Changed();
+    }
+
+    private void Show(string text, bool isError)
+    {
+        message = text;
+        messageIsError = isError;
+    }
+
+    private static string? Text(ChangeEventArgs args)
+    {
+        var text = args.Value?.ToString()?.Trim();
+        return string.IsNullOrEmpty(text) ? null : text;
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= Refresh;
+    }
+}

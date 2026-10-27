@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "override-set.schema.json",
+  "title": "NavySimulator Override Set",
+  "description": "Changes to defines, static modifiers and imported content, applied over the define sources and the data directory when a scenario is built (docs/overrides.md).",
+  "type": "object",
+  "required": [
+    "overrideSet"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "overrideSet": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The set's ID; the GUI names the file after it."
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "defines": {
+          "type": "object",
+          "description": "Define values by Category.KEY (e.g. NNavy.COMBAT_BASE_HIT_CHANCE).",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "number" },
+              { "type": "boolean" },
+              { "type": "string" },
+              { "type": "array", "items": { "type": "number" } }
+            ]
+          }
+        },
+        "staticModifiers": {
+          "type": "object",
+          "description": "Static modifier keys by block (e.g. screening_bonus), then modifier; null removes the key from the block.",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
+        },
+        "content": {
+          "type": "array",
+          "description": "Changes to imported items, applied in order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "collection",
+              "id",
+              "path"
+            ],
+            "properties": {
+              "collection": {
+                "enum": [
+                  "hulls",
+                  "modules",
+                  "ship-types",
+                  "critical-parts",
+                  "researches",
+                  "doctrines",
+                  "spirits",
+                  "mios",
+                  "mio-policies",
+                  "leader-traits",
+                  "leader-skills",
+                  "planes",
+                  "aces",
+                  "naval-terrains"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "description": "The item's ID (for doctrines the folder, e.g. naval)."
+              },
+              "path": {
+                "type": "string",
+                "description": "JSON property names separated by dots; [id] after a list picks the entry with that ID, e.g. subdoctrines[line_of_battle].rewards[flagships].mastery."
+              },
+              "value": {
+                "description": "The new value; null (or left out) removes a dictionary key."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

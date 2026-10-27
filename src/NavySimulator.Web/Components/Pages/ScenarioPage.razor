@@ -182,7 +182,7 @@
                 <label>Naval terrain</label>
                 <select @bind:get="Scenario.Terrain ?? string.Empty" @bind:set="SetTerrain">
                     <option value="">Region's (@LocationInfo.RegionTerrainLabel(region))</option>
-                    @foreach (var terrain in Workspace.Catalog.NavalTerrains)
+                    @foreach (var terrain in Workspace.Content.NavalTerrains)
                     {
                         <option value="@terrain.ID">@(terrain.Name ?? terrain.ID)</option>
                     }

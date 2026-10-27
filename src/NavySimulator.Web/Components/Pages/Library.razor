@@ -1,11 +1,13 @@
 @page "/library"
+@using NavySimulator.GameData.Overrides
+@implements IDisposable
 @inject Workspace Workspace
 
 <PageTitle>Library · NavySimulator</PageTitle>
 
 <div class="page-head">
     <h1>Library</h1>
-    <span class="muted">The content designs and scenarios are built from (read-only). Hulls, modules and ship types come from the game (<code>NavySimulator import-ship-data</code>). Values are as written in the JSON: +flat, ~averaged, % multiplied.</span>
+    <span class="muted">The content designs and scenarios are built from. Hulls, modules and ship types come from the game (<code>NavySimulator import-ship-data</code>). Values are as written in the JSON: +flat, ~averaged, % multiplied, with the active override set's changes (<span class="badge override">✎</span> marks what it changes; hover for the values). Click an item to change it in the set.</span>
 </div>
 
 <div class="panel">
@@ -16,7 +18,52 @@
         }
         <span class="right" style="padding: 4px 0"><input type="search" placeholder="Filter…" @bind="filter" @bind:event="oninput" /></span>
     </div>
-    <div class="scroll" style="max-height: calc(100vh - 220px)">
+    @if (open is { } item)
+    {
+        var active = Workspace.ActiveOverrides;
+        <div class="panel-body stack library-item">
+            <div class="row tight">
+                <strong>@item.Label</strong>
+                <span class="muted small">@(OverrideCollections.Find(item.Collection)?.Label) · @item.Id@(item.Prefix is null ? "" : $" · {item.Prefix}")</span>
+                <span class="right row tight">
+                    @if (active is not null)
+                    {
+                        <span class="small muted">changes go into</span>
+                        <a href="overrides"><strong>@active.DisplayName</strong></a>
+                        @if (active.IsDirty)
+                        {
+                            <span class="dot-dirty" title="Unsaved changes: save the set on the Overrides page"></span>
+                        }
+                    }
+                    <button class="small icon" title="Close" @onclick="() => open = null">✕</button>
+                </span>
+            </div>
+            @if (active is null)
+            {
+                <div class="message info row tight">
+                    <span>No override set is active. Changes go into the active set:</span>
+                    @if (Workspace.Overrides.Entries.Count > 0)
+                    {
+                        <select @onchange="args => UseSet(args.Value?.ToString())">
+                            <option value="">pick one…</option>
+                            @foreach (var entry in Workspace.Overrides.Entries)
+                            {
+                                <option value="@entry.File">@entry.DisplayName</option>
+                            }
+                        </select>
+                        <span>or</span>
+                    }
+                    <input type="text" placeholder="new set ID" @bind="newSetId" />
+                    <button class="small" @onclick="CreateSet">New set</button>
+                </div>
+            }
+            else
+            {
+                <OverrideItemEditor Set="active.Set" Collection="@item.Collection" ItemId="@item.Id" PathPrefix="@item.Prefix" MaxHeight="40vh" OnEdited="Workspace.OverridesEdited" />
+            }
+        </div>
+    }
+    <div class="scroll" style="max-height: @(open is null ? "calc(100vh - 220px)" : "45vh")">
         @switch (tab)
         {
             case "hulls":
@@ -32,12 +79,12 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var hull in Workspace.Catalog.Hulls.Where(hull => Matches(hull.ID, hull.Name, hull.ArchetypeName, hull.Archetype)))
+                        @foreach (var hull in Workspace.Content.Hulls.Where(hull => Matches(hull.ID, hull.Name, hull.ArchetypeName, hull.Archetype)))
                         {
                             var stats = hull.BaseStats.ToDomain();
                             var fixedSlots = hull.Slots.Count(DesignSlots.IsFixed);
-                            <tr>
-                                <td>@(hull.Name ?? hull.ID)</td>
+                            <tr class="@RowClass("hulls", hull.ID)" @onclick="@(() => Open("hulls", hull.ID, hull.Name))">
+                                <td>@(hull.Name ?? hull.ID) @Marker("hulls", hull.ID)</td>
                                 <td class="muted small">@hull.ID</td>
                                 <td class="muted">@(hull.ArchetypeName ?? hull.Archetype)</td>
                                 <td class="num">@hull.Year</td>
@@ -48,7 +95,7 @@
                                 {
                                     <td class="num">@(stat.Get(stats) == 0 ? "" : stat.Display(stats))</td>
                                 }
-                                <td class="faint small">@Workspace.Catalog.SourceFileOf(hull)</td>
+                                <td class="faint small">@Workspace.Content.SourceFileOf(hull)</td>
                             </tr>
                         }
                     </tbody>
@@ -59,11 +106,11 @@
                 <table class="data compact">
                     <thead><tr><th>Category</th><th>Module</th><th>ID</th><th>Effect</th><th>Design rules</th><th class="num">Used in</th></tr></thead>
                     <tbody>
-                        @foreach (var module in Workspace.Catalog.Modules.Where(module => Matches(module.ID, module.Name, module.ShortName, Workspace.ModuleCategory(module))))
+                        @foreach (var module in Workspace.Content.Modules.Where(module => Matches(module.ID, module.Name, module.ShortName, Workspace.ModuleCategory(module))))
                         {
-                            <tr>
+                            <tr class="@RowClass("modules", module.ID)" @onclick="@(() => Open("modules", module.ID, DesignSlots.ModuleLabel(module)))">
                                 <td class="muted">@Workspace.ModuleCategory(module)</td>
-                                <td>@DesignSlots.ModuleLabel(module)</td>
+                                <td>@DesignSlots.ModuleLabel(module) @Marker("modules", module.ID)</td>
                                 <td class="muted small">@module.ID</td>
                                 <td class="small">@StatInfo.Summarize(module.StatModifiers, module.StatAverages, module.StatMultipliers)</td>
                                 <td class="small muted">@ModuleRules(module)</td>
@@ -78,10 +125,10 @@
                 <table class="data compact">
                     <thead><tr><th>Ship type</th><th>ID</th><th>Role</th><th>Hulls</th><th>Needs one of</th><th class="num">Organization</th><th class="num" title="The highest priority wins when several types accept a design">Priority</th></tr></thead>
                     <tbody>
-                        @foreach (var shipType in Workspace.Catalog.ShipTypes.Where(shipType => Matches(shipType.ID, shipType.Name, shipType.Role)))
+                        @foreach (var shipType in Workspace.Content.ShipTypes.Where(shipType => Matches(shipType.ID, shipType.Name, shipType.Role)))
                         {
-                            <tr>
-                                <td>@(shipType.Name ?? shipType.ID)</td>
+                            <tr class="@RowClass("ship-types", shipType.ID)" @onclick="@(() => Open("ship-types", shipType.ID, shipType.Name))">
+                                <td>@(shipType.Name ?? shipType.ID) @Marker("ship-types", shipType.ID)</td>
                                 <td class="muted small">@shipType.ID</td>
                                 <td>@shipType.Role</td>
                                 <td class="muted">@string.Join(", ", shipType.Hulls)</td>
@@ -98,16 +145,16 @@
                 <table class="data compact">
                     <thead><tr><th>MIO</th><th>ID</th><th>Countries</th><th>Covers</th><th>Initial trait</th><th class="num" title="Hover for the traits and their equipment bonuses">Traits</th><th>File</th></tr></thead>
                     <tbody>
-                        @foreach (var mio in Workspace.Catalog.Mios.Where(mio => Matches(mio.ID, mio.Name, string.Join(" ", mio.Countries))))
+                        @foreach (var mio in Workspace.Content.Mios.Where(mio => Matches(mio.ID, mio.Name, string.Join(" ", mio.Countries))))
                         {
-                            <tr class="@(mio.ArchetypeOnly || mio.DebugOnly ? "faint" : "")">
-                                <td>@(mio.Name ?? mio.ID)</td>
+                            <tr class="@RowClass("mios", mio.ID) @(mio.ArchetypeOnly || mio.DebugOnly ? "faint" : "")" @onclick="@(() => Open("mios", mio.ID, mio.Name))">
+                                <td>@(mio.Name ?? mio.ID) @Marker("mios", mio.ID)</td>
                                 <td class="muted small">@mio.ID</td>
                                 <td class="muted">@(mio.ArchetypeOnly ? "archetype only" : mio.DebugOnly ? "debug mode only" : string.Join(", ", mio.Countries))</td>
                                 <td class="small">@string.Join(", ", mio.EquipmentTypes.Select(GroupName))</td>
                                 <td class="small">@(mio.InitialTrait is { } initial ? MioInfo.Summarize(initial) : string.Empty)</td>
                                 <td class="num" title="@TraitList(mio)">@mio.Traits.Count</td>
-                                <td class="faint small">@Workspace.Catalog.SourceFileOf(mio)</td>
+                                <td class="faint small">@Workspace.Content.SourceFileOf(mio)</td>
                             </tr>
                         }
                     </tbody>
@@ -116,10 +163,10 @@
                 <table class="data compact">
                     <thead><tr><th>Policy</th><th>ID</th><th>For MIOs with</th><th>Equipment bonus</th><th>Conditions</th></tr></thead>
                     <tbody>
-                        @foreach (var policy in Workspace.Catalog.MioPolicies.Where(policy => Matches(policy.ID, policy.Name)))
+                        @foreach (var policy in Workspace.Content.MioPolicies.Where(policy => Matches(policy.ID, policy.Name)))
                         {
-                            <tr>
-                                <td>@(policy.Name ?? policy.ID)</td>
+                            <tr class="@RowClass("mio-policies", policy.ID)" @onclick="@(() => Open("mio-policies", policy.ID, policy.Name))">
+                                <td>@(policy.Name ?? policy.ID) @Marker("mio-policies", policy.ID)</td>
                                 <td class="muted small">@policy.ID</td>
                                 <td class="small muted">@(policy.AllowedEquipmentTypes.Count == 0 ? "any" : string.Join(", ", policy.AllowedEquipmentTypes.Select(GroupName)))</td>
                                 <td class="small">@MioInfo.Summarize(policy)</td>
@@ -134,11 +181,11 @@
                 <table class="data compact">
                     <thead><tr><th>File</th><th>Research</th><th>Applies to</th><th>Effect</th><th>Kind</th></tr></thead>
                     <tbody>
-                        @foreach (var research in Workspace.Catalog.Researches.Where(research => Matches(research.ID, Workspace.Catalog.SourceFileOf(research))))
+                        @foreach (var research in Workspace.Content.Researches.Where(research => Matches(research.ID, Workspace.Content.SourceFileOf(research))))
                         {
-                            <tr>
-                                <td class="muted">@Path.GetFileNameWithoutExtension(Workspace.Catalog.SourceFileOf(research))</td>
-                                <td>@research.ID</td>
+                            <tr class="@RowClass("researches", research.ID)" @onclick="@(() => Open("researches", research.ID, null))">
+                                <td class="muted">@Path.GetFileNameWithoutExtension(Workspace.Content.SourceFileOf(research))</td>
+                                <td>@research.ID @Marker("researches", research.ID)</td>
                                 <td class="muted">@Scope(research.AppliesToRoles, research.AppliesToTypes)</td>
                                 <td class="small">@ModifierInfo.SummarizeResearch(research)</td>
                                 <td class="small" title="Equipment bonuses go into the design multiplier (S-STATS-BONUS); technologies scale the ship (S-STATS-SHIP)">@(research.EquipmentBonus ? "equipment bonus" : "technology")</td>
@@ -154,9 +201,9 @@
                     <tbody>
                         @foreach (var spirit in Workspace.Spirits.Where(spirit => Matches(spirit.ID, spirit.Name, spirit.Category)))
                         {
-                            <tr>
+                            <tr class="@RowClass("spirits", spirit.ID)" @onclick="@(() => Open("spirits", spirit.ID, spirit.Name))">
                                 <td class="muted">@(spirit.CategoryName ?? spirit.Category)</td>
-                                <td title="@spirit.ID">@(spirit.Name ?? spirit.ID)</td>
+                                <td title="@spirit.ID">@(spirit.Name ?? spirit.ID) @Marker("spirits", spirit.ID)</td>
                                 <td class="small">
                                     @string.Join(" and ", spirit.RequiredDoctrines.Select(group => string.Join(" or ", group)))
                                     @if (spirit.OtherConditions.Count > 0)
@@ -179,17 +226,19 @@
                         {
                             @foreach (var doctrine in folder.GrandDoctrines.Where(doctrine => Matches(doctrine.ID, doctrine.Name)))
                             {
-                                <tr>
+                                var grandPath = $"grandDoctrines[{doctrine.ID}]";
+                                <tr class="@RowClass("doctrines", folder.ID, grandPath)" @onclick="@(() => Open("doctrines", folder.ID, doctrine.Name ?? doctrine.ID, grandPath))">
                                     <td class="muted">@(folder.Name ?? folder.ID)</td>
-                                    <td title="@doctrine.ID"><strong>@(doctrine.Name ?? doctrine.ID)</strong></td>
+                                    <td title="@doctrine.ID"><strong>@(doctrine.Name ?? doctrine.ID)</strong> @Marker("doctrines", folder.ID, grandPath)</td>
                                     <td class="muted">grand doctrine</td>
                                     <td class="small">@DoctrineInfo.Summarize(doctrine.Effects)</td>
                                 </tr>
                                 @foreach (var (track, milestone) in doctrine.Milestones)
                                 {
-                                    <tr>
+                                    var milestonePath = $"{grandPath}.milestones.{track}";
+                                    <tr class="@RowClass("doctrines", folder.ID, milestonePath)" @onclick="@(() => Open("doctrines", folder.ID, $"{doctrine.Name ?? doctrine.ID}: {track} milestone", milestonePath))">
                                         <td></td>
-                                        <td class="muted">milestone</td>
+                                        <td class="muted">milestone @Marker("doctrines", folder.ID, milestonePath)</td>
                                         <td class="muted">@track</td>
                                         <td class="small">@DoctrineInfo.Summarize(milestone)</td>
                                     </tr>
@@ -197,17 +246,19 @@
                             }
                             @foreach (var subdoctrine in folder.Subdoctrines.Where(subdoctrine => Matches(subdoctrine.ID, subdoctrine.Name, string.Join(" ", subdoctrine.Tracks))))
                             {
-                                <tr>
+                                var subPath = $"subdoctrines[{subdoctrine.ID}]";
+                                <tr class="@RowClass("doctrines", folder.ID, subPath)" @onclick="@(() => Open("doctrines", folder.ID, subdoctrine.Name ?? subdoctrine.ID, subPath))">
                                     <td class="muted">@(folder.Name ?? folder.ID)</td>
-                                    <td title="@subdoctrine.ID">@(subdoctrine.Name ?? subdoctrine.ID)</td>
+                                    <td title="@subdoctrine.ID">@(subdoctrine.Name ?? subdoctrine.ID) @Marker("doctrines", folder.ID, subPath)</td>
                                     <td class="muted">@string.Join(", ", subdoctrine.Tracks)</td>
                                     <td class="small">@DoctrineInfo.Summarize(subdoctrine.Effects)</td>
                                 </tr>
                                 @foreach (var (reward, threshold, _) in DoctrineInfo.Rewards(subdoctrine, 0))
                                 {
-                                    <tr>
+                                    var rewardPath = $"{subPath}.rewards[{reward.ID}]";
+                                    <tr class="@RowClass("doctrines", folder.ID, rewardPath)" @onclick="@(() => Open("doctrines", folder.ID, $"{subdoctrine.Name ?? subdoctrine.ID}: {reward.Name ?? reward.ID}", rewardPath))">
                                         <td></td>
-                                        <td class="muted" title="@reward.ID">↳ @(reward.Name ?? reward.ID)</td>
+                                        <td class="muted" title="@reward.ID">↳ @(reward.Name ?? reward.ID) @Marker("doctrines", folder.ID, rewardPath)</td>
                                         <td class="muted num">@threshold</td>
                                         <td class="small">@DoctrineInfo.Summarize(reward.Effects)</td>
                                     </tr>
@@ -227,10 +278,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var plane in Workspace.Catalog.Planes.Where(plane => Matches(plane.ID) || Matches(plane.Name ?? string.Empty)))
+                        @foreach (var plane in Workspace.Content.Planes.Where(plane => Matches(plane.ID) || Matches(plane.Name ?? string.Empty)))
                         {
-                            <tr>
-                                <td>@plane.ID</td>
+                            <tr class="@RowClass("planes", plane.ID)" @onclick="@(() => Open("planes", plane.ID, plane.Name))">
+                                <td>@plane.ID @Marker("planes", plane.ID)</td>
                                 <td>@plane.Name</td>
                                 <td class="muted small">@(Workspace.Library.Planes.TryGetValue(plane.ID, out var equipment) ? CarrierLoadouts.Role(equipment, Engine.Defines.GameDefines.Vanilla().Hardcoded) : "?")</td>
                                 <td>@(plane.CarrierCapable ? "✓" : "")</td>
@@ -260,6 +311,64 @@
 
     private string tab = "hulls";
     private string filter = string.Empty;
+    private string newSetId = string.Empty;
+
+    // The item whose fields the panel above the table edits; Prefix picks a part of it (a doctrine of a folder).
+    private (string Collection, string Id, string Label, string? Prefix)? open;
+
+    protected override void OnInitialized()
+    {
+        Workspace.Changed += Refresh;
+    }
+
+    private void Refresh()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Open(string collection, string id, string? name, string? prefix = null)
+    {
+        open = (collection, id, name ?? id, prefix);
+    }
+
+    private string RowClass(string collection, string id, string? prefix = null)
+    {
+        var selected = open is { } item && item.Collection == collection && item.Id == id && item.Prefix == prefix;
+        var changed = OverrideInfo.ChangesOf(Workspace.ActiveOverrides?.Set, collection, id, prefix).Count > 0;
+        return $"clickable{(selected ? " selected" : "")}{(changed ? " changed" : "")}";
+    }
+
+    // The active set's changes to the row's item: a badge with their count, hover for before → after.
+    private RenderFragment Marker(string collection, string id, string? prefix = null) => __builder =>
+    {
+        var set = Workspace.ActiveOverrides?.Set;
+        var count = OverrideInfo.ChangesOf(set, collection, id, prefix).Count;
+
+        if (count > 0)
+        {
+            <span class="badge override" title="@($"Changed by {Workspace.ActiveOverrides!.DisplayName}:\n{OverrideInfo.Describe(set, Workspace.Catalog, collection, id, prefix)}")">✎ @count</span>
+        }
+    };
+
+    private void UseSet(string? file)
+    {
+        if (!string.IsNullOrEmpty(file))
+        {
+            Workspace.UseOverrideSet(file);
+        }
+    }
+
+    private void CreateSet()
+    {
+        var entry = Workspace.Overrides.Create(newSetId);
+        newSetId = string.Empty;
+        Workspace.UseOverrideSet(entry.File);
+    }
+
+    public void Dispose()
+    {
+        Workspace.Changed -= Refresh;
+    }
 
     private IEnumerable<(string Key, string Label, int Count)> Tabs()
     {
@@ -305,7 +414,7 @@
 
     private string CategoryName(string category)
     {
-        return Workspace.Catalog.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
+        return Workspace.Content.Modules.FirstOrDefault(module => module.Category == category)?.CategoryName ?? category;
     }
 
     private static string Scope(List<string> roles, List<string>? types)

@@ -40,7 +40,7 @@ The GUI keeps one shared state for every browser tab: reloading the page or swit
   - **Raw log**: the CLI's `hourly.log` lines.
   - **Notes**: inputs the engine ignores, and skipped weapon actions.
 - **Downloads**: `shots.csv`, `ships.csv` and `hourly.log` of the battle so far. **Save report** writes the CLI's report folder (`summary.txt`, `hourly.log`, `shots.csv`, `ships.csv`, `air.csv`) to `output/`.
-- A banner says when the scenario or content changed after the battle started; **Restart with the changes** starts again with the same seed.
+- A banner says when the scenario, the content or the active override set changed after the battle started; **Restart with the changes** starts again with the same seed.
 
 ### Scenario
 
@@ -76,11 +76,24 @@ The stats panel shows the design's stats (S-STATS-DESIGN), optionally with the a
 
 ### Batch
 
-Runs the edited scenario many times on all cores; run *i* uses seed base + *i*, as in the CLI. It shows the outcome shares, distributions (mean, median, min, 10th and 90th percentile, max) of hours, ships sunk and escaped, HP lost and IC lost (production cost of the ships sunk; the header shows each fleet's cost), mean fleet HP over time with a 10–90 % band, per-design averages (sunk rate, damage per ship, hit rate) and every run. **Inspect** replays a run's seed on the Battle page with the batch's scenario, with all shots and ship logs. `runs.csv` downloads the runs (with each side's IC lost); **Save summary** writes the CLI's aggregate `summary.txt` and `runs.csv` to `output/`.
+Runs the edited scenario many times on all cores; run *i* uses seed base + *i*, as in the CLI. With an active override set, **Compare with and without** (on by default) runs the same seeds a second time without the set; **Override set effect** then lists, without and with the set, each outcome's share and the mean hours, ships sunk and escaped, HP lost and dealt and IC lost per side, the change and its standard error (bold: more than two standard errors, unlikely to be chance). The rest of the page shows the runs with the set. It shows the outcome shares, distributions (mean, median, min, 10th and 90th percentile, max) of hours, ships sunk and escaped, HP lost and IC lost (production cost of the ships sunk; the header shows each fleet's cost), mean fleet HP over time with a 10–90 % band, per-design averages (sunk rate, damage per ship, hit rate) and every run. **Inspect** replays a run's seed on the Battle page with the batch's scenario, with all shots and ship logs. `runs.csv` downloads the runs (with each side's IC lost); **Save summary** writes the CLI's aggregate `summary.txt` and `runs.csv` to `output/`.
 
 ### Library
 
-Read-only tables of hulls (name, archetype, year, fixed + custom slots with their categories on hover, manpower, naval dominance factor, base stats with range), modules (category, names, effect, the categories they forbid and equipment types they add, how many designs use them), ship types (role, hulls, the modules one of which they need, organization, priority), MIOs (name, countries, the equipment they cover, initial trait, trait count with the traits and their bonuses on hover, file) and MIO policies, researches, doctrines (grand doctrines with their milestones, subdoctrines with their rewards and the mastery each needs), spirits (slot, name, the doctrines they need, effects) and planes (ID, name, naval role, carrier capable, year, stats), as written in the JSON. A research's effect lists its stat blocks and then its country modifiers (S-STATS-COUNTRY) with the game's names, e.g. "Fleet speed while retreating +20%"; country modifiers the engine does not read yet are marked "not simulated" (they also appear in the content warnings).
+Tables of hulls (name, archetype, year, fixed + custom slots with their categories on hover, manpower, naval dominance factor, base stats with range), modules (category, names, effect, the categories they forbid and equipment types they add, how many designs use them), ship types (role, hulls, the modules one of which they need, organization, priority), MIOs (name, countries, the equipment they cover, initial trait, trait count with the traits and their bonuses on hover, file) and MIO policies, researches, doctrines (grand doctrines with their milestones, subdoctrines with their rewards and the mastery each needs), spirits (slot, name, the doctrines they need, effects) and planes (ID, name, naval role, carrier capable, year, stats), as written in the JSON. A research's effect lists its stat blocks and then its country modifiers (S-STATS-COUNTRY) with the game's names, e.g. "Fleet speed while retreating +20%"; country modifiers the engine does not read yet are marked "not simulated" (they also appear in the content warnings).
+
+The tables show the content with the active override set's changes ([overrides.md](overrides.md)): a row the set changes is outlined with a **✎ n** badge (n changes; hover for each field's value in `data/` and the set's). Clicking a row opens the item above the table with the Overrides page's field editor: every field with its value in `data/` and the set's value, which you can type, clear or extend (**+ key**). Changes go into the active set (unsaved until you save it on the Overrides page); without one the panel offers to pick a set or create one. A doctrine row opens only its part of the doctrine folder (the grand doctrine, a milestone, a subdoctrine or one reward).
+
+### Overrides
+
+Override sets ([overrides.md](overrides.md)) try a mod change without editing the game's or the mod's files. The list on the left has **None** and every set in `overrides/`; the radio button makes a set the active one, which every battle, batch and stat preview uses (with its unsaved changes) after Simulate as. The choice is kept in the GUI settings and shown in the top bar (**Overrides …**, with a dot for unsaved changes). **New** starts an empty set, **Edit** opens one; **Reload** reads the files again.
+
+The editor has the set's ID (its file name: saving under a new ID moves the file), name and description, **Save**, **Revert**, **Duplicate**, **Delete** and **Use for battles**, the changes the set cannot apply ("Not applied", as the scenario check also warns), and three tables, each change next to its value without the set ("Before": the defines of Simulate as and the scenario, the content in `data/`):
+- **Defines**: any define the simulator reads, picked by its game key (`NNavy.COMBAT_BASE_HIT_CHANCE`); it starts at its current value.
+- **Static modifiers**: a block naval combat reads and a modifier key (the block's keys are suggested); `null` removes the key from the block.
+- **Content**: every change to an imported item (click the item to browse it). The Library opens the same editor from any row. **Change an item** picks a collection (hulls, modules, ship types, critical parts, researches, doctrines, spirits, MIOs, MIO policies, admiral traits and skills, planes, aces, naval terrains) and an item by name or ID, then lists its fields with their values in `data/`, filterable; typing a value adds the change, clearing it takes it out. Dictionaries (modifiers, stat bonuses) have **+ key** for a key the item does not have yet.
+
+Values are numbers, `true`/`false`, lists (`{ 3, 6, 2 }` or `[3, 6, 2]`) or text.
 
 ### Settings
 
@@ -98,6 +111,7 @@ Read-only tables of hulls (name, archetype, year, fixed + custom slots with thei
 
 - Designs, fleets and scenarios go to their JSON files in the data directory. Only the edited entry is replaced (or appended); other entries keep their content, the file keeps its line endings, and it is re-indented with two spaces. New files get the matching `$schema`.
 - Reports go to `output/` next to the data directory.
+- Override sets go to `overrides/<id>.json` in the data directory, only when saved.
 - Settings go to the GUI settings file (outside the repository).
 
 ## Architecture
@@ -120,7 +134,9 @@ Read-only tables of hulls (name, archetype, year, fixed + custom slots with thei
 | `DesignRules` | `Engine/Ships/` | The designer rules: slots, forbidden categories, count limits and the ship type (S-DESIGN). |
 | `DesignSlots` | `Web/Services/` | The Designs page's slot editor: slot rows with their issues, the modules a slot offers, switching hulls, hull defaults, readable names. |
 | `ReportWriter` | `GameData/Reports/` | The report files shared by the CLI and the GUI. |
-| `Workspace` | `Web/Services/` | Singleton GUI state: catalog, edited scenario, saving, stat previews, settings, the active ruleset (Simulate as). |
+| `Workspace` | `Web/Services/` | Singleton GUI state: catalog, edited scenario, saving, stat previews, settings, the active ruleset (Simulate as) and override set; `Content` is the catalog with the active set's content changes, which previews read. |
+| `OverrideSets`, `OverrideInfo`, `BatchComparison` | `Web/Services/` | The override sets being edited, the Overrides page's rows (values before the set, fields of an item), the batch comparison with and without the set. |
+| `OverrideApplier` | `GameData/Overrides/` | Applies an override set to a copy of the content and to the defines ([overrides.md](overrides.md)). |
 | `Hoi4Locator` | `Web/Services/` | Finds the HOI4 install, Steam workshop mods and the launcher's mods (`Documents/Paradox Interactive/Hearts of Iron IV/mod`) for Simulate as. |
 | `BattleRunner` | `Web/Services/` | The Battle page's session, stepped on a background thread under a lock; `View(hour)` copies it into an immutable `BattleView` for rendering. |
 | `BattleViewBuilder`, `DamageBreakdownBuilder`, `ShipLog`, `ShotFilter` | `Web/Services/` | Turn a session into what the Battle page shows at an hour: ship rows, damage splits, a ship's log, filtered shots. |
@@ -132,7 +148,7 @@ The services are covered by `tests/NavySimulator.Web.Tests` (stepping equals the
 ## Limits
 
 - Design rules follow the scripts (S-DESIGN), not decoded code: the ship type pick in particular is inferred.
-- Hulls, modules, ship types, MIOs, researches, doctrines, spirits, imported admirals and planes are read-only in the GUI. Re-import hulls, modules, ship types, MIOs, doctrines, spirits, admirals and planes from the game (Settings); edit the other JSON and use **Reload data from disk**.
+- Hulls, modules, ship types, MIOs, researches, doctrines, spirits, imported admirals and planes are read-only in the GUI (an override set can change them for battles without touching their files). Re-import hulls, modules, ship types, MIOs, doctrines, spirits, admirals and planes from the game (Settings); edit the other JSON and use **Reload data from disk**.
 - Reward thresholds in the doctrine editor use the vanilla `NDoctrines.DEFAULT_REWARD_MASTERY`; battles use the scenario's defines.
 - Unsaved editor changes live in the server process; they are lost when it stops.
 - Rewinding keeps one state per ship per hour in memory, which is why Run to end pauses every 5,000 hours.
