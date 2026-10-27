@@ -354,9 +354,11 @@
               "needed": 1
             }
           ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
           "equipmentBonus": {
-            "naval_speed": 0.05,
-            "mines_planting": 0.05
+            "mines_planting": 0.2
           },
           "conditions": [
             "visible = { has_dlc = \"Man the Guns\" }"
@@ -423,7 +425,7 @@
           ],
           "equipmentBonus": {
             "naval_range": 0.1,
-            "surface_detection": 0.03,
+            "surface_detection": 0.05,
             "hg_attack": 0.05
           }
         },
@@ -444,7 +446,7 @@
             "generic_mio_trait_spotting_tops"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.08
+            "surface_detection": 0.15
           }
         },
         {
@@ -487,7 +489,8 @@
             "capital_ship"
           ],
           "equipmentBonus": {
-            "lg_attack": 0.05
+            "lg_attack": 0.1,
+            "naval_speed": 0.05
           }
         },
         {
@@ -508,7 +511,7 @@
             "ship_hull_cruiser"
           ],
           "equipmentBonus": {
-            "naval_range": 0.05,
+            "naval_range": 0.1,
             "surface_detection": 0.05
           }
         },
@@ -555,7 +558,7 @@
             "screen_ship"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.03
+            "surface_detection": 0.1
           }
         },
         {
@@ -1039,9 +1042,11 @@
               "needed": 1
             }
           ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
           "equipmentBonus": {
-            "naval_speed": 0.05,
-            "mines_planting": 0.05
+            "mines_planting": 0.2
           },
           "conditions": [
             "visible = { has_dlc = \"Man the Guns\" }"
@@ -1108,7 +1113,7 @@
           ],
           "equipmentBonus": {
             "naval_range": 0.1,
-            "surface_detection": 0.03,
+            "surface_detection": 0.05,
             "hg_attack": 0.05
           }
         },
@@ -1129,7 +1134,7 @@
             "generic_mio_trait_spotting_tops"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.08
+            "surface_detection": 0.15
           }
         },
         {
@@ -1172,7 +1177,8 @@
             "capital_ship"
           ],
           "equipmentBonus": {
-            "lg_attack": 0.05
+            "lg_attack": 0.1,
+            "naval_speed": 0.05
           }
         },
         {
@@ -1193,7 +1199,7 @@
             "ship_hull_cruiser"
           ],
           "equipmentBonus": {
-            "naval_range": 0.05,
+            "naval_range": 0.1,
             "surface_detection": 0.05
           }
         },
@@ -1240,7 +1246,7 @@
             "screen_ship"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.03
+            "surface_detection": 0.1
           }
         },
         {

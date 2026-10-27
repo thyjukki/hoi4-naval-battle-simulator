@@ -247,8 +247,8 @@
       "skill": 2,
       "attackSkill": 1,
       "defenseSkill": 2,
-      "maneuveringSkill": 1,
-      "coordinationSkill": 1,
+      "maneuveringSkill": 2,
+      "coordinationSkill": 2,
       "traits": [
         "old_guard_navy",
         "gentlemanly"
@@ -1944,7 +1944,6 @@
     {
       "id": "debug_james_fownes_somerville",
       "name": "James Fownes Somerville",
-      "country": "BUL",
       "skill": 5,
       "attackSkill": 4,
       "defenseSkill": 3,
@@ -1959,7 +1958,6 @@
     {
       "id": "debug_henry_harwood",
       "name": "Henry Harwood",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -1973,7 +1971,6 @@
     {
       "id": "debug_andrew_cunningham",
       "name": "Andrew Cunningham",
-      "country": "BUL",
       "skill": 5,
       "attackSkill": 4,
       "defenseSkill": 3,
@@ -1990,7 +1987,6 @@
     {
       "id": "debug_bruce_fraser",
       "name": "Bruce Fraser",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2005,7 +2001,6 @@
     {
       "id": "debug_john_tovey",
       "name": "John Tovey",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 3,
@@ -2020,7 +2015,6 @@
     {
       "id": "debug_bernard_rawlings",
       "name": "Bernard Rawlings",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2033,7 +2027,6 @@
     {
       "id": "debug_john_cunningham",
       "name": "John Cunningham",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 2,
       "defenseSkill": 4,
@@ -2047,7 +2040,6 @@
     {
       "id": "debug_charles_forbes",
       "name": "Charles Forbes",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2061,7 +2053,6 @@
     {
       "id": "debug_algernon_willis",
       "name": "Algernon Willis",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2075,7 +2066,6 @@
     {
       "id": "debug_arthur_power",
       "name": "Arthur Power",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 3,
       "defenseSkill": 1,
@@ -2088,7 +2078,6 @@
     {
       "id": "debug_ernest_king",
       "name": "Ernest King",
-      "country": "BUL",
       "skill": 5,
       "attackSkill": 4,
       "defenseSkill": 3,
@@ -2105,7 +2094,6 @@
     {
       "id": "debug_frank_jack_fletcher",
       "name": "Frank Jack Fletcher",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 2,
       "defenseSkill": 2,
@@ -2121,7 +2109,6 @@
     {
       "id": "debug_harold_rainsford_stark",
       "name": "Harold Rainsford Stark",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 2,
       "defenseSkill": 1,
@@ -2136,7 +2123,6 @@
     {
       "id": "debug_arleigh_burke",
       "name": "Arleigh Burke",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 3,
@@ -2152,7 +2138,6 @@
     {
       "id": "debug_chester_w._nimitz",
       "name": "Chester W. Nimitz",
-      "country": "BUL",
       "skill": 5,
       "attackSkill": 3,
       "defenseSkill": 3,
@@ -2169,7 +2154,6 @@
     {
       "id": "debug_william_halsey_jr.",
       "name": "William Halsey, Jr.",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 5,
       "defenseSkill": 3,
@@ -2185,7 +2169,6 @@
     {
       "id": "debug_raymond_a._spruance",
       "name": "Raymond A. Spruance",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 4,
       "defenseSkill": 3,
@@ -2200,7 +2183,6 @@
     {
       "id": "debug_charles_m._cooke_jr",
       "name": "Charles M. Cooke, Jr.",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 1,
       "defenseSkill": 1,
@@ -2210,7 +2192,6 @@
     {
       "id": "debug_francois_darlan",
       "name": "François Darlan",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 2,
       "defenseSkill": 2,
@@ -2225,7 +2206,6 @@
     {
       "id": "debug_jeanmarie_charles_abrial",
       "name": "Jean-Marie Charles Abrial",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 2,
       "defenseSkill": 3,
@@ -2239,7 +2219,6 @@
     {
       "id": "debug_jeanpierre_esteva",
       "name": "Jean-Pierre Esteva",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 1,
       "defenseSkill": 2,
@@ -2252,7 +2231,6 @@
     {
       "id": "debug_rene_emile_godfroy",
       "name": "René-Emile Godfroy",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 2,
       "defenseSkill": 1,
@@ -2268,7 +2246,6 @@
     {
       "id": "debug_jean_de_laborde",
       "name": "Jean de Laborde",
-      "country": "BUL",
       "skill": 1,
       "attackSkill": 1,
       "defenseSkill": 1,
@@ -2282,7 +2259,6 @@
     {
       "id": "debug_harry_dewolf",
       "name": "Harry DeWolf",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2296,7 +2272,6 @@
     {
       "id": "debug_leonard_w_murray",
       "name": "Leonard W. Murray",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 4,
       "defenseSkill": 3,
@@ -2306,7 +2281,6 @@
     {
       "id": "debug_ht_bailliegrohman",
       "name": "H.T. Baillie-Grohman",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 3,
@@ -2319,7 +2293,6 @@
     {
       "id": "debug_james_d_prentice",
       "name": "James D. Prentice",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2332,7 +2305,6 @@
     {
       "id": "debug_filipp_oktyabrsky",
       "name": "Filipp Oktyabrsky",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2346,7 +2318,6 @@
     {
       "id": "debug_sergey_gorshkov",
       "name": "Sergey Gorshkov",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 3,
       "defenseSkill": 2,
@@ -2360,7 +2331,6 @@
     {
       "id": "debug_gordey_levchenko",
       "name": "Gordey Levchenko",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 2,
       "defenseSkill": 2,
@@ -2373,7 +2343,6 @@
     {
       "id": "debug_arseny_golovko",
       "name": "Arseny Golovko",
-      "country": "BUL",
       "skill": 4,
       "attackSkill": 3,
       "defenseSkill": 4,
@@ -2387,7 +2356,6 @@
     {
       "id": "debug_vladimir_kasatonov",
       "name": "Vladimir Kasatonov",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 1,
       "defenseSkill": 2,
@@ -2400,7 +2368,6 @@
     {
       "id": "debug_augusto_rademaker",
       "name": "Augusto Rademaker",
-      "country": "BUL",
       "skill": 3,
       "attackSkill": 2,
       "defenseSkill": 2,
@@ -2413,7 +2380,6 @@
     {
       "id": "debug_henrique_aristides_guilhem",
       "name": "Henrique Aristides Guilhem",
-      "country": "BUL",
       "skill": 1,
       "attackSkill": 1,
       "defenseSkill": 2,
@@ -2426,7 +2392,6 @@
     {
       "id": "debug_silvio_de_noronha",
       "name": "Sílvio de Noronha",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 2,
       "defenseSkill": 2,
@@ -2439,7 +2404,6 @@
     {
       "id": "debug_protogenes_guimaraes",
       "name": "Protógenes Pereira Guimarães",
-      "country": "BUL",
       "skill": 1,
       "attackSkill": 2,
       "defenseSkill": 1,
@@ -2452,7 +2416,6 @@
     {
       "id": "debug_renato_de_almeida_guillobel",
       "name": "Renato de Almeida Guillobel",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 1,
       "defenseSkill": 1,
@@ -2465,7 +2428,6 @@
     {
       "id": "debug_alvaro_alberto_da_motta_e_silva",
       "name": "Álvaro Alberto da Motta e Silva",
-      "country": "BUL",
       "skill": 2,
       "attackSkill": 2,
       "defenseSkill": 2,

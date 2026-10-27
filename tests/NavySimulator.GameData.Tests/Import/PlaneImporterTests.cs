@@ -82,9 +82,53 @@ public sealed class PlaneImporterTests : IDisposable
                     interface_category = interface_category_air
                     module_slots = { }
                 }
-                small_plane_airframe_1 = { archetype = small_plane_airframe }
+                small_plane_airframe_1 = { archetype = small_plane_airframe module_slots = { } }
                 guided_missile_equipment = { is_archetype = yes type = missile interface_category = interface_category_air }
                 guided_missile_equipment_1 = { archetype = guided_missile_equipment }
+            }
+            """);
+    }
+
+    // TFB since its air rewrite (BBA's layout): fixed planes on airframe archetypes with module slots and on
+    // duplicate_archetypes, missions only on each line's first variant.
+    private void WriteBbaLayout()
+    {
+        Write(mod, "common/units/equipment/single_engine_airframe.txt", "equipments = { }");
+        Write(mod, "common/units/equipment/plane_airframes.txt", """
+            equipments = {
+                small_plane_airframe = {
+                    is_archetype = yes
+                    type = fighter
+                    interface_category = interface_category_air
+                    allow_mission_type = training
+                    air_superiority = 1
+                    module_slots = { fixed_main_weapon_slot = { required = yes } }
+                }
+                small_plane_airframe_1 = { archetype = small_plane_airframe derived_variant_name = fighter_equipment_1 module_slots = { } }
+            }
+            """);
+        Write(mod, "common/units/equipment/x_plane_airframes.txt", """
+            duplicate_archetypes = {
+                small_plane_naval_bomber_airframe = {
+                    archetype = small_plane_airframe
+                    type = naval_bomber
+                    variant_name = { small_plane_naval_bomber_airframe_1 = nav_bomber_equipment_1 }
+                }
+            }
+            equipments = {
+                fighter_equipment_0 = { archetype = small_plane_airframe allow_mission_type = { air_superiority interception } air_attack = 20 }
+                nav_bomber_equipment_1 = {
+                    archetype = small_plane_naval_bomber_airframe
+                    allow_mission_type = { naval_bomber port_strike }
+                    naval_strike_attack = 12
+                }
+                nav_bomber_equipment_2 = { archetype = small_plane_naval_bomber_airframe parent = nav_bomber_equipment_1 naval_strike_attack = 15 }
+            }
+            """);
+        Write(mod, "common/units/air.txt", """
+            sub_units = {
+                fighter = { type = { fighter } need = { small_plane_airframe = 1 } }
+                nav_bomber = { type = { naval_bomber } need = { small_plane_naval_bomber_airframe = 1 } land_air_wing_size = 100 }
             }
             """);
     }
@@ -124,6 +168,41 @@ public sealed class PlaneImporterTests : IDisposable
         Assert.Equal(24, fighter.Stats.AirAttack);
         Assert.Null(fighter.SubUnit);
         Assert.Contains("plane 'fighter_equipment_1': no sub-unit needs 'fighter_equipment'.", import.Warnings);
+    }
+
+    [Fact]
+    public void Read_TakesFixedPlanesOfAirframesAndDuplicateArchetypes_LeavingDesignerAirframesOut()
+    {
+        WriteBbaLayout();
+
+        var import = PlaneImporter.Read(new GameFileSystem(game, [mod]));
+
+        Assert.DoesNotContain(import.Planes, plane => plane.ID == "small_plane_airframe_1");
+        var fighter = Assert.Single(import.Planes, plane => plane.ID == "fighter_equipment_0");
+        Assert.Equal("small_plane_airframe", fighter.Archetype);
+        Assert.Equal(["fighter"], fighter.Types);
+        Assert.Equal(["training", "air_superiority", "interception"], fighter.Missions);
+        Assert.Equal(1, fighter.Stats.AirSuperiority);
+        Assert.Equal("fighter", fighter.SubUnit);
+
+        var bomber = Assert.Single(import.Planes, plane => plane.ID == "nav_bomber_equipment_2");
+        Assert.Equal("small_plane_naval_bomber_airframe", bomber.Archetype);
+        Assert.Equal(["naval_bomber"], bomber.Types);
+        Assert.Equal(1, bomber.Stats.AirSuperiority);
+        Assert.Equal(15, bomber.Stats.NavalAttack);
+        Assert.Equal("nav_bomber", bomber.SubUnit);
+        Assert.Equal(100, bomber.LandWingSize);
+    }
+
+    [Fact]
+    public void Read_TakesMissionsFromTheParentChain_WhenAVariantListsNone()
+    {
+        WriteBbaLayout();
+
+        var import = PlaneImporter.Read(new GameFileSystem(game, [mod]));
+
+        Assert.Equal(["training", "naval_bomber", "port_strike"], import.Planes.Single(plane => plane.ID == "nav_bomber_equipment_1").Missions);
+        Assert.Equal(["training", "naval_bomber", "port_strike"], import.Planes.Single(plane => plane.ID == "nav_bomber_equipment_2").Missions);
     }
 
     [Fact]

@@ -4,24 +4,22 @@
     {
       "id": "CAS_equipment_1",
       "name": "Close Air Support I",
-      "archetype": "CAS_equipment",
+      "archetype": "small_plane_cas_airframe",
       "archetypeName": "Close Air Support",
       "year": 1936,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "attack_logistics"
       ],
       "subUnit": "cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas"
@@ -43,24 +41,22 @@
     {
       "id": "CAS_equipment_2",
       "name": "Close Air Support II",
-      "archetype": "CAS_equipment",
+      "archetype": "small_plane_cas_airframe",
       "archetypeName": "Close Air Support",
       "year": 1939,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "attack_logistics"
       ],
       "subUnit": "cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas"
@@ -72,7 +68,7 @@
         "navalAttack": 5,
         "speed": 450,
         "agility": 39,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 96,
@@ -82,24 +78,22 @@
     {
       "id": "CAS_equipment_3",
       "name": "Close Air Support III",
-      "archetype": "CAS_equipment",
+      "archetype": "small_plane_cas_airframe",
       "archetypeName": "Close Air Support",
       "year": 1942,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "attack_logistics"
       ],
       "subUnit": "cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas"
@@ -111,7 +105,7 @@
         "navalAttack": 10,
         "speed": 520,
         "agility": 44,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 104,
@@ -121,24 +115,22 @@
     {
       "id": "CAS_equipment_4",
       "name": "Close Air Support IV",
-      "archetype": "CAS_equipment",
+      "archetype": "small_plane_cas_airframe",
       "archetypeName": "Close Air Support",
       "year": 1945,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "attack_logistics"
       ],
       "subUnit": "cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas"
@@ -150,7 +142,7 @@
         "navalAttack": 12,
         "speed": 580,
         "agility": 49,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 112,
@@ -160,7 +152,7 @@
     {
       "id": "amerikabomber_equipment",
       "name": "Messerschmidt ME264 Amerikabomber",
-      "archetype": "strat_bomber_equipment",
+      "archetype": "large_plane_airframe",
       "archetypeName": "Strategic Bomber",
       "year": 1945,
       "types": [
@@ -171,8 +163,7 @@
       ],
       "subUnit": "strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -181,11 +172,11 @@
       "stats": {
         "airDefense": 15,
         "airAttack": 30,
-        "navalAttack": 9,
+        "navalAttack": 1,
         "speed": 300,
         "agility": 5,
         "airSuperiority": 0.01,
-        "navalTargeting": 2.5,
+        "navalTargeting": 1,
         "reliability": 0.8,
         "productionCost": 360,
         "range": 9000
@@ -194,26 +185,24 @@
     {
       "id": "cv_CAS_equipment_1",
       "name": "Carrier Close Air Support I",
-      "archetype": "cv_CAS_equipment",
+      "archetype": "cv_small_plane_cas_airframe",
       "archetypeName": "Carrier Close Air Support",
       "year": 1936,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
         "port_strike",
+        "attack_logistics",
         "naval_patrol"
       ],
       "carrierCapable": true,
       "subUnit": "cv_cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas",
@@ -227,7 +216,7 @@
         "navalAttack": 7.5,
         "speed": 351,
         "agility": 35,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 104,
@@ -237,26 +226,24 @@
     {
       "id": "cv_CAS_equipment_2",
       "name": "Carrier Close Air Support II",
-      "archetype": "cv_CAS_equipment",
+      "archetype": "cv_small_plane_cas_airframe",
       "archetypeName": "Carrier Close Air Support",
       "year": 1939,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
         "port_strike",
+        "attack_logistics",
         "naval_patrol"
       ],
       "carrierCapable": true,
       "subUnit": "cv_cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas",
@@ -270,7 +257,7 @@
         "navalAttack": 10,
         "speed": 405,
         "agility": 39,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 112,
@@ -280,26 +267,24 @@
     {
       "id": "cv_CAS_equipment_3",
       "name": "Carrier Close Air Support III",
-      "archetype": "cv_CAS_equipment",
+      "archetype": "cv_small_plane_cas_airframe",
       "archetypeName": "Carrier Close Air Support",
       "year": 1942,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
         "port_strike",
+        "attack_logistics",
         "naval_patrol"
       ],
       "carrierCapable": true,
       "subUnit": "cv_cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas",
@@ -313,7 +298,7 @@
         "navalAttack": 15,
         "speed": 495,
         "agility": 44,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 120,
@@ -323,26 +308,24 @@
     {
       "id": "cv_CAS_equipment_4",
       "name": "Carrier Close Air Support IV",
-      "archetype": "cv_CAS_equipment",
+      "archetype": "cv_small_plane_cas_airframe",
       "archetypeName": "Carrier Close Air Support",
       "year": 1945,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "naval_bomber",
         "port_strike",
+        "attack_logistics",
         "naval_patrol"
       ],
       "carrierCapable": true,
       "subUnit": "cv_cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas",
@@ -356,7 +339,7 @@
         "navalAttack": 20,
         "speed": 520,
         "agility": 49,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 128,
@@ -366,12 +349,11 @@
     {
       "id": "cv_fighter_equipment_0",
       "name": "Inter-War Carrier Fighter",
-      "archetype": "cv_fighter_equipment",
+      "archetype": "cv_small_plane_airframe",
       "archetypeName": "Carrier Fighter",
       "year": 1933,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -406,12 +388,11 @@
     {
       "id": "cv_fighter_equipment_1",
       "name": "Carrier Fighter I",
-      "archetype": "cv_fighter_equipment",
+      "archetype": "cv_small_plane_airframe",
       "archetypeName": "Carrier Fighter",
       "year": 1936,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -446,12 +427,11 @@
     {
       "id": "cv_fighter_equipment_2",
       "name": "Carrier Fighter II",
-      "archetype": "cv_fighter_equipment",
+      "archetype": "cv_small_plane_airframe",
       "archetypeName": "Carrier Fighter",
       "year": 1939,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -486,12 +466,11 @@
     {
       "id": "cv_fighter_equipment_3",
       "name": "Carrier Fighter III",
-      "archetype": "cv_fighter_equipment",
+      "archetype": "cv_small_plane_airframe",
       "archetypeName": "Carrier Fighter",
       "year": 1942,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -526,12 +505,11 @@
     {
       "id": "cv_fighter_equipment_4",
       "name": "Carrier Fighter IV",
-      "archetype": "cv_fighter_equipment",
+      "archetype": "cv_small_plane_airframe",
       "archetypeName": "Carrier Fighter",
       "year": 1945,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -566,7 +544,7 @@
     {
       "id": "cv_nav_bomber_equipment_1",
       "name": "Carrier Naval Bomber I",
-      "archetype": "cv_nav_bomber_equipment",
+      "archetype": "cv_small_plane_naval_bomber_airframe",
       "archetypeName": "Carrier Naval Bomber",
       "year": 1936,
       "types": [
@@ -576,6 +554,8 @@
         "training",
         "naval_bomber",
         "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
         "naval_patrol"
       ],
       "carrierCapable": true,
@@ -605,7 +585,7 @@
     {
       "id": "cv_nav_bomber_equipment_2",
       "name": "Carrier Naval Bomber II",
-      "archetype": "cv_nav_bomber_equipment",
+      "archetype": "cv_small_plane_naval_bomber_airframe",
       "archetypeName": "Carrier Naval Bomber",
       "year": 1939,
       "types": [
@@ -615,6 +595,8 @@
         "training",
         "naval_bomber",
         "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
         "naval_patrol"
       ],
       "carrierCapable": true,
@@ -644,7 +626,7 @@
     {
       "id": "cv_nav_bomber_equipment_3",
       "name": "Carrier Naval Bomber III",
-      "archetype": "cv_nav_bomber_equipment",
+      "archetype": "cv_small_plane_naval_bomber_airframe",
       "archetypeName": "Carrier Naval Bomber",
       "year": 1942,
       "types": [
@@ -654,6 +636,8 @@
         "training",
         "naval_bomber",
         "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
         "naval_patrol"
       ],
       "carrierCapable": true,
@@ -683,7 +667,7 @@
     {
       "id": "cv_nav_bomber_equipment_4",
       "name": "Carrier Naval Bomber IV",
-      "archetype": "cv_nav_bomber_equipment",
+      "archetype": "cv_small_plane_naval_bomber_airframe",
       "archetypeName": "Carrier Naval Bomber",
       "year": 1945,
       "types": [
@@ -693,6 +677,8 @@
         "training",
         "naval_bomber",
         "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
         "naval_patrol"
       ],
       "carrierCapable": true,
@@ -722,12 +708,11 @@
     {
       "id": "fighter_equipment_0",
       "name": "Inter-War Fighter",
-      "archetype": "fighter_equipment",
+      "archetype": "small_plane_airframe",
       "archetypeName": "Fighter",
       "year": 1933,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -758,12 +743,11 @@
     {
       "id": "fighter_equipment_1",
       "name": "Fighter I",
-      "archetype": "fighter_equipment",
+      "archetype": "small_plane_airframe",
       "archetypeName": "Fighter",
       "year": 1936,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -787,19 +771,18 @@
         "airSuperiority": 1,
         "navalTargeting": 10,
         "reliability": 0.8,
-        "productionCost": 80,
+        "productionCost": 96,
         "range": 700
       }
     },
     {
       "id": "fighter_equipment_2",
       "name": "Fighter II",
-      "archetype": "fighter_equipment",
+      "archetype": "small_plane_airframe",
       "archetypeName": "Fighter",
       "year": 1939,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -830,12 +813,11 @@
     {
       "id": "fighter_equipment_3",
       "name": "Fighter III",
-      "archetype": "fighter_equipment",
+      "archetype": "small_plane_airframe",
       "archetypeName": "Fighter",
       "year": 1942,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -866,12 +848,11 @@
     {
       "id": "fighter_equipment_4",
       "name": "Fighter IV",
-      "archetype": "fighter_equipment",
+      "archetype": "small_plane_airframe",
       "archetypeName": "Fighter",
       "year": 1945,
       "types": [
-        "fighter",
-        "interceptor"
+        "fighter"
       ],
       "missions": [
         "training",
@@ -889,7 +870,7 @@
       "stats": {
         "airDefense": 16,
         "airAttack": 36,
-        "navalAttack": 8,
+        "navalAttack": 6,
         "speed": 600,
         "agility": 80,
         "airSuperiority": 1,
@@ -900,131 +881,13 @@
       }
     },
     {
-      "id": "flying_boat_equipment_1",
-      "name": "Flying Boat I",
-      "archetype": "flying_boat_equipment",
-      "archetypeName": "Flying Boat",
-      "year": 1936,
-      "types": [
-        "naval_bomber"
-      ],
-      "missions": [
-        "training",
-        "port_strike",
-        "naval_bomber",
-        "naval_patrol"
-      ],
-      "subUnit": "flying_boat",
-      "subUnitTypes": [
-        "naval_bomber",
-        "scout_plane"
-      ],
-      "subUnitCategories": [
-        "category_nav_bomber",
-        "category_strat_bomber",
-        "category_maritime_patrol_bomber"
-      ],
-      "landWingSize": 100,
-      "stats": {
-        "airDefense": 15,
-        "airAttack": 12,
-        "navalAttack": 10,
-        "speed": 240,
-        "agility": 20,
-        "airSuperiority": 0.01,
-        "navalTargeting": 7.5,
-        "reliability": 0.8,
-        "productionCost": 140,
-        "range": 1600
-      }
-    },
-    {
-      "id": "flying_boat_equipment_2",
-      "name": "Flying Boat II",
-      "archetype": "flying_boat_equipment",
-      "archetypeName": "Flying Boat",
-      "year": 1939,
-      "types": [
-        "naval_bomber"
-      ],
-      "missions": [
-        "port_strike",
-        "naval_bomber",
-        "naval_mines_planting",
-        "naval_mines_sweeping"
-      ],
-      "subUnit": "flying_boat",
-      "subUnitTypes": [
-        "naval_bomber",
-        "scout_plane"
-      ],
-      "subUnitCategories": [
-        "category_nav_bomber",
-        "category_strat_bomber",
-        "category_maritime_patrol_bomber"
-      ],
-      "landWingSize": 100,
-      "stats": {
-        "airDefense": 18,
-        "airAttack": 14,
-        "navalAttack": 14,
-        "speed": 280,
-        "agility": 20,
-        "airSuperiority": 0.01,
-        "navalTargeting": 7.5,
-        "reliability": 0.8,
-        "productionCost": 148,
-        "range": 2000
-      }
-    },
-    {
-      "id": "flying_boat_equipment_3",
-      "name": "Flying Boat III",
-      "archetype": "flying_boat_equipment",
-      "archetypeName": "Flying Boat",
-      "year": 1942,
-      "types": [
-        "naval_bomber"
-      ],
-      "missions": [
-        "port_strike",
-        "naval_bomber",
-        "naval_mines_planting",
-        "naval_mines_sweeping"
-      ],
-      "subUnit": "flying_boat",
-      "subUnitTypes": [
-        "naval_bomber",
-        "scout_plane"
-      ],
-      "subUnitCategories": [
-        "category_nav_bomber",
-        "category_strat_bomber",
-        "category_maritime_patrol_bomber"
-      ],
-      "landWingSize": 100,
-      "stats": {
-        "airDefense": 21,
-        "airAttack": 18,
-        "navalAttack": 18,
-        "speed": 320,
-        "agility": 20,
-        "airSuperiority": 0.01,
-        "navalTargeting": 7.5,
-        "reliability": 0.8,
-        "productionCost": 156,
-        "range": 2400
-      }
-    },
-    {
       "id": "heavy_fighter_equipment_1",
       "name": "Heavy Fighter I",
-      "archetype": "heavy_fighter_equipment",
+      "archetype": "medium_plane_fighter_airframe",
       "archetypeName": "Heavy Fighter",
       "year": 1936,
       "types": [
-        "fighter",
-        "interceptor"
+        "heavy_fighter"
       ],
       "missions": [
         "training",
@@ -1033,7 +896,7 @@
       ],
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
-        "fighter"
+        "heavy_fighter"
       ],
       "subUnitCategories": [
         "category_heavy_fighter"
@@ -1055,12 +918,11 @@
     {
       "id": "heavy_fighter_equipment_2",
       "name": "Heavy Fighter II",
-      "archetype": "heavy_fighter_equipment",
+      "archetype": "medium_plane_fighter_airframe",
       "archetypeName": "Heavy Fighter",
       "year": 1939,
       "types": [
-        "fighter",
-        "interceptor"
+        "heavy_fighter"
       ],
       "missions": [
         "training",
@@ -1069,7 +931,7 @@
       ],
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
-        "fighter"
+        "heavy_fighter"
       ],
       "subUnitCategories": [
         "category_heavy_fighter"
@@ -1091,12 +953,11 @@
     {
       "id": "heavy_fighter_equipment_3",
       "name": "Heavy Fighter III",
-      "archetype": "heavy_fighter_equipment",
+      "archetype": "medium_plane_fighter_airframe",
       "archetypeName": "Heavy Fighter",
       "year": 1942,
       "types": [
-        "fighter",
-        "interceptor"
+        "heavy_fighter"
       ],
       "missions": [
         "training",
@@ -1105,7 +966,7 @@
       ],
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
-        "fighter"
+        "heavy_fighter"
       ],
       "subUnitCategories": [
         "category_heavy_fighter"
@@ -1127,12 +988,11 @@
     {
       "id": "heavy_fighter_equipment_4",
       "name": "Heavy Fighter IV",
-      "archetype": "heavy_fighter_equipment",
+      "archetype": "medium_plane_fighter_airframe",
       "archetypeName": "Heavy Fighter",
       "year": 1945,
       "types": [
-        "fighter",
-        "interceptor"
+        "heavy_fighter"
       ],
       "missions": [
         "training",
@@ -1141,7 +1001,7 @@
       ],
       "subUnit": "heavy_fighter",
       "subUnitTypes": [
-        "fighter"
+        "heavy_fighter"
       ],
       "subUnitCategories": [
         "category_heavy_fighter"
@@ -1163,20 +1023,18 @@
     {
       "id": "jet_CAS_equipment",
       "name": "Jet CAS",
-      "archetype": "CAS_equipment",
+      "archetype": "small_plane_cas_airframe",
       "archetypeName": "Close Air Support",
       "year": 1945,
       "types": [
-        "cas",
-        "fighter"
+        "cas"
       ],
       "missions": [
         "training"
       ],
       "subUnit": "cas",
       "subUnitTypes": [
-        "cas",
-        "strategic_bomber"
+        "cas"
       ],
       "subUnitCategories": [
         "category_cas"
@@ -1188,7 +1046,7 @@
         "navalAttack": 15,
         "speed": 900,
         "agility": 55,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 10,
         "reliability": 0.8,
         "productionCost": 160,
@@ -1259,27 +1117,25 @@
         "speed": 1100,
         "agility": 120,
         "airSuperiority": 1,
-        "navalTargeting": 10,
+        "navalTargeting": 1,
         "reliability": 0.8,
         "productionCost": 124,
-        "range": 1500
+        "range": 2200
       }
     },
     {
       "id": "jet_fighter_volksjager_equipment_1",
       "name": "Heinkel He 162 Volksjäger",
-      "archetype": "jet_fighter_equipment",
-      "archetypeName": "Jet Fighter",
+      "archetype": "small_plane_airframe",
+      "archetypeName": "Fighter",
       "year": 1946,
       "types": [
         "fighter"
       ],
       "missions": [
-        "training",
-        "air_superiority",
-        "interception"
+        "training"
       ],
-      "subUnit": "jet_fighter",
+      "subUnit": "fighter",
       "subUnitTypes": [
         "fighter"
       ],
@@ -1305,19 +1161,18 @@
       "name": "Jet Strategic Bomber I",
       "archetype": "jet_strat_bomber_equipment",
       "archetypeName": "Jet Strategic Bomber",
-      "year": 1948,
+      "year": 1950,
       "types": [
         "strategic_bomber"
       ],
       "missions": [
         "training",
         "strategic_bomber",
-        "port_strike"
+        "naval_mines_planting"
       ],
       "subUnit": "jet_strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -1348,10 +1203,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "jet_tac_bomber",
       "subUnitTypes": [
@@ -1386,10 +1243,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "jet_tac_bomber",
       "subUnitTypes": [
@@ -1406,10 +1265,121 @@
         "speed": 1000,
         "agility": 57,
         "airSuperiority": 0.5,
-        "navalTargeting": 5,
+        "navalTargeting": 6,
         "reliability": 0.8,
         "productionCost": 192,
         "range": 5000
+      }
+    },
+    {
+      "id": "maritime_patrol_plane_equipment_1",
+      "name": "Maritime Patrol Bomber I",
+      "archetype": "large_plane_maritime_patrol_plane_airframe",
+      "archetypeName": "Maritime Patrol Bomber",
+      "year": 1936,
+      "types": [
+        "maritime_patrol_plane"
+      ],
+      "missions": [
+        "training",
+        "naval_bomber",
+        "port_strike",
+        "naval_patrol"
+      ],
+      "subUnit": "maritime_patrol_plane",
+      "subUnitTypes": [
+        "maritime_patrol_plane"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
+      ],
+      "landWingSize": 100,
+      "stats": {
+        "airDefense": 15,
+        "airAttack": 12,
+        "navalAttack": 10,
+        "speed": 240,
+        "agility": 20,
+        "airSuperiority": 0.01,
+        "navalTargeting": 7.5,
+        "reliability": 0.8,
+        "productionCost": 140,
+        "range": 1600
+      }
+    },
+    {
+      "id": "maritime_patrol_plane_equipment_2",
+      "name": "Maritime Patrol Bomber II",
+      "archetype": "large_plane_maritime_patrol_plane_airframe",
+      "archetypeName": "Maritime Patrol Bomber",
+      "year": 1939,
+      "types": [
+        "maritime_patrol_plane"
+      ],
+      "missions": [
+        "training",
+        "naval_bomber",
+        "port_strike",
+        "naval_patrol"
+      ],
+      "subUnit": "maritime_patrol_plane",
+      "subUnitTypes": [
+        "maritime_patrol_plane"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
+      ],
+      "landWingSize": 100,
+      "stats": {
+        "airDefense": 18,
+        "airAttack": 14,
+        "navalAttack": 14,
+        "speed": 280,
+        "agility": 20,
+        "airSuperiority": 0.01,
+        "navalTargeting": 7.5,
+        "reliability": 0.8,
+        "productionCost": 148,
+        "range": 2000
+      }
+    },
+    {
+      "id": "maritime_patrol_plane_equipment_3",
+      "name": "Maritime Patrol Bomber III",
+      "archetype": "large_plane_maritime_patrol_plane_airframe",
+      "archetypeName": "Maritime Patrol Bomber",
+      "year": 1942,
+      "types": [
+        "maritime_patrol_plane"
+      ],
+      "missions": [
+        "training",
+        "naval_bomber",
+        "port_strike",
+        "naval_patrol"
+      ],
+      "subUnit": "maritime_patrol_plane",
+      "subUnitTypes": [
+        "maritime_patrol_plane"
+      ],
+      "subUnitCategories": [
+        "category_strat_bomber",
+        "category_maritime_patrol_bomber"
+      ],
+      "landWingSize": 100,
+      "stats": {
+        "airDefense": 21,
+        "airAttack": 18,
+        "navalAttack": 18,
+        "speed": 320,
+        "agility": 20,
+        "airSuperiority": 0.01,
+        "navalTargeting": 7.5,
+        "reliability": 0.8,
+        "productionCost": 156,
+        "range": 2400
       }
     },
     {
@@ -1422,6 +1392,7 @@
         "fighter"
       ],
       "missions": [
+        "training",
         "air_superiority",
         "interception"
       ],
@@ -1449,7 +1420,7 @@
     {
       "id": "nav_bomber_equipment_1",
       "name": "Naval Bomber I",
-      "archetype": "nav_bomber_equipment",
+      "archetype": "small_plane_naval_bomber_airframe",
       "archetypeName": "Naval Bomber",
       "year": 1936,
       "types": [
@@ -1458,7 +1429,10 @@
       "missions": [
         "training",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
+        "naval_patrol"
       ],
       "subUnit": "nav_bomber",
       "subUnitTypes": [
@@ -1474,8 +1448,8 @@
         "navalAttack": 15,
         "speed": 230,
         "agility": 30,
-        "airSuperiority": 0.5,
-        "navalTargeting": 10,
+        "airSuperiority": 1,
+        "navalTargeting": 7.5,
         "reliability": 0.8,
         "productionCost": 104,
         "range": 850
@@ -1484,7 +1458,7 @@
     {
       "id": "nav_bomber_equipment_2",
       "name": "Naval Bomber II",
-      "archetype": "nav_bomber_equipment",
+      "archetype": "small_plane_naval_bomber_airframe",
       "archetypeName": "Naval Bomber",
       "year": 1939,
       "types": [
@@ -1493,7 +1467,10 @@
       "missions": [
         "training",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
+        "naval_patrol"
       ],
       "subUnit": "nav_bomber",
       "subUnitTypes": [
@@ -1509,7 +1486,7 @@
         "navalAttack": 20,
         "speed": 300,
         "agility": 35,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 10,
         "reliability": 0.8,
         "productionCost": 112,
@@ -1519,7 +1496,7 @@
     {
       "id": "nav_bomber_equipment_3",
       "name": "Naval Bomber III",
-      "archetype": "nav_bomber_equipment",
+      "archetype": "small_plane_naval_bomber_airframe",
       "archetypeName": "Naval Bomber",
       "year": 1942,
       "types": [
@@ -1528,7 +1505,10 @@
       "missions": [
         "training",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
+        "naval_patrol"
       ],
       "subUnit": "nav_bomber",
       "subUnitTypes": [
@@ -1544,7 +1524,7 @@
         "navalAttack": 25,
         "speed": 400,
         "agility": 40,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 12.5,
         "reliability": 0.8,
         "productionCost": 120,
@@ -1553,7 +1533,7 @@
     },
     {
       "id": "nav_bomber_equipment_4",
-      "archetype": "nav_bomber_equipment",
+      "archetype": "small_plane_naval_bomber_airframe",
       "archetypeName": "Naval Bomber",
       "year": 1945,
       "types": [
@@ -1562,7 +1542,10 @@
       "missions": [
         "training",
         "naval_bomber",
-        "port_strike"
+        "port_strike",
+        "naval_mines_planting",
+        "naval_mines_sweeping",
+        "naval_patrol"
       ],
       "subUnit": "nav_bomber",
       "subUnitTypes": [
@@ -1578,7 +1561,7 @@
         "navalAttack": 30,
         "speed": 450,
         "agility": 45,
-        "airSuperiority": 0.5,
+        "airSuperiority": 1,
         "navalTargeting": 15,
         "reliability": 0.8,
         "productionCost": 128,
@@ -1596,7 +1579,6 @@
       ],
       "missions": [
         "training",
-        "strategic_bomber",
         "interception"
       ],
       "subUnit": "rocket_interceptor",
@@ -1628,7 +1610,6 @@
       ],
       "missions": [
         "training",
-        "strategic_bomber",
         "interception"
       ],
       "subUnit": "rocket_interceptor",
@@ -1660,7 +1641,6 @@
       ],
       "missions": [
         "training",
-        "strategic_bomber",
         "interception"
       ],
       "subUnit": "rocket_interceptor",
@@ -1684,7 +1664,7 @@
     {
       "id": "rocket_suicide_equipment_1",
       "name": "Suicide Strike Craft",
-      "archetype": "suicide_craft_equipment",
+      "archetype": "small_plane_suicide_airframe",
       "archetypeName": "Suicide Craft",
       "year": 1944,
       "types": [
@@ -1715,17 +1695,17 @@
     {
       "id": "scout_plane_equipment_1",
       "name": "Scout Plane I",
-      "archetype": "scout_plane_equipment",
+      "archetype": "medium_plane_scout_plane_airframe",
       "archetypeName": "Scout Plane",
       "year": 1936,
       "types": [
         "scout_plane"
       ],
       "missions": [
+        "training",
         "recon",
         "naval_patrol"
       ],
-      "carrierCapable": true,
       "subUnit": "scout_plane",
       "subUnitTypes": [
         "scout_plane"
@@ -1733,14 +1713,13 @@
       "subUnitCategories": [
         "category_scout_plane"
       ],
-      "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
-        "airDefense": 1,
+        "airDefense": 13,
         "airAttack": 0,
         "navalAttack": 0,
         "speed": 500,
-        "agility": 1,
+        "agility": 25,
         "airSuperiority": 0.01,
         "navalTargeting": 0,
         "reliability": 0.8,
@@ -1751,17 +1730,17 @@
     {
       "id": "scout_plane_equipment_2",
       "name": "Scout Plane II",
-      "archetype": "scout_plane_equipment",
+      "archetype": "medium_plane_scout_plane_airframe",
       "archetypeName": "Scout Plane",
       "year": 1940,
       "types": [
         "scout_plane"
       ],
       "missions": [
+        "training",
         "recon",
         "naval_patrol"
       ],
-      "carrierCapable": true,
       "subUnit": "scout_plane",
       "subUnitTypes": [
         "scout_plane"
@@ -1769,15 +1748,14 @@
       "subUnitCategories": [
         "category_scout_plane"
       ],
-      "carrierWingSize": 10,
       "landWingSize": 100,
       "stats": {
-        "airDefense": 1,
+        "airDefense": 15,
         "airAttack": 0,
         "navalAttack": 0,
         "speed": 550,
-        "agility": 1,
-        "airSuperiority": 0.01,
+        "agility": 30,
+        "airSuperiority": 0,
         "navalTargeting": 0,
         "reliability": 0.8,
         "productionCost": 60,
@@ -1787,7 +1765,7 @@
     {
       "id": "strat_bomber_equipment_1",
       "name": "Strategic Bomber I",
-      "archetype": "strat_bomber_equipment",
+      "archetype": "large_plane_airframe",
       "archetypeName": "Strategic Bomber",
       "year": 1936,
       "types": [
@@ -1796,12 +1774,11 @@
       "missions": [
         "training",
         "strategic_bomber",
-        "port_strike"
+        "naval_mines_planting"
       ],
       "subUnit": "strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -1823,7 +1800,7 @@
     {
       "id": "strat_bomber_equipment_2",
       "name": "Strategic Bomber II",
-      "archetype": "strat_bomber_equipment",
+      "archetype": "large_plane_airframe",
       "archetypeName": "Strategic Bomber",
       "year": 1939,
       "types": [
@@ -1832,12 +1809,11 @@
       "missions": [
         "training",
         "strategic_bomber",
-        "port_strike"
+        "naval_mines_planting"
       ],
       "subUnit": "strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -1859,7 +1835,7 @@
     {
       "id": "strat_bomber_equipment_3",
       "name": "Strategic Bomber III",
-      "archetype": "strat_bomber_equipment",
+      "archetype": "large_plane_airframe",
       "archetypeName": "Strategic Bomber",
       "year": 1942,
       "types": [
@@ -1868,12 +1844,11 @@
       "missions": [
         "training",
         "strategic_bomber",
-        "port_strike"
+        "naval_mines_planting"
       ],
       "subUnit": "strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -1895,7 +1870,7 @@
     {
       "id": "strat_bomber_equipment_4",
       "name": "Strategic Bomber IV",
-      "archetype": "strat_bomber_equipment",
+      "archetype": "large_plane_airframe",
       "archetypeName": "Strategic Bomber",
       "year": 1945,
       "types": [
@@ -1904,12 +1879,11 @@
       "missions": [
         "training",
         "strategic_bomber",
-        "port_strike"
+        "naval_mines_planting"
       ],
       "subUnit": "strat_bomber",
       "subUnitTypes": [
-        "strategic_bomber",
-        "naval_bomber"
+        "strategic_bomber"
       ],
       "subUnitCategories": [
         "category_strat_bomber"
@@ -1938,6 +1912,7 @@
         "strategic_bomber"
       ],
       "missions": [
+        "training",
         "strategic_bomber"
       ],
       "subUnit": "strat_bomber_intercontinental",
@@ -1990,7 +1965,7 @@
         "speed": 1400,
         "agility": 82,
         "airSuperiority": 1,
-        "navalTargeting": 10,
+        "navalTargeting": 1,
         "reliability": 0.8,
         "productionCost": 39,
         "range": 2400
@@ -1999,7 +1974,7 @@
     {
       "id": "tac_bomber_equipment_0",
       "name": "Inter-War Bomber",
-      "archetype": "tac_bomber_equipment",
+      "archetype": "medium_plane_airframe",
       "archetypeName": "Tactical Bomber",
       "year": 1933,
       "types": [
@@ -2008,10 +1983,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "tac_bomber",
       "subUnitTypes": [
@@ -2037,7 +2014,7 @@
     {
       "id": "tac_bomber_equipment_1",
       "name": "Tactical Bomber I",
-      "archetype": "tac_bomber_equipment",
+      "archetype": "medium_plane_airframe",
       "archetypeName": "Tactical Bomber",
       "year": 1936,
       "types": [
@@ -2046,10 +2023,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "tac_bomber",
       "subUnitTypes": [
@@ -2069,13 +2048,13 @@
         "navalTargeting": 5,
         "reliability": 0.8,
         "productionCost": 148,
-        "range": 1500
+        "range": 2400
       }
     },
     {
       "id": "tac_bomber_equipment_2",
       "name": "Tactical Bomber II",
-      "archetype": "tac_bomber_equipment",
+      "archetype": "medium_plane_airframe",
       "archetypeName": "Tactical Bomber",
       "year": 1939,
       "types": [
@@ -2084,10 +2063,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "tac_bomber",
       "subUnitTypes": [
@@ -2113,7 +2094,7 @@
     {
       "id": "tac_bomber_equipment_3",
       "name": "Tactical Bomber III",
-      "archetype": "tac_bomber_equipment",
+      "archetype": "medium_plane_airframe",
       "archetypeName": "Tactical Bomber",
       "year": 1942,
       "types": [
@@ -2122,10 +2103,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "tac_bomber",
       "subUnitTypes": [
@@ -2151,7 +2134,7 @@
     {
       "id": "tac_bomber_equipment_4",
       "name": "Tactical Bomber IV",
-      "archetype": "tac_bomber_equipment",
+      "archetype": "medium_plane_airframe",
       "archetypeName": "Tactical Bomber",
       "year": 1945,
       "types": [
@@ -2160,10 +2143,12 @@
       "missions": [
         "training",
         "cas",
-        "attack_logistics",
         "strategic_bomber",
+        "naval_bomber",
         "port_strike",
-        "naval_bomber"
+        "attack_logistics",
+        "naval_mines_planting",
+        "naval_mines_sweeping"
       ],
       "subUnit": "tac_bomber",
       "subUnitTypes": [

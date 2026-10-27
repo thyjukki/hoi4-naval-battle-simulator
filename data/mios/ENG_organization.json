@@ -377,6 +377,37 @@
           }
         },
         {
+          "id": "ENG_mio_trait_thicker_armour",
+          "name": "Thicker Armour",
+          "x": 2,
+          "y": 2,
+          "special": true,
+          "limitToEquipmentTypes": [
+            "mio_cat_eq_all_battleship"
+          ],
+          "equipmentBonus": {
+            "armor_value": 0.05
+          },
+          "conditions": [
+            "visible = { FROM = { original_tag = ENG } }",
+            "available = { FROM = { has_completed_focus = ENG_thicker_armour } }"
+          ]
+        },
+        {
+          "id": "ENG_mio_trait_portsmouth_refits",
+          "name": "Portsmouth Refits",
+          "x": 3,
+          "y": 2,
+          "special": true,
+          "productionBonus": {
+            "production_conversion_speed_factor": 0.1
+          },
+          "conditions": [
+            "visible = { FROM = { original_tag = ENG } }",
+            "available = { FROM = { has_completed_focus = ENG_his_majesty_s_dockyard_portsmouth } }"
+          ]
+        },
+        {
           "id": "generic_mio_trait_external_armor_belt",
           "name": "Vertical Armor Belt",
           "x": 0,
@@ -939,9 +970,11 @@
               "needed": 1
             }
           ],
+          "limitToEquipmentTypes": [
+            "screen_ship"
+          ],
           "equipmentBonus": {
-            "naval_speed": 0.05,
-            "mines_planting": 0.05
+            "mines_planting": 0.2
           },
           "conditions": [
             "visible = { has_dlc = \"Man the Guns\" }"
@@ -1008,7 +1041,7 @@
           ],
           "equipmentBonus": {
             "naval_range": 0.1,
-            "surface_detection": 0.03,
+            "surface_detection": 0.05,
             "hg_attack": 0.05
           }
         },
@@ -1029,7 +1062,7 @@
             "generic_mio_trait_spotting_tops"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.08
+            "surface_detection": 0.15
           }
         },
         {
@@ -1072,7 +1105,8 @@
             "capital_ship"
           ],
           "equipmentBonus": {
-            "lg_attack": 0.05
+            "lg_attack": 0.1,
+            "naval_speed": 0.05
           }
         },
         {
@@ -1093,7 +1127,7 @@
             "ship_hull_cruiser"
           ],
           "equipmentBonus": {
-            "naval_range": 0.05,
+            "naval_range": 0.1,
             "surface_detection": 0.05
           }
         },
@@ -1140,7 +1174,7 @@
             "screen_ship"
           ],
           "equipmentBonus": {
-            "surface_detection": 0.03
+            "surface_detection": 0.1
           }
         },
         {

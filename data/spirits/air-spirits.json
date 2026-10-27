@@ -30,8 +30,7 @@
       ],
       "effects": {
         "countryModifiers": {
-          "strat_bomber_equipment_design_cost_factor": -0.75,
-          "jet_strat_bomber_equipment_design_cost_factor": -0.75
+          "large_plane_airframe_design_cost_factor": -0.75
         },
         "scripted": [
           "research_bonus"
@@ -53,8 +52,8 @@
       ],
       "effects": {
         "countryModifiers": {
-          "CAS_equipment_design_cost_factor": -0.75,
-          "cv_CAS_equipment_design_cost_factor": -0.75
+          "small_plane_cas_airframe_design_cost_factor": -0.75,
+          "cv_small_plane_cas_airframe_design_cost_factor": -0.75
         },
         "scripted": [
           "research_bonus"
@@ -76,8 +75,7 @@
       ],
       "effects": {
         "countryModifiers": {
-          "tac_bomber_equipment_design_cost_factor": -0.75,
-          "jet_tac_bomber_equipment_design_cost_factor": -0.75
+          "medium_plane_airframe_design_cost_factor": -0.75
         },
         "scripted": [
           "research_bonus"
