@@ -7,7 +7,8 @@
 - **Why it matters:** a fresh wing carries the full experience malus (TFB −0.15 air attack, defence and agility,
   A-STATS-XP). Wings that fight in the region's air war gain experience, the malus shrinks, and from the next air hour
   their region war attack, defence, agility and escort rise (the constant-roll `air_cv_land_mix` battle: the USA land
-  fighters' escort 576.64 in game against 573.71 in an engine that keeps experience fixed, from air hour 17).
+  fighters' escort 576.64 in game against 573.71 in an engine that keeps experience fixed, from air hour 17; the rest
+  of that gap was the experience share's 0.1 steps, A-ORDER).
 
 ## The changes
 
@@ -66,7 +67,8 @@ Per wing `xp` (start: the save's `experience`, 0 in make_save.py saves). In an a
 4. during the naval hour, every plane lost to AA or interception: the blend with xpKilled;
 5. at the day change, refilled planes: the blend with xpNew 0.
 The experience malus (RegionAirWarRules.ExperienceModifier) already follows 0xf65f20: v = clamp(xp / L0 − 1, −1, 0)
-below the first AIR_WING_XP_LEVELS level, truncated to 0.01 (0.56 → −0.99), so it only needs the live `xp`.
+below the first AIR_WING_XP_LEVELS level, truncated to 0.1 (0.56 → −0.9; corrected from 0.01 in A-ORDER), so it
+only needs the live `xp`.
 
 ## Validation
 

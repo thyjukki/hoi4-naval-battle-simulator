@@ -427,6 +427,7 @@ public sealed class BattleSession
 
                     if (RetreatRules.AdvanceRetreat(ship, tick, own.Screening, environment, defines))
                     {
+                        airPhase.CarrierLeft(own, ship);
                         tallies[ship].RetreatedHour = hour;
                         log.Add($"Hour {hour}: {own.Label} {ship.ID} escaped the battle");
                         events.Add(new BattleEvent(hour, own.Label, ship.ID, BattleEventKind.Escaped, "escaped the battle"));
@@ -474,6 +475,7 @@ public sealed class BattleSession
             if (applied.Sunk)
             {
                 tallies[target].SunkHour = hour;
+                airPhase.CarrierLeft(enemy, target);
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
                     $"sunk by an air strike from {record.Source}{PrideNote(target)}", record.Source));
                 ReinforceAfterSinking(enemy, hour);
@@ -564,6 +566,7 @@ public sealed class BattleSession
             if (applied.Sunk)
             {
                 tallies[target].SunkHour = hour;
+                airPhase.CarrierLeft(enemy, target);
                 events.Add(new BattleEvent(hour, enemy.Label, target.ID, BattleEventKind.Sunk,
                     $"sunk by {shooter.ID} ({weapon}){PrideNote(target)}", shooter.ID));
                 ReinforceAfterSinking(enemy, hour);

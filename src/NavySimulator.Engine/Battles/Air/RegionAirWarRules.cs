@@ -176,7 +176,9 @@ public static class RegionAirWarRules
 
     /// <summary>
     /// [RE] A-STATS-XP 0xf65f20: the wing experience holder's value of <paramref name="key"/>: with v = clamp(xp / L0 − 1, −1, 0)
-    /// below the first AIR_WING_XP_LEVELS level, else clamp((xp − L0) / (Llast − L0), 0, 1), truncated to 0.01:
+    /// below the first AIR_WING_XP_LEVELS level, else clamp((xp − L0) / (Llast − L0), 0, 1), truncated toward zero to
+    /// steps of 0.1 (HardcodedValues.AirWingExperienceStep; a fresh wing has v = −1, any experience up to a tenth of L0
+    /// gives −0.9):
     /// air_wing_experience_bonus_max × v, or air_wing_experience_malus_min × (−v) × (1 + max(air_untrained_pilots_penalty_factor, −1)).
     /// </summary>
     public static double ExperienceModifier(AirWing wing, string key, ModifierSet country, GameDefines defines)
@@ -193,7 +195,8 @@ public static class RegionAirWarRules
         var v = wing.Experience < first
             ? Math.Clamp(wing.Experience / first - 1, -1, 0)
             : last > first ? Math.Clamp((wing.Experience - first) / (last - first), 0, 1) : 1;
-        v = Math.Truncate(v * 100) / 100;
+        var step = defines.Hardcoded.AirWingExperienceStep;
+        v = Math.Truncate(Math.Round(v / step, 9)) * step;
 
         if (v > 0)
         {

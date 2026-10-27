@@ -16,6 +16,7 @@ public sealed class AirPhase
     private readonly BattleScenario scenario;
     private readonly GameDefines defines;
     private readonly Dictionary<BattleSide, List<AirGroup>> groups = [];
+    private readonly Dictionary<BattleSide, List<AirGroup>> strikeOrder = [];
     private readonly Dictionary<BattleSide, int> externalJoined = [];
     private readonly Dictionary<BattleSide, Dictionary<string, int>> stockpiles = [];
 
@@ -28,6 +29,7 @@ public sealed class AirPhase
         foreach (var side in new[] { attacker, defender })
         {
             groups[side] = BuildGroups(side);
+            strikeOrder[side] = [.. groups[side]];
             externalJoined[side] = 0;
             stockpiles[side] = new Dictionary<string, int>(side.Participant.PlaneStockpile, StringComparer.Ordinal);
         }
@@ -45,6 +47,38 @@ public sealed class AirPhase
     }
 
     public bool HasAir => groups.Values.Any(list => list.Count > 0);
+
+    /// <summary>
+    /// A-ORDER [RE + LOG] 0x1975480 → 0x1c6ae50 (sink) and 0x1c6cc50 (escape): a carrier that sinks or escapes leaves the group's
+    /// air object list (group+0x58), which the strikes walk, at once: each of its air objects, in list order, is replaced
+    /// by the list's last one (swap and pop). In 309 logged removals the list changed exactly so. The engine keeps the
+    /// groups themselves (region air war, positioning, interception read them); only the strike order changes.
+    /// </summary>
+    public void CarrierLeft(BattleSide side, Ship carrier)
+    {
+        var order = strikeOrder[side];
+
+        foreach (var group in order.Where(group => group.Carrier == carrier).ToList())
+        {
+            var index = order.IndexOf(group);
+            order[index] = order[^1];
+            order.RemoveAt(order.Count - 1);
+        }
+    }
+
+    /// <summary>The side's air groups in the game's strike order. Carriers out of the battle that nobody reported (a state
+    /// a replay set) leave the list first, in list order; the groups off the list follow at the end and do not strike.</summary>
+    private List<AirGroup> StrikeOrder(BattleSide side)
+    {
+        var order = strikeOrder[side];
+
+        foreach (var carrier in order.Select(group => group.Carrier).OfType<Ship>().Where(carrier => !carrier.IsInBattle).Distinct().ToList())
+        {
+            CarrierLeft(side, carrier);
+        }
+
+        return [.. order, .. groups[side].Where(group => !order.Contains(group))];
+    }
 
     /// <summary>A-REINFORCE: the side's planes left in stock, by plane ID.</summary>
     public IReadOnlyDictionary<string, int> StockpileOf(BattleSide side)
@@ -166,11 +200,14 @@ public sealed class AirPhase
             return results;
         }
 
-        // [RE + LOG] The stacking factor is taken before the air objects recount their planes (0x1c6c580).
-        var ownCarrierPlanes = ownGroups.Where(group => !group.IsExternal).Sum(group => group.PlanesCounted);
+        // A-STACK, A-ORDER [RE + LOG]: the stacking factor is taken before the air objects recount their planes (0x1c6c580), over the air
+        // objects still on the group's list: a sunk or escaped carrier's planes stop counting at once (the logged
+        // defender's factor went from 0.89285 to 0.96153 when a carrier with 80 planes sank).
+        var order = StrikeOrder(own);
+        var ownCarrierPlanes = strikeOrder[own].Where(group => !group.IsExternal).Sum(group => group.PlanesCounted);
         var stacking = AirRules.StackingFactor(ownCarrierPlanes, AirRules.PlaneCap(enemy.Ships, defines), defines);
 
-        foreach (var group in ownGroups)
+        foreach (var group in order)
         {
             group.CountedPlanes = group.Planes;
             var strikeWings = group.StrikeWings.ToList();

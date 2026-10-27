@@ -312,7 +312,15 @@ public sealed class GameBattleLog
             return strikes;
         }
 
-        var damage = record.TryGetProperty("damage", out var hits) ? hits.EnumerateArray().ToList() : [];
+        // A damage record a strike carries itself is also in the hour's list; leave it out there, or a strike without
+        // hits that fires before it at the same target would take it over.
+        var attached = air.EnumerateArray()
+            .Where(entry => entry.TryGetProperty("damage", out var own) && own.ValueKind == JsonValueKind.Object)
+            .Select(entry => entry.GetProperty("damage").GetRawText())
+            .ToHashSet();
+        var damage = record.TryGetProperty("damage", out var hits)
+            ? hits.EnumerateArray().Where(hit => !attached.Contains(hit.GetRawText())).ToList()
+            : [];
         var next = 0;
 
         foreach (var entry in air.EnumerateArray())

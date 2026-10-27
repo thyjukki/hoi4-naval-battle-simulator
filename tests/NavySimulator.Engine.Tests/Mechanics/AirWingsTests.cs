@@ -249,6 +249,52 @@ public class AirWingsTests
         Assert.Equal(FixedPoint.Truncate(left * bomber.DisruptionTaken), bomber.Disruption, 9);
     }
 
+    [Fact]
+    public void ExperienceShare_IsTruncatedToTenths()
+    {
+        // A-STATS-XP [RE + LOG] 0xf6602d: v = clamp(xp / L0 − 1, −1, 0) in steps of 0.1 toward zero. A fresh wing carries
+        // the whole malus, any experience up to a tenth of L0 nine tenths of it (the logged escort of the USA land fighters
+        // stayed flat from xp 0.56 to 5.6).
+        var fighter = new PlaneEquipment("f", new PlaneStats(AirAttack: 1), ["fighter"], ["air_superiority"], subUnitTypes: ["fighter"]);
+        var level = defines.NAir.AIR_WING_XP_LEVELS[0];
+        double Malus(double xp) => RegionAirWarRules.ExperienceModifier(new AirWing(fighter, 10, defines.Hardcoded) { Experience = xp },
+            StaticModifiers.AirAccidentsFactor, ModifierSet.Empty, defines);
+        var full = Malus(0);
+
+        Assert.NotEqual(0, full);
+        Assert.Equal(0.9 * full, Malus(0.56), 9);
+        Assert.Equal(0.9 * full, Malus(0.1 * level), 9);
+        Assert.Equal(0.8 * full, Malus(0.1001 * level), 9);
+        Assert.Equal(0.4 * full, Malus(0.55 * level), 9);
+    }
+
+    [Fact]
+    public void ACarrierThatSinks_LeavesTheStrikeOrderBySwapAndPop_AndItsPlanesTheStacking()
+    {
+        // [RE + LOG] 0x1975480 → 0x1c6ae50: the sunk carrier's air object takes the list's last one's place, so the
+        // land-based group strikes first after the first carrier sinks (logged: [land, …] in air_cv_land_mix at U 0.07).
+        var carriers = new[] { Carrier("cv1"), Carrier("cv2"), Carrier("cv3") };
+        var wings = carriers.ToDictionary(carrier => carrier.ID, _ => new List<CarrierAirwingAssignment> { new("cv_nb", 1, 10) });
+        var attacker = new BattleParticipant(new Fleet("a", [.. carriers], wings), null, [], [], carrierStanceIndex: 4,
+            landBasedAirwings: [new LandBasedAirwing("nb", 20)]);
+        var defender = TestEntityFactory.Participant("d", [TestEntityFactory.Capital("bb")]);
+        var scenario = new BattleScenario("air", "ocean", "clear", 1, null, attacker, defender, Planes(), defines, new BattleRules());
+        var own = new BattleSide("attacker", attacker);
+        var enemy = new BattleSide("defender", defender);
+        var phase = new AirPhase(scenario, own, enemy);
+        phase.JoinLandBased(30);
+
+        List<string> Sources() => phase.Strike(own, enemy, 30, BattleEnvironment.None, new ConstantRandomSource(0.5))
+            .Select(result => result.Record.Source).ToList();
+
+        Assert.Equal(["cv1", "cv2", "cv3", "land-based nb"], Sources());
+
+        carriers[0].CurrentHP = 0;
+        phase.CarrierLeft(own, carriers[0]);
+
+        Assert.Equal(["land-based nb", "cv2", "cv3"], Sources());
+    }
+
     private Results.BattleResult Simulate(BattleRules rules)
     {
         var carrier = TestEntityFactory.CreateShip("cv", ShipRole.Carrier, TestEntityFactory.CapitalStats() with { HeavyAttack = 0, LightAttack = 0, CarrierSize = 4 });

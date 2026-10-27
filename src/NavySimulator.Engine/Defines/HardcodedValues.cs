@@ -92,6 +92,10 @@ public sealed class HardcodedValues
     // [RE] A-ACCIDENT 0xc60290: an air base entry has an accident pass in an hour when its first draw (of 100,000) is below this.
     public int AirAccidentGate { get; set; } = 10000;
 
+    // [RE + LOG] A-STATS-XP 0xf6602d (× 1e6 / 1e10 as an integer): a wing's experience share v is truncated toward zero
+    // to steps of this size before it scales the experience bonus or malus.
+    public double AirWingExperienceStep { get; set; } = 0.1;
+
     // [RE] A-DETECT 0xf77730: the floor of a country's air detection in a region (0x3e8 in fixed point).
     public double MinimumRegionAirDetection { get; set; } = 0.01;
 

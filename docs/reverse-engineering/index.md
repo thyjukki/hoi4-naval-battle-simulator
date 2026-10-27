@@ -415,7 +415,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x2072200 | define reader storing fx15 (27 defines) | S-XP-GAIN | [XP/top] |
 | 0x221f310 | resolve a `{type, id}` handle to its object (null if deleted) | — | [LOG] |
 | 0x2233db0 | `random_fixed(int64* out, file, line)` | all | see §4, [LOG] |
-| 0x1975480 | combat sink handler: sets the member's state to sunk (0x1975bea), calls `0xd77ff0` for the ship's task force (0x1975879) | S-MANPOWER | [LOG] |
+| 0x1975480 | combat sink handler: sets the member's state to sunk (0x1975bea), calls `0xd77ff0` for the ship's task force (0x1975879); the group's 0x1c6ae50 takes the carrier's air objects off the list (A-ORDER) | S-MANPOWER, A-ORDER | [LOG], [ORD] |
 | 0x2233fa0 | random int31 | FEX, A-* | [HOUR/fex], [AIR/conv] |
 | 0x24ed3f0 | fx5 → fx15 | — | [XP/top] |
 | 0x24ed580 | fx15 → fx5 | — | [XP/top] |
@@ -943,7 +943,7 @@ From [A-STATS-plane-stats-and-air-modifiers.md][AST]: how a wing's stats are bui
 | 0xf60a40 | stat array for a mission bit, else `wing+0x390` | A-STATS | [AST/cache] |
 | 0xf61d70 | accident chance: 0 if the mission `type` is 0 or no planes; else 0xc4daf0 | A-REGION | [AST/accident] |
 | 0xf63a2d (chunk of 0xf63580) | XP loss on killed planes × (1 + air_wing_xp_loss_when_killed_factor), AIR_WING_XP_LOSS_WHEN_KILLED | A-STATS | [AST/mods] |
-| 0xf65f20 | (update) experience holder: `v` from AIR_WING_XP_LEVELS (−1..1, 0.01 steps); malus × (−v) × (1 + max(air_untrained_pilots_penalty_factor, −1)) if `wing+0x9c4` is set; cached `wing+0xa10` | A-STATS | [AST/xp] |
+| 0xf65f20 | (update) experience holder: `v` from AIR_WING_XP_LEVELS (−1..1, **0.1 steps** toward zero at 0xf6602d, corrected by [ORD/xp]; AST read 0.01); malus × (−v) × (1 + max(air_untrained_pilots_penalty_factor, −1)) if `wing+0x9c4` is set; cached `wing+0xa10` | A-STATS | [AST/xp] |
 | 0xf661a0 | pool `+0x20` = the owner's sub-unit copy (`[country+0xf70]`, 0xd11ae0) | A-STATS | [AST/cache] |
 | 0xf661e0 | wing stat cache `(wing, opt mask)`: per variant `stat[s] += trunc(trunc((1 + sub[s]) × w) × variant[s])` into `wing+0x390`; per-mission arrays `wing+0x968` (`mission_type_stats` deltas); then the sub-unit additive list and clamps (0x1019ea0); mask = argument or mission `type` | A-STATS | [AST/cache] |
 | 0xf78500 | effectiveness: `(1 + dist)(1 + crowd)(1 + supply) × (1 − rcp) × (1 + air_mission_efficiency [region weather + country + carrier fleet admiral]) × fuel × (1 + per-region country value)`, clamp [0, 1] | A-STATS, A-EXTERNAL | [AST/effectiveness] |
@@ -1071,6 +1071,19 @@ From [A-ACCIDENT-land-wing-accidents.md][ACC]: the hourly accident pass, its loc
 | 0xf61d70 | accident chance: 0 if type 0 / no planes / mission inactive (non-training); rel = stat 0x41; xp `air_accidents_factor`; owner | A-ACCIDENT | [ACC/chance] |
 | 0xf63e00 | wing XP average after a plane-count change: `xp = n > 0 ? max(0, (old × xp + (n − old) × xpNew) / n) : 0` (raw integer division); losses pass xpKilled, refills 0 | A-ACCIDENT, A-XP | [ACC/effect], [XP/xp] |
 | 0xf80920 | mission active with a region | A-ACCIDENT | [ACC/chance] |
+
+### Air objects leaving the strike list (A-ORDER)
+
+From [A-ORDER-air-objects-leaving-the-strike-list.md][ORD]: how a sunk or escaped carrier's air objects leave the group's list (strike order, stacking), and the experience share's 0.1 steps. Sorted by RVA.
+
+| RVA | Name / role | Spec IDs | Finding |
+|---|---|---|---|
+| 0x1620270 | remove a wing from its air object → 0x1c6c3d0 | A-ORDER | [ORD/list] |
+| 0x1c6ae50 | group: a sunk member's air objects: wings into the pool 0xc51710(ship+0x730, owner tag) if found, else swap and pop from `+0x58` (0x1c6b220) into `+0x88`; `member+0x128` = the pool's province or −1 | A-ORDER | [ORD/list] |
+| 0x1c6c3d0 | group: remove a wing from the air object holding it; swap and pop the object when its planes reach 0 (0x1c6c49e) | A-ORDER | [ORD/list] |
+| 0x1c6cc50 | (update) escape: forward scan of `+0x58`, each match swap and pop (slot checked again), appended to `+0x88` | A-ORDER, A-REGION-ESCAPE | [ORD/list] |
+| 0xc51710 | lookup by country tag in an air base's map (→ 0xc515b0); meaning not read | A-ORDER | [ORD/list] |
+| 0xf6602d | experience share `v × 1e6 / 1e10` as an integer: steps of 0.1 | A-STATS-XP | [ORD/xp] |
 
 ### Mixed plane variants in a wing (A-MIXED)
 
@@ -2139,6 +2152,9 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [ACC/effect]: findings/A-ACCIDENT-land-wing-accidents.md#a-accident-effect-planes-lost-0xf5dd80
 [COV/refill]: findings/A-COVERAGE-land-mission-effectiveness.md#a-coverage-refill-the-region-change-penalty-of-refilled-planes
 [MIX]: findings/A-MIXED-plane-variants-in-a-wing.md
+[ORD]: findings/A-ORDER-air-objects-leaving-the-strike-list.md
+[ORD/list]: findings/A-ORDER-air-objects-leaving-the-strike-list.md#removing-a-carriers-air-objects-0x1c6ae50-sink-0x1c6cc50-escape
+[ORD/xp]: findings/A-ORDER-air-objects-leaving-the-strike-list.md#a-stats-xp-correction-v-in-steps-of-01-0xf65f20
 [MIX/stock]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-stock-which-variants-the-day-tick-gives-a-reinforce
 [MIX/order]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-order-how-a-wing-stores-its-variants
 [MIX/remove]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-remove-which-planes-are-lost-first-removeplanes-0xf63580

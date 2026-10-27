@@ -72,4 +72,34 @@ public class GameBattleLogTests
             Directory.Delete(directory, true);
         }
     }
+
+    [Fact]
+    public void AirStrikes_KeepTheirOwnDamage_AndAMissDoesNotTakeAnotherStrikesFromTheHourList()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), "navysim-replay-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(directory);
+
+        try
+        {
+            var full = Sides(Member(11, 1, 5000000, 3500000, 400), Member(22, 1, 13200000, 4000000, 1200));
+            // A carrier strike without hits (under 1 HP of damage would also log damageInt 0), then a land strike at the same
+            // target that carries its damage; the hour's list holds that damage too.
+            var damage = """{ "target": 22, "str": 84162, "org": 50497, "flag": 0, "before": { "id": 22, "hp": 13200000, "org": 4000000 }, "after": { "id": 22, "hp": 13115838, "org": 3949503 } }""";
+            var air = $$"""
+                [{ "fx": "0xa", "carrier": 11, "external": 0, "wings": [{ "handle": [69, 1], "planes": 10 }], "target": 22, "strikers": 9, "damageInt": 0, "struck": true },
+                 { "fx": "0xb", "carrier": null, "external": 1, "wings": [{ "handle": [69, 2], "planes": 50 }], "target": 22, "strikers": 44, "damage": {{damage}}, "damageInt": 0, "struck": true }]
+                """.ReplaceLineEndings(" ");
+            var hour = Hour(1, full, full, "[]", "[]").Replace("\"damage\": []", $"\"damage\": [{damage}], \"air\": {air}");
+            File.WriteAllText(Path.Combine(directory, "meta.json"), Meta);
+            File.WriteAllLines(Path.Combine(directory, "raw.jsonl"), [Hour(0, full, full, "[]", "[]"), hour, Hour(2, full, full, "[]", "[]")]);
+
+            var strikes = GameBattleLog.Read(directory).Hours(new Dictionary<uint, string> { [11] = "rom_cv", [22] = "bul_cl" })[0].Air!;
+
+            Assert.Equal([0, 0.84162], strikes.Select(strike => Math.Round(strike.HpDamage, 5)));
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
 }

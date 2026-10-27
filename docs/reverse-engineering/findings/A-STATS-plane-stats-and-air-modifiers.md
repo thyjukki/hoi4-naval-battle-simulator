@@ -224,7 +224,8 @@ per-region container `country+0x4d8`.
 
 ```
 L = NAir.AIR_WING_XP_LEVELS (vanilla {100, 300, 700, 900}); xp = wing+0x218
-v = xp < L[0] ? clamp(xp / L[0] − 1, −1, 0) : clamp((xp − L[0]) / (L[last] − L[0]), 0, 1);  v truncated to 0.01
+v = xp < L[0] ? clamp(xp / L[0] − 1, −1, 0) : clamp((xp − L[0]) / (L[last] − L[0]), 0, 1);  v truncated to 0.1
+                                       // corrected (was 0.01): 0xf6602d, A-ORDER-air-objects-leaving-the-strike-list.md
 u = wing+0x9c4 tag set ? 1 + max(owner.air_untrained_pilots_penalty_factor, −1) : 1        // cached wing+0xa10
 holder(wing+0x238) = v > 0 ? air_wing_experience_bonus_max × v : air_wing_experience_malus_min × (−v × u)
 ```
