@@ -53,6 +53,7 @@ Carrier wings are set per carrier in the force composition (`carrierAirwings`: p
 `airHour ⇔ hourOfDay mod (2 × HOURS_DELAY_AFTER_EACH_COMBAT) == regionPhase` (`0xe24530`). With the vanilla 4 h delay, every air group in the battle acts at the three hours of each day where `hour % 8 == regionId % 8`. The phase follows the game clock and the strategic region, not the battle start. Hour 0 counts.
 - `rules.airRegionPhase` (default 4, which gives the wiki's 04/12/20) and `rules.startHourOfDay` set the phase and the clock.
 - `CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` **has no effect**: the cooldown it sets is written but read only by a dead eligibility list. Land-based groups also strike at every air hour (their "struck once" flag is dead too).
+  [LOG] Checked in game on 2026-10-27 (`run_battles.py --force-carrier-cooldown`, `output/ingame/cvdelay/`): the game writes `ceil(carrier_sortie_hours_delay) + CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` after each strike (TFB 8; 6 with Massed Carrier Fleet's `crew_shifts`, −2), counts it down every hour, and so reads 0 by the next air hour anyway. With every cooldown forced to 9,999 h, the constant-roll carrier mirror made the same 172 strikes in the same air hours as unforced, though the dead list then read 9,991. So `carrier_sortie_hours_delay` does nothing; `crew_shifts` works only through its `sortie_efficiency`. The engine replays all three runs (with and without `crew_shifts`, forced) shot for shot and strike for strike.
 - The air step does not check S-ACTIVATE.
 
 ## A-SORTIE: how many carrier planes fly [RE]

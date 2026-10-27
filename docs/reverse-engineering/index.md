@@ -380,7 +380,7 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0x197b890 | main air strike `(airfx, enemyGroup, combat, F)` | A-* | [AIR/graph] |
 | 0x197c8b0 | preemptive AA | A-AA-PREEMPT | [AIR/preempt] |
 | 0x197d4a0 | plane-weighted equipment averages (+0xc8..+0xe8) | A-HIT | [AIR/graph] |
-| 0x197d770 | set carrier cooldown (no effect) | A-CADENCE | [AIR/cadence] |
+| 0x197d770 | set carrier cooldown (no effect; store at 0x197d8af, `edx` → AirFX +0xf8; verified in game with a forced 9,999 h) | A-CADENCE | [AIR/cadence] |
 | 0x197d990 | AirFX save code | A-CADENCE | [AIR/cadence] |
 | 0x19895d0 | fire-exchange group stat accumulation (cooldowns 0x1972b60 with the side's commanding admiral, attacks × 1/cooldown); called from 0x16223af | FEX | [ADM/reads] |
 | 0x1989c60 | aggressiveness-check strength score (not decoded) | S-RETREAT | [ACT/retreat] |

@@ -1,0 +1,91 @@
+{
+  "$schema": "schemas/battle-scenario.schema.json",
+  "battleScenario": {
+    "id": "cvdelay_with_crew_shifts",
+    "terrain": "ocean",
+    "weather": "clear",
+    "maxHours": 720,
+    "iterations": 10,
+    "continueAfterRetreat": false,
+    "rules": {
+      "weatherEnabled": false,
+      "navalDominanceEnabled": true,
+      "startHourOfDay": 13,
+      "airRegionPhase": 6
+    },
+    "attacker": {
+      "fleetID": "air_test_cv_std",
+      "country": "JAP",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4,
+      "carrierWingsOnRegionMission": true,
+      "carrierMissionEfficiency": 0.734,
+      "doctrines": {
+        "naval": {
+          "grandDoctrine": "new_fleet_in_being",
+          "tracks": {
+            "carriers": {
+              "subdoctrine": "massed_carrier_fleet",
+              "mastery": 300
+            }
+          }
+        }
+      }
+    },
+    "defender": {
+      "fleetID": "air_test_cv_std_b",
+      "country": "USA",
+      "researchIDs": [
+        "damage_control_1",
+        "damage_control_2",
+        "fire_control_methods_1",
+        "fire_control_methods_2",
+        "fire_control_methods_2_ca",
+        "fire_control_methods_3",
+        "fire_control_methods_3_cruiser",
+        "fire_control_methods_3_dd",
+        "light_upgrade_1",
+        "light_upgrade_2",
+        "heavy_upgrade_1",
+        "heavy_upgrade_2",
+        "torpedo_upgrade_1",
+        "torpedo_upgrade_2",
+        "smoke_generator"
+      ],
+      "spiritIDs": [],
+      "aggressiveness": "AlwaysEngage",
+      "repairPriority": "NeverRepair",
+      "carrierStanceIndex": 4,
+      "doctrines": {
+        "naval": {
+          "grandDoctrine": "new_fleet_in_being",
+          "tracks": {
+            "carriers": {
+              "subdoctrine": "massed_carrier_fleet",
+              "mastery": 200
+            }
+          }
+        }
+      }
+    }
+  }
+}

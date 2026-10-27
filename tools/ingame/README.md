@@ -144,6 +144,9 @@ catch a second engagement), closes the game and deletes the copy. `continue_game
 sinking, and `--force-recovery-factor F` also the factor (0 in every country of 1.19.3, which makes recovery
 impossible); every sinking's chance, factor, roll and outcome is logged in `raw.jsonl` (`recovery` of the hour record).
 
+`--force-carrier-cooldown H` (A-CADENCE probe) forces every carrier cooldown the game writes after a strike to H
+hours; `raw.jsonl` logs each written cooldown (`cooldowns`: computed and forced) and each read of it (`cooldownChecks`).
+
 `--constant-roll U` makes every roll the engine also makes return U (whole 1e-5 steps; the air target pick's integer
 draw floor(U × 2^31)), for a battle the engine must fight identically: the surface and air rolls of the combat update,
 and the region air war's rolls outside it (forced by call site). It also switches the game's air accident pass off

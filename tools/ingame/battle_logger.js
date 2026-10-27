@@ -34,6 +34,8 @@ const RVA = {
   recoveryFactor: 0xd7810d, // S-RECOVERY: rax -> the country's naval_ship_recovery_chance_factor (0x280)
   recoveryRoll: 0xd781c1, // S-RECOVERY: rcx = the roll 0..99999, rbx = the final chance; recovered if rcx < rbx
   recovered: 0xd781ca, // S-RECOVERY: the recovered branch (HP set to SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR)
+  carrierCooldownStore: 0x197d8af, // A-CADENCE: edx = ceil(carrier_sortie_hours_delay) + CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT -> AirFX +0xf8
+  carrierCooldownCheck: 0x197a1b0, // A-CADENCE (AirFX in rcx): AirFX +0xf8 <= 0, feeds the unused eligibility list
 };
 
 const resolveHandle = new NativeFunction(base.add(RVA.resolveHandle), 'pointer', ['pointer']);
@@ -205,6 +207,9 @@ let forcedRecovery = null; // S-RECOVERY probe: the chance before the factor for
 let forcedRecoveryFactor = null; // S-RECOVERY probe: the country's factor forced to this (fx5), or null
 let recoveryLog = []; // removed sunk ships since the last hour record
 let removing = null; // the remove-sunk-ship call in progress (its record)
+let forcedCooldown = null; // A-CADENCE probe: every carrier cooldown written forced to this (hours), or null
+let cooldownLog = []; // carrier cooldowns written since the last hour record
+let cooldownChecks = []; // cooldown checks (the dead eligibility list) since the last hour record
 const watchHandle = Memory.alloc(8);
 
 function landWings() {
@@ -286,8 +291,12 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       forcedOutside,
       landWingsStart: current && current.key === combat.toString() ? current.landWings : [],
       recovery: recoveryLog,
+      cooldowns: cooldownLog,
+      cooldownChecks,
     };
     recoveryLog = [];
+    cooldownLog = [];
+    cooldownChecks = [];
     forcedOutside = 0;
     airLog = [];
     ratioLog = [];
@@ -600,6 +609,23 @@ Interceptor.attach(base.add(RVA.recovered), {
   onEnter: guard(function recoveredEnter() { if (removing) removing.recovered = true; }),
 });
 
+// A-CADENCE probe: the carrier cooldown set after a strike (0x197d770) and its only reader (0x197a1b0).
+Interceptor.attach(base.add(RVA.carrierCooldownStore), {
+  onEnter: guard(function cooldownStoreEnter() {
+    const record = { tick: ticks, airfx: this.context.rbp.toString(), computed: this.context.rdx.toInt32() };
+    if (forcedCooldown !== null) {
+      this.context.rdx = ptr(forcedCooldown);
+      record.forced = forcedCooldown;
+    }
+    cooldownLog.push(record);
+  }),
+});
+Interceptor.attach(base.add(RVA.carrierCooldownCheck), {
+  onEnter: guard(function cooldownCheckEnter(args) {
+    cooldownChecks.push({ tick: ticks, airfx: args[0].toString(), cooldown: args[0].add(0xf8).readS32() });
+  }),
+});
+
 rpc.exports = {
   ping() { return { base: base.toString(), ticks }; },
   forceRoll(raw) {
@@ -608,6 +634,7 @@ rpc.exports = {
     return { fixed: forcedRoll, int: forcedInt };
   },
   watchWings(ids) { watchedWings = ids; return watchedWings.length; },
+  forceCarrierCooldown(hours) { forcedCooldown = hours; return forcedCooldown; },
   forceRecovery(raw, factor) { forcedRecovery = raw; forcedRecoveryFactor = factor; return [forcedRecovery, forcedRecoveryFactor]; },
   disableAccidents() {
     if (noAccidents === null) {

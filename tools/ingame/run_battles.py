@@ -202,6 +202,9 @@ def run_one(save_path, seed, out_dir, args):
             # S-RECOVERY probe: every sinking rolls for recovery with this chance before the country's factor
             script.exports_sync.force_recovery(round(args.force_recovery * FX),
                                                None if args.force_recovery_factor is None else round(args.force_recovery_factor * FX))
+        if args.force_carrier_cooldown is not None:
+            # A-CADENCE probe: every carrier cooldown the game writes after a strike is this many hours
+            script.exports_sync.force_carrier_cooldown(args.force_carrier_cooldown)
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -225,6 +228,7 @@ def run_one(save_path, seed, out_dir, args):
         "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256, "constantRoll": args.constant_roll,
         "accidentsDisabled": args.constant_roll is not None and not args.keep_accidents,
         "forcedRecovery": args.force_recovery, "forcedRecoveryFactor": args.force_recovery_factor,
+        "forcedCarrierCooldown": args.force_carrier_cooldown,
     })
 
 
@@ -444,6 +448,9 @@ def main():
     parser.add_argument("--force-recovery-factor", type=float,
                         help="with --force-recovery, also force the country's naval_ship_recovery_chance_factor "
                              "(0 in every country of 1.19.3, which makes recovery impossible)")
+    parser.add_argument("--force-carrier-cooldown", type=int,
+                        help="A-CADENCE probe: force every carrier cooldown the game writes after a strike to this many "
+                             "hours (computed and forced values logged in raw.jsonl, with the reads of the cooldown)")
     parser.add_argument("--keep-accidents", action="store_true",
                         help="with --constant-roll, leave the game's air accident pass on (the engine cannot follow it)")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
