@@ -38,6 +38,12 @@ public enum RollKind
     /// <summary>A-TARGET: the air target pick, an integer draw (naval_fire_exchange_air.cpp line 0x43f) used as U = n / 2^31.</summary>
     AirTargetPick,
 
+    /// <summary>
+    /// A-MIXED-REMOVE (1.19.4): which plane a wing loses, an integer draw n (random.h line 0x95, at RemovePlanes 0xfe7af4)
+    /// used as U = n / 2^31; the plane is the one at n mod the wing's planes.
+    /// </summary>
+    AirPlaneLoss,
+
     /// <summary>A-INTERCEPT: the roll that rounds the planes carrier fighters shoot down (line 0x27d).</summary>
     AirInterception,
 

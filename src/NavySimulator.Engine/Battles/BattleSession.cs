@@ -3,6 +3,7 @@ using NavySimulator.Engine.Battles.Mechanics;
 using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Environment;
 using NavySimulator.Engine.Leaders;
+using NavySimulator.Engine.Nations;
 using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Results;
 using NavySimulator.Engine.Stats;
@@ -1075,6 +1076,22 @@ public sealed class BattleSession
                     $"{side.Label} admiral {admiral.Name}: skill {levels[LeaderSkills.Skill]}, attack {levels[LeaderSkills.Attack]}, defense {levels[LeaderSkills.Defense]}, ") +
                     FormattableString.Invariant($"maneuvering {levels[LeaderSkills.Maneuvering]}, coordination {levels[LeaderSkills.Coordination]}, ") +
                     (admiral.Traits.Count == 0 ? "no traits." : $"traits {string.Join(", ", admiral.Traits.Select(trait => trait.ID))}."));
+            }
+
+            // S-NATIONAL: what the national setup resolves to, with the dynamic modifiers' modelled values.
+            if (side.Participant.National is { } national)
+            {
+                var state = NationalRules.Resolve(national);
+                var modifiers = state.DynamicModifiers.Where(national.Nation.DynamicModifiers.ContainsKey).Select(id =>
+                {
+                    var values = national.Nation.DynamicModifiers[id].Effects(state.Variables).CountryModifiers.Values
+                        .Where(entry => entry.Value != 0 && BattleParticipant.IsModelledCountryModifier(entry.Key))
+                        .Select(entry => FormattableString.Invariant($"{entry.Key} {entry.Value:+0.###;-0.###}"));
+                    return $"{id} ({string.Join(", ", values)})";
+                });
+                notes.Add($"{side.Label} national state {national.Nation.Tag}" + (national.FromHistory ? " from the 1936 history" : " without history") +
+                          $", {national.Focuses.Count} focuses: national spirits " + (state.Spirits.Count == 0 ? "none" : string.Join(", ", state.Spirits)) +
+                          "; dynamic modifiers " + (state.DynamicModifiers.Count == 0 ? "none." : $"{string.Join(", ", modifiers)}."));
             }
 
             // S-POTF: the commanding admiral's in-combat bonus is the only side-wide effect.

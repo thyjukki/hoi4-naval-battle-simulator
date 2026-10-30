@@ -2,7 +2,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// <c>NDefines.NDoctrines</c> values the doctrine setup reads (S-DOCTRINE-MASTERY). Property names match the game keys
-/// exactly so they can be bound from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.3.
+/// exactly so they can be bound from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.4 (the same as 1.19.3).
 /// </summary>
 public sealed class NDoctrinesDefines
 {

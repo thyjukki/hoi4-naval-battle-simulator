@@ -2,6 +2,7 @@ using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Doctrines;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Mios;
+using NavySimulator.Engine.Nations;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles;
@@ -127,13 +128,14 @@ public class BattleParticipant
     public readonly IReadOnlyDictionary<string, Mio?> DesignMios;
 
     /// <summary>
-    /// S-DOCTRINE-EFFECT: the effects the side's doctrines (every folder) and spirits give, each with its source (e.g.
-    /// <c>line_of_battle/flagships</c>).
+    /// S-DOCTRINE-EFFECT: the effects the side's doctrines (every folder), spirits and active national spirits and dynamic
+    /// modifiers (S-NATIONAL) give, each with its source (e.g. <c>line_of_battle/flagships</c>).
     /// </summary>
     public readonly IReadOnlyList<(string Source, CountryEffects Effects)> ActiveEffects;
 
     /// <summary>
-    /// S-STATS-COUNTRY [RE + CAL]: the country modifiers of the side's researches, doctrines and spirits, summed. Every
+    /// S-STATS-COUNTRY [RE + CAL]: the country modifiers of the side's researches, doctrines, spirits and national
+    /// effects, summed. Every
     /// ship of the side gets them.
     /// </summary>
     public readonly ModifierSet CountryModifiers;
@@ -188,6 +190,9 @@ public class BattleParticipant
     /// <summary>A-COVERAGE: the side's air bases, one per state its land-based wings fly from.</summary>
     public readonly IReadOnlyList<AirBaseSetup> AirBases;
 
+    /// <summary>S-NATIONAL: the side's national focuses, spirits and dynamic modifiers; null: none (no national effects).</summary>
+    public readonly NationalSetup? National;
+
     public BattleParticipant(
         Fleet fleet,
         Admiral? admiral,
@@ -208,7 +213,8 @@ public class BattleParticipant
         double carrierMissionEfficiency = 1.0,
         double radarCoverage = 0,
         IReadOnlyList<AirBaseSetup>? airBases = null,
-        double? navalDominanceStart = null)
+        double? navalDominanceStart = null,
+        NationalSetup? national = null)
     {
         if (prideOfTheFleet is not null && !fleet.Ships.Contains(prideOfTheFleet))
         {
@@ -230,6 +236,7 @@ public class BattleParticipant
         RadarCoverage = Math.Clamp(radarCoverage, 0, 1);
         NavalDominanceStart = navalDominanceStart;
         AirBases = airBases ?? [];
+        National = national;
         Doctrines = doctrines ?? [];
         Mios = mios ?? [];
         DesignMios = designMios ?? new Dictionary<string, Mio?>();
@@ -239,6 +246,7 @@ public class BattleParticipant
         ActiveEffects = Doctrines
             .SelectMany(setup => DoctrineRules.ActiveEffects(setup, gameDefines))
             .Concat(spirits.Select(spirit => (Source: spirit.ID, spirit.Effects)))
+            .Concat(NationalRules.ActiveEffects(national))
             .ToList();
         CountryModifiers = researches.Select(research => research.CountryModifiers)
             .Concat(ActiveEffects.Select(effect => effect.Effects.CountryModifiers))

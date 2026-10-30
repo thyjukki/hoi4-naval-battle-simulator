@@ -352,8 +352,10 @@ line always uses the commanding admiral of the ship's side.
   modifier `pride_of_the_fleet` in every `Mod` (vanilla `critical_receive_chance −0.5`, `experience_gain_navy_unit_factor 0.25`).
 - *`_against`.* The six `navy_*_factor_against` attack/defence terms index the shooter country's targeted-modifier table
   by the **controller of the province its task force is in**. Sea provinces have no controller, so the lookup lands on slot
-  0. The hit chance (0x1c7, 0x1970bd7) and crit (0x1d3, 0x1974254) `_against` terms index by the target ship's country
-  instead (0xc3acc0 on the target). Likely never active at sea; what slot 0 holds is not decoded.
+  0, which is the null tag `---`: they **never apply in a battle at sea** (settled 2026-10-28,
+  [S-STATS-AGAINST](#s-stats-against-which-country-the-_against-attack-and-defence-factors-target)). The hit chance (0x1c7,
+  0x1970bd7) and crit (0x1d3, 0x1974254) `_against` terms index by the target ship's country instead (0xc3acc0 on the
+  target).
 - *Fuel.* As above; `OUT_OF_FUEL_*` are read at 0xc351f7 / 0xc35212.
 - *Admiral terms.* Naval-terrain and night adjusters and the sub-unit adjuster from traits (above), the admiral container
   inside every `Mod`, and the PotF value. The attack/defence/maneuvering skill levels act through `Mod` (vanilla navy
@@ -374,8 +376,106 @@ with surface visibility `ship+0x1c8`.
 
 **Verdict.** NEW for the spec: the type gate is the sub-unit `type`, carriers get no capital term, `submarine_attack` is
 flat, PotF and `_against` behave as above, naval terrain enters attack and armor. **Confidence.** High for the
-pseudocode (every term read off the code); medium for what slot 0 of the targeted table holds and for the task-force
-fallback 0xd6b1b0/0xd6b590 (sub-unit index < 0 only).
+pseudocode (every term read off the code); medium for the task-force fallback 0xd6b1b0/0xd6b590 (sub-unit index < 0 only). What slot 0 of the targeted table holds:
+high, see below.
+
+## S-STATS-AGAINST: which country the `_against` attack and defence factors target
+
+Decoded 2026-10-28 in **1.19.4** (SHA-256 `B6650C85…D888`; 1.19.3 addresses in brackets, mapped with the `remap.py`
+function indexes). Question: does `navy_{capital_ship,screen,submarine}_{attack,defence}_factor_against` (ids 0x1c8–0x1cd,
+e.g. TFB's A Day of Infamy `targeted_modifier = { tag = JAP navy_capital_ship_attack_factor_against = -0.4 }` on USA, or
+Japan's Kantai Kessen +0.1 against its chosen target) act in a naval battle?
+
+```
+getter 0xc8b0e0 [0xc34a50](out, kind, tf, ship, unit, admiral)    // tf = ship+0x728 from every wrapper (0xc91290 [0xc3ac00] …)
+owner = country(tf+0x1dc if > 0 else tf+0x1d8)                     // 0xc8b15f..0xc8b18b, 0xc07b80 [0xbb48f0]
+loc   = [tf+0x1f0]                                                 // the task force's current province
+tag   = dword [loc+0x188]                                          // the province's controller
+slot  = tag == 0 ? 0 : TagIndex(tag)                               // 0xc8b1a6..0xc8b1b3
+entry = (owner+0xf88).data[slot]                                   // 0xc8b1b6..0xc8b1be: owner's targeted table
+if entry: Σ += entry.holder(+0x130, 0xd85040 [0xd23780]).Get(0x1c8 + type offset + d)   // 0x5a51a0
+
+TagIndex 0xc08720 [0xbb5490](tag):                                 // also behind tag -> country 0xc07b80 [0xbb48f0]
+    no gamestate: return tag                                       // else a thread check, then
+    return (gamestate+0x340)[tag]                                  // 0xc087ce..0xc087df: tag -> country slot
+
+tag database 0x763c80 [0x71bb60]: one instance (global 0x33df288 in 1.19.4), built by 0x7633c0 [0x71b2a0], whose
+first act after the hash set is push_back("---") (0x76349a, 0x11dff0 [0x11d740] = string vector push_back);
+the loader 0x194800 then reads common/country_tags into the same object (0x195405 → 0x764180 [0x71c060]).
+```
+
+- **Slot 0 is the null tag.** The tag database registers `---` before any country tag, so tag value 0 is "no country"
+  (as the `tf+0x1dc > 0` test for the operating country and the `tag == 0` shortcuts in every table reader assume). A
+  script `targeted_modifier = { tag = X }` names a real tag, so its entry is at `TagIndex(X) ≥ 1`; every reader of the
+  table indexes it the same way (0x732e70, 0x733210, 0x733730, 0x73a030, 0x73a270 in 1.19.4: country code; 0x1a031c8 =
+  hit chance with the **target ship's** country tag `country+8`, 0x1a06770 = crits).
+- **`tf+0x1f0` is where the task force is, not its home port** (1.19.3, checked 2026-10-28): the task force's unit
+  fields start at `tf+0x10` (the CTaskForce vtable 0x2963150 holding the unit reader has RTTI this-offset 0x10), and the
+  unit writer 0xc06540 saves unit+0x1e0 (= tf+0x1f0) as `location` (unit+0x1e8 `previous`, unit+0x1f0 `path`, unit+0x1d0
+  `logical_country` = tf+0x1e0); in the test save the task forces have `location=7906`, a Black Sea province. The home
+  port is the fleet's `home_base`, a different object.
+- **`loc+0x188` is the controller.** The getter's `[tf+0x1f0]` is the province whose `+0xc8` region and `+0xa4` id the
+  naval dominance and darkness code read (both matched against logged battles); naval-base code 0xc39b70 [0xbe4370]
+  reads `+0x188` as a country only after testing the province's land bit (`[[p+0xb8]+0xd2] & 1`). A sea province has no
+  controller (0), so the getter reads slot 0.
+- **No other reader.** A scan of `.text` for the six ids as an immediate operand (`mov r8d/edx, id`, `add r8d, id`)
+  finds them read through the container getter 0x5a51a0 only in 0xc8b0e0; the other hits are assert line numbers,
+  allocation sizes and the modifier registration 0x5a6630.
+
+- **Spotting uses the same lookup** (1.19.3, checked 2026-10-28): `spotting_chance_against` (0x1c5) has one reader,
+  the naval-mission fleet spotting 0xfaa680: `spotting_chance` of the spotting task force (0xd6cea0, id 0x55) plus
+  `(owner+0xf88)[TagIndex([tf+0x1f0]+0x188)].Get(0x1c5)` (0xfaa6d5..0xfaa723), the same controller-of-the-task-force's-
+  province slot. So both targeted parts of A Day of Infamy and Kantai Kessen key on the province controller.
+- **The naval "against a country" modifiers** the exe registers (`modids.py`, 1.19.3): 0x1c5 spotting chance, 0x1c6
+  amphibious invasion, 0x1c7 naval hit chance, 0x1c8–0x1cd capital / screen / submarine attack and defence, 0x1ce naval
+  invasion preparation, 0x1d3 naval critical score chance. Only 0x1c7 (0x1970bd7) and 0x1d3 (0x1974254) index the
+  table by the **target ship's** country; the attack/defence factors and spotting index it by the province controller.
+  Vanilla 1.19.3 and TFB use 0x1c8 and 0x1c5 (A Day of Infamy against JAP; Kantai Kessen against its target) and never
+  0x1c7 or 0x1d3. Vanilla's A Day of Infamy is the same as TFB's.
+
+- **Every reader of the targeted tables** (1.19.3, 2026-10-28: the 49 calls of the entry-holder accessor 0xd23780, each
+  with the key it reads and how it picks the slot). Naval combat: the attack/armor getter 0xc34a50 (0x1c8–0x1cd, province
+  controller), hit chance 0x1970b48 (0x1c7, target ship's country), crit 0x19740c0 (0x1d3, target ship's country; the
+  `naval_defense_factor` read after it is the ordinary member getter). Around naval combat: fleet spotting 0xfaa680
+  (0x1c5, province controller), the region air war 0xf75690 / 0xf75820 / 0xbb3800 (air intercept efficiency 0xd, air
+  detection 1, against the target), naval invasions 0x102bbe0 (0x1ce, 0x1c6 in 0x12af7c0). The rest is land combat
+  (0x12af7c0: attack, breakthrough, defence bonus against; 0xc7fdb0 river crossing; 0xc728b0 planning speed), politics
+  (0xba7770 / 0xbaaa20 sum a key over every entry for party popularity), trade, production and licenses (0x14373f0,
+  0x1438470, 0x1cb78e0, 0xca6eb0 …), intel, diplomacy, volunteers and resistance. No reader merges a whole targeted block
+  into a ship's, side's or combat's modifiers, so a targeted block's other keys (in A Day of Infamy only the two above)
+  never reach a naval battle.
+
+**Answer.** The `_against` attack and defence factors apply only when the shooter's task force (for the defence
+factors, the target's) is in a province **controlled by the targeted country**, i.e. a land province (a port or a canal)
+that country controls. Naval battles are fought in sea provinces, so the terms are 0 there: A Day of Infamy's −40 %
+capital ship attack against Japan and Kantai Kessen's +10 % do nothing in a naval battle. This is what the code does
+(likely not what the designers meant). The simulator, which fights only at sea, leaves them out (S-NATIONAL-SPIRIT).
+
+**Confidence.** High for the getter, the slot rule and the null tag (read off the code), and **verified in game**
+(2026-10-28, 1.19.3 + TFB dev checkout, logs `output/ingame/against_test/`, local only). The mixed-fleet battle-start
+save (BUL = USA fleet, ROM = Japan fleet), each run with every combat roll forced to 0.02 (`run_battles.py
+--constant-roll 0.02`), with test ideas in a temporary `common/ideas` file of the mod added to the countries' idea
+lists:
+
+| Run | Ideas | Shots | Hours with shots | Ships sunk (shots) | HP dealt to BUL / ROM |
+|---|---|---|---|---|---|
+| base | none | 1,013 | 36 | 99 | 12,184.0 / 8,011.2 |
+| test | BUL: all six `_against` factors +2 against ROM; ROM: the same against BUL | 1,013 | 36 | 99 | 12,184.0 / 8,011.2 |
+| control | BUL: `naval_critical_score_chance_factor_against` +10 against ROM | 742 | 21 | 91 | 6,584.3 / 11,830.0 |
+
+**The controller is the gate** (same day, `output/ingame/against_test*/`): a mirror battle (both sides the USA fleet,
+41 ships, same researches; scenario only in the session's data copy), BUL holding `navy_capital_ship / screen /
+submarine_attack_factor_against = 10` against ROM. Without help the bonus does nothing (fixed dice: the engine, which has
+no `_against`, replays all 990 shots; normal dice: every attack value of every design pair is the same on both sides).
+With `run_battles.py --force-controller <a ROM ship>`, which writes ROM's tag into the battle province's controller field
+(province 7906: 0 → 11), BUL's attacks become ×11 at once (SHBB heavy 156.8 → 1,724.8, battleship heavy 112 → 1,232,
+light cruiser 22.7 → 249.5; ROM's unchanged) and BUL wins in 15 hours (ROM 41 sunk, BUL 16). So the factor is applied
+exactly when the shooter's task force is in a province the targeted country controls.
+
+The test run's shots.csv, hours.csv and sides.csv are identical to the base run's, row for row (and the base run to the
+same save's 1.19.3 log of 2026-10-26): +200 % attack and defence against the enemy do nothing at sea. The control
+diverges at hour 13 with the first BUL crit on a ROM ship (crit chance 0.005 × 10.8 > 0.02), so ideas added this way
+and their targeted tables are live; the game's error.log has nothing about the test ideas.
 
 ---
 
@@ -436,6 +536,9 @@ TorpedoHitChanceFactor 0.063 (game: 0.06 × 1.05) vs 0.110 (simulator: 0.06 + 0.
 7. Spec: add the S-STATS-* items to `docs/mechanics/surface.md` with [RE] tags.
 
 ## Unresolved
+
+- (Settled 2026-10-28.) Slot 0 of the targeted table is the null tag `---`; the `_against` attack and defence factors
+  never apply at sea ([S-STATS-AGAINST](#s-stats-against-which-country-the-_against-attack-and-defence-factors-target)).
 
 - How the hull's base array (`type+0x148`) is filled from `archetype` and `parent` (assumed: archetype values,
   overridden by the hull's own; the JSON hulls match this reading for heavy_hull_3 and light_cruiser_hull_3).

@@ -8,3 +8,4 @@ output/
 
 tools/re/*.json
 __pycache__/
+tools/re/*.pkl

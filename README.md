@@ -6,7 +6,7 @@ Simulates Hearts of Iron IV naval battles, aiming to reproduce the game's combat
 
 ## Status
 
-- **Surface combat**: checked against the HOI4 1.19.3 executable by static analysis. Every rule in [docs/mechanics/surface.md](docs/mechanics/surface.md) is tagged with its source; the evidence is in [docs/reverse-engineering/findings/](docs/reverse-engineering/findings/README.md).
+- **Surface combat**: checked against the HOI4 1.19.3 executable by static analysis, and against 1.19.4 (identical in-game battles). Every rule in [docs/mechanics/surface.md](docs/mechanics/surface.md) is tagged with its source; the evidence is in [docs/reverse-engineering/findings/](docs/reverse-engineering/findings/README.md).
 - **Air combat**: decoded from the executable and simulated ([docs/mechanics/air.md](docs/mechanics/air.md)): sortie cadence and efficiency, stances, stacking, land-based planes, interception, AA, hits, damage and crits. Weather, kamikaze and port strikes are not modelled.
 - **GUI**: a local web app to edit scenarios, fleets and designs, step battles hour by hour with per-ship combat logs, and run batches ([docs/gui.md](docs/gui.md)).
 - Plan: [docs/ROADMAP.md](docs/ROADMAP.md). All docs: [docs/README.md](docs/README.md).
@@ -94,6 +94,16 @@ dotnet run --project src/NavySimulator.Cli -- import-planes --game "C:\Program F
 ```
 
 A fleet's `carrierAirwings` gives each carrier its wings (per design, one loadout per ship); a scenario side's `landBasedAirwings` lists its land-based planes (one entry per air base, with a mission efficiency) and `planeStockpile` the planes it has in stock (A-WINGS, A-EXTERNAL, A-REINFORCE in [docs/mechanics/air.md](docs/mechanics/air.md)).
+
+### Importing national focuses and spirits
+
+`data/nations/<TAG>.json` holds what a country's 1936 history and focus tree give its navy: national spirits, dynamic modifiers with the variables they read (TFB's Japan: Imperial Navy, torpedo hit chance +15 %) and the focuses that change them. Only content with naval combat effects is kept:
+
+```powershell
+dotnet run --project src/NavySimulator.Cli -- import-national --game "C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV" --mod "<mod folder>" --countries USA,JAP
+```
+
+A scenario side's `national` (`fromHistory`, completed `focuses`, `addedSpirits`, `removedSpirits`, `variables`) turns them on for its `country` (S-NATIONAL in [docs/mechanics/surface.md](docs/mechanics/surface.md)); without it the side has none.
 
 ### Testing a scenario in the game
 

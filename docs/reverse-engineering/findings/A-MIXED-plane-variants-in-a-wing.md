@@ -102,6 +102,30 @@ first**; a wing refilled with old models returns to its original model as it los
 After losing one plane it is 0.47635 = `(86 × 25 + 13 × 16) / 99 × 0.02` (old plane removed; removing a new one would
 give 0.47454). ROM's wing (88 + 3 old) logs 0.49406 and is back at 0.50000 once it has lost 11 planes.
 
+### 1.19.4: a random plane per loss (RemovePlanes 0xfe7a10)
+
+hoi4.exe 1.19.4 (SHA-256 `B6650C85002374218E60598BD04AAA26CBAD996FEDCE77126FCF92FC6BD6D888`) rewrote the removal loop;
+the manpower and XP parts are unchanged. Found by `tools/re/randlines.py` (a new `random_int` call site, 0xfe7af4) after
+the land constant-roll battles stopped matching:
+```
+total = Σ max(0, trunc(amount)) over wing+0x1f8          // 0xfe7a83..0xfe7ad5
+repeat planes times while total > 0:                      // r14 = planes, ebp = total
+    n = random_int(random.h line 0x95) & 0x7fffffff       // 0xfe7af4
+    r = n mod total                                       // idiv ebp
+    for (variant, amount) in wing+0x1f8 in array order:   // oldest type first
+        a = trunc(amount); if a <= 0: continue
+        if r < a: container.add(variant, −1); manpower += variant.manpower; break
+        r −= a
+    total −= 1
+```
+So every lost plane is a random pick weighted by the variants' plane counts, and a wing of one variant still makes one
+draw per plane lost. Line 0x95 is the `random.h` helper, which 1.19.4 also uses for the draws that were line 0x96 in
+1.19.3 (with the sinking rolls); the logger tells them apart by the return address 0xfe7af9 (`planeLoss` in
+`raw.jsonl`). **Logs:** `output/ingame/v1194/u005` (`air_land_vs_fleet`, `air_cv_land_mix` at U 0.05): the game's land
+bomber wing, refilled with old `tac_bomber_equipment_0`, strikes with a different agility average from hour 26 than in
+1.19.3, and the engine with the 1.19.3 rule loses a shot; `output/ingame/v1194/u005_planeloss`, the same battles with the
+plane picks forced to `floor(U × 2^31)`: the engine with this rule matches every shot and strike.
+
 ## A-MIXED-STATS: the wing's stats are the plane-share mix (A-STATS-CACHE)
 
 0xf661e0 (refreshed every hour by the wing update 0xf62750, step 1 of the strategic-air hour; also at creation, load

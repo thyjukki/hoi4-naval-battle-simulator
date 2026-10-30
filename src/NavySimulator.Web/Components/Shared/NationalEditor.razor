@@ -1,0 +1,192 @@
+@* S-NATIONAL: a side's national state for its country: history start, completed focuses, national spirits and the variables of its dynamic modifiers. Edits Side.National in place. *@
+@inject Workspace Workspace
+
+<div class="stack">
+    @if (string.IsNullOrEmpty(Side.Country))
+    {
+        <span class="hint">Pick the side's country first.</span>
+    }
+    else if (nation is null)
+    {
+        <span class="hint">
+            No national data for @Side.Country: import it in Settings → Data (or <code>NavySimulator import-national --countries @Side.Country</code>).
+        </span>
+    }
+    else
+    {
+        <label class="row tight">
+            <input type="checkbox" checked="@(Side.National is not null)" @onchange="e => SetEnabled((bool)e.Value!)" />
+            <span>Simulate @(nation.Name ?? nation.ID)'s national focuses and spirits</span>
+        </label>
+        @if (Side.National is { } national)
+        {
+            <label class="row tight">
+                <input type="checkbox" checked="@national.FromHistory" @onchange="e => SetFromHistory((bool)e.Value!)" />
+                <span>Start from the 1936 history</span>
+                <span class="hint">@HistoryHint()</span>
+            </label>
+
+            <div class="stack" style="gap: 4px">
+                <label>Completed focuses <span class="hint">(only those with naval combat effects; they apply in the tree's order)</span></label>
+                <CheckList Items="FocusItems()" Selected="national.Focuses" OnChanged="Changed" MaxHeight="220" />
+                @foreach (var (first, second) in exclusive)
+                {
+                    <span class="hint bad">⚠ @FocusName(first) and @FocusName(second) are mutually exclusive in the game.</span>
+                }
+            </div>
+
+            <div class="stack" style="gap: 4px">
+                <label>National spirits <span class="hint">(tick to add or remove by hand, as events and decisions do)</span></label>
+                <div class="checklist" style="max-height: 220px">
+                    @foreach (var spirit in nation.Spirits)
+                    {
+                        var active = state.Spirits.Contains(spirit.ID);
+                        var byHand = national.AddedSpirits.Contains(spirit.ID) || national.RemovedSpirits.Contains(spirit.ID);
+                        <label>
+                            <input type="checkbox" checked="@active" @onchange="e => SetSpirit(spirit.ID, (bool)e.Value!)" />
+                            <span>
+                                <span>@(spirit.Name ?? spirit.ID)</span>
+                                <span class="mono small muted"> @spirit.ID</span>
+                                @if (byHand)
+                                {
+                                    <span class="small"> (by hand)</span>
+                                }
+                                <span class="desc"><br />@NationalInfo.Summarize(spirit) · from @NationalInfo.Sources(spirit, nation)</span>
+                            </span>
+                        </label>
+                    }
+                </div>
+            </div>
+
+            @if (state.DynamicModifiers.Count > 0)
+            {
+                <div class="stack" style="gap: 4px">
+                    <label>Dynamic modifiers</label>
+                    @foreach (var id in state.DynamicModifiers)
+                    {
+                        var modifier = nation.DynamicModifiers.FirstOrDefault(item => item.ID == id);
+                        <div class="small"><span>@(modifier?.Name ?? id)</span> <span class="mono muted">@id</span>: @ModifierValues(id)</div>
+                    }
+                    <div class="fields">
+                        @foreach (var variable in variables)
+                        {
+                            <div class="field">
+                                <label title="@variable.Name">@string.Join(", ", variable.Modifiers.Select(ModifierInfo.Label))</label>
+                                <div class="row tight" style="flex-wrap: nowrap">
+                                    <input type="number" step="0.01" class="grow" value="@variable.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                           @onchange="e => SetVariable(variable.Name, e.Value?.ToString())" />
+                                    @if (variable.SetByHand)
+                                    {
+                                        <button class="small ghost" title="Use the history's and focuses' value" @onclick="() => ResetVariable(variable.Name)">Reset</button>
+                                    }
+                                </div>
+                                <span class="hint mono" style="overflow-wrap: anywhere">@variable.Name@(variable.SetByHand ? " (set by hand)" : string.Empty)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+    }
+</div>
+
+@code {
+    private NationDto? nation;
+    private Engine.Nations.NationalState state = Engine.Nations.NationalState.Empty;
+    private Engine.Nations.NationalState baseline = Engine.Nations.NationalState.Empty;
+    private Engine.Nations.NationalSetup? setup;
+    private IReadOnlyList<NationalVariable> variables = [];
+    private IReadOnlyList<(string First, string Second)> exclusive = [];
+
+    [Parameter, EditorRequired] public BattleParticipantDto Side { get; set; } = null!;
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        nation = Workspace.FindNation(Side.Country);
+        setup = Workspace.NationalSetup(Side);
+        state = NationalInfo.State(setup);
+        baseline = setup is null ? state : NationalInfo.State(new Engine.Nations.NationalSetup(setup.Nation, setup.FromHistory, setup.Focuses, [], [], setup.Variables));
+        variables = nation is not null && Side.National is { } national ? NationalInfo.Variables(nation, national, state) : [];
+        exclusive = setup is null ? [] : Engine.Nations.NationalRules.ExclusiveFocusPairs(setup.Focuses);
+    }
+
+    private async Task Changed()
+    {
+        Refresh();
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SetEnabled(bool enabled)
+    {
+        Side.National = enabled ? new NationalSetupDto() : null;
+        await Changed();
+    }
+
+    private async Task SetFromHistory(bool fromHistory)
+    {
+        Side.National!.FromHistory = fromHistory;
+        await Changed();
+    }
+
+    private async Task SetSpirit(string id, bool active)
+    {
+        NationalInfo.SetSpirit(Side.National!, id, active, baseline.Spirits.Contains(id));
+        await Changed();
+    }
+
+    private async Task SetVariable(string name, string? text)
+    {
+        if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            Side.National!.Variables[name] = value;
+            await Changed();
+        }
+    }
+
+    private async Task ResetVariable(string name)
+    {
+        Side.National!.Variables.Remove(name);
+        await Changed();
+    }
+
+    private string HistoryHint()
+    {
+        var history = nation!.History;
+        var spirits = history.Count(effect => effect.Effect == "add_ideas");
+        var modifiers = history.Count(effect => effect.Effect == "add_dynamic_modifier");
+        return history.Count == 0 ? "The history gives nothing with naval effects." : $"The history gives {spirits} national spirits and {modifiers} dynamic modifiers with naval effects.";
+    }
+
+    private IReadOnlyList<CheckItem> FocusItems()
+    {
+        return nation!.Focuses
+            .Select(focus => new CheckItem(focus.ID, $"{focus.Name ?? focus.ID} · {NationalInfo.Summarize(focus, nation)}", string.Empty))
+            .ToList();
+    }
+
+    private string FocusName(string id)
+    {
+        return nation?.Focuses.FirstOrDefault(focus => focus.ID == id)?.Name ?? id;
+    }
+
+    // S-NATIONAL-DM: the modelled modifiers with their current values.
+    private string ModifierValues(string id)
+    {
+        if (setup?.Nation.DynamicModifiers.GetValueOrDefault(id) is not { } modifier)
+        {
+            return string.Empty;
+        }
+
+        var values = modifier.Effects(state.Variables).CountryModifiers.Values
+            .Where(entry => Engine.Battles.BattleParticipant.IsModelledCountryModifier(entry.Key))
+            .ToDictionary(entry => entry.Key, entry => entry.Value);
+        var text = ModifierInfo.Summarize(values);
+        return text.Length == 0 ? "no modelled modifier is set" : text;
+    }
+}

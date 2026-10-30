@@ -416,9 +416,11 @@ public static class AirRules
 
     /// <summary>
     /// [ASSUMED] Removes lost planes from the wings in order (strike wings first); the game's split is not decoded. Each
-    /// wing's experience loses the killed pilots' (A-XP).
+    /// wing's experience loses the killed pilots' (A-XP); <paramref name="order"/> picks the planes inside a wing
+    /// (A-MIXED-REMOVE).
     /// </summary>
-    public static void RemoveLosses(IEnumerable<AirWing> wings, int losses, GameDefines defines, ModifierSet country)
+    public static void RemoveLosses(IEnumerable<AirWing> wings, int losses, GameDefines defines, ModifierSet country,
+        PlaneLossOrder order = PlaneLossOrder.OldestFirst, IRandomSource? random = null)
     {
         foreach (var wing in wings)
         {
@@ -428,7 +430,7 @@ public static class AirRules
             }
 
             var removed = Math.Min(wing.Planes, losses);
-            wing.LosePlanes(removed, defines, country);
+            wing.LosePlanes(removed, defines, country, order, random);
             losses -= removed;
         }
     }

@@ -39,4 +39,4 @@ When sources disagree, or none exist, the engine implements the candidates side 
 
 ## Game version
 
-Built-in defaults and every [RE] item are **1.19.3** ([defines.md](defines.md), [findings](../reverse-engineering/findings/README.md)). After a patch, reload your install's defines (`--defines "<HOI4 install dir>"`, then mod folders) and re-run the analysis in `tools/re/` to see whether formulas moved.
+Built-in defaults are vanilla **1.19.4** (the same values as 1.19.3) and every [RE] item was decoded in **1.19.3** and checked in 1.19.4 ([defines.md](defines.md), [findings](../reverse-engineering/findings/README.md), [patch check](../reverse-engineering/README.md#patch-1194)). After a patch, reload your install's defines (`--defines "<HOI4 install dir>"`, then mod folders) and re-run the analysis in `tools/re/` to see whether formulas moved.

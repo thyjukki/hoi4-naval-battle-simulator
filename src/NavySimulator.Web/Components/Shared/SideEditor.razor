@@ -67,7 +67,7 @@
                         </optgroup>
                     }
                 </select>
-                <span class="hint">@(countries.Count == 0 ? "Import MIOs (Settings → Data) for the country list." : "Which MIOs the side can have.")</span>
+                <span class="hint">@(countries.Count == 0 ? "Import MIOs (Settings → Data) for the country list." : "Which MIOs, admirals and national focuses the side can have.")</span>
             </div>
             <div class="field">
                 <label>Aggressiveness</label>
@@ -295,6 +295,13 @@
         </details>
 
         <details class="section">
+            <summary><span class="label">National focuses and spirits</span><span class="small muted">@NationalInfo.Summary(Side, NationalInfo.State(Workspace.NationalSetup(Side)))</span></summary>
+            <div class="section-body stack">
+                <NationalEditor Side="Side" OnChanged="Changed" />
+            </div>
+        </details>
+
+        <details class="section">
             <summary><span class="label">Researches</span><span class="small muted">@SelectionSummary(Side.ResearchIDs)</span></summary>
             <div class="section-body stack">
                 <div class="row">
@@ -315,7 +322,7 @@
         {
             <details>
                 <summary class="small muted" style="cursor: pointer">
-                    Doctrine and spirit effects: @effects.ActiveEffects.Count sources@(ignored.Count > 0 ? $", {ignored.Count} parts not simulated" : string.Empty)
+                    Doctrine, spirit and national effects: @effects.ActiveEffects.Count sources@(ignored.Count > 0 ? $", {ignored.Count} parts not simulated" : string.Empty)
                 </summary>
                 <div class="stack small" style="margin-top: 6px; gap: 4px">
                     @foreach (var (source, _) in effects.ActiveEffects)
@@ -687,10 +694,19 @@
         await Changed();
     }
 
-    // The source names of BattleParticipant.ActiveEffects: a grand doctrine, subdoctrine or spirit ID,
-    // "subdoctrine/reward" or "grand/track milestone".
+    // The source names of BattleParticipant.ActiveEffects: a grand doctrine, subdoctrine, spirit, national spirit or
+    // dynamic modifier ID, "subdoctrine/reward" or "grand/track milestone".
     private string EffectSummary(string source)
     {
+        if (effects?.ActiveEffects.FirstOrDefault(effect => effect.Source == source).Effects is { } active && effects.National?.Nation is { } nation &&
+            (nation.Spirits.ContainsKey(source) || nation.DynamicModifiers.ContainsKey(source)))
+        {
+            return Workspace.FindNation(nation.Tag)?.Spirits.FirstOrDefault(spirit => spirit.ID == source) is { } spirit
+                ? NationalInfo.Summarize(spirit)
+                : ModifierInfo.Summarize(active.CountryModifiers.Values.Where(entry => Engine.Battles.BattleParticipant.IsModelledCountryModifier(entry.Key))
+                    .ToDictionary(entry => entry.Key, entry => entry.Value));
+        }
+
         var folders = Workspace.Content.DoctrineFolders;
         var parts = source.Split('/');
         var milestone = parts.Length == 2 && parts[1].EndsWith(" milestone", StringComparison.Ordinal);
@@ -824,9 +840,17 @@
         await Changed();
     }
 
+    // S-NATIONAL: another country has other focuses and spirits; only the history choice carries over.
     private async Task SetCountry(string value)
     {
-        Side.Country = string.IsNullOrEmpty(value) ? null : value;
+        var country = string.IsNullOrEmpty(value) ? null : value;
+
+        if (Side.National is { } national && country != Side.Country)
+        {
+            Side.National = new NationalSetupDto { FromHistory = national.FromHistory };
+        }
+
+        Side.Country = country;
         await Changed();
     }
 

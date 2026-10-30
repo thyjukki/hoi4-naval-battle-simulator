@@ -1,8 +1,9 @@
 # Logging battles from the running game
 
 Runs HOI4 battles unattended and logs them hour by hour and shot by shot, for calibration ([docs/calibration.md](../../docs/calibration.md)).
-Requirements: Windows, Python 3.12, `pip install frida-tools`, HOI4 1.19.3 with the executable the reverse-engineering
-index was built for (the runner checks its SHA-256), Steam running. The hooks and offsets are described in
+Requirements: Windows, Python 3.12, `pip install frida-tools`, HOI4 1.19.3 or 1.19.4 with one of the executables the
+logger has addresses for (the runner checks its SHA-256 against `EXE_BUILDS`; `battle_logger.js` keeps one address table
+per build, `BUILDS`, and the runner passes it the running build's hash), Steam running. The hooks and offsets are described in
 [LOG-ingame-logging.md](../../docs/reverse-engineering/findings/LOG-ingame-logging.md).
 
 | File | Purpose |
@@ -142,11 +143,16 @@ catch a second engagement), closes the game and deletes the copy. `continue_game
 save and seed as usual, then pauses the game and leaves it running on the copy, to look at the result.
 
 `--force-recovery C` (S-RECOVERY probe) forces the ship recovery chance before the country's factor to C at every
-sinking, and `--force-recovery-factor F` also the factor (0 in every country of 1.19.3, which makes recovery
-impossible); every sinking's chance, factor, roll and outcome is logged in `raw.jsonl` (`recovery` of the hour record).
+sinking, and `--force-recovery-factor F` also the factor (0 in every country of 1.19.3 and 1.19.4, which makes
+recovery impossible); every sinking's chance, factor, roll and outcome is logged in `raw.jsonl` (`recovery` of the hour record).
 
 `--force-carrier-cooldown H` (A-CADENCE probe) forces every carrier cooldown the game writes after a strike to H
 hours; `raw.jsonl` logs each written cooldown (`cooldowns`: computed and forced) and each read of it (`cooldownChecks`).
+
+`--force-controller SHIP_ID` (S-STATS-AGAINST probe) learns the country tag of that ship's task force the first time the
+attack/armor getter runs for it, then before every getter call writes it into the controller field (`+0x188`) of the
+province the fighting task force is in, so a sea province counts as controlled by that country; `raw.jsonl` logs each
+change (`controllers`) and the probe's counters (`controllerProbe`: getter calls, first ships, learned tag).
 
 `--constant-roll U` makes every roll the engine also makes return U (whole 1e-5 steps; the air target pick's integer
 draw floor(U × 2^31)), for a battle the engine must fight identically: the surface and air rolls of the combat update,
@@ -163,7 +169,7 @@ not have. A replay that needs `--design` or a weather-on scenario: see docs/cali
 Written and first run 2026-10-26 (results: docs/mechanics/surface.md, S-REPLAY-CONSTANT): the carrier and land-based
 plane battles with constant rolls. On the computer with the game:
 
-1. Prerequisites: hoi4.exe 1.19.3 with the SHA-256 in `run_battles.py` (the logger's addresses are for that build),
+1. Prerequisites: hoi4.exe 1.19.3 or 1.19.4 with a SHA-256 in `run_battles.py` (the logger's addresses are per build),
    Python with `frida-tools`, the Windows session active and unlocked on the console (the game crashes on a locked or
    disconnected session), the game closed. `HOI4_DIR` / `HOI4_USER_DIR` if the game or the user folder are elsewhere.
 2. Copy the four saves into the save games folder (from this computer's `Documents/Paradox Interactive/Hearts of Iron
@@ -178,7 +184,7 @@ plane battles with constant rolls. On the computer with the game:
    ```
    Each run folder's `meta.json` should say `"constantRoll": 0.05` and `"accidentsDisabled": true`; in `raw.jsonl`
    the hour records' `forcedOutside` counts the region air war rolls forced in that hour (above 0 in air hours with a
-   region fight), and `rolls.csv` should hold only U (and the bookkeeping lines 0x40e, 0x96, 0x1c9, 0xb72, 0x369).
+   region fight), and `rolls.csv` should hold only U (and the bookkeeping lines 0x40e, 0x96 (0x95 in 1.19.4), 0x1c9, 0xb72, 0x369).
 4. Bring `output/ingame/constant_roll_air/` back (or replay there) and compare, per run:
    ```
    dotnet run --project src/NavySimulator.Cli -- replay --log output/ingame/constant_roll_air/u005/air_cv_mirror_battle_start_<stamp>/save-seed --data data --scenario air_cv_mirror.json --defines "<TFB dev mod folder>" --constant-roll 0.05 --air <scratch>/air.csv --states <scratch>/states.csv
@@ -216,7 +222,10 @@ One folder per run under `output/ingame/<save>_<timestamp>/<seed>/` (or `--out`)
   combat terms read. A change here shows where a game-side difference comes from.
 - `rolls.csv`: every `random_fixed` call of the combat update in call order: hour, sequence, source line, value, and the
   index of the shot loop it fell in (-1 outside one); since 2026-10-20 also the generator's integer draws (`int` = 1,
-  value = n / 2^31: the air target pick 0x43f and bookkeeping draws).
+  value = n / 2^31: the air target pick 0x43f and bookkeeping draws). In 1.19.4 RemovePlanes draws one per lost plane
+  (A-MIXED-REMOVE, line 0x95 like the `random.h` bookkeeping draws); `raw.jsonl` marks those `planeLoss`, and
+  `--constant-roll` forces them. `meta.json` names the game version (`gameVersion`, since 2026-10-28; older runs are
+  1.19.3), and `NavySimulator replay` uses that version's rules.
 - `landwings.csv` (since 2026-10-26): every land-based wing with a mission over `--air-region` (default 30), read by its
   handle at the start of each combat hour, after that hour's region air war: planes, mission type and executing, the
   region air war's disruption taken and escort value, the disruption after escorts, the region change penalty, the

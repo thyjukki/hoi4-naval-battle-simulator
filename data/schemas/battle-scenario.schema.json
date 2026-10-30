@@ -164,6 +164,44 @@
           "type": "string",
           "description": "S-POTF: a ship design of the side's fleet; its first ship is the country's pride of the fleet (a capital ship in the game). Absent: none."
         },
+        "national": {
+          "type": "object",
+          "description": "S-NATIONAL: the side's national focuses, spirits and dynamic modifiers for its country (nations/<country>.json). Absent: none.",
+          "properties": {
+            "fromHistory": {
+              "type": "boolean",
+              "description": "Start with the history file's 1936 national spirits, dynamic modifiers and variables (default true)."
+            },
+            "focuses": {
+              "type": "array",
+              "description": "Completed national focuses; they apply in the tree's order.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "addedSpirits": {
+              "type": "array",
+              "description": "National spirits the side has on top (events, decisions).",
+              "items": {
+                "type": "string"
+              }
+            },
+            "removedSpirits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "variables": {
+              "type": "object",
+              "description": "Variable values that replace the history's and focuses' result.",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "doctrines": {
           "type": "object",
           "description": "S-DOCTRINE: the side's doctrines by folder ID (naval, air). Air doctrines are recorded but not simulated yet.",

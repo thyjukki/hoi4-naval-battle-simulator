@@ -27,6 +27,7 @@ Map each schema to these patterns:
 - `planes.schema.json` -> `data/planes/*.json`
 - `sea-regions.schema.json` -> `data/sea-regions/*.json`
 - `naval-terrains.schema.json` -> `data/naval-terrains/*.json`
+- `nations.schema.json` -> `data/nations/*.json`
 - `override-set.schema.json` -> `data/overrides/*.json`
 
 ## Notes

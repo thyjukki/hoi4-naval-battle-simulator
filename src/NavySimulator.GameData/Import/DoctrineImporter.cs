@@ -24,7 +24,7 @@ public static class DoctrineImporter
     ], StringComparer.Ordinal);
 
     // Keys of an idea that are neither effects nor conditions.
-    private static readonly HashSet<string> IdeaNonEffectKeys = new(
+    internal static readonly HashSet<string> IdeaNonEffectKeys = new(
     [
         "name", "ledger", "ai_will_do", "cost", "removal_cost", "picture", "cancel", "allowed_civil_war", "allowed_to_remove",
         "level", "traits", "default", "available", "visible", "allowed"
@@ -246,7 +246,7 @@ public static class DoctrineImporter
     /// sub-unit category) bonus; <c>effect</c>, <c>enable_tactic</c> and the like are scripted. The documented plural
     /// <c>modifiers</c> block has no case in the game's reader, so it is listed as scripted, not applied.
     /// </summary>
-    private static CountryEffectsDto ReadEffects(PdxBlock block, HashSet<string> nonEffectKeys)
+    internal static CountryEffectsDto ReadEffects(PdxBlock block, HashSet<string> nonEffectKeys)
     {
         var effects = new CountryEffectsDto();
 
@@ -321,12 +321,12 @@ public static class DoctrineImporter
         return key is null ? localisation.Get(item.ID) : localisation.Get(key);
     }
 
-    private static string Text(PdxEntry entry)
+    internal static string Text(PdxEntry entry)
     {
         return $"{entry.Key} {entry.Operator ?? "="} {Text(entry.Value)}";
     }
 
-    private static string Text(PdxValue value)
+    internal static string Text(PdxValue value)
     {
         if (value.Block is null)
         {

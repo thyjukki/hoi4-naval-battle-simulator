@@ -15,9 +15,16 @@ Set `HOI4_EXE` and `HOI4_DEFINES` if the game is not in the default Steam locati
 | `modmap.py <start> <end>` | Lists functions in an address range with their defines, strings and callees |
 | `darkness.py` | Fixed-point emulation of the province darkness (S-NIGHT), for checks against logged battles |
 | `srcfiles.py` | Lists source-file assert paths (e.g. `naval\naval_fire_exchange_member.cpp`) and the functions that use them |
+| `remap.py OLD NEW` | Maps RVAs from one build to another by matching functions on masked code (then callees, globals, vtables): `same` / `changed` / `unmatched` per address; `--diff` prints an instruction diff, `--check` the struct offsets, constants and callees that changed in the functions holding the RVAs |
+| `modids.py [OLD NEW]` | The modifier id table (id → `MODIFIER_*` loc key) of a build, or the ids that moved between two |
+| `randlines.py OLD NEW` | The source lines of every `random_fixed` / `random_int` call, paired between two builds by call site (the roll logger and the replay reader key rolls by line) |
 
-Typical start after a game patch: `python defmap.py`, `python uses.py`, `python srcfiles.py`, then follow the
-functions for the spec item you are checking.
+Typical start after a game patch: keep a copy of the old hoi4.exe before Steam replaces it (Steam's betas list has
+the previous version as a branch if it is too late), then `python remap.py OLD NEW --file ../ingame/battle_logger.js`,
+`python randlines.py OLD NEW`, `python modids.py OLD NEW`, and `--check` over the index and findings (see
+`docs/reverse-engineering/README.md#patch-1194`). With the new build as `HOI4_EXE`: `python defmap.py`,
+`python uses.py`, `python srcfiles.py`, then follow the functions for the spec item you are checking. 1.19.4 passes an
+empty source-file string to asserts and random draws, so `srcfiles.py` and source file names only work on 1.19.3.
 
 Known gaps: functions without unwind entries (small leaf functions) are not attributed, so a define read only from
 such a function shows as unused; confirm "no reader" results with `ctx.py` before relying on them.

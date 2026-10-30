@@ -54,4 +54,11 @@ public class BattleScenario
         Location = location ?? BattleLocation.Unknown;
         WeatherSetup = weatherSetup ?? WeatherSetup.Clear;
     }
+
+    /// <summary>The same scenario with other rules (e.g. a replay of a battle logged in an older game version).</summary>
+    public BattleScenario WithRules(BattleRules rules)
+    {
+        return new BattleScenario(ID, Terrain, Weather, Iterations, Seed, Attacker, Defender, PlanesByID, Defines, rules,
+            AceTemplates, Location, WeatherSetup);
+    }
 }

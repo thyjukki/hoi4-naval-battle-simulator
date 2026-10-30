@@ -2,8 +2,8 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// Values from <c>common/modifiers/00_static_modifiers.txt</c> that naval combat applies directly, keyed by block and
-/// modifier name (e.g. <c>screening_bonus</c> / <c>naval_hit_chance</c>). Defaults are vanilla 1.19.3; the loader
-/// replaces whole blocks with the ones found in the game and mod folders it is given.
+/// modifier name (e.g. <c>screening_bonus</c> / <c>naval_hit_chance</c>). Defaults are vanilla 1.19.4 (the same as
+/// 1.19.3); the loader replaces whole blocks with the ones found in the game and mod folders it is given.
 /// </summary>
 public sealed class StaticModifiers
 {

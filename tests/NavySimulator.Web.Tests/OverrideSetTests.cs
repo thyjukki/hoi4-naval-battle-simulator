@@ -13,6 +13,17 @@ public sealed class OverrideSetTests : IDisposable
 
     private Workspace Workspace => test.Workspace;
 
+    public OverrideSetTests()
+    {
+        // These tests count the sets, so they start without the ones in the repository's data.
+        foreach (var file in OverrideSetStore.ListFiles(test.DataDirectory))
+        {
+            File.Delete(Path.Combine(test.DataDirectory, file));
+        }
+
+        Workspace.Overrides.Reload();
+    }
+
     public void Dispose()
     {
         test.Dispose();

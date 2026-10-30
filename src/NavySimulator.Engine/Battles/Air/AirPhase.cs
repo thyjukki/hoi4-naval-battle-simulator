@@ -251,12 +251,12 @@ public sealed class AirPhase
             var ratios = defines.NNavy.CARRIER_OFFENSIVE_STANCE_SORTIE_RATIO;
             var defendingShare = 1.0 - (ratios.Length == 0 ? 0.5 : ratios[Math.Clamp(StanceIndex(enemy), 0, ratios.Length - 1)]);
             var intercepted = Math.Min(flying, AirRules.Interception(strikeWings, defenders, defendingShare, defines, random));
-            RemoveLosses(group, intercepted, own.Participant.CountryModifiers);
+            RemoveLosses(group, intercepted, own.Participant.CountryModifiers, random);
 
             var targetAntiAir = target.Role == ShipRole.Convoy ? 0 : CombatStatRules.AntiAir(target, defines);
             var inReach = (int)Math.Ceiling(Math.Max(0, flying - intercepted) * stacking);
             var shotDown = Math.Min(flying - intercepted, AirRules.PreemptiveAntiAir(targetAntiAir, agility, inReach, defines, random));
-            RemoveLosses(group, shotDown, own.Participant.CountryModifiers);
+            RemoveLosses(group, shotDown, own.Participant.CountryModifiers, random);
             group.CountedPlanes = group.Planes;
 
             var strikers = flying - intercepted - shotDown;
@@ -404,11 +404,12 @@ public sealed class AirPhase
 
     // [RE] A-LOSSES (0x197a1dc): losses go to the strike wings executing naval strike, in order [ASSUMED]; an external
     // wing loses at most the planes it offered at its last join.
-    private void RemoveLosses(AirGroup group, int losses, ModifierSet country)
+    private void RemoveLosses(AirGroup group, int losses, ModifierSet country, IRandomSource random)
     {
         var limit = group.IsExternal ? Math.Min(losses, group.Offered) : losses;
         var removed = Math.Min(limit, group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).Sum(wing => wing.Planes));
-        AirRules.RemoveLosses(group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).ToList(), removed, defines, country);
+        AirRules.RemoveLosses(group.StrikeWings.Where(wing => wing.ExecutesNavalStrike).ToList(), removed, defines, country,
+            scenario.Rules.PlaneLosses, random);
 
         if (group.IsExternal)
         {
@@ -645,7 +646,7 @@ public sealed class AirPhase
                 foreach (var wing in group.Wings.Where(wing => wing.RegionLosses > 0).ToList())
                 {
                     var removed = Math.Min(wing.Planes, wing.RegionLosses);
-                    wing.LosePlanes(removed, defines, side.Participant.CountryModifiers);
+                    wing.LosePlanes(removed, defines, side.Participant.CountryModifiers, scenario.Rules.PlaneLosses, random);
                     Log.Add($"Hour {hour}: {side.Label} {group.Source} lost {removed} {wing.Plane.ID} in the region's air war");
 
                     // [LOG] A carrier wing emptied in the region's air war is deleted from its pool.
@@ -923,7 +924,7 @@ public sealed class AirPhase
 
                         if (lost > 0)
                         {
-                            wing.LosePlanes(lost, defines, country);
+                            wing.LosePlanes(lost, defines, country, scenario.Rules.PlaneLosses, random);
                             lines.Add($"Hour {hour}: {side.Label} {pools[(start + k) % pools.Count].Source} lost {lost} {wing.Plane.ID} in an accident");
                         }
 

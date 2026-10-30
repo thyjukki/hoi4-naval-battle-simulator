@@ -4,7 +4,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// S-WEATHER-SIM [PDX + RE]: the <c>settings</c> of <c>common/weather.txt</c> the region weather roll reads (0xf20ef0,
-/// 0xf15c50, 0xf18ad0). Defaults are vanilla 1.19.3 (TFB has no weather.txt of its own).
+/// 0xf15c50, 0xf18ad0). Defaults are vanilla 1.19.4, the same as 1.19.3 (TFB has no weather.txt of its own).
 /// </summary>
 public sealed class WeatherSettings
 {

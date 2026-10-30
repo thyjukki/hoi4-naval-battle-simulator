@@ -2,7 +2,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// Combat constants that are not in any defines or script file. Each value is tagged:
-/// [RE] read from hoi4.exe 1.19.3 (docs/reverse-engineering/findings), [ASSUMED] a placeholder for something not yet decoded.
+/// [RE] read from hoi4.exe 1.19.3 and checked in 1.19.4 (docs/reverse-engineering/findings), [ASSUMED] a placeholder for something not yet decoded.
 /// See docs/mechanics/README.md for the provenance legend.
 /// </summary>
 public sealed class HardcodedValues

@@ -2,6 +2,7 @@ using NavySimulator.Engine;
 using NavySimulator.Engine.Doctrines;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Mios;
+using NavySimulator.Engine.Nations;
 using NavySimulator.Engine.Stats;
 using NavySimulator.GameData.Contracts;
 using NavySimulator.GameData.Import;
@@ -28,7 +29,8 @@ public sealed class ContentLibrary
         Dictionary<string, GrandDoctrine> grandDoctrines,
         Dictionary<string, Subdoctrine> subdoctrines,
         Dictionary<string, LeaderTrait> leaderTraits,
-        LeaderSkills leaderSkills)
+        LeaderSkills leaderSkills,
+        Dictionary<string, Nation> nations)
     {
         Hulls = hulls;
         Modules = modules;
@@ -43,6 +45,7 @@ public sealed class ContentLibrary
         Subdoctrines = subdoctrines;
         LeaderTraits = leaderTraits;
         LeaderSkills = leaderSkills;
+        Nations = nations;
     }
 
     public IReadOnlyDictionary<string, Hull> Hulls { get; }
@@ -64,6 +67,9 @@ public sealed class ContentLibrary
 
     /// <summary>S-ADMIRAL-SKILL: the navy skill levels of <c>leader-skills/</c> (none when not imported).</summary>
     public LeaderSkills LeaderSkills { get; }
+
+    /// <summary>S-NATIONAL: the nations of <c>nations/</c>, by country tag.</summary>
+    public IReadOnlyDictionary<string, Nation> Nations { get; }
 
     public static ContentLibrary From(ContentCatalog catalog)
     {
@@ -254,8 +260,69 @@ public sealed class ContentLibrary
             skillLevels[skill.ID] = levels;
         }
 
+        var nations = new Dictionary<string, Nation>(StringComparer.Ordinal);
+
+        foreach (var nation in catalog.Nations.Where(nation => !string.IsNullOrWhiteSpace(nation.ID)))
+        {
+            nations.TryAdd(nation.ID, CreateNation(nation));
+        }
+
         return new ContentLibrary(hulls, modules, shipTypes, mios, mioPolicies, equipmentGroups, researches, spirits, planes, grandDoctrines, subdoctrines,
-            leaderTraits, new LeaderSkills(skillLevels));
+            leaderTraits, new LeaderSkills(skillLevels), nations);
+    }
+
+    /// <summary>
+    /// S-NATIONAL: the engine form of a nation. A national spirit's targeted modifiers are listed as not simulated: the
+    /// <c>_against</c> attack and defence factors are read for the controller of the task force's province, which at sea
+    /// is the null tag, so they never act in a naval battle [RE] (S-STATS-AGAINST); the others act outside battle.
+    /// Effects with an unknown effect name are left out.
+    /// </summary>
+    internal static Nation CreateNation(NationDto nation)
+    {
+        var spirits = new Dictionary<string, NationalSpirit>(StringComparer.Ordinal);
+
+        foreach (var spirit in (nation.Spirits ?? []).Where(spirit => !string.IsNullOrWhiteSpace(spirit.ID)))
+        {
+            var effects = Effects(spirit.Effects, spirit.ID);
+            var targeted = (spirit.TargetedModifiers ?? [])
+                .SelectMany(block => (block.Modifiers ?? []).Select(entry => FormattableString.Invariant($"{entry.Key} {entry.Value:0.###} against {block.Tag} (targeted; no effect at sea)")));
+            effects = new CountryEffects(effects.CountryModifiers, effects.StatBonuses, effects.NotSimulated.Concat(targeted).ToList(), effects.PlaneBonuses);
+            spirits.TryAdd(spirit.ID, new NationalSpirit(spirit.ID, spirit.Category, effects));
+        }
+
+        var modifiers = new Dictionary<string, DynamicModifier>(StringComparer.Ordinal);
+
+        foreach (var modifier in (nation.DynamicModifiers ?? []).Where(modifier => !string.IsNullOrWhiteSpace(modifier.ID)))
+        {
+            modifiers.TryAdd(modifier.ID, new DynamicModifier(modifier.ID, new ModifierSet(modifier.Modifiers ?? []),
+                new Dictionary<string, string>(modifier.VariableModifiers ?? [], StringComparer.Ordinal)));
+        }
+
+        var focuses = (nation.Focuses ?? []).Where(focus => !string.IsNullOrWhiteSpace(focus.ID))
+            .DistinctBy(focus => focus.ID)
+            .Select(focus => new NationalFocus(focus.ID, NationalEffects(focus.Effects), focus.MutuallyExclusive ?? []))
+            .ToList();
+        return new Nation(nation.ID, spirits, modifiers, NationalEffects(nation.History), focuses);
+    }
+
+    /// <summary>S-NATIONAL-EFFECT: the game effect names <see cref="NationalEffectDto.Effect"/> takes, by engine kind.</summary>
+    public static IReadOnlyDictionary<string, NationalEffectKind> NationalEffectNames { get; } = new Dictionary<string, NationalEffectKind>(StringComparer.Ordinal)
+    {
+        ["add_ideas"] = NationalEffectKind.AddIdea,
+        ["remove_ideas"] = NationalEffectKind.RemoveIdea,
+        ["add_dynamic_modifier"] = NationalEffectKind.AddDynamicModifier,
+        ["remove_dynamic_modifier"] = NationalEffectKind.RemoveDynamicModifier,
+        ["set_variable"] = NationalEffectKind.SetVariable,
+        ["add_to_variable"] = NationalEffectKind.AddToVariable,
+        ["subtract_from_variable"] = NationalEffectKind.SubtractFromVariable,
+        ["multiply_variable"] = NationalEffectKind.MultiplyVariable
+    };
+
+    private static List<NationalEffect> NationalEffects(IEnumerable<NationalEffectDto>? effects)
+    {
+        return (effects ?? []).Where(effect => NationalEffectNames.ContainsKey(effect.Effect))
+            .Select(effect => new NationalEffect(NationalEffectNames[effect.Effect], effect.Target, effect.Value ?? 0))
+            .ToList();
     }
 
     /// <summary>

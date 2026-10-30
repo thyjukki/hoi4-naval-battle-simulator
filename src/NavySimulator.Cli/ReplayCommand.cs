@@ -159,6 +159,9 @@ public static class ReplayCommand
             return 1;
         }
 
+        // A-MIXED-REMOVE: a battle logged in 1.19.3 lost its planes oldest type first.
+        scenario = scenario.WithRules(log.RulesFor(scenario.Rules));
+        Console.WriteLine($"Logged in game version {log.GameVersion}");
         var map = log.MapOnto(scenario);
         using var shots = shotsFile is null ? null : new StreamWriter(shotsFile);
         shots?.WriteLine("hour,index,gameShooter,gameWeapon,gameTarget,gameHit,gameHitChance,gameHpDamage," +

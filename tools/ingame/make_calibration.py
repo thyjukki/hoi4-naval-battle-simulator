@@ -150,7 +150,7 @@ def main():
     parser.add_argument("--attacker", required=True, help="country tag playing the scenario's attacker")
     parser.add_argument("--design", action="append", default=[], help="GAME NAME=design_id")
     parser.add_argument("--mod", action="append", default=[])
-    parser.add_argument("--game-version", default="1.19.3")
+    parser.add_argument("--game-version", default="1.19.4")
     parser.add_argument("--notes", default="")
     parser.add_argument("--sim", type=Path, help="simulator report folder (run-*/summary.txt and ships.csv)")
     parser.add_argument("--sim-commit", default="")

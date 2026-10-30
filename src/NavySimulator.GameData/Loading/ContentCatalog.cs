@@ -61,6 +61,9 @@ public sealed class ContentCatalog
     /// <summary>S-TERRAIN: the naval terrains of <c>naval-terrains/</c>, empty when the folder does not exist.</summary>
     public List<NavalTerrainDto> NavalTerrains { get; } = [];
 
+    /// <summary>S-NATIONAL: the nations of <c>nations/</c> (imported by <c>NavySimulator import-national</c>), empty when the folder does not exist.</summary>
+    public List<NationDto> Nations { get; } = [];
+
     /// <summary>S-DOCTRINE: the doctrine folders of <c>doctrines/</c> (imported), empty when the folder does not exist.</summary>
     public List<DoctrineFolderDto> DoctrineFolders { get; } = [];
 

@@ -46,7 +46,7 @@ combat:
 | 0x1bd | `naval_torpedo_screen_penetration_factor` | | 0x1972cff via 0x1972570 |
 | 0x1be | `naval_torpedo_cooldown_factor` | | 0x1972b00, 0x1972ba0 via 0xc38760 |
 | 0x1c7 | `naval_hit_chance_against` | | 0x1970bd7 (target ship's country) |
-| 0x1c8 / 0x1c9 | `navy_capital_ship_attack_factor_against` / `_defence_factor_against` | | 0xc34c29 (province controller) |
+| 0x1c8 / 0x1c9 | `navy_capital_ship_attack_factor_against` / `_defence_factor_against` | | 0xc34c29 (province controller; 0 at sea, so never in a naval battle) |
 | 0x1ca / 0x1cb | `navy_screen_attack_factor_against` / `_defence_factor_against` | | 0xc34c97 (province controller) |
 | 0x1cc / 0x1cd | `navy_submarine_attack_factor_against` / `_defence_factor_against` | `MODIFIERS_SUBMARINE_*_AGAINST_A_COUNTRY` | 0xc34bbb (province controller) |
 | 0x1d0 | `naval_enemy_fleet_size_ratio_penalty_factor` | | 0x161bfe3, enemy commanding admiral `+0x418` only |
@@ -151,9 +151,9 @@ the building-module term of 0xc38760 (0x1622d60), not the containers above.
   `screening_efficiency`, `screening_without_screens`, `naval_enemy_positioning_in_initial_attack`, `naval_night_attack`,
   the capital/screen/submarine attack and defence factors, `naval_damage_factor`, `naval_defense_factor`,
   `navy_anti_air_attack(_factor)`, the hit chance, crit, torpedo, retreat and speed modifiers.
-- The `_against` attack/defence factors look up the province controller (see S-STATS-COMBAT-GETTER) and are likely
-  inert at sea; `naval_hit_chance_against` and `naval_critical_score_chance_factor_against` work against the target ship's
-  country.
+- The `_against` attack/defence factors look up the controller of the task force's province, and at sea that is the
+  null tag (slot 0 = `---`), so they never act in a naval battle ([S-STATS-AGAINST](S-STATS-design-stats.md#s-stats-against-which-country-the-_against-attack-and-defence-factors-target));
+  `naval_hit_chance_against` and `naval_critical_score_chance_factor_against` work against the target ship's country.
 
 **Confidence.** High that no country term is added (every source of 0xc21570/0xc21fc0/0x70ba00/0xc11540 traced).
 Medium on the identity of the `country+0x15b8` entries (leader-bound, timed; the UI 0x15f4200 names them
@@ -177,8 +177,8 @@ show the same positioning penalty as without it in a logged battle.
 
 ## Unresolved
 
-- What slot 0 of the targeted-modifier table (`country+0xf88`) holds, i.e. whether the `_against` attack/defence factors
-  can ever apply at sea.
+- (Settled 2026-10-28.) Slot 0 of the targeted-modifier table (`country+0xf88`) is the null tag `---`: the `_against`
+  attack/defence factors never apply at sea ([S-STATS-AGAINST](S-STATS-design-stats.md#s-stats-against-which-country-the-_against-attack-and-defence-factors-target)).
 - Which modifier definitions have the scaling flags read by 0x60fbd0, and the size efficiencies at CNavyLeader vt+0x88 /
   vt+0x90 (0xc10ab0, 0xc10a10) and the cap 0xc18780.
 - The object at `ship+0x8f8` (holder +0x1a0), the task-force holder `tf+0x658`, 0xd6fa50, the province holder 0xf197d0, and

@@ -35,6 +35,11 @@ if (args.Length > 0 && args[0] == ImportPlanesCommand.Name)
     return ImportPlanesCommand.Run(args[1..]);
 }
 
+if (args.Length > 0 && args[0] == ImportNationalCommand.Name)
+{
+    return ImportNationalCommand.Run(args[1..]);
+}
+
 if (args.Length > 0 && args[0] == ListShipsCommand.Name)
 {
     return ListShipsCommand.Run(args[1..]);

@@ -8,7 +8,7 @@ The engine reads every numeric combat constant from a `GameDefines` instance (`s
 
 ## Loading order
 
-1. Built-in defaults: vanilla **1.19.3**, generated from the game's own `00_defines.lua` and `00_static_modifiers.txt`.
+1. Built-in defaults: vanilla **1.19.4** (the same values as 1.19.3), generated from the game's own `00_defines.lua` and `00_static_modifiers.txt`.
 2. The scenario's `"defines"` list, in order.
 3. Each `--defines <path>` on the command line, in order.
 4. The override set, if any (CLI `--overrides`, GUI Overrides page): its defines and static modifier keys ([overrides.md](../overrides.md)).
@@ -31,7 +31,8 @@ hoi4.exe 1.19.3 converts most numeric defines to **int64 fixed point with scale 
 
 | Version | Source |
 |---|---|
-| 1.19.3 (current) | The installed game's `common/defines/00_defines.lua` and `common/modifiers/00_static_modifiers.txt` |
+| 1.19.4 (current) | Same values as 1.19.3: the patch added only non-combat defines (volunteers recall, casualty trickleback cap, auto import, AI, GUI) and left `00_static_modifiers.txt` and `common/weather.txt` unchanged |
+| 1.19.3 | The installed game's `common/defines/00_defines.lua` and `common/modifiers/00_static_modifiers.txt` |
 | 1.17 / 1.16.9 (milestone 1) | Mod copies of `00_defines.lua` cross-checked across several repositories |
 
 1.17 → 1.19.3, combat-relevant changes:
@@ -42,6 +43,8 @@ hoi4.exe 1.19.3 converts most numeric defines to **int64 fixed point with scale 
 - Submarine reveal reworked: `SUBMARINE_BASE_STEALTH_VALUE`, `SUBMARINE_REVEAL_DETECTION_MULTIPLIER`, `SUBMARINE_REVEAL_TORPEDO_FIRING_DETECTION_MULTIPLIER`; `SUBMARINE_HIDE_TIMEOUT` 20 → 8, `SUBMARINE_REVEALED_TIMEOUT` 16 → 12. The old reveal chance/pow defines are no longer read.
 - Air: `NAVAL_STRIKE_CARRIER_MULTIPLIER` 10 → 12, `CARRIER_COMBAT_DAMAGE_STATS_MULTIPLIER` 0.35 → 0.5, `ANTI_AIR_ATTACK_TO_DAMAGE_REDUCTION_FACTOR` 1 → 2.5.
 - Removed keys: `CARRIER_STACK_PENALTY*`, `NAVAL_COMBAT_AIR_*_TARGET_SCORE` (replaced by `*_TARGET_BASE`/`*_TARGET_SCALE`).
+
+1.19.3 → 1.19.4: no combat define or static modifier changed. The only naval script change is vanilla's Proximity Fuze tech (`navy_anti_air_attack_factor` 0.25 → 0.2), which TFB replaces with its own (0.10).
 
 Defines that exist but are not read by naval combat in 1.19.3: `COMBAT_EVASION_TO_HIT_CHANCE`, `REPAIR_AND_RETURN_UNIT_DYING_STR`, `XP_GAIN_FACTOR` (for ship combat XP), `COMBAT_CHASE_RESIGNATION_HOURS` (stored, never used in the tick), `AA_EFFICIENCY_PENALTY_ON_MINIMUM_POSITIONING` (tooltip only), `CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT` (written to a cooldown nothing uses).
 

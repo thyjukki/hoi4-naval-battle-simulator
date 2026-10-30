@@ -16,6 +16,9 @@ public class BattleParticipantDto
     /// </summary>
     public string? PrideOfTheFleet { get; set; }
 
+    /// <summary>S-NATIONAL: the side's national focuses, spirits and dynamic modifiers for its country; null: none.</summary>
+    public NationalSetupDto? National { get; set; }
+
     public int? ShipExperienceLevel { get; set; }
     public List<string> ResearchIDs { get; set; } = [];
     public List<string> SpiritIDs { get; set; } = [];

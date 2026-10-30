@@ -1,0 +1,110 @@
+{
+  "$schema": "../schemas/nations.schema.json",
+  "nations": [
+    {
+      "id": "USA",
+      "name": "America",
+      "focusTree": "usa_focus",
+      "spirits": [
+        {
+          "id": "USA_unrestricted_submarine_warfare",
+          "name": "Unrestricted Submarine Warfare",
+          "category": "country",
+          "sources": [
+            "focus:USA_unrestricted_submarine_warfare",
+            "id"
+          ],
+          "effects": {
+            "equipmentBonuses": {
+              "submarine": {
+                "surface_detection": 0.1,
+                "sub_visibility": -0.1
+              }
+            }
+          }
+        },
+        {
+          "id": "JAP_day_of_infamy_1",
+          "name": "A Day of Infamy",
+          "category": "country",
+          "sources": [
+            "against:JAP"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "repair_speed_factor": -0.05,
+              "navy_anti_air_attack_factor": -0.1
+            }
+          },
+          "targetedModifiers": [
+            {
+              "tag": "JAP",
+              "modifiers": {
+                "spotting_chance_against": -0.1,
+                "navy_capital_ship_attack_factor_against": -0.1
+              }
+            }
+          ]
+        },
+        {
+          "id": "JAP_day_of_infamy_2",
+          "name": "A Day of Infamy",
+          "category": "country",
+          "sources": [
+            "against:JAP"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "repair_speed_factor": -0.1,
+              "navy_anti_air_attack_factor": -0.2
+            }
+          },
+          "targetedModifiers": [
+            {
+              "tag": "JAP",
+              "modifiers": {
+                "spotting_chance_against": -0.25,
+                "navy_capital_ship_attack_factor_against": -0.25
+              }
+            }
+          ]
+        },
+        {
+          "id": "JAP_day_of_infamy_3",
+          "name": "A Day of Infamy",
+          "category": "country",
+          "sources": [
+            "against:JAP"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "repair_speed_factor": -0.15,
+              "navy_anti_air_attack_factor": -0.25
+            }
+          },
+          "targetedModifiers": [
+            {
+              "tag": "JAP",
+              "modifiers": {
+                "spotting_chance_against": -0.4,
+                "navy_capital_ship_attack_factor_against": -0.4
+              }
+            }
+          ]
+        }
+      ],
+      "focuses": [
+        {
+          "id": "USA_unrestricted_submarine_warfare",
+          "name": "Unrestricted Submarine Warfare",
+          "effects": [
+            {
+              "effect": "add_ideas",
+              "target": "USA_unrestricted_submarine_warfare"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

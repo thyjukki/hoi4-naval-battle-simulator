@@ -27,7 +27,7 @@
                     <input type="radio" name="ruleset" checked="@(sources.Count == 0)" @onchange="() => Use(null)" />
                     <span>
                         <strong>Vanilla HOI4</strong>
-                        <span class="path">The built-in 1.19.3 defines and static modifiers.</span>
+                        <span class="path">The built-in 1.19.4 defines and static modifiers.</span>
                     </span>
                 </label>
                 @foreach (var candidate in Workspace.ModCandidates)
@@ -67,7 +67,7 @@
                 </p>
                 @if (sources.Count == 0)
                 {
-                    <p class="muted">None: battles use vanilla 1.19.3 values plus the scenario's sources.</p>
+                    <p class="muted">None: battles use vanilla 1.19.4 values plus the scenario's sources.</p>
                 }
                 @for (var i = 0; i < sources.Count; i++)
                 {
@@ -112,7 +112,7 @@
                         @Workspace.Catalog.ShipDesigns.Count designs, @Workspace.Catalog.Fleets.Count fleets, @Workspace.Catalog.Researches.Count researches,
                         @Workspace.Catalog.Spirits.Count spirits, @Workspace.Catalog.DoctrineFolders.Sum(folder => folder.GrandDoctrines.Count) grand doctrines,
                         @Workspace.Catalog.DoctrineFolders.Sum(folder => folder.Subdoctrines.Count) subdoctrines, @Workspace.Catalog.Admirals.Count admirals,
-                        @Workspace.Catalog.LeaderTraits.Count admiral traits, @Workspace.Catalog.Planes.Count planes
+                        @Workspace.Catalog.LeaderTraits.Count admiral traits, @Workspace.Catalog.Planes.Count planes, @Workspace.Catalog.Nations.Count nations
                     </dd>
                 </dl>
                 <div class="row">
@@ -159,6 +159,13 @@
                     <span class="small muted">
                         From the same sources: replaces the files in <code>planes/</code> with the game's fixed plane equipment
                         (no plane designer). Fleets keep their carrier wings and scenarios their land-based planes and stockpiles.
+                    </span>
+                </div>
+                <div class="row">
+                    <button @onclick="ImportNations" disabled="@(importing || ShipDataGame is null)">Import national focuses and spirits</button>
+                    <span class="small muted">
+                        From the same sources, for USA, JAP, the countries already imported and the open scenario's countries: replaces their files in
+                        <code>nations/</code> (national spirits, dynamic modifiers and focuses with naval combat effects). Scenarios keep their selections.
                     </span>
                 </div>
                 <p class="small muted">Start the GUI with <code>--data &lt;dir&gt;</code> to work on another data directory.</p>
@@ -453,6 +460,31 @@
             var import = await Task.Run(Workspace.ImportRegions);
             message = $"Imported {import.Regions.Count} sea regions and {import.Terrains.Count} naval terrains from {ShipDataSourceNames()}." +
                       (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings.Take(10))}" : string.Empty);
+            messageIsError = false;
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            message = exception.Message;
+            messageIsError = true;
+        }
+        finally
+        {
+            importing = false;
+        }
+
+        await Check();
+    }
+
+    private async Task ImportNations()
+    {
+        importing = true;
+
+        try
+        {
+            var import = await Task.Run(Workspace.ImportNations);
+            var nations = import.Nations.Select(nation => $"{nation.ID} ({nation.Spirits.Count} national spirits, {nation.DynamicModifiers.Count} dynamic modifiers, {nation.Focuses.Count} focuses)");
+            message = $"Imported {string.Join(", ", nations)} from {ShipDataSourceNames()}." +
+                      (import.Warnings.Count > 0 ? $" Script warnings: {string.Join(" ", import.Warnings)}" : string.Empty);
             messageIsError = false;
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException or UnauthorizedAccessException)

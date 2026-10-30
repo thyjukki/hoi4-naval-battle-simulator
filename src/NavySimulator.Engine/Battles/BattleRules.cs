@@ -2,7 +2,8 @@ namespace NavySimulator.Engine.Battles;
 
 /// <summary>
 /// Options for the parts of the model that are not settled by reverse-engineering, plus tooling switches.
-/// Mechanics confirmed from hoi4.exe 1.19.3 are not configurable here (see docs/mechanics/surface.md).
+/// Mechanics confirmed from hoi4.exe 1.19.3 and 1.19.4 are not configurable here (see docs/mechanics/surface.md), except
+/// where the two versions differ (<see cref="PlaneLosses"/>).
 /// </summary>
 public sealed record BattleRules
 {
@@ -56,6 +57,12 @@ public sealed record BattleRules
     /// execute nothing, so carriers do no damage.
     /// </summary>
     public bool CarrierWingsExecuteNavalStrike { get; init; } = true;
+
+    /// <summary>
+    /// A-MIXED-REMOVE [RE + LOG]: which planes a wing loses. <see cref="PlaneLossOrder.RandomPlane"/> is 1.19.4 (the
+    /// default); <see cref="PlaneLossOrder.OldestFirst"/> is 1.19.3, for replaying battles logged in that version.
+    /// </summary>
+    public PlaneLossOrder PlaneLosses { get; init; } = PlaneLossOrder.RandomPlane;
 
     /// <summary>S-RETREAT: when false, ships never decide to retreat (tooling).</summary>
     public bool RetreatEnabled { get; init; } = true;

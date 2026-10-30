@@ -321,6 +321,27 @@ public class AirRulesTests
     }
 
     [Fact]
+    public void MixedWing_In1194_LosesARandomPlanePerLoss_PickedFromThePlaneCounts()
+    {
+        // A-MIXED-REMOVE [RE] 1.19.4 0xfe7a10: per lost plane an integer draw n picks plane n mod total, the variants in
+        // their order (oldest first) each covering as many places as they have planes; 1.19.3 took the oldest first.
+        var old = new PlaneEquipment("fighter_0", new PlaneStats(AirAttack: 20, Agility: 40), ["fighter"], ["air_superiority"], subUnit: "fighter", year: 1933, order: 1);
+        var young = new PlaneEquipment("fighter_2", new PlaneStats(AirAttack: 40, Agility: 60), ["fighter"], ["air_superiority"], subUnit: "fighter", year: 1940, order: 3);
+        var wing = new AirWing(young, 75, defines.Hardcoded);
+        wing.Add(old, 25);
+
+        // n = 30 of 100 → place 30, a new plane (old ones hold places 0–24); n = 146 ≡ 47 (mod 99) → new;
+        // n = 2147483614 ≡ 10 (mod 98) → an old plane.
+        var random = new ScriptedRandomSource(30 / 2147483648.0, 146 / 2147483648.0, 2147483614 / 2147483648.0);
+        wing.LosePlanes(3, defines, ModifierSet.Empty, PlaneLossOrder.RandomPlane, random);
+        Assert.Equal([("fighter_0", 24), ("fighter_2", 73)], wing.Variants.Select(variant => (variant.Plane.ID, variant.Planes)));
+
+        // The 1.19.3 rule draws nothing.
+        wing.LosePlanes(24, defines, ModifierSet.Empty, PlaneLossOrder.OldestFirst, new ScriptedRandomSource());
+        Assert.Equal([("fighter_2", 73)], wing.Variants.Select(variant => (variant.Plane.ID, variant.Planes)));
+    }
+
+    [Fact]
     public void LandCoverage_CountsTheRegionsProvincesInRangeOfTheStateCentre()
     {
         // A-COVERAGE [RE + LOG]: Burgas (state centre 3229, 1377) to region 30 (TFB): Fighter II, 900 km = 126 px, covers 4 of 7

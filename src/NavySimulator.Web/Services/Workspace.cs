@@ -263,6 +263,36 @@ public sealed class Workspace
     }
 
     /// <summary>
+    /// S-NATIONAL: reads the national spirits, dynamic modifiers and focuses of USA, JAP, the countries already imported
+    /// and the open scenario's countries from the game and the Simulate-as mods (the same sources as
+    /// <see cref="ShipDataSources"/>), writes their <c>nations/</c> files and reloads the catalog.
+    /// </summary>
+    public NationImport ImportNations()
+    {
+        var (game, mods) = ShipDataSources();
+
+        if (game is null)
+        {
+            throw new InvalidOperationException("No Hearts of Iron IV install was found. Use 'NavySimulator import-national --game <dir>' instead.");
+        }
+
+        NationImport import;
+
+        lock (sync)
+        {
+            var countries = NationImporter.DefaultCountries
+                .Concat(Catalog.Nations.Select(nation => nation.ID))
+                .Concat(new[] { Scenario.Attacker.Country, Scenario.Defender.Country }.OfType<string>().Where(tag => tag.Length > 0));
+            import = NationImporter.Read(new GameFileSystem(game, mods), countries);
+            NationWriter.Write(DataDirectory, import);
+            LoadCatalog();
+        }
+
+        Notify();
+        return import;
+    }
+
+    /// <summary>
     /// Reads the game's fixed plane equipment (A-PLANES) from the game and the Simulate-as mods (the same sources as
     /// <see cref="ShipDataSources"/>), writes it over <c>planes/</c> and reloads the catalog. Fleets and scenarios keep
     /// their plane IDs; the scenario check reports IDs that no longer exist.
@@ -343,9 +373,9 @@ public sealed class Workspace
         return import;
     }
 
-    /// <summary>What every battle simulates: "Vanilla 1.19.3", or the names of the GUI's define sources (e.g. the mod).</summary>
+    /// <summary>What every battle simulates: "Vanilla 1.19.4", or the names of the GUI's define sources (e.g. the mod).</summary>
     public string RulesetName => ExtraDefineSources.Count == 0
-        ? "Vanilla 1.19.3"
+        ? "Vanilla 1.19.4"
         : string.Join(" + ", ExtraDefineSources.Select(SourceName));
 
     /// <summary>A readable name for a define source: the mod's name, or the file or folder name.</summary>
@@ -651,6 +681,18 @@ public sealed class Workspace
             .ToList();
     }
 
+    /// <summary>S-NATIONAL: the imported nation of a country tag (with the active override set), or null.</summary>
+    public NationDto? FindNation(string? tag)
+    {
+        return string.IsNullOrEmpty(tag) ? null : Content.Nations.FirstOrDefault(nation => nation.ID == tag);
+    }
+
+    /// <summary>S-NATIONAL: the side's national setup as the engine resolves it (unknown focuses left out), or null.</summary>
+    public Engine.Nations.NationalSetup? NationalSetup(BattleParticipantDto side)
+    {
+        return SetupLoader.BuildNational(side, Library);
+    }
+
     /// <summary>S-POTF [RE]: the side's fleet's designs the game lets a country make its pride of the fleet: capital ships and carriers.</summary>
     public IReadOnlyList<ShipDesignDto> PrideOfTheFleetCandidates(BattleParticipantDto side)
     {
@@ -764,7 +806,7 @@ public sealed class Workspace
         var admiral = side.Admiral is { } dto ? Library.CreateAdmiral(dto) : null;
         return new BattleParticipant(new Fleet("preview", ships), admiral, researches, spirits,
             doctrines: SetupLoader.BuildDoctrines(side, Library), mios: SetupLoader.BuildMios(side, Library),
-            designMios: SetupLoader.BuildDesignMios(side, Library));
+            designMios: SetupLoader.BuildDesignMios(side, Library), national: SetupLoader.BuildNational(side, Library));
     }
 
     public IReadOnlyList<string> FleetsUsingDesign(string designId)

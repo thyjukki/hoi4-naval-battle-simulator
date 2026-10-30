@@ -5,6 +5,7 @@
 | Build | 1.19.3.0 "Operation Postern" |
 | Executable SHA-256 | `7DC947BE34970DA1E1C787BCDDBE7F62B610FF258AEBF8F06AA8B348F3A031D5` |
 | Addresses | RVAs, image base 0x140000000. Valid for this build only. |
+| 1.19.4.0 | SHA-256 `B6650C85002374218E60598BD04AAA26CBAD996FEDCE77126FCF92FC6BD6D888`. Every address moved; the ship, fire-exchange, side, combat, task force, leader and AirFX offsets, the modifier ids and the combat roll lines did not (equipment type fields +0x3c4 … +0x555 moved by +0x60, some country fields too). Map a 1.19.3 RVA with `tools/re/remap.py`; the logger's addresses for both builds are in `tools/ingame/battle_logger.js` (`BUILDS`). See [README.md#patch-1194](README.md#patch-1194). |
 
 Built only from the [findings](findings/README.md). Nothing here is new evidence: follow the link for pseudocode, evidence addresses and confidence. "?" means the source finding is unsure; the confidence word is the finding's own.
 
@@ -173,6 +174,10 @@ Sorted by RVA. "chunk" = a non-contiguous part of the function above it, as the 
 | 0xcfe7e0 | draw manpower from national pool | S-MANPOWER | [XP/mp] |
 | 0xd1b800 | reads 0x3334d70 (not COMBAT_DAMAGE_RANDOMNESS; who.py false positive) | S-DMG-RANDOM | [DMG/random] |
 | 0xd23780 | targeted-modifier entry → holder +0x130 (leaf) | S-HIT-MODS, S-STATS-COMBAT | [STATS/getter] |
+| 0xbb5490 | `TagIndex(tag)`: the tag's value without a gamestate, else `(gamestate+0x340)[tag]` (country slot) | S-STATS-COMBAT | [STATS/against] |
+| 0xbe4370 | naval-base code: reads province `+0x188` as a country after the land-bit test | S-STATS-COMBAT | [STATS/against] |
+| 0x71b2a0 | country tag database constructor: pushes `---` as tag 0 before any country tag | S-STATS-COMBAT | [STATS/against] |
+| 0x71bb60 | country tag database singleton (created once; `common/country_tags` loaded into it by 0x71c060) | S-STATS-COMBAT | [STATS/against] |
 | 0xd53880 | admiral task-force cap factor `(fleet)`: 1 without a fleet admiral or with cap 0, else `n = 0xd55ed0`, `1 − clamp((n − cap)/cap, 0, 1)` | S-STATS-COUNTRY, S-ADMIRAL-MOD | [STC/leader], [ADM/eff] |
 | 0xd54840 | fleet daily update: vtable +0x98 (DailyUpdate) on each task force (fleet +0xb8, count +0xc4) | S-MANPOWER | [XP/mp] |
 | 0xd55ed0 | fleet's task forces with a non-empty ship list and `tf+0x4b8 == 0` (count) | S-ADMIRAL-MOD | [ADM/eff] |
@@ -949,7 +954,7 @@ From [A-STATS-plane-stats-and-air-modifiers.md][AST]: how a wing's stats are bui
 | 0xf661e0 | wing stat cache `(wing, opt mask)`: per variant `stat[s] += trunc(trunc((1 + sub[s]) × w) × variant[s])` into `wing+0x390`; per-mission arrays `wing+0x968` (`mission_type_stats` deltas); then the sub-unit additive list and clamps (0x1019ea0); mask = argument or mission `type` | A-STATS | [AST/cache] |
 | 0xf78500 | effectiveness: `(1 + dist)(1 + crowd)(1 + supply) × (1 − rcp) × (1 + air_mission_efficiency [region weather + country + carrier fleet admiral]) × fuel × (1 + per-region country value)`, clamp [0, 1] | A-STATS, A-EXTERNAL | [AST/effectiveness] |
 | 0xf7ed40 | (update) the naval strike getters pass the mission `type` (carrier wings 0 → M = 0); 0xf5e890 passes the executing mission if not 0, else `type` | A-STATS, A-DMG | [AST/mission] |
-| 0xfaa680 | naval-mission fleet spotting: spotting_chance / night_spotting_chance (navalmission.cpp), before battles | — | [AST/mods] |
+| 0xfaa680 | naval-mission fleet spotting: spotting_chance / night_spotting_chance (navalmission.cpp), before battles; `spotting_chance_against` (0x1c5) from the owner's targeted table at the controller of the task force's province (0xfaa6d5..0xfaa723), so none at sea | — | [AST/mods], [STATS/against] |
 
 | Field | Meaning | Finding |
 |---|---|---|
@@ -1114,6 +1119,7 @@ From [A-MIXED-plane-variants-in-a-wing.md][MIX]: which variants refill a wing, h
 | 0xc924b0 | equipment type ctor: +0x418 = database index | A-MIXED | [MIX/order] |
 | 0xe6f910 | return a wing's planes of one archetype to stock, worst first | A-MIXED | [MIX/stock] |
 | 0xf63580 | (update) RemovePlanes: entries in container order (oldest type first), manpower × MANPOWER_LOSS_RATIO_PLANE_SHOT, XP via 0xf63e00, no cache refresh | A-MIXED, A-ACCIDENT | [MIX/remove] |
+| 0xf63580 → 1.19.4 0xfe7a10 | RemovePlanes in **1.19.4**: one `random_int` (random.h line 0x95, call 0xfe7af4, return 0xfe7af9) per lost plane picks plane `n mod total` over the entries in container order; manpower and XP as in 1.19.3 | A-MIXED-REMOVE | [MIX/remove1194] |
 
 ## 2. Struct fields
 
@@ -1237,8 +1243,8 @@ From [A-MIXED-plane-variants-in-a-wing.md][MIX]: which variants refill a wing, h
 | +0x4b8 | ≠ 0: not counted by 0xd55ed0 for the admiral cap (meaning ?) | [ADM/eff] |
 | +0x1a8 | combats list ([0] = first; count +0x1b4); a combat is removed only by 0xc03e00 | [XP/gain], [POTF/combat] |
 | +0x1d8 / +0x1dc | owner tag / operating country tag (used if > 0 by 0xc3acc0 and the targeted lookup) | [STATS/getter] |
-| +0x1e0 | country used to find the task force's combat side (0x15c3010) | [STATS/getter] |
-| +0x1f0 | current province | [STATS/getter] |
+| +0x1e0 | country used to find the task force's combat side (0x15c3010): the unit's `logical_country` | [STATS/getter], [STATS/against] |
+| +0x1f0 | current province: the unit's save key `location` (unit fields start at tf+0x10: CTaskForce vtable 0x2963150 has RTTI this-offset 0x10; unit reader 0xc02ae0 / writer 0xc06540 store `location` at unit+0x1e0, `previous` +0x1e8, `path` +0x1f0); not the home port (`home_base` is a fleet key) | [STATS/getter], [STATS/against] |
 | +0x1b4 | > 0 = in combat | [XP/gain] |
 | +0x348 / +0x354 | ships / count | [XP/gain] |
 | +0x340 | fleet (its admiral: 0xd64510) | [STC/sum] |
@@ -1360,9 +1366,9 @@ From [A-MIXED-plane-variants-in-a-wing.md][MIX]: which variants refill a wing, h
 | country | +0x258 / +0x260 / +0x268 | date the PotF was lost: CDate object, hours at +0x260 (default 0x29c77f8 = 1.1.1.1 = never; written by 0x70c760), persistent base at +0x268 (save key `pride_of_the_fleet_date_lost`) | [POTF/sink], [POTF/save] |
 | country | +0x270 | `pride_of_the_fleet_sunk_temporary` applied (0x6dade0) | [POTF/sink] |
 | country | +0x484 | must be > 0 for the PotF command (meaning ?) | [POTF/assign] |
-| country | +0xf88 | targeted-modifier table by target country index (entry holder +0x130) | [STATS/getter] |
+| country | +0xf88 | targeted-modifier table by target country index (`TagIndex(tag)`, tag 0 → slot 0 = null tag `---`; data +8, entry holder +0x130) | [STATS/getter], [STATS/against] |
 | country | +0x15b8 / +0x15c4 | leader-bound timed entries, 0x58 bytes (+0 obj, +0x10 leader, +0x18 count, +0x48 expired; obj +0x3b8 / +0x478 holders, +0xa8 start, +0xac duration) | [STC/leader] |
-| province | +0xa4 / +0xc8 / +0x188 | id / strategic region / controller tag (saved as `controller`) | [STATS/getter] |
+| province | +0xa4 / +0xc8 / +0x188 | id / strategic region / controller tag (saved as `controller`; 0 for a sea province, read only after the land bit `[[p+0xb8]+0xd2] & 1` by naval-base code 0xbe4370) | [STATS/getter], [STATS/against] |
 | strategic region | +0x30 | its template; naval terrain via 0x15a5560 | [STC/mod], [TER/terrain] |
 | strategic region template | +0x110 / +0x130 | `naval_terrain` name / resolved terrain (0x15a6a10) | [TER/terrain] |
 | terrain | +0x10 | `naval_terrain = yes` | [TER/terrain] |
@@ -1690,7 +1696,7 @@ Names come from the registration function 0x55f7f0 unless the confidence says ot
 | 0x1c2 | NAVAL_TORPEDO_ENEMY_CRITICAL_CHANCE_FACTOR | 0x1970b48 | [HIT/crit] |
 | 0x1c3 | NAVAL_TORPEDO_DAMAGE_REDUCTION_FACTOR | 0x1970b48 (0x1971338..) | [HIT/pierce] |
 | 0x1c7 | NAVAL_HIT_CHANCE_AGAINST_A_COUNTRY | 0x1970b48 | [HIT/mods] |
-| 0x1c8 / 0x1c9 | `navy_capital_ship_attack_factor_against` / `_defence_factor_against`: indexed by the province controller | 0xc34c29 | [STATS/getter] |
+| 0x1c8 / 0x1c9 | `navy_capital_ship_attack_factor_against` / `_defence_factor_against`: indexed by the province controller (null tag at sea: never in a naval battle) | 0xc34c29 | [STATS/getter], [STATS/against] |
 | 0x1ca / 0x1cb | `navy_screen_attack_factor_against` / `_defence_factor_against` (same lookup) | 0xc34c97 | [STATS/getter] |
 | 0x1cc / 0x1cd | `navy_submarine_attack_factor_against` / `_defence_factor_against` (same lookup) | 0xc34bbb | [STATS/getter] |
 | 0x1cf | CARRIER_SORTIE_HOURS_DELAY | 0x197d770 | [AIR/cadence] |
@@ -1890,7 +1896,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 - Convoy-type combat end path (EndHour returns false). [HOUR/end]
 - Purpose of side vt+0x100 `0x1621a70`. [HOUR/hour]
 - ~~Modifier names by index~~ settled from the registration + static token table. [STC/names]
-- Slot 0 of the targeted-modifier table (`country+0xf88`): whether the attack/defence `_against` factors ever apply at sea. [STATS/getter]
+- (Settled 2026-10-28) Slot 0 of the targeted-modifier table is the null tag `---`; the attack/defence `_against` factors never apply at sea. [STATS/against]
 - ~~Which modifier definitions 0x60fbd0 scales by leader efficiency; CNavyLeader vt+0x88/+0x90 and the cap 0xc18780~~ settled: the registration flags and the per-flag rule ([ADM/scale]); both size factors are 1 for a navy leader ([ADM/eff]). [STC/leader]
 - Admiral: `tf+0x4b8`; the readers of `leader+0x598`/`+0x658`/`+0xd18`/`+0xfc0`; the child containers scaled at depth 2; when the cooldown ends (vt+0xc8 0xc12470) and whether `reassigned` is given on a fleet change; the use of the speed and sub attack read in 0x1973521; mid-battle level-up rebuilds. [ADM/open]
 - `ship+0x8f8` object, `tf+0x658`, 0xd6fa50, province holder 0xf197d0, the `tf+0x728` building-module entries, the identity of the `country+0x15b8` entries; any `naval_coordination` reader. [STC]
@@ -2027,6 +2033,7 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [WSIM/open]: findings/S-WEATHER-region-simulation.md#unresolved
 [STATS]: findings/S-STATS-design-stats.md
 [STATS/getter]: findings/S-STATS-design-stats.md#s-stats-combat-getter-the-attack-and-armor-getter-0xc34a50-fully-decoded
+[STATS/against]: findings/S-STATS-design-stats.md#s-stats-against-which-country-the-_against-attack-and-defence-factors-target
 [STC]: findings/S-STATS-COUNTRY-modifier-sources.md
 [STC/names]: findings/S-STATS-COUNTRY-modifier-sources.md#modifier-names
 [STC/sum]: findings/S-STATS-COUNTRY-modifier-sources.md#the-ship-modifier-sum-0xc38760
@@ -2175,3 +2182,4 @@ Cross-file disagreements are flagged "**disagrees**" in the tables above; the th
 [MIX/stock]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-stock-which-variants-the-day-tick-gives-a-reinforce
 [MIX/order]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-order-how-a-wing-stores-its-variants
 [MIX/remove]: findings/A-MIXED-plane-variants-in-a-wing.md#a-mixed-remove-which-planes-are-lost-first-removeplanes-0xf63580
+[MIX/remove1194]: findings/A-MIXED-plane-variants-in-a-wing.md#1194-a-random-plane-per-loss-removeplanes-0xfe7a10

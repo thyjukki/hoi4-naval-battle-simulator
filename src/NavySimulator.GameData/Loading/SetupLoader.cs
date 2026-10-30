@@ -6,6 +6,7 @@ using NavySimulator.Engine.Defines;
 using NavySimulator.Engine.Doctrines;
 using NavySimulator.Engine.Leaders;
 using NavySimulator.Engine.Mios;
+using NavySimulator.Engine.Nations;
 using NavySimulator.GameData.Defines;
 using NavySimulator.GameData.Contracts;
 using NavySimulator.GameData.Overrides;
@@ -147,6 +148,13 @@ public class SetupLoader
             catalog.Aces.AddRange(ReadCollectionFromFolderOrFile<AceTemplateDto>(catalog, "aces", "aces.json", "aces"));
         }
         catalog.Fleets.AddRange(ReadCollectionFromFolderOrFile<FleetDto>(catalog, "force-compositions", "force-compositions.json", "fleets"));
+
+        // S-NATIONAL: optional; data imported before nations existed has none.
+        if (Directory.Exists(Path.Combine(dataDirectoryPath, NationsFolder)))
+        {
+            catalog.Nations.AddRange(ReadCollectionFromFolderOrFile<NationDto>(catalog, NationsFolder, $"{NationsFolder}.json", "nations"));
+        }
+
         ReadDoctrineFolders(catalog);
         ValidateCountryModifierWarnings(catalog);
         ValidateDesignRuleWarnings(catalog);
@@ -164,6 +172,7 @@ public class SetupLoader
     private const string SeaRegionsFolder = "sea-regions";
     private const string AirBasesFolder = "air-bases";
     private const string NavalTerrainsFolder = "naval-terrains";
+    private const string NationsFolder = "nations";
 
     /// <summary>
     /// The files <see cref="ReadCatalog"/> reads, data-directory relative with forward slashes: each collection
@@ -190,8 +199,8 @@ public class SetupLoader
             }
         }
 
-        // S-DOCTRINE, S-MIO, S-ADMIRAL, S-REGION: optional, no legacy file.
-        foreach (var folder in new[] { "doctrines", MioPoliciesFolder, EquipmentGroupsFolder, CountriesFolder, AdmiralsFolder, LeaderTraitsFolder, LeaderSkillsFolder, SeaRegionsFolder, NavalTerrainsFolder })
+        // S-DOCTRINE, S-MIO, S-ADMIRAL, S-REGION, S-NATIONAL: optional, no legacy file.
+        foreach (var folder in new[] { "doctrines", MioPoliciesFolder, EquipmentGroupsFolder, CountriesFolder, AdmiralsFolder, LeaderTraitsFolder, LeaderSkillsFolder, SeaRegionsFolder, NavalTerrainsFolder, NationsFolder })
         {
             var directory = Path.Combine(dataDirectoryPath, folder);
 
@@ -433,6 +442,8 @@ public class SetupLoader
         ValidateMios("defender", scenarioDto.Defender, library, errors);
         ValidateCountry("attacker", scenarioDto.Attacker, catalog, errors);
         ValidateCountry("defender", scenarioDto.Defender, catalog, errors);
+        ValidateNational("attacker", scenarioDto.Attacker, library, errors);
+        ValidateNational("defender", scenarioDto.Defender, library, errors);
         ValidateAirBases("attacker", scenarioDto.Attacker, catalog, errors);
         ValidateAirBases("defender", scenarioDto.Defender, catalog, errors);
         ValidateAdmiral("attacker", scenarioDto.Attacker, library, errors);
@@ -461,6 +472,8 @@ public class SetupLoader
         WarnAboutAdmiral("defender", defender, library);
         WarnAboutPrideOfTheFleet("attacker", attacker);
         WarnAboutPrideOfTheFleet("defender", defender);
+        WarnAboutNational("attacker", attacker);
+        WarnAboutNational("defender", defender);
 
         return new BattleScenario(
             scenarioDto.ID,
@@ -1303,7 +1316,74 @@ public class SetupLoader
             participant.CarrierMissionEfficiency ?? 1.0,
             participant.RadarCoverage ?? 0,
             BuildAirBases(participant, catalog),
-            participant.NavalDominanceStart);
+            participant.NavalDominanceStart,
+            BuildNational(participant, library));
+    }
+
+    /// <summary>
+    /// S-NATIONAL: the side's national setup for its country, or null without one (or without the country's nation).
+    /// Lenient, for previews: unknown focuses are left out (<see cref="ValidateNational"/> reports them as errors).
+    /// </summary>
+    public static NationalSetup? BuildNational(BattleParticipantDto participant, ContentLibrary library)
+    {
+        if (participant.National is not { } national || participant.Country is null || !library.Nations.TryGetValue(participant.Country, out var nation))
+        {
+            return null;
+        }
+
+        var focuses = (national.Focuses ?? []).Select(nation.Focus).OfType<NationalFocus>().ToList();
+        return new NationalSetup(nation, national.FromHistory, focuses, national.AddedSpirits ?? [], national.RemovedSpirits ?? [],
+            new Dictionary<string, double>(national.Variables ?? [], StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// S-NATIONAL: errors for national setups the simulator cannot build: no country or no imported nation for it, and
+    /// unknown focuses and national spirits.
+    /// </summary>
+    private static void ValidateNational(string role, BattleParticipantDto participant, ContentLibrary library, List<string> errors)
+    {
+        if (participant.National is not { } national)
+        {
+            return;
+        }
+
+        var path = $"battleScenario.{role}.national";
+
+        if (string.IsNullOrEmpty(participant.Country))
+        {
+            errors.Add($"{path} needs the side's country.");
+            return;
+        }
+
+        if (!library.Nations.TryGetValue(participant.Country, out var nation))
+        {
+            errors.Add($"{path}: no national data for {participant.Country} (import it with 'NavySimulator import-national --countries {participant.Country}').");
+            return;
+        }
+
+        foreach (var focus in (national.Focuses ?? []).Where(id => nation.Focus(id) is null))
+        {
+            errors.Add($"{path}.focuses: {participant.Country} has no focus '{focus}' with naval effects.");
+        }
+
+        foreach (var spirit in (national.AddedSpirits ?? []).Concat(national.RemovedSpirits ?? []).Where(id => !nation.Spirits.ContainsKey(id)).Distinct(StringComparer.Ordinal))
+        {
+            errors.Add($"{path}: {participant.Country} has no national spirit '{spirit}' with naval effects.");
+        }
+    }
+
+    /// <summary>S-NATIONAL-FOCUS: completed focuses the game would not allow together are still simulated, with a warning.</summary>
+    private void WarnAboutNational(string role, BattleParticipant participant)
+    {
+        if (participant.National is not { } national)
+        {
+            return;
+        }
+
+        foreach (var (first, second) in NationalRules.ExclusiveFocusPairs(national.Focuses))
+        {
+            warnings.Add($"{role}: focuses '{first}' and '{second}' are mutually exclusive in the game; both are simulated.");
+        }
     }
 
     /// <summary>

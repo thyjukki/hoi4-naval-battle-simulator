@@ -1,11 +1,12 @@
-// Frida agent for hoi4.exe 1.19.3 (SHA-256 in docs/reverse-engineering/index.md): logs every naval combat hour
-// and every surface shot to the Python runner (run_battles.py). Addresses and offsets come from the index; they are
-// valid for that build only. Values marked fx5 are the game's fixed point (raw / 100000).
+// Frida agent for hoi4.exe 1.19.3 and 1.19.4 (SHA-256s in docs/reverse-engineering/index.md): logs every naval combat
+// hour and every surface shot to the Python runner (run_battles.py). Addresses come from the index (1.19.3) and from
+// tools/re/remap.py (1.19.4); struct offsets and modifier ids are the same in both builds. run_battles.py prepends
+// `const EXE_SHA256 = '...';` for the running build. Values marked fx5 are the game's fixed point (raw / 100000).
 'use strict';
 
 const base = Process.getModuleByName('hoi4.exe').base;
 
-const RVA = {
+const RVA_1_19_3 = {
   gamestate: 0x332f260, // global pointer to the gamestate
   tick: 0x1dd370, // gamestate tick: date += 1 h, hourly update, daily update on day change
   resolveHandle: 0x221f310, // {type, id} handle -> object
@@ -36,7 +37,35 @@ const RVA = {
   recovered: 0xd781ca, // S-RECOVERY: the recovered branch (HP set to SUPPORT_SHIP_RECOVERY_BASE_STRENGTH_FACTOR)
   carrierCooldownStore: 0x197d8af, // A-CADENCE: edx = ceil(carrier_sortie_hours_delay) + CARRIER_HOURS_DELAY_AFTER_EACH_COMBAT -> AirFX +0xf8
   carrierCooldownCheck: 0x197a1b0, // A-CADENCE (AirFX in rcx): AirFX +0xf8 <= 0, feeds the unused eligibility list
+  attackGetter: 0xc34a50, // S-STATS-COMBAT-GETTER (out, kind, tf, ship, unit, admiral): attack/armor; _against slot = controller of [tf+0x1f0]
 };
+// 1.19.4: the same functions found by tools/re/remap.py (code compared instruction by instruction; the mid-function
+// probes checked by hand). The cooldown store keeps its value in edi instead of edx.
+const RVA_1_19_4 = {
+  gamestate: 0x33dd6b0, tick: 0x1f34d0, resolveHandle: 0x22844f0, combatUpdate: 0x165f820, combatEndHour: 0x165f8b0,
+  shotProfile: 0x1a03110, shotLoop: 0x1a06770, applyDamage: 0xc947b0, randomFixed: 0x2298f60, maxOrganization: 0xc8e500,
+  shipModifier: 0xc8edf0, containerGet: 0x5a51a0, ownerCountry: 0xc07b80, airStrike: 0x1a0e020, randomInt: 0x2299150,
+  airSortie: 0x1a0ae00, airTarget: 0x1a0ce90, airIntercept: 0x1a0db10, airPreempt: 0x1a0f010, airAverages: 0x1a0b5c0,
+  carrierRatio: 0x16b8800, airHits: 0x1a0d410, accidentEntry: 0xcbcf70, removeSunk: 0xdde430, recoveryChance: 0xdde523,
+  recoveryFactor: 0xdde54d, recoveryRoll: 0xdde601, recovered: 0xdde60a, carrierCooldownStore: 0x1a0ffa9,
+  carrierCooldownCheck: 0x1a0c940, attackGetter: 0xc8b0e0,
+};
+const BUILDS = {
+  '7DC947BE34970DA1E1C787BCDDBE7F62B610FF258AEBF8F06AA8B348F3A031D5': {
+    version: '1.19.3', rva: RVA_1_19_3, cooldownRegister: 'rdx', planeLossSite: null,
+    fixedSites: [0xf86610, 0xf86660, 0xf86735, 0xf7c674, 0xf7c710, 0xf7c727], intSites: [0x197ac2a, 0xc6006e],
+  },
+  // A-MIXED-REMOVE: 1.19.4's RemovePlanes (0xfe7a10) draws one integer per plane lost (random.h line 0x95, which other
+  // draws share); planeLossSite is its return address, logged as planeLoss and forced with the constant roll.
+  'B6650C85002374218E60598BD04AAA26CBAD996FEDCE77126FCF92FC6BD6D888': {
+    version: '1.19.4', rva: RVA_1_19_4, cooldownRegister: 'rdi', planeLossSite: 0xfe7af9,
+    fixedSites: [0x100ab70, 0x100abc0, 0x100ac95, 0x1000b94, 0x1000c30, 0x1000c47],
+    intSites: [0x1a0d3ba, 0xcbcd4e, 0xfe7af9],
+  },
+};
+const BUILD = BUILDS[typeof EXE_SHA256 === 'string' ? EXE_SHA256.toUpperCase() : ''];
+if (BUILD === undefined) throw new Error('battle_logger.js: no addresses for this hoi4.exe build');
+const RVA = BUILD.rva;
 
 const resolveHandle = new NativeFunction(base.add(RVA.resolveHandle), 'pointer', ['pointer']);
 const maxOrganization = new NativeFunction(base.add(RVA.maxOrganization), 'pointer', ['pointer', 'pointer']);
@@ -177,25 +206,22 @@ function sideState(side, inputs) {
 // (0..99999) instead of the generator's, and its integer draws floor(raw / 100000 × 2^31). In the naval combat update by
 // source line: target pick, torpedo line, hit, damage randomness, crit, part chance, part pick, retreat decision, and the
 // air strike's interception, AA chance and kills, hits, crit, ace earn and ace death; the sinking rolls (0x40e) and the
-// bookkeeping draws keep the generator's. Outside it, by call site (the return address; tools/re, hoi4.exe 1.19.3): the
-// region air war's losses, ace attribution and ace earning, and its province pick.
+// bookkeeping draws keep the generator's. Outside it, by call site (the return address; tools/re, per build, listed
+// for 1.19.3 below and in BUILDS): the region air war's losses, ace attribution and ace earning, and its province pick.
+// The source lines above are the same in 1.19.3 and 1.19.4 (tools/re/randlines.py).
 let forcedRoll = null;
 let forcedInt = null;
 let forcedOutside = 0; // forced rolls outside the combat update since the last hour record
 const FORCED_LINES = new Set([0x37b, 0x3d9, 0x587, 0x593, 0x59f, 0x2f4, 0x78f, 0xa83,
   0x27d, 0x212, 0x21c, 0x45d, 0x487, 0xb68, 0xb52]);
-const FORCED_FIXED_SITES = new Set([
-  0xf86610, // 0xf862a0 defender losses: U(airmission.cpp 0xacf) rounds the planes lost (A-REGION)
-  0xf86660, // 0xf862a0: U(0xade), which ace a mission credits
-  0xf86735, // 0xf862a0: U(0xae5), clearing the credited ace
-  0xf7c674, // 0xf7be70 one attacker against the defenders: ace earn U(0x82b)
-  0xf7c710, // 0xf7be70: U(0x833)
-  0xf7c727, // 0xf7be70: U(0x834)
-]);
-const FORCED_INT_SITES = new Set([
-  0x197ac2a, // 0x197a700 A-TARGET: the air target pick, random_int(naval_fire_exchange_air.cpp 0x43f)
-  0xc6006e, // 0xc5f4c0 region air war: random_int(strategicair.cpp 0x12c9) picks the fight's province
-]);
+// 1.19.3 fixed sites, in BUILDS order: 0xf86610 (0xf862a0 defender losses: U(airmission.cpp 0xacf) rounds the planes
+// lost, A-REGION), 0xf86660 (0xf862a0: U(0xade), which ace a mission credits), 0xf86735 (0xf862a0: U(0xae5), clearing the
+// credited ace), 0xf7c674 (0xf7be70 one attacker against the defenders: ace earn U(0x82b)), 0xf7c710 (U(0x833)),
+// 0xf7c727 (U(0x834)). Int sites: 0x197ac2a (0x197a700 A-TARGET: the air target pick, random_int(
+// naval_fire_exchange_air.cpp 0x43f)), 0xc6006e (0xc5f4c0 region air war: random_int(strategicair.cpp 0x12c9, 0x12c8 in
+// 1.19.4) picks the fight's province). 1.19.4 adds RemovePlanes' plane pick (A-MIXED-REMOVE, planeLossSite).
+const FORCED_FIXED_SITES = new Set(BUILD.fixedSites);
+const FORCED_INT_SITES = new Set(BUILD.intSites);
 // With --constant-roll the accident pass is switched off (A-ACCIDENT): its local generator is seeded once an hour and
 // shared by every air base in the world, so the engine cannot follow it; the engine's free replay turns its own off.
 let noAccidents = null;
@@ -210,6 +236,10 @@ let removing = null; // the remove-sunk-ship call in progress (its record)
 let forcedCooldown = null; // A-CADENCE probe: every carrier cooldown written forced to this (hours), or null
 let cooldownLog = []; // carrier cooldowns written since the last hour record
 let cooldownChecks = []; // cooldown checks (the dead eligibility list) since the last hour record
+let forcedControllerShip = null; // S-STATS-AGAINST probe: the ship whose owner tag becomes the battle provinces' controller
+let forcedControllerTag = null; // that tag (the task force's +0x1d8), learned when the getter first runs for the ship
+let controllerLog = []; // provinces whose controller the probe changed since the last hour record
+const controllerProbe = { calls: 0, ships: [] }; // getter calls seen by the probe and the first ships
 const watchHandle = Memory.alloc(8);
 
 function landWings() {
@@ -293,7 +323,10 @@ Interceptor.attach(base.add(RVA.combatEndHour), {
       recovery: recoveryLog,
       cooldowns: cooldownLog,
       cooldownChecks,
+      controllers: controllerLog,
+      controllerProbe: forcedControllerShip === null ? null : { calls: controllerProbe.calls, ships: controllerProbe.ships, tag: forcedControllerTag },
     };
+    controllerLog = [];
     recoveryLog = [];
     cooldownLog = [];
     cooldownChecks = [];
@@ -377,7 +410,9 @@ Interceptor.attach(base.add(RVA.randomFixed), {
 // use it.
 Interceptor.attach(base.add(RVA.randomInt), {
   onEnter(args) {
-    this.forceInt = forcedInt !== null && FORCED_INT_SITES.has(this.returnAddress.sub(base).toUInt32());
+    const site = this.returnAddress.sub(base).toUInt32();
+    this.forceInt = forcedInt !== null && FORCED_INT_SITES.has(site);
+    this.planeLoss = site === BUILD.planeLossSite;
     if (current === null || this.threadId !== current.thread) return;
     this.line = args[1].toInt32();
     this.active = true;
@@ -389,7 +424,9 @@ Interceptor.attach(base.add(RVA.randomInt), {
     }
     if (!this.active || current === null) return;
     const value = this.forceInt ? forcedInt : retval.toUInt32() & 0x7fffffff;
-    current.rolls.push({ line: this.line, value, int: true, loop: shooting === null ? -1 : current.shots.length });
+    const roll = { line: this.line, value, int: true, loop: shooting === null ? -1 : current.shots.length };
+    if (this.planeLoss) roll.planeLoss = true;
+    current.rolls.push(roll);
   }),
 });
 
@@ -612,9 +649,10 @@ Interceptor.attach(base.add(RVA.recovered), {
 // A-CADENCE probe: the carrier cooldown set after a strike (0x197d770) and its only reader (0x197a1b0).
 Interceptor.attach(base.add(RVA.carrierCooldownStore), {
   onEnter: guard(function cooldownStoreEnter() {
-    const record = { tick: ticks, airfx: this.context.rbp.toString(), computed: this.context.rdx.toInt32() };
+    const register = BUILD.cooldownRegister;
+    const record = { tick: ticks, airfx: this.context.rbp.toString(), computed: this.context[register].toInt32() };
     if (forcedCooldown !== null) {
-      this.context.rdx = ptr(forcedCooldown);
+      this.context[register] = ptr(forcedCooldown);
       record.forced = forcedCooldown;
     }
     cooldownLog.push(record);
@@ -626,8 +664,31 @@ Interceptor.attach(base.add(RVA.carrierCooldownCheck), {
   }),
 });
 
+// S-STATS-AGAINST probe: before every attack/armor getter call, the province the task force is in ([tf+0x1f0]) gets the
+// forced controller tag at +0x188, the field the _against lookup reads (a sea province has none).
+Interceptor.attach(base.add(RVA.attackGetter), {
+  onEnter: guard(function attackGetterEnter(args) {
+    if (forcedControllerShip === null) return;
+    controllerProbe.calls++;
+    if (controllerProbe.ships.length < 8 && !args[3].isNull()) controllerProbe.ships.push(args[3].add(0xc).readU32());
+    const tf = args[2];
+    if (tf.isNull()) return;
+    if (forcedControllerTag === null && !args[3].isNull() && args[3].add(0xc).readU32() === forcedControllerShip) {
+      forcedControllerTag = tf.add(0x1d8).readS32();
+    }
+    if (forcedControllerTag === null) return;
+    const province = tf.add(0x1f0).readPointer();
+    if (province.isNull()) return;
+    const before = province.add(0x188).readS32();
+    if (before !== forcedControllerTag) {
+      province.add(0x188).writeS32(forcedControllerTag);
+      controllerLog.push({ tick: ticks, province: province.add(0xa4).readS32(), before, after: forcedControllerTag });
+    }
+  }),
+});
+
 rpc.exports = {
-  ping() { return { base: base.toString(), ticks }; },
+  ping() { return { base: base.toString(), ticks, version: BUILD.version }; },
   forceRoll(raw) {
     forcedRoll = raw;
     forcedInt = Math.floor(raw * 2147483648 / 100000);
@@ -635,6 +696,7 @@ rpc.exports = {
   },
   watchWings(ids) { watchedWings = ids; return watchedWings.length; },
   forceCarrierCooldown(hours) { forcedCooldown = hours; return forcedCooldown; },
+  forceController(shipId) { forcedControllerShip = shipId; return forcedControllerShip; },
   forceRecovery(raw, factor) { forcedRecovery = raw; forcedRecoveryFactor = factor; return [forcedRecovery, forcedRecoveryFactor]; },
   disableAccidents() {
     if (noAccidents === null) {

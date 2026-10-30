@@ -1,4 +1,5 @@
 using NavySimulator.Engine.Defines;
+using NavySimulator.Engine.Random;
 using NavySimulator.Engine.Stats;
 
 namespace NavySimulator.Engine.Battles.Air;
@@ -9,6 +10,9 @@ namespace NavySimulator.Engine.Battles.Air;
 /// </summary>
 public sealed class AirWing
 {
+    // The game's integer draws n are read as U = n / 2^31.
+    private const double IntegerScale = 2147483648.0;
+
     // A-MIXED [RE] 0xbd1f20: the wing's variants in the game's order, the oldest type first.
     private readonly List<(PlaneEquipment Plane, int Planes)> variants = [];
     private readonly ModifierSet bonus;
@@ -116,11 +120,22 @@ public sealed class AirWing
     /// with <c>trunc(lossF × AIR_WING_XP_LOSS_WHEN_KILLED)</c> experience out of the wing's average, lossF = clamp((1 −
     /// trunc(f × AIR_WING_XP_LOSS_REDUCTION_OVER_FRIENDLY_TERRITORY_FACTOR)) × (1 + air_wing_xp_loss_when_killed_factor),
     /// 0, 1) with f the friendly share of the mission region's provinces, 0 over a sea region [ASSUMED for every battle].
+    /// A-MIXED-REMOVE: <paramref name="order"/> picks which variants lose them (<see cref="RemoveRandomPlanes"/> in 1.19.4).
     /// </summary>
-    public void LosePlanes(int planes, GameDefines defines, ModifierSet country)
+    public void LosePlanes(int planes, GameDefines defines, ModifierSet country, PlaneLossOrder order = PlaneLossOrder.OldestFirst,
+        IRandomSource? random = null)
     {
         var old = Planes;
-        Planes = old - Math.Min(planes, old);
+
+        if (order == PlaneLossOrder.RandomPlane && random is not null)
+        {
+            RemoveRandomPlanes(Math.Min(planes, old), random);
+        }
+        else
+        {
+            Planes = old - Math.Min(planes, old);
+        }
+
         var n = Planes;
 
         if (n == old)
@@ -131,6 +146,44 @@ public sealed class AirWing
         var lossFactor = Math.Clamp(1 + country.Get(StaticModifiers.AirWingXpLossWhenKilledFactor), 0, 1);
         var killed = FixedPoint.Raw(FixedPoint.Truncate(lossFactor * defines.NAir.AIR_WING_XP_LOSS_WHEN_KILLED));
         Experience = n > 0 ? Math.Max(0, (old * FixedPoint.Raw(Experience) - (old - n) * killed) / n) / (double)FixedPoint.Scale : 0;
+    }
+
+    /// <summary>
+    /// A-MIXED-REMOVE [RE + LOG] 1.19.4 RemovePlanes 0xfe7a10: one plane at a time, while the wing has planes, an integer
+    /// draw n (bit 31 cleared) picks plane <c>n mod total</c> in the variants' order (the oldest type first), each variant
+    /// covering as many places as it has planes; the 1.19.3 rule took the oldest type's planes first, no draws.
+    /// </summary>
+    private void RemoveRandomPlanes(int planes, IRandomSource random)
+    {
+        var total = Planes;
+
+        for (var i = 0; i < planes && total > 0; i++, total--)
+        {
+            var pick = (long)(random.NextDouble(RollKind.AirPlaneLoss) * IntegerScale) % total;
+
+            for (var v = 0; v < variants.Count; v++)
+            {
+                if (variants[v].Planes <= 0)
+                {
+                    continue;
+                }
+
+                if (pick < variants[v].Planes)
+                {
+                    variants[v] = (variants[v].Plane, variants[v].Planes - 1);
+                    break;
+                }
+
+                pick -= variants[v].Planes;
+            }
+        }
+
+        variants.RemoveAll(variant => variant.Planes <= 0);
+
+        if (variants.Count == 0)
+        {
+            variants.Add((Plane, 0));
+        }
     }
 
     /// <summary>

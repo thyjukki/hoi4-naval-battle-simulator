@@ -76,7 +76,7 @@ public sealed class RulesetTests : IDisposable
         test.Workspace.UseRuleset(null);
         var vanilla = test.Workspace.BuildScenario();
 
-        Assert.Equal("Vanilla 1.19.3", test.Workspace.RulesetName);
+        Assert.Equal("Vanilla 1.19.4", test.Workspace.RulesetName);
         Assert.Empty(test.Workspace.ExtraDefineSources);
         Assert.NotEqual(0.33, vanilla.Scenario!.Defines.NNavy.COMBAT_MIN_HIT_CHANCE);
     }

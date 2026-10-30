@@ -14,7 +14,10 @@ namespace NavySimulator.GameData.Replay;
 /// </summary>
 public sealed class GameBattleLog
 {
-    /// <summary>Source lines of the <c>random_fixed</c> calls in the naval combat update, hoi4.exe 1.19.3 ([LOG]).</summary>
+    /// <summary>
+    /// Source lines of the <c>random_fixed</c> calls in the naval combat update, hoi4.exe 1.19.3 ([LOG]); the same in
+    /// 1.19.4 (tools/re/randlines.py).
+    /// </summary>
     public static IReadOnlyDictionary<int, RollKind> RollLines { get; } = new Dictionary<int, RollKind>
     {
         [0x37b] = RollKind.TargetPick,
@@ -40,11 +43,13 @@ public sealed class GameBattleLog
     /// Source lines of the integer draws (random int31, the same generator) in the combat update ([LOG], logged since
     /// 2026-10-20): 0x43f the air target pick (naval_fire_exchange_air.cpp), 0x96 with the sinking rolls, 0x1c9 once per
     /// air strike and 0xb72 after an ace is earned (the promotion event); only the target pick decides anything in the battle.
+    /// 1.19.4 moved the sinking draw (random.h) to 0x95; the others are unchanged.
     /// </summary>
     public static IReadOnlyDictionary<int, RollKind> IntegerRollLines { get; } = new Dictionary<int, RollKind>
     {
         [0x43f] = RollKind.AirTargetPick,
         [0x96] = RollKind.Sinking,
+        [0x95] = RollKind.Sinking,
         [0x1c9] = RollKind.AirBookkeeping,
         [0xb72] = RollKind.AirBookkeeping,
         [0x369] = RollKind.AirBookkeeping
@@ -53,8 +58,8 @@ public sealed class GameBattleLog
     // Game fixed point: values are raw / 100000.
     private const double Fx = 100000.0;
 
-    /// <summary>S-RECOVERY: the source line of the ship recovery roll's integer draw (taskforce.cpp 0xb31).</summary>
-    public const int RecoveryRollLine = 0xb31;
+    /// <summary>S-RECOVERY: the source lines of the ship recovery roll's integer draw (taskforce.cpp 0xb31 in 1.19.3, 0xb2d in 1.19.4).</summary>
+    public static IReadOnlySet<int> RecoveryRollLines { get; } = new HashSet<int> { 0xb31, 0xb2d };
 
     /// <summary>
     /// [RE + LOG] S-RECOVERY 0xd78140..0xd781bb: the recovery roll 0..99999 the game makes of an integer draw: a bit mix of
@@ -78,13 +83,26 @@ public sealed class GameBattleLog
         return (int)(x % 100000);
     }
 
+    // run_battles.py's builds (EXE_BUILDS): logs from before it wrote gameVersion are 1.19.3.
+    private const string Version1194Sha256 = "B6650C85002374218E60598BD04AAA26CBAD996FEDCE77126FCF92FC6BD6D888";
+
     private readonly List<JsonElement> hours;
     private readonly Dictionary<uint, (string Country, string Design)> ships;
 
-    private GameBattleLog(List<JsonElement> hours, Dictionary<uint, (string Country, string Design)> ships)
+    private GameBattleLog(List<JsonElement> hours, Dictionary<uint, (string Country, string Design)> ships, string gameVersion)
     {
         this.hours = hours;
         this.ships = ships;
+        GameVersion = gameVersion;
+    }
+
+    /// <summary>The game version the battle was logged in ("1.19.3", "1.19.4").</summary>
+    public string GameVersion { get; }
+
+    /// <summary>The engine rules for this log's game version (A-MIXED-REMOVE changed in 1.19.4).</summary>
+    public BattleRules RulesFor(BattleRules rules)
+    {
+        return GameVersion == "1.19.3" ? rules with { PlaneLosses = PlaneLossOrder.OldestFirst } : rules;
     }
 
     /// <summary>
@@ -132,7 +150,13 @@ public sealed class GameBattleLog
         }
 
         var main = records.GroupBy(record => record.GetProperty("combat").GetString()).MaxBy(group => group.Count())!.Key;
-        return new GameBattleLog(records.Where(record => record.GetProperty("combat").GetString() == main).ToList(), ships);
+        var metaRoot = meta.RootElement;
+        var version = metaRoot.TryGetProperty("gameVersion", out var gameVersion) && gameVersion.ValueKind == JsonValueKind.String
+            ? gameVersion.GetString()!
+            : metaRoot.TryGetProperty("exeSha256", out var sha) && sha.ValueKind == JsonValueKind.String && sha.GetString() == Version1194Sha256
+                ? "1.19.4"
+                : "1.19.3";
+        return new GameBattleLog(records.Where(record => record.GetProperty("combat").GetString() == main).ToList(), ships, version);
     }
 
     /// <summary>Country of game side <paramref name="side"/> (0 attacker, 1 defender).</summary>
@@ -474,7 +498,13 @@ public sealed class GameBattleLog
                 // An integer draw n is used as U = n / 2^31 (0x24f04f0); the ship recovery roll mixes it first.
                 if (roll.TryGetProperty("int", out var integer) && integer.GetBoolean())
                 {
-                    if (line == RecoveryRollLine)
+                    // A-MIXED-REMOVE (1.19.4): the logger marks RemovePlanes' draws, which share their line with others.
+                    if (roll.TryGetProperty("planeLoss", out var planeLoss) && planeLoss.GetBoolean())
+                    {
+                        return new ReplayRoll(RollKind.AirPlaneLoss, roll.GetProperty("value").GetInt64() / 2147483648.0, line);
+                    }
+
+                    if (RecoveryRollLines.Contains(line))
                     {
                         return new ReplayRoll(RollKind.ShipRecovery, RecoveryRoll(roll.GetProperty("value").GetInt64()) / Fx, line);
                     }

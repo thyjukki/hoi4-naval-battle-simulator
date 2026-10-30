@@ -2,7 +2,7 @@ namespace NavySimulator.Engine.Defines;
 
 /// <summary>
 /// <c>NDefines.NGraphics</c> values the province darkness reads (S-NIGHT, <c>common/defines/00_graphics.lua</c>). Property
-/// names match the game keys exactly so they can be bound from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.3.
+/// names match the game keys exactly so they can be bound from <c>common/defines/*.lua</c>. Defaults are vanilla 1.19.4 (the same as 1.19.3).
 /// </summary>
 public sealed class NGraphicsDefines
 {

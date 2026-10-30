@@ -1,0 +1,668 @@
+{
+  "$schema": "../schemas/nations.schema.json",
+  "nations": [
+    {
+      "id": "JAP",
+      "name": "Japan",
+      "focusTree": "japan_wtt_focus",
+      "spirits": [
+        {
+          "id": "JAP_battle_for_oceania",
+          "name": "The Battle for Oceania",
+          "category": "country",
+          "sources": [
+            "focus:JAP_battle_for_australia",
+            "allowed"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "air_mission_efficiency": 0.05,
+              "sortie_efficiency": 0.05,
+              "air_carrier_night_penalty_reduction_factor": 0.1
+            }
+          },
+          "targetedModifiers": [
+            {
+              "tag": "AST",
+              "modifiers": {
+                "attack_bonus_against": 0.05
+              }
+            },
+            {
+              "tag": "NZL",
+              "modifiers": {
+                "attack_bonus_against": 0.05
+              }
+            }
+          ]
+        },
+        {
+          "id": "JAP_the_divine_wind_idea",
+          "name": "The Divine Wind",
+          "category": "country",
+          "sources": [
+            "focus:JAP_the_divine_wind",
+            "allowed"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "air_untrained_pilots_penalty_factor": -0.1,
+              "port_strike": 0.05,
+              "air_nav_efficiency": 0.05
+            }
+          }
+        },
+        {
+          "id": "idea_RAJ_japanese_supremacy",
+          "name": "Japanese Supremacy",
+          "category": "country",
+          "sources": [
+            "allowed"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "production_speed_buildings_factor": 0.15,
+              "navy_capital_ship_attack_factor": 0.15
+            }
+          }
+        },
+        {
+          "id": "JAP_first_air_fleet",
+          "name": "First Air Fleet",
+          "category": "country",
+          "sources": [
+            "id"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "sortie_efficiency": 0.2
+            }
+          }
+        },
+        {
+          "id": "JAP_tora_tora_tora_idea",
+          "name": "Tora! Tora! Tora!",
+          "category": "country",
+          "sources": [
+            "id"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "port_strike": 1,
+              "carrier_capacity_penalty_reduction": -0.5,
+              "sortie_efficiency": 0.5,
+              "naval_strike_attack_factor": 0.12,
+              "naval_strike_targetting_factor": 0.12,
+              "naval_strike_agility_factor": 0.12
+            }
+          }
+        },
+        {
+          "id": "JAP_supremacy_of_the_battlefleet",
+          "name": "Supremacy of the Battlefleet",
+          "category": "country",
+          "sources": [
+            "id"
+          ],
+          "effects": {
+            "countryModifiers": {
+              "navy_capital_ship_defence_factor": 0.1,
+              "sp_naval_super_heavy_battleship_speed_factor": 1
+            }
+          }
+        },
+        {
+          "id": "JAP_kantai_kessen_1",
+          "name": "Decisive Battle Against … for … days",
+          "category": "hidden_ideas",
+          "sources": [
+            "id"
+          ],
+          "targetedModifiers": [
+            {
+              "tag": "JAP.JAP_kantai_kessen_target_1",
+              "modifiers": {
+                "spotting_chance_against": 0.1,
+                "navy_capital_ship_attack_factor_against": 0.1
+              }
+            }
+          ]
+        },
+        {
+          "id": "JAP_kantai_kessen_2",
+          "name": "Decisive Battle Against … for … days",
+          "category": "hidden_ideas",
+          "sources": [
+            "id"
+          ],
+          "targetedModifiers": [
+            {
+              "tag": "JAP.JAP_kantai_kessen_target_2",
+              "modifiers": {
+                "spotting_chance_against": 0.1,
+                "navy_capital_ship_attack_factor_against": 0.1
+              }
+            }
+          ]
+        },
+        {
+          "id": "JAP_kantai_kessen_3",
+          "name": "Decisive Battle Against … for … days",
+          "category": "hidden_ideas",
+          "sources": [
+            "id"
+          ],
+          "targetedModifiers": [
+            {
+              "tag": "JAP.JAP_kantai_kessen_target_3",
+              "modifiers": {
+                "spotting_chance_against": 0.1,
+                "navy_capital_ship_attack_factor_against": 0.1
+              }
+            }
+          ]
+        }
+      ],
+      "dynamicModifiers": [
+        {
+          "id": "JAP_imperial_navy_dm",
+          "name": "Imperial Navy",
+          "variableModifiers": {
+            "naval_torpedo_hit_chance_factor": "JAP_navy_naval_torpedo_hit_chance_factor",
+            "ships_at_battle_start": "JAP_navy_ships_at_battle_start",
+            "navy_max_range_factor": "JAP_navy_navy_max_range_factor",
+            "naval_detection": "JAP_navy_naval_detection",
+            "naval_accidents_chance": "JAP_navy_naval_accidents_chance",
+            "convoy_escort_efficiency": "JAP_navy_convoy_escort_efficiency",
+            "naval_coordination": "JAP_navy_naval_coordination",
+            "naval_invasion_prep_speed": "JAP_navy_naval_invasion_prep_speed",
+            "amphibious_invasion": "JAP_navy_amphibious_invasion",
+            "marines_special_forces_contribution_factor": "JAP_marines_special_forces_contribution_factor",
+            "naval_heavy_gun_hit_chance_factor": "JAP_navy_naval_heavy_gun_hit_chance_factor",
+            "navy_anti_air_attack_factor": "JAP_navy_navy_anti_air_attack_factor",
+            "naval_mine_hit_chance": "JAP_navy_naval_mine_hit_chance",
+            "naval_mines_damage_factor": "JAP_navy_naval_mines_damage_factor",
+            "navy_org_factor": "JAP_navy_navy_org_factor",
+            "experience_gain_navy_unit_factor": "JAP_navy_experience_gain_navy_unit_factor",
+            "repair_speed_factor": "JAP_navy_repair_speed_factor",
+            "refit_speed": "JAP_navy_refit_speed",
+            "naval_ship_recovery_chance": "JAP_navy_naval_ship_recovery_chance"
+          }
+        },
+        {
+          "id": "JAP_army_and_naval_air_services_dm",
+          "name": "Army and Naval Air Services",
+          "variableModifiers": {
+            "air_nav_efficiency": "JAP_airforce_air_nav_efficiency",
+            "air_wing_xp_loss_when_killed_factor": "JAP_airforce_air_wing_xp_loss_when_killed_factor",
+            "air_untrained_pilots_penalty_factor": "JAP_airforce_air_untrained_pilots_penalty_factor",
+            "air_cas_efficiency": "JAP_airforce_air_cas_efficiency",
+            "sortie_efficiency": "JAP_airforce_sortie_efficiency",
+            "air_escort_efficiency": "JAP_airforce_air_escort_efficiency",
+            "air_range_factor": "JAP_airforce_air_range_factor",
+            "air_defence_factor": "JAP_airforce_air_defence_factor",
+            "mines_planting_by_air_factor": "JAP_airforce_mines_planting_by_air_factor",
+            "port_strike": "JAP_airforce_port_strike",
+            "air_mission_efficiency": "JAP_airforce_air_mission_efficiency",
+            "air_accidents_factor": "JAP_airforce_air_accidents_factor"
+          }
+        },
+        {
+          "id": "JAP_early_industrialization_efforts_dm",
+          "name": "Early Industrialization Efforts",
+          "variableModifiers": {
+            "industry_air_damage_factor": "JAP_industry_industry_air_damage_factor",
+            "production_lack_of_resource_penalty_factor": "JAP_industry_lack_of_resource_penalty_factor",
+            "research_speed_factor": "JAP_industry_research_speed_factor",
+            "consumer_goods_factor": "JAP_industry_consumer_goods_factor",
+            "production_speed_industrial_complex_factor": "JAP_industry_production_speed_industrial_complex_factor",
+            "production_speed_arms_factory_factor": "JAP_industry_production_speed_arms_factory_factor",
+            "production_speed_dockyard_factor": "JAP_industry_production_speed_dockyard_factor",
+            "production_speed_buildings_factor": "JAP_industry_production_speed_buildings_factor",
+            "factory_energy_consumption": "JAP_industry_factory_energy_consumption",
+            "industrial_capacity_dockyard": "JAP_industry_industrial_capacity_dockyard",
+            "industrial_capacity_factory": "JAP_industry_industrial_capacity_factory",
+            "local_resources_factor": "JAP_industry_local_resources_factor",
+            "local_resources_coal_factor": "JAP_industry_local_resources_coal_factor",
+            "convoy_retreat_speed": "JAP_industry_convoy_retreat_speed",
+            "production_factory_max_efficiency_factor": "JAP_industry_production_factory_max_efficiency_factor",
+            "production_factory_efficiency_gain_factor": "JAP_industry_production_factory_efficiency_gain_factor",
+            "special_project_speed_factor": "JAP_industry_special_project_speed_factor",
+            "line_change_production_efficiency_factor": "JAP_industry_line_change_production_efficiency_factor"
+          }
+        },
+        {
+          "id": "JAP_the_economic_mirale_dm",
+          "name": "The Economic Miracle",
+          "variableModifiers": {
+            "industry_air_damage_factor": "JAP_industry_industry_air_damage_factor",
+            "production_lack_of_resource_penalty_factor": "JAP_industry_lack_of_resource_penalty_factor",
+            "research_speed_factor": "JAP_industry_research_speed_factor",
+            "consumer_goods_factor": "JAP_industry_consumer_goods_factor",
+            "production_speed_industrial_complex_factor": "JAP_industry_production_speed_industrial_complex_factor",
+            "production_speed_arms_factory_factor": "JAP_industry_production_speed_arms_factory_factor",
+            "production_speed_dockyard_factor": "JAP_industry_production_speed_dockyard_factor",
+            "production_speed_buildings_factor": "JAP_industry_production_speed_buildings_factor",
+            "factory_energy_consumption": "JAP_industry_factory_energy_consumption",
+            "industrial_capacity_dockyard": "JAP_industry_industrial_capacity_dockyard",
+            "industrial_capacity_factory": "JAP_industry_industrial_capacity_factory",
+            "local_resources_factor": "JAP_industry_local_resources_factor",
+            "local_resources_coal_factor": "JAP_industry_local_resources_coal_factor",
+            "convoy_retreat_speed": "JAP_industry_convoy_retreat_speed",
+            "production_factory_max_efficiency_factor": "JAP_industry_production_factory_max_efficiency_factor",
+            "production_factory_efficiency_gain_factor": "JAP_industry_production_factory_efficiency_gain_factor",
+            "special_project_speed_factor": "JAP_industry_special_project_speed_factor",
+            "line_change_production_efficiency_factor": "JAP_industry_line_change_production_efficiency_factor"
+          }
+        },
+        {
+          "id": "JAP_japanese_airforce_dm",
+          "name": "Japanese Air Force",
+          "variableModifiers": {
+            "air_nav_efficiency": "JAP_airforce_air_nav_efficiency",
+            "air_wing_xp_loss_when_killed_factor": "JAP_airforce_air_wing_xp_loss_when_killed_factor",
+            "air_untrained_pilots_penalty_factor": "JAP_airforce_air_untrained_pilots_penalty_factor",
+            "air_cas_efficiency": "JAP_airforce_air_cas_efficiency",
+            "sortie_efficiency": "JAP_airforce_sortie_efficiency",
+            "air_escort_efficiency": "JAP_airforce_air_escort_efficiency",
+            "air_range_factor": "JAP_airforce_air_range_factor",
+            "air_defence_factor": "JAP_airforce_air_defence_factor",
+            "mines_planting_by_air_factor": "JAP_airforce_mines_planting_by_air_factor",
+            "port_strike": "JAP_airforce_port_strike",
+            "air_mission_efficiency": "JAP_airforce_air_mission_efficiency",
+            "air_accidents_factor": "JAP_airforce_air_accidents_factor"
+          }
+        }
+      ],
+      "history": [
+        {
+          "effect": "add_dynamic_modifier",
+          "target": "JAP_imperial_navy_dm"
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_naval_torpedo_hit_chance_factor",
+          "value": 0.15
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_naval_heavy_gun_hit_chance_factor",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_navy_anti_air_attack_factor",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_navy_org_factor",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_experience_gain_navy_unit_factor",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_navy_naval_ship_recovery_chance",
+          "value": 0
+        },
+        {
+          "effect": "add_dynamic_modifier",
+          "target": "JAP_army_and_naval_air_services_dm"
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_air_nav_efficiency",
+          "value": 0.1
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_air_wing_xp_loss_when_killed_factor",
+          "value": 0.1
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_air_untrained_pilots_penalty_factor",
+          "value": 0.1
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_sortie_efficiency",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_air_escort_efficiency",
+          "value": 0
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_airforce_air_defence_factor",
+          "value": 0
+        },
+        {
+          "effect": "add_dynamic_modifier",
+          "target": "JAP_early_industrialization_efforts_dm"
+        },
+        {
+          "effect": "set_variable",
+          "target": "JAP_industry_convoy_retreat_speed",
+          "value": 0
+        }
+      ],
+      "focuses": [
+        {
+          "id": "JAP_battle_for_australia",
+          "name": "The Battle for Australia",
+          "effects": [
+            {
+              "effect": "add_ideas",
+              "target": "JAP_battle_for_oceania",
+              "days": 270
+            }
+          ]
+        },
+        {
+          "id": "JAP_civilian_nuclear_reactor_investments",
+          "name": "Civilian Nuclear Reactor Investments",
+          "effects": [
+            {
+              "effect": "remove_dynamic_modifier",
+              "target": "JAP_early_industrialization_efforts_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_early_industrialization_efforts_dm } }"
+            },
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_the_economic_mirale_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_early_industrialization_efforts_dm } }"
+            }
+          ]
+        },
+        {
+          "id": "JAP_ship_management_committee",
+          "name": "Ship Management Committee",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_early_industrialization_efforts_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_early_industrialization_efforts_dm } has_dynamic_modifier = { modifier = JAP_the_economic_mirale_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_industry_convoy_retreat_speed",
+              "value": 0.1
+            }
+          ]
+        },
+        {
+          "id": "JAP_resource_security",
+          "name": "Resource Security",
+          "effects": [
+            {
+              "effect": "remove_dynamic_modifier",
+              "target": "JAP_early_industrialization_efforts_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_early_industrialization_efforts_dm } }"
+            },
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_the_economic_mirale_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_early_industrialization_efforts_dm } }"
+            }
+          ]
+        },
+        {
+          "id": "JAP_escort_efficiency",
+          "name": "Invest in Aerial Escorts",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_escort_efficiency",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_sea_sturdy_aircraft",
+          "name": "Sturdy Aircraft",
+          "mutuallyExclusive": [
+            "JAP_sea_long_operational_range"
+          ],
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_defence_factor",
+              "value": 0.1
+            }
+          ]
+        },
+        {
+          "id": "JAP_sea_long_operational_range",
+          "name": "Long Operational Range",
+          "mutuallyExclusive": [
+            "JAP_sea_sturdy_aircraft"
+          ],
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_defence_factor",
+              "value": -0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_sea_unify_the_air_forces",
+          "name": "Unify the Air Forces",
+          "effects": [
+            {
+              "effect": "remove_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } }"
+            },
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_japanese_airforce_dm",
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_wing_xp_loss_when_killed_factor",
+              "value": -0.15,
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_untrained_pilots_penalty_factor",
+              "value": -0.15,
+              "condition": "{ has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } }"
+            }
+          ]
+        },
+        {
+          "id": "JAP_improved_radio_communications",
+          "name": "Improve Radio Communications",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_wing_xp_loss_when_killed_factor",
+              "value": -0.1
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_air_untrained_pilots_penalty_factor",
+              "value": -0.1
+            }
+          ]
+        },
+        {
+          "id": "JAP_the_divine_wind",
+          "name": "The Divine Wind",
+          "effects": [
+            {
+              "effect": "add_ideas",
+              "target": "JAP_the_divine_wind_idea"
+            }
+          ]
+        },
+        {
+          "id": "JAP_yokosuka_naval_air_technical_arsenal",
+          "name": "Yokosuka Naval Air Technical Arsenal",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_sortie_efficiency",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_establish_the_mine_warfare_force",
+          "name": "Establish the Mine Warfare Force",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_naval_torpedo_hit_chance_factor",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_sea_bigger_better_yamato",
+          "name": "Tsushima Class Battleships",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_naval_heavy_gun_hit_chance_factor",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_akizuki_class_destroyers",
+          "name": "Akizuki Class Destroyers",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_navy_anti_air_attack_factor",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_form_the_kido_butai",
+          "name": "Form the Kido Butai",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_army_and_naval_air_services_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_army_and_naval_air_services_dm } has_dynamic_modifier = { modifier = JAP_japanese_airforce_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_airforce_sortie_efficiency",
+              "value": 0.1
+            }
+          ]
+        },
+        {
+          "id": "JAP_sea_heavier_naval_guns",
+          "name": "Heavier Naval Guns",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_naval_heavy_gun_hit_chance_factor",
+              "value": 0.1
+            }
+          ]
+        },
+        {
+          "id": "JAP_assure_superior_naval_quality",
+          "name": "Assure Superior Naval Quality",
+          "mutuallyExclusive": [
+            "JAP_seek_strength_in_numbers"
+          ],
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_navy_org_factor",
+              "value": 0.05
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_experience_gain_navy_unit_factor",
+              "value": 0.05
+            }
+          ]
+        },
+        {
+          "id": "JAP_nationalize_fujinagata_shipyards",
+          "name": "Nationalize Fujinagata Shipyards",
+          "effects": [
+            {
+              "effect": "add_dynamic_modifier",
+              "target": "JAP_imperial_navy_dm",
+              "condition": "{ NOT = { has_dynamic_modifier = { modifier = JAP_imperial_navy_dm } has_dynamic_modifier = { modifier = JAP_japanese_navy_dm } } }"
+            },
+            {
+              "effect": "add_to_variable",
+              "target": "JAP_navy_naval_ship_recovery_chance",
+              "value": 0.1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

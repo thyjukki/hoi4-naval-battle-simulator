@@ -23,7 +23,8 @@ public static class OverrideCollections
         new("leader-skills", "Admiral skills", typeof(LeaderSkillDto), catalog => catalog.LeaderSkills),
         new("planes", "Planes", typeof(PlaneDto), catalog => catalog.Planes),
         new("aces", "Aces", typeof(AceTemplateDto), catalog => catalog.Aces),
-        new("naval-terrains", "Naval terrains", typeof(NavalTerrainDto), catalog => catalog.NavalTerrains)
+        new("naval-terrains", "Naval terrains", typeof(NavalTerrainDto), catalog => catalog.NavalTerrains),
+        new("nations", "Nations", typeof(NationDto), catalog => catalog.Nations)
     ];
 
     public static OverrideCollection? Find(string name)

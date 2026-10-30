@@ -12,7 +12,7 @@ seed, the runner:
 With --setup-only it stops after the console commands and leaves the game paused and running on the copy, to look at.
 Output per run in --out (default output/ingame/<save>_<timestamp>/<seed>/): meta.json, hours.csv, sides.csv, modifiers.csv, holders.csv,
 shots.csv and raw.jsonl. The game must not be running when it starts; the game window takes keyboard focus during a run.
-Requires: pip install frida-tools. Checks hoi4.exe against the SHA-256 the reverse-engineering index was built for.
+Requires: pip install frida-tools. Checks hoi4.exe against the builds the logger has addresses for (EXE_BUILDS).
 """
 import argparse
 import csv
@@ -35,7 +35,12 @@ import savefile
 GAME_DIR = Path(os.environ.get("HOI4_DIR", r"C:\Program Files (x86)\Steam\steamapps\common\Hearts of Iron IV"))
 USER_DIR = Path(os.environ.get("HOI4_USER_DIR", Path.home() / "Documents" / "Paradox Interactive" / "Hearts of Iron IV"))
 SAVE_DIR = USER_DIR / "save games"
-EXE_SHA256 = "7DC947BE34970DA1E1C787BCDDBE7F62B610FF258AEBF8F06AA8B348F3A031D5"
+# Builds battle_logger.js has addresses for (its BUILDS table): SHA-256 -> game version.
+EXE_BUILDS = {
+    "7DC947BE34970DA1E1C787BCDDBE7F62B610FF258AEBF8F06AA8B348F3A031D5": "1.19.3",
+    "B6650C85002374218E60598BD04AAA26CBAD996FEDCE77126FCF92FC6BD6D888": "1.19.4",
+}
+exe_sha256 = None  # the installed build, set by check_exe
 AGENT = Path(__file__).with_name("battle_logger.js")
 REPO = Path(__file__).resolve().parents[2]
 FX = 100000.0
@@ -124,10 +129,12 @@ def console(hwnd, commands):
 # ---- game process ----
 
 def check_exe():
+    global exe_sha256
     digest = hashlib.sha256((GAME_DIR / "hoi4.exe").read_bytes()).hexdigest().upper()
-    if digest != EXE_SHA256:
-        sys.exit(f"hoi4.exe SHA-256 {digest} is not the build the logger's addresses are for ({EXE_SHA256}); "
-                 "re-run the reverse-engineering tools for this patch first")
+    if digest not in EXE_BUILDS:
+        sys.exit(f"hoi4.exe SHA-256 {digest} is not a build the logger has addresses for "
+                 f"({', '.join(EXE_BUILDS.values())}); map them with tools/re/remap.py for this patch first")
+    exe_sha256 = digest
 
 
 def running_game_pids():
@@ -187,7 +194,7 @@ def run_one(save_path, seed, out_dir, args):
     try:
         wait_for_load(game, started, args.load_timeout)
         session = frida.attach(game.pid)
-        script = session.create_script(AGENT.read_text(encoding="utf-8"))
+        script = session.create_script(f"const EXE_SHA256 = '{exe_sha256}';\n" + AGENT.read_text(encoding="utf-8"))
         script.on("message", lambda message, _data: messages.put(message))
         script.load()
         if land_wings:
@@ -205,6 +212,9 @@ def run_one(save_path, seed, out_dir, args):
         if args.force_carrier_cooldown is not None:
             # A-CADENCE probe: every carrier cooldown the game writes after a strike is this many hours
             script.exports_sync.force_carrier_cooldown(args.force_carrier_cooldown)
+        if args.force_controller is not None:
+            # S-STATS-AGAINST probe: the battle provinces get this ship's country as controller (logged per hour)
+            script.exports_sync.force_controller(args.force_controller)
         time.sleep(args.settle)
         hwnd = game_window(game.pid)
         if hwnd is None:
@@ -229,10 +239,10 @@ def run_one(save_path, seed, out_dir, args):
 
     write_outputs(out_dir, hours, index, {
         "save": str(save_path), "seed": seed if seed is not None else save.seed, "date": save.date,
-        "commands": args.commands, "speed": args.speed, "exeSha256": EXE_SHA256, "constantRoll": args.constant_roll,
+        "commands": args.commands, "speed": args.speed, "exeSha256": exe_sha256, "gameVersion": EXE_BUILDS.get(exe_sha256), "constantRoll": args.constant_roll,
         "accidentsDisabled": args.constant_roll is not None and not args.keep_accidents,
         "forcedRecovery": args.force_recovery, "forcedRecoveryFactor": args.force_recovery_factor,
-        "forcedCarrierCooldown": args.force_carrier_cooldown,
+        "forcedCarrierCooldown": args.force_carrier_cooldown, "forcedController": args.force_controller,
     })
 
 
@@ -451,10 +461,13 @@ def main():
                              "naval_ship_recovery_chance_factor to this value at every sinking (logged in raw.jsonl)")
     parser.add_argument("--force-recovery-factor", type=float,
                         help="with --force-recovery, also force the country's naval_ship_recovery_chance_factor "
-                             "(0 in every country of 1.19.3, which makes recovery impossible)")
+                             "(0 in every country of 1.19.3 and 1.19.4, which makes recovery impossible)")
     parser.add_argument("--force-carrier-cooldown", type=int,
                         help="A-CADENCE probe: force every carrier cooldown the game writes after a strike to this many "
                              "hours (computed and forced values logged in raw.jsonl, with the reads of the cooldown)")
+    parser.add_argument("--force-controller", type=int, metavar="SHIP_ID",
+                        help="S-STATS-AGAINST probe: make the province each fighting task force is in controlled by the "
+                             "country of this ship (written before every attack/armor getter call; changes logged per hour)")
     parser.add_argument("--keep-accidents", action="store_true",
                         help="with --constant-roll, leave the game's air accident pass on (the engine cannot follow it)")
     parser.add_argument("--keep-saves", action="store_true", help="keep the nsim_* copies in the save games folder")
